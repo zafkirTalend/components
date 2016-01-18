@@ -1,4 +1,4 @@
-package org.talend.components.cassandra.io;
+package org.talend.components.cassandra.tCassandraInput;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
@@ -11,7 +11,6 @@ import org.talend.components.api.component.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.cassandra.tCassandraInput.tCassandraInputDIProperties;
 import org.talend.components.cassandra.type.CassandraBaseType;
 
 import java.util.List;

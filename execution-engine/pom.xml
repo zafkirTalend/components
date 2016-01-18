@@ -10,19 +10,19 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Components - Cassandra</name>
-    <artifactId>components-cassandra</artifactId>
+    <name>Execution - Engine</name>
+    <artifactId>execution-engine</artifactId>
     <version>0.3.0.BUILD-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.10</artifactId>
-            <version>1.3.1</version>
+            <groupId>com.cloudera.dataflow.spark</groupId>
+            <artifactId>spark-dataflow</artifactId>
+            <version>0.4.3-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.datastax.spark</groupId>
-            <artifactId>spark-cassandra-connector-java_2.10</artifactId>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
             <version>1.3.1</version>
         </dependency>
         <dependency>
@@ -45,6 +45,16 @@
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-df-api</artifactId>
+            <version>0.3.0.BUILD-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-cassandra</artifactId>
+            <version>0.3.0.BUILD-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-mysql</artifactId>
             <version>0.3.0.BUILD-SNAPSHOT</version>
         </dependency>
     </dependencies>
@@ -82,7 +92,7 @@
                         </goals>
                         <configuration>
                             <instructions>
-                                <Bundle-SymbolicName>org.talend.components.cassandra.lib</Bundle-SymbolicName>
+                                <Bundle-SymbolicName>org.org.talend.components.cassandra.lib</Bundle-SymbolicName>
                                 <Bundle-Name>${project.name} lib</Bundle-Name>
                             </instructions>
                         </configuration>
@@ -100,9 +110,9 @@
                             <instructions>
                                 <Import-Package>!*internal,org.talend*,org.slf4j*,javax.xml.namespace,org.junit*
                                 </Import-Package>
-                                <Bundle-SymbolicName>org.talend.components.cassandra.test</Bundle-SymbolicName>
+                                <Bundle-SymbolicName>org.org.talend.components.cassandra.test</Bundle-SymbolicName>
                                 <Bundle-Name>Test Fragment for ${project.name}</Bundle-Name>
-                                <Fragment-Host>org.talend.components.cassandra</Fragment-Host>
+                                <Fragment-Host>org.org.talend.components.cassandra</Fragment-Host>
                                 <Bundle-ActivationPolicy>lazy</Bundle-ActivationPolicy>
                                 <DynamicImport-Package>*</DynamicImport-Package>
                                 <Embed-Dependency></Embed-Dependency>

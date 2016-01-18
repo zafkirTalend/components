@@ -9,15 +9,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.runtime.input.Reader;
 import org.talend.components.api.component.runtime.input.SingleSplit;
+import org.talend.components.api.component.runtime.input.Source;
 import org.talend.components.api.component.runtime.metadata.Metadata;
+import org.talend.components.api.component.runtime.output.Sink;
+import org.talend.components.api.component.runtime.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
-import org.talend.components.cassandra.io.CassandraSink;
-import org.talend.components.cassandra.io.CassandraSource;
 import org.talend.components.cassandra.metadata.CassandraMetadata;
+import org.talend.components.cassandra.tCassandraInput.CassandraSource;
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputDIProperties;
+import org.talend.components.cassandra.tCassandraOutput.CassandraSink;
 import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.type.CassandraTalendTypesRegistry;
 
@@ -76,12 +79,12 @@ public class CassandraDITest {
         m.initSchema(props);
         m.initSchema(outProps);
 
-        CassandraSource source = new CassandraSource();
+        Source source = new CassandraSource();
         source.init(props);
 
-        CassandraSink sink = new CassandraSink();
+        Sink sink = new CassandraSink();
         sink.init(outProps);
-        CassandraSink.CassandraRecordWriter writer = sink.getWriter();
+        Writer writer = sink.getRecordWriter();
 
         Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
 

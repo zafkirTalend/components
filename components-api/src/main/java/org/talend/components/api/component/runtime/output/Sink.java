@@ -10,7 +10,7 @@ public interface Sink {
 
     public void close();
 
-    public Writer getWriter();
+    public Writer getRecordWriter();
 
     /**
      * do something like create folder/create table

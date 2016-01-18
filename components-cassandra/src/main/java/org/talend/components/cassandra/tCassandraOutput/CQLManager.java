@@ -1,10 +1,9 @@
-package org.talend.components.cassandra.io;
+package org.talend.components.cassandra.tCassandraOutput;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.common.ExternalBaseType;
 import org.talend.components.api.schema.internal.DataSchemaElement;
-import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 
 import java.util.ArrayList;
 import java.util.List;

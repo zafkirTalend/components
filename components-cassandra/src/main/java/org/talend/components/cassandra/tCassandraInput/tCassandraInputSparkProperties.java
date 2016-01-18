@@ -19,7 +19,11 @@ public class tCassandraInputSparkProperties extends CassandraMetadataProperties 
         super(name);
     }
 
+    public Property useQuery = newBoolean("useQuery");
+    //useQuery = true DI api
+    public Property query = newString("query", "select id, name from employee");
     //TODO how to hidden host/port in this component?
+    //useQuery = false spark-cassandra-connector api
     public Property columnFunctionTables = newTable("columnFunctionTables", newString("COLUMN"), newEnum("FUNCTION", "TTL", "WRITETIME"));
     public Property filterConditionTables = newTable("filterConditionTables", newString("COLUMN"), newEnum("FUNCTION", "EQ", "LT", "GT", "LE", "GE", "CONTAINS", "CONTAINSKEY", "IN"), newString("VALUE"));
     public Property order = newEnum("order", "NONE", "ASC", "DESC");

@@ -24,6 +24,8 @@
         <module>components-proptester</module>
         <module>components-cassandra</module>
         <module>components-mysql</module>
+        <module>execution-engine</module>
+        <module>components-df-api</module>
     </modules>
     <build>
         <!-- skip the deployment for this aggregator, not necessary -->

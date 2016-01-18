@@ -1,4 +1,4 @@
-package org.talend.components.cassandra.io.bd;
+package org.talend.components.api.runtime.api.spark;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.*;
@@ -7,10 +7,10 @@ import org.talend.components.api.component.runtime.input.SingleSplit;
 import org.talend.components.api.component.runtime.input.Source;
 import org.talend.components.api.component.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
-import org.talend.components.api.runtime.row.BaseRowStruct;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -23,7 +23,7 @@ import java.util.Map;
  * Created by bchen on 16-1-10.
  */
 //TODO better to and a talend InputFormat to avoid the dependency of MapReduce, just need a method getSplits;no close method for InputFormat?
-public class BDInputFormat implements InputFormat<NullWritable, BaseRowStruct>, JobConfigurable {
+public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, JobConfigurable {
     private Source source;
 
     @Override

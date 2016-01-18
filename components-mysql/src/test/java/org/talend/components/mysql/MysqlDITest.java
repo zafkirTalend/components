@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.runtime.input.Reader;
+import org.talend.components.api.component.runtime.input.Source;
 import org.talend.components.api.component.runtime.input.Split;
 import org.talend.components.api.component.runtime.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
@@ -79,7 +80,7 @@ public class MysqlDITest {
         Metadata metadata = new MysqlMetadata();
         metadata.initSchema(props);
 
-        MysqlSource source = new MysqlSource();
+        Source source = new MysqlSource();
         source.init(props);
 
         Map<String, SchemaElement.Type> row_metadata = new HashMap<>();

@@ -1,4 +1,4 @@
-package org.talend.components.cassandra.io;
+package org.talend.components.cassandra.tCassandraOutput;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -12,7 +12,6 @@ import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
-import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.type.CassandraBaseType;
 
 /**
@@ -50,7 +49,7 @@ public class CassandraSink implements Sink {
     }
 
     @Override
-    public CassandraRecordWriter getWriter() {
+    public CassandraRecordWriter getRecordWriter() {
         return new CassandraRecordWriter(boundStatement);
     }
 
