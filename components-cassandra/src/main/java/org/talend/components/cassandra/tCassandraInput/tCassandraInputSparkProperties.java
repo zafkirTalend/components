@@ -1,14 +1,13 @@
 package org.talend.components.cassandra.tCassandraInput;
 
 import org.talend.components.api.properties.Property;
-import org.talend.components.cassandra.metadata.CassandraMetadataProperties;
 
 import static org.talend.components.api.properties.PropertyFactory.*;
 
 /**
  * Created by bchen on 16-1-13.
  */
-public class tCassandraInputSparkProperties extends CassandraMetadataProperties {
+public class tCassandraInputSparkProperties extends tCassandraInputDIProperties {
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
@@ -21,7 +20,7 @@ public class tCassandraInputSparkProperties extends CassandraMetadataProperties 
 
     public Property useQuery = newBoolean("useQuery");
     //useQuery = true DI api
-    public Property query = newString("query", "select id, name from employee");
+//    public Property query = newString("query", "select id, name from employee");
     //TODO how to hidden host/port in this component?
     //useQuery = false spark-cassandra-connector api
     public Property columnFunctionTables = newTable("columnFunctionTables", newString("COLUMN"), newEnum("FUNCTION", "TTL", "WRITETIME"));

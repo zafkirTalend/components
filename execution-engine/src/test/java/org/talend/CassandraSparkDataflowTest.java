@@ -4,68 +4,208 @@ import com.cloudera.dataflow.spark.SparkPipelineOptions;
 import com.cloudera.dataflow.spark.SparkPipelineOptionsFactory;
 import com.cloudera.dataflow.spark.SparkPipelineRunner;
 import com.cloudera.dataflow.spark.TransformTranslator;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
 import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.TextIO;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.talend.components.api.runtime.api.spark_dataflow.SparkDataflowIO;
-import org.talend.components.api.runtime.api.spark_dataflow.SparkDataflowInputTransformEvaluator;
+import org.talend.components.api.component.metadata.Metadata;
+import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.bd.api.component.spark.SparkInputConf;
+import org.talend.components.bd.api.component.spark.SparkOutputConf;
 import org.talend.components.cassandra.metadata.CassandraMetadata;
 import org.talend.components.cassandra.tCassandraInput.CassandraSource;
 import org.talend.components.cassandra.tCassandraInput.spark.CassandraInputSparkConf;
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputSparkProperties;
+import org.talend.components.cassandra.tCassandraOutput.CassandraSink;
+import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.type.CassandraTalendTypesRegistry;
+import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowIO;
+import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowInputTransformEvaluator;
+import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowOutputTransformEvaluator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by bchen on 16-1-9.
  */
 public class CassandraSparkDataflowTest {
+    private static final String HOST = "localhost";
+    private static final String PORT = "9042";
+    private static final String KEYSPACE = "ks";
+    Session connect;
+
     @Before
     public void prepare() {
         TypeMapping.registryTypes(new CassandraTalendTypesRegistry());
         TransformTranslator.addTransformEvaluator(SparkDataflowIO.Read.Bound.class, new SparkDataflowInputTransformEvaluator());
+        TransformTranslator.addTransformEvaluator(SparkDataflowIO.Write.Bound.class, new SparkDataflowOutputTransformEvaluator());
+
+        Cluster cluster = Cluster.builder().addContactPoints(HOST).withPort(Integer.valueOf(PORT)).build();
+        connect = cluster.connect();
+        connect.execute("drop KEYSPACE ks");
+        connect.execute("create KEYSPACE ks WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}");
+        connect.execute("create TABLE ks.test ( name text PRIMARY KEY )");
+        connect.execute("insert into ks.test (name) values ('hello')");
+        connect.execute("insert into ks.test (name) values ('world')");
+
+        connect.execute("create TABLE ks.test2 ( name text PRIMARY KEY )");
     }
 
+    /**
+     * reuse the DI api
+     */
     @Test
-    public void testType1() {
-        tCassandraInputSparkProperties properties = new tCassandraInputSparkProperties("tCassandraInput_1");
-        properties.initForRuntime();
-        properties.host.setValue("localhost");
-        properties.port.setValue("9042");
-        properties.useAuth.setValue(false);
-        properties.keyspace.setValue("ks");
-        properties.columnFamily.setValue("test");
-        properties.useQuery.setValue(false);
+    public void testForSparkDF() {
+        tCassandraInputSparkProperties props = gettCassandraInputSparkProperties();
 
-        CassandraMetadata m = new CassandraMetadata();
-        m.initSchema(properties);
+        tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
+
+        Metadata m = new CassandraMetadata();
+        m.initSchema(props);
+        m.initSchema(outProps);
 
         SparkPipelineOptions options = SparkPipelineOptionsFactory.create();
         Pipeline p = Pipeline.create(options);
-        p.apply(SparkDataflowIO.Read.named("ReadCassandraRow").fromProperties(properties).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class)).apply(TextIO.Write.named("WriteDone").to("/tmp/out"));
+        p.apply(SparkDataflowIO.Read.named("tCassandraInput_1").fromProperties(props).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class))
+                .apply(SparkDataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps).withSource(CassandraSink.class));
         SparkPipelineRunner.create().run(p);
+
+        ResultSet rs = connect.execute("select name from ks.test2");
+        List<String> result = new ArrayList<>();
+        for (Row r : rs) {
+            result.add(r.getString("name"));
+        }
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("hello", result.get(0));
+        Assert.assertEquals("world", result.get(1));
     }
 
+    /**
+     * use the spark-cassandra-connector api for input
+     */
     @Test
-    public void testType2() {
-        tCassandraInputSparkProperties properties = new tCassandraInputSparkProperties("tCassandraInput_1");
-        properties.initForRuntime();
-        properties.host.setValue("localhost");
-        properties.port.setValue("9042");
-        properties.useAuth.setValue(false);
-        properties.keyspace.setValue("ks");
-        properties.columnFamily.setValue("test");
-        properties.useQuery.setValue(true);
-        properties.query.setValue("select name from ks.test");
+    public void testForSparkDFWithNativeInputAPI() {
+        tCassandraInputSparkProperties props = gettCassandraInputSparkPropertiesForNativeAPI();
 
-        CassandraMetadata m = new CassandraMetadata();
-        m.initSchema(properties);
+        tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
+
+        Metadata m = new CassandraMetadata();
+        m.initSchema(props);
+        m.initSchema(outProps);
 
         SparkPipelineOptions options = SparkPipelineOptionsFactory.create();
         Pipeline p = Pipeline.create(options);
-        p.apply(SparkDataflowIO.Read.named("ReadCassandraRow").fromProperties(properties).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class)).apply(TextIO.Write.named("WriteDone").to("/tmp/out"));
+        p.apply(SparkDataflowIO.Read.named("tCassandraInput_1").fromProperties(props).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class))
+                .apply(SparkDataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps).withSource(CassandraSink.class));
         SparkPipelineRunner.create().run(p);
+
+        ResultSet rs = connect.execute("select name from ks.test2");
+        List<String> result = new ArrayList<>();
+        for (Row r : rs) {
+            result.add(r.getString("name"));
+        }
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("hello", result.get(0));
+        Assert.assertEquals("world", result.get(1));
+    }
+
+
+    @Test
+    public void testForSpark() {
+        tCassandraInputSparkProperties props = gettCassandraInputSparkProperties();
+        tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
+        Metadata m = new CassandraMetadata();
+        m.initSchema(props);
+        m.initSchema(outProps);
+
+
+        SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
+        JavaSparkContext jsc = new JavaSparkContext(conf);
+        SparkInputConf inputConf = new SparkInputConf();
+        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props, CassandraSource.class);
+        SparkOutputConf outputConf = new SparkOutputConf();
+        outputConf.invoke(rdd, outProps, CassandraSink.class);
+
+        ResultSet rs = connect.execute("select name from ks.test2");
+        List<String> result = new ArrayList<>();
+        for (Row r : rs) {
+            result.add(r.getString("name"));
+        }
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("hello", result.get(0));
+        Assert.assertEquals("world", result.get(1));
+    }
+
+    @Test
+    public void testForSparkWithNativeAPI() {
+        tCassandraInputSparkProperties props = gettCassandraInputSparkPropertiesForNativeAPI();
+        tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
+        Metadata m = new CassandraMetadata();
+        m.initSchema(props);
+        m.initSchema(outProps);
+
+        SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
+        JavaSparkContext jsc = new JavaSparkContext(conf);
+        SparkInputConf inputConf = new CassandraInputSparkConf();
+        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props, CassandraSource.class);
+        SparkOutputConf outputConf = new SparkOutputConf();
+        outputConf.invoke(rdd, outProps, CassandraSink.class);
+
+        ResultSet rs = connect.execute("select name from ks.test2");
+        List<String> result = new ArrayList<>();
+        for (Row r : rs) {
+            result.add(r.getString("name"));
+        }
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("hello", result.get(0));
+        Assert.assertEquals("world", result.get(1));
+    }
+
+    private tCassandraInputSparkProperties gettCassandraInputSparkPropertiesForNativeAPI() {
+        tCassandraInputSparkProperties props = new tCassandraInputSparkProperties("tCassandraInput_1");
+        props.initForRuntime();
+        props.host.setValue(HOST);
+        props.port.setValue(PORT);
+        props.useAuth.setValue(false);
+        props.keyspace.setValue(KEYSPACE);
+        props.columnFamily.setValue("test");
+        props.useQuery.setValue(false);
+        return props;
+    }
+
+
+    private tCassandraInputSparkProperties gettCassandraInputSparkProperties() {
+        tCassandraInputSparkProperties props = new tCassandraInputSparkProperties("tCassandraInput_1");
+        props.initForRuntime();
+        props.host.setValue(HOST);
+        props.port.setValue(PORT);
+        props.useAuth.setValue(false);
+        props.keyspace.setValue(KEYSPACE);
+        props.columnFamily.setValue("test");
+        props.useQuery.setValue(true);
+        props.query.setValue("select name from ks.test");
+        return props;
+    }
+
+    private tCassandraOutputDIProperties gettCassandraOutputDIProperties() {
+        tCassandraOutputDIProperties outProps = new tCassandraOutputDIProperties("tCassandraOutput_1");
+        outProps.initForRuntime();
+        outProps.host.setValue(HOST);
+        outProps.port.setValue(PORT);
+        outProps.keyspace.setValue(KEYSPACE);
+        outProps.columnFamily.setValue("test2");
+        outProps.dataAction.setValue("INSERT");
+        outProps.useUnloggedBatch.setValue(false);
+        return outProps;
     }
 
 

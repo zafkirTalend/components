@@ -1,4 +1,4 @@
-package org.talend.components.api.component.runtime.metadata;
+package org.talend.components.api.component.metadata;
 
 import org.talend.components.api.properties.ComponentProperties;
 

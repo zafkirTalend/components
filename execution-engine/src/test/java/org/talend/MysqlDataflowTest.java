@@ -9,13 +9,13 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.talend.components.api.component.runtime.metadata.Metadata;
+import org.talend.components.api.component.metadata.Metadata;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
 import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
 import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
-import org.talend.components.api.runtime.api.dataflow.DFBoundedSource;
+import org.talend.components.bd.api.component.dataflow.DFBoundedSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

@@ -4,10 +4,10 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.talend.components.api.component.runtime.input.Reader;
-import org.talend.components.api.component.runtime.input.SingleSplit;
-import org.talend.components.api.component.runtime.input.Source;
-import org.talend.components.api.component.runtime.input.Split;
+import org.talend.components.api.component.input.Reader;
+import org.talend.components.api.component.input.SingleSplit;
+import org.talend.components.api.component.input.Source;
+import org.talend.components.api.component.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
@@ -38,7 +38,6 @@ public class CassandraSource implements Source<Row> {
 
     @Override
     public void close() {
-        //TODO connection pool
         connection.close();
         cluster.close();
     }

@@ -1,11 +1,11 @@
-package org.talend.components.api.runtime.api.spark;
+package org.talend.components.bd.api.component.spark;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.*;
-import org.talend.components.api.component.runtime.input.Reader;
-import org.talend.components.api.component.runtime.input.SingleSplit;
-import org.talend.components.api.component.runtime.input.Source;
-import org.talend.components.api.component.runtime.input.Split;
+import org.talend.components.api.component.input.Reader;
+import org.talend.components.api.component.input.SingleSplit;
+import org.talend.components.api.component.input.Source;
+import org.talend.components.api.component.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;

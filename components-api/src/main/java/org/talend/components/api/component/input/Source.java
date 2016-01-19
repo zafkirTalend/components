@@ -1,4 +1,4 @@
-package org.talend.components.api.component.runtime.input;
+package org.talend.components.api.component.input;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;

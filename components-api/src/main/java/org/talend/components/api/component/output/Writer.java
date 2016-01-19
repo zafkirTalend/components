@@ -1,4 +1,4 @@
-package org.talend.components.api.component.runtime.output;
+package org.talend.components.api.component.output;
 
 import org.talend.components.api.runtime.row.BaseRowStruct;
 

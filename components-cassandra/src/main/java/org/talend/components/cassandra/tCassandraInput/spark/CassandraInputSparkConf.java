@@ -2,20 +2,15 @@ package org.talend.components.cassandra.tCassandraInput.spark;
 
 import com.datastax.spark.connector.japi.CassandraJavaUtil;
 import com.datastax.spark.connector.japi.rdd.CassandraTableScanJavaRDD;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.talend.components.api.component.runtime.input.Source;
+import org.talend.components.api.component.input.Source;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.runtime.api.spark.MRInputFormat;
-import org.talend.components.api.runtime.api.spark.SparkInputConf;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
+import org.talend.components.bd.api.component.spark.SparkInputConf;
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputSparkProperties;
-import scala.Tuple2;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,21 +18,12 @@ import java.util.Map;
 /**
  * Created by bchen on 16-1-18.
  */
-public class CassandraInputSparkConf implements SparkInputConf {
+public class CassandraInputSparkConf extends SparkInputConf {
     @Override
     public JavaRDD<BaseRowStruct> invoke(JavaSparkContext jsc, ComponentProperties properties, Class<? extends Source> sourceClazz) {
         tCassandraInputSparkProperties props = (tCassandraInputSparkProperties) properties;
         if (props.useQuery.getBooleanValue()) {
-            JobConf job = new JobConf();
-            job.set("input.source", sourceClazz.getName());
-            job.set("input.props", properties.toSerialized());
-            JavaPairRDD<NullWritable, BaseRowStruct> pairRDD = jsc.hadoopRDD(job, MRInputFormat.class, NullWritable.class, BaseRowStruct.class);
-            return pairRDD.map(new Function<Tuple2<NullWritable, BaseRowStruct>, BaseRowStruct>() {
-                @Override
-                public BaseRowStruct call(Tuple2<NullWritable, BaseRowStruct> row) throws Exception {
-                    return row._2();
-                }
-            });
+            return super.invoke(jsc, properties, sourceClazz);
         } else {
             CassandraTableScanJavaRDD<String> rdd = CassandraJavaUtil
                     .javaFunctions(jsc)

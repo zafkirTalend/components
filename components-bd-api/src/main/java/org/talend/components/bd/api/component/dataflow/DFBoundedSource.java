@@ -1,4 +1,4 @@
-package org.talend.components.api.runtime.api.dataflow;
+package org.talend.components.bd.api.component.dataflow;
 
 import com.google.cloud.dataflow.sdk.coders.Coder;
 import com.google.cloud.dataflow.sdk.coders.MapCoder;
@@ -6,9 +6,9 @@ import com.google.cloud.dataflow.sdk.coders.StringUtf8Coder;
 import com.google.cloud.dataflow.sdk.io.BoundedSource;
 import com.google.cloud.dataflow.sdk.options.DataflowPipelineWorkerPoolOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import org.talend.components.api.component.runtime.input.SingleSplit;
-import org.talend.components.api.component.runtime.input.Source;
-import org.talend.components.api.component.runtime.input.Split;
+import org.talend.components.api.component.input.SingleSplit;
+import org.talend.components.api.component.input.Source;
+import org.talend.components.api.component.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.common.TypeMapping;
@@ -83,9 +83,9 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
     public class DFBoundedReader extends BoundedReader<Map<String, String>> {
         DFBoundedSource dfsource;
-        org.talend.components.api.component.runtime.input.Reader reader;
+        org.talend.components.api.component.input.Reader reader;
 
-        public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.component.runtime.input.Reader reader) {
+        public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.component.input.Reader reader) {
             this.dfsource = dfsource;
             this.reader = reader;
         }

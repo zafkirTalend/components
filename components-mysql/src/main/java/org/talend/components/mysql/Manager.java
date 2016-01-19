@@ -1,6 +1,6 @@
 package org.talend.components.mysql;
 
-import org.talend.components.api.component.runtime.input.Split;
+import org.talend.components.api.component.input.Split;
 
 import java.io.IOException;
 

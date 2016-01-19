@@ -1,6 +1,6 @@
 package org.talend.components.mysql.metadata;
 
-import org.talend.components.api.component.runtime.metadata.Metadata;
+import org.talend.components.api.component.metadata.Metadata;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaFactory;
 import org.talend.components.mysql.type.MysqlBaseType;
