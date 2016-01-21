@@ -14,7 +14,7 @@ package org.talend.components.api.schema.internal;
 
 import org.talend.components.api.schema.AbstractSchemaElement;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.ExternalBaseType;
+import org.talend.components.api.schema.column.type.ExternalBaseType;
 
 /**
  * Represents meta data elements. This typically defines the DisplayName to be the same

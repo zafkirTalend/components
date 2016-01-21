@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
 import org.talend.components.mysql.type.Mysql_INT;

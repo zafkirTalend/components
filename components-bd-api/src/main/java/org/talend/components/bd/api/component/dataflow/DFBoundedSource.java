@@ -11,7 +11,7 @@ import org.talend.components.api.component.input.Source;
 import org.talend.components.api.component.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 
 import java.io.IOException;
@@ -107,8 +107,7 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    result.put(dataFiled.getName(), TypeMapping.convert(TypeMapping.getDefaultTalendType(source.getFamilyName(), dataFiled.getAppColType()),
-                            dataFiled.getType(), dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())).toString());
+                    result.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())).toString());
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

@@ -10,7 +10,7 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.cassandra.type.CassandraBaseType;
 
@@ -70,7 +70,7 @@ public class CassandraSink implements Sink {
             for (SchemaElement column : ((Schema) props.schema.schema.getValue()).getRoot().getChildren()) {
                 DataSchemaElement col = (DataSchemaElement) column;
                 try {
-                    col.getAppColType().newInstance().assign2AValue(TypeMapping.convert(col.getType(), TypeMapping.getDefaultTalendType(CassandraBaseType.FAMILY_NAME, col.getAppColType()), rowStruct.get(col.getName())), boundStatement, col.getAppColName());
+                    col.getAppColType().newInstance().assign2AValue(TypeMapping.convert(CassandraBaseType.FAMILY_NAME, col, rowStruct.get(col.getName())), boundStatement, col.getAppColName());
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

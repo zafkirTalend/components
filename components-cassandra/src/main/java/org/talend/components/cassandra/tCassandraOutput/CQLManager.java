@@ -2,7 +2,7 @@ package org.talend.components.cassandra.tCassandraOutput;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.ExternalBaseType;
+import org.talend.components.api.schema.column.type.ExternalBaseType;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 
 import java.util.ArrayList;

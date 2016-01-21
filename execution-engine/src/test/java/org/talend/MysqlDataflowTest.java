@@ -10,7 +10,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.metadata.Metadata;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
 import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;

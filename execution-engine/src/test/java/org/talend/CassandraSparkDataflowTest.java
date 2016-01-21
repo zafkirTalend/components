@@ -17,7 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.bd.api.component.spark.SparkInputConf;
 import org.talend.components.bd.api.component.spark.SparkOutputConf;
 import org.talend.components.cassandra.metadata.CassandraMetadata;

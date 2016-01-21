@@ -1,8 +1,8 @@
 package org.talend.components.mysql.type;
 
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.ExternalBaseType;
-import org.talend.components.api.schema.column.type.common.TypesRegistry;
+import org.talend.components.api.schema.column.type.ExternalBaseType;
+import org.talend.components.api.schema.column.type.TypesRegistry;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -9,7 +9,7 @@ import org.talend.components.api.component.input.Split;
 import org.talend.components.api.component.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
@@ -99,8 +99,7 @@ public class MysqlDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(TypeMapping.getDefaultTalendType(source.getFamilyName(), dataFiled.getAppColType()),
-                            dataFiled.getType(), dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -119,8 +118,7 @@ public class MysqlDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(TypeMapping.getDefaultTalendType(source.getFamilyName(), dataFiled.getAppColType()),
-                            dataFiled.getType(), dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

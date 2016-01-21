@@ -9,7 +9,7 @@ import org.talend.components.api.component.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 
 import java.io.DataInput;
@@ -82,8 +82,7 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
                 for (SchemaElement column : schema) {
                     DataSchemaElement col = (DataSchemaElement) column;
                     try {
-                        baseRowStruct.put(col.getName(), TypeMapping.convert(TypeMapping.getDefaultTalendType(familyName, col.getAppColType()),
-                                col.getType(), col.getAppColType().newInstance().retrieveTValue(row, col.getAppColName())));
+                        baseRowStruct.put(col.getName(), TypeMapping.convert(familyName, col, col.getAppColType().newInstance().retrieveTValue(row, col.getAppColName())));
                     } catch (InstantiationException e) {
                         e.printStackTrace();
                     } catch (IllegalAccessException e) {

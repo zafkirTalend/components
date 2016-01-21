@@ -12,8 +12,8 @@
 // ============================================================================
 package org.talend.components.api.schema;
 
-import org.talend.components.api.schema.column.type.common.ExternalBaseType;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.ExternalBaseType;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.api.schema.internal.SchemaImpl;
 

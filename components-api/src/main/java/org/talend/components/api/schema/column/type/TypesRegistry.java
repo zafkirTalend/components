@@ -1,4 +1,4 @@
-package org.talend.components.api.schema.column.type.common;
+package org.talend.components.api.schema.column.type;
 
 import org.talend.components.api.schema.SchemaElement;
 

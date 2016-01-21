@@ -15,7 +15,7 @@ import org.talend.components.api.component.output.Sink;
 import org.talend.components.api.component.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.common.TypeMapping;
+import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.cassandra.metadata.CassandraMetadata;
 import org.talend.components.cassandra.tCassandraInput.CassandraSource;
@@ -99,8 +99,7 @@ public class CassandraDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(TypeMapping.getDefaultTalendType(source.getFamilyName(), dataFiled.getAppColType()),
-                            dataFiled.getType(), dataFiled.getAppColType().newInstance().retrieveTValue(recordReader.getCurrent(), dataFiled.getAppColName())));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(recordReader.getCurrent(), dataFiled.getAppColName())));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
