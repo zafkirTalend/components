@@ -9,32 +9,27 @@
         <relativePath>../components-parent/pom.xml</relativePath>
 	</parent>
 	<properties>
-		<partner.version>34.0.0</partner.version>
+		<partner.version>25.0.0</partner.version>
 	</properties>
 
 	<name>Components - Salesforce</name>
 	<artifactId>components-salesforce</artifactId>
-	<version>0.1.0.RELEASE</version>
+	<version>0.1.1.BUILD-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<dependencies>
 
 		<dependency>
 			<groupId>com.force.api</groupId>
 			<artifactId>force-wsc</artifactId>
-			<version>35.0.0</version>
+			<version>25.0.0</version>
 		</dependency>
 
 		<!-- Generated Jar files from the WSDL -->
 		<dependency>
 			<groupId>org.talend.components.salesforce</groupId>
 			<artifactId>partner</artifactId>
-			<version>${partner.version}</version>
+			<version>25.0.0</version>
 			<!-- <scope>provided</scope> -->
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components.salesforce</groupId>
-			<artifactId>metadata</artifactId>
-			<version>34.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>

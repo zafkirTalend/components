@@ -261,7 +261,8 @@ public class SalesforceLocalComponentTestIT  {
             } else {
                 SalesforceModuleProperties storedModule = (SalesforceModuleProperties) rp.props;
                 assertEquals(selected.get(i - 1).name, storedModule.getValue(storedModule.moduleName));
-                assertTrue(rp.schema.getRoot().getChildren().size() > 10);
+                // AccountHistory is only 8 in version 25
+                assertTrue(rp.schema.getRoot().getChildren().size() > 7);
                 assertTrue(storedModule.schema.getValue(storedModule.schema.schema) == rp.schema);
             }
             i++;

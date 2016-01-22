@@ -50,7 +50,7 @@ public class SalesforceRuntime extends ComponentRuntime {
 
     private static final   Logger LOG         = LoggerFactory.getLogger(SalesforceRuntime.class);
 
-    protected static final String API_VERSION = "34.0";
+    protected static final String API_VERSION = "25.0";
 
     protected ComponentService componentService;
 

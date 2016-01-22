@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 @JsonRootName("salesforceConnectionProperties")
 public class SalesforceConnectionProperties extends ComponentProperties {
 
-    public static final String URL = "https://www.salesforce.com/services/Soap/u/34.0";
+    public static final String URL = "https://www.salesforce.com/services/Soap/u/" + SalesforceRuntime.API_VERSION;
 
     public static final String OAUTH_URL = "https://login.salesforce.com/services/oauth2";
 
