@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.talend.components.api.component.input.Source;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.runtime.IDIImplement;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import scala.Tuple2;
 
@@ -17,8 +18,12 @@ import java.io.Serializable;
  * Created by bchen on 16-1-18.
  */
 public class SparkInputConf implements Serializable {
-    //TODO sourceClazz may a part of properties, and there also need talendJobContext
-    public JavaRDD<BaseRowStruct> invoke(JavaSparkContext jsc, ComponentProperties properties, Class<? extends Source> sourceClazz) {
+    //TODO need talendJobContext
+    public JavaRDD<BaseRowStruct> invoke(JavaSparkContext jsc, ComponentProperties properties) {
+        Class<? extends Source> sourceClazz = null;
+        if (properties instanceof IDIImplement) {
+            sourceClazz = ((IDIImplement) properties).getSourceClass();
+        }
         JobConf job = new JobConf();
         job.set("input.source", sourceClazz.getName());
         job.set("input.props", properties.toSerialized());

@@ -1,4 +1,4 @@
-package org.talend.components.bd.api.component.spark_dataflow;
+package org.talend.components.bd.api.component.x_dataflow;
 
 import com.cloudera.dataflow.spark.EvaluationContext;
 import com.cloudera.dataflow.spark.TransformEvaluator;
@@ -7,24 +7,37 @@ import com.google.cloud.dataflow.sdk.util.WindowedValue;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaRDDLike;
 import org.apache.spark.api.java.function.Function;
-import org.talend.components.bd.api.component.spark.SparkOutputConf;
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
+import org.talend.components.bd.api.component.BDType;
+import org.talend.components.bd.api.component.IBDImplement;
+import org.talend.components.bd.api.component.spark.SparkOutputConf;
 
 /**
- * Created by bchen on 16-1-19.
+ * Created by bchen on 16-1-25.
  */
-public class SparkDataflowOutputTransformEvaluator implements TransformEvaluator<SparkDataflowIO.Write.Bound<String>> {
+public class DataflowOutputTransformEvaluator implements TransformEvaluator<DataflowIO.Write.Component<String>>{
     @Override
-    public void evaluate(SparkDataflowIO.Write.Bound<String> transform, EvaluationContext context) {
+    public void evaluate(DataflowIO.Write.Component<String> transform, EvaluationContext context) {
+        ComponentProperties properties = transform.getProperties();
+        IBDImplement bdProps = null;
+        //TODO check if it's default, should be done in SparkInputConf, not in here, refactor later
+        boolean isDefault = true;
+        if (properties instanceof IBDImplement) {
+            bdProps = (IBDImplement) properties;
+            isDefault = false;
+        }
         SparkOutputConf sparkOutputConf = null;
-        if (transform.getSparkOutputConfClazz() == null) {
+        if (isDefault) {
             sparkOutputConf = new SparkOutputConf();
         } else {
             try {
-                sparkOutputConf = transform.getSparkOutputConfClazz().newInstance();
+                sparkOutputConf = (SparkOutputConf) Class.forName(bdProps.getImplementClassName(BDType.SparkOutputConf)).newInstance();
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -37,6 +50,6 @@ public class SparkDataflowOutputTransformEvaluator implements TransformEvaluator
                                 return t;
                             }
                         });
-        sparkOutputConf.invoke(last, transform.getProperties(), transform.getSinkClazz());
+        sparkOutputConf.invoke(last, transform.getProperties());
     }
 }

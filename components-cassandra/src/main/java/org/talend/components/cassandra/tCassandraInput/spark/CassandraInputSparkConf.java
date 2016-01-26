@@ -5,7 +5,6 @@ import com.datastax.spark.connector.japi.rdd.CassandraTableScanJavaRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.talend.components.api.component.input.Source;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
@@ -20,10 +19,10 @@ import java.util.Map;
  */
 public class CassandraInputSparkConf extends SparkInputConf {
     @Override
-    public JavaRDD<BaseRowStruct> invoke(JavaSparkContext jsc, ComponentProperties properties, Class<? extends Source> sourceClazz) {
+    public JavaRDD<BaseRowStruct> invoke(JavaSparkContext jsc, ComponentProperties properties) {
         tCassandraInputSparkProperties props = (tCassandraInputSparkProperties) properties;
         if (props.useQuery.getBooleanValue()) {
-            return super.invoke(jsc, properties, sourceClazz);
+            return super.invoke(jsc, properties);
         } else {
             CassandraTableScanJavaRDD<String> rdd = CassandraJavaUtil
                     .javaFunctions(jsc)

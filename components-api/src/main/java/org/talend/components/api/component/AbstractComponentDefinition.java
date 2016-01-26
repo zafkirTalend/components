@@ -12,11 +12,11 @@
 // ============================================================================
 package org.talend.components.api.component;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import org.talend.components.api.AbstractTopLevelDefinition;
 import org.talend.components.api.properties.ComponentProperties;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 public abstract class AbstractComponentDefinition extends AbstractTopLevelDefinition implements ComponentDefinition {
 
@@ -31,7 +31,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
     @Override
     public String[] getFamilies() {
         // Subclass me
-        return new String[] {};
+        return new String[]{};
     }
 
     @Override
@@ -53,8 +53,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
 
     /**
      * DOC sgandon Comment method "instanciateComponentProperties".
-     * 
-     * @param compProp
+     *
      * @return
      */
     public ComponentProperties instanciateComponentProperties() {
@@ -65,7 +64,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
                 return null;// TODO throw an exception
             } // else keep going
             Constructor c = propertyClass.getConstructor(String.class);
-            compProp = (ComponentProperties) c.newInstance(new Object[] { "root" });
+            compProp = (ComponentProperties) c.newInstance(new Object[]{"root"});
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {

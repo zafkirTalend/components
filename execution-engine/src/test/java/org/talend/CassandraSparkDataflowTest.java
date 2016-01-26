@@ -20,16 +20,14 @@ import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.bd.api.component.spark.SparkInputConf;
 import org.talend.components.bd.api.component.spark.SparkOutputConf;
+import org.talend.components.bd.api.component.x_dataflow.DataflowIO;
+import org.talend.components.bd.api.component.x_dataflow.DataflowInputTransformEvaluator;
+import org.talend.components.bd.api.component.x_dataflow.DataflowOutputTransformEvaluator;
 import org.talend.components.cassandra.metadata.CassandraMetadata;
-import org.talend.components.cassandra.tCassandraInput.CassandraSource;
 import org.talend.components.cassandra.tCassandraInput.spark.CassandraInputSparkConf;
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputSparkProperties;
-import org.talend.components.cassandra.tCassandraOutput.CassandraSink;
 import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.type.CassandraTalendTypesRegistry;
-import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowIO;
-import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowInputTransformEvaluator;
-import org.talend.components.bd.api.component.spark_dataflow.SparkDataflowOutputTransformEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +44,8 @@ public class CassandraSparkDataflowTest {
     @Before
     public void prepare() {
         TypeMapping.registryTypes(new CassandraTalendTypesRegistry());
-        TransformTranslator.addTransformEvaluator(SparkDataflowIO.Read.Bound.class, new SparkDataflowInputTransformEvaluator());
-        TransformTranslator.addTransformEvaluator(SparkDataflowIO.Write.Bound.class, new SparkDataflowOutputTransformEvaluator());
+        TransformTranslator.addTransformEvaluator(DataflowIO.Read.Component.class, new DataflowInputTransformEvaluator());
+        TransformTranslator.addTransformEvaluator(DataflowIO.Write.Component.class, new DataflowOutputTransformEvaluator());
 
         Cluster cluster = Cluster.builder().addContactPoints(HOST).withPort(Integer.valueOf(PORT)).build();
         connect = cluster.connect();
@@ -75,8 +73,8 @@ public class CassandraSparkDataflowTest {
 
         SparkPipelineOptions options = SparkPipelineOptionsFactory.create();
         Pipeline p = Pipeline.create(options);
-        p.apply(SparkDataflowIO.Read.named("tCassandraInput_1").fromProperties(props).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class))
-                .apply(SparkDataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps).withSource(CassandraSink.class));
+        p.apply(DataflowIO.Read.named("tCassandraInput_1").fromProperties(props))
+                .apply(DataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps));
         SparkPipelineRunner.create().run(p);
 
         ResultSet rs = connect.execute("select name from ks.test2");
@@ -104,8 +102,8 @@ public class CassandraSparkDataflowTest {
 
         SparkPipelineOptions options = SparkPipelineOptionsFactory.create();
         Pipeline p = Pipeline.create(options);
-        p.apply(SparkDataflowIO.Read.named("tCassandraInput_1").fromProperties(props).withSparkConf(CassandraInputSparkConf.class).withSource(CassandraSource.class))
-                .apply(SparkDataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps).withSource(CassandraSink.class));
+        p.apply(DataflowIO.Read.named("tCassandraInput_1").fromProperties(props))
+                .apply(DataflowIO.Write.named("tCassandraOutput_1").fromProperties(outProps));
         SparkPipelineRunner.create().run(p);
 
         ResultSet rs = connect.execute("select name from ks.test2");
@@ -131,9 +129,9 @@ public class CassandraSparkDataflowTest {
         SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
         JavaSparkContext jsc = new JavaSparkContext(conf);
         SparkInputConf inputConf = new SparkInputConf();
-        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props, CassandraSource.class);
+        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props);
         SparkOutputConf outputConf = new SparkOutputConf();
-        outputConf.invoke(rdd, outProps, CassandraSink.class);
+        outputConf.invoke(rdd, outProps);
 
         ResultSet rs = connect.execute("select name from ks.test2");
         List<String> result = new ArrayList<>();
@@ -156,9 +154,9 @@ public class CassandraSparkDataflowTest {
         SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
         JavaSparkContext jsc = new JavaSparkContext(conf);
         SparkInputConf inputConf = new CassandraInputSparkConf();
-        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props, CassandraSource.class);
+        JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props);
         SparkOutputConf outputConf = new SparkOutputConf();
-        outputConf.invoke(rdd, outProps, CassandraSink.class);
+        outputConf.invoke(rdd, outProps);
 
         ResultSet rs = connect.execute("select name from ks.test2");
         List<String> result = new ArrayList<>();
