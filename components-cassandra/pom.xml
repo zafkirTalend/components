@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>org.talend.components</groupId>
-            <artifactId>components-df-api</artifactId>
+            <artifactId>components-bd-api</artifactId>
             <version>0.3.0.BUILD-SNAPSHOT</version>
         </dependency>
     </dependencies>

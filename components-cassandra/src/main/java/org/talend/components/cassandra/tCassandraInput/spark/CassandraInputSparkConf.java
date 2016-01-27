@@ -24,6 +24,7 @@ public class CassandraInputSparkConf extends SparkInputConf {
         if (props.useQuery.getBooleanValue()) {
             return super.invoke(jsc, properties);
         } else {
+            //TODO create rowMapper for BaseRowStruct/avro
             CassandraTableScanJavaRDD<String> rdd = CassandraJavaUtil
                     .javaFunctions(jsc)
                     .cassandraTable(props.keyspace.getStringValue(), props.columnFamily.getStringValue(),
