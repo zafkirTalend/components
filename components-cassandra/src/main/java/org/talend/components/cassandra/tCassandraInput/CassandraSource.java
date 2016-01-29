@@ -4,10 +4,11 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.talend.components.api.component.input.Reader;
-import org.talend.components.api.component.input.SingleSplit;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.input.Split;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
@@ -24,7 +25,7 @@ public class CassandraSource implements Source<Row> {
     tCassandraInputDIProperties props;
 
     @Override
-    public void init(ComponentProperties properties) {
+    public void init(ComponentProperties properties) throws TalendConnectionException {
         props = (tCassandraInputDIProperties) properties;
         // TODO connection pool
         Cluster.Builder clusterBuilder = Cluster.builder().addContactPoints(props.host.getStringValue().split(",")).withPort(Integer.valueOf(props.port.getStringValue()));
@@ -58,15 +59,17 @@ public class CassandraSource implements Source<Row> {
     }
 
     @Override
-    public List<SchemaElement> getSchema() {
-        return ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
+    public String getFamilyName() {
+        return CassandraBaseType.FAMILY_NAME;
     }
 
     public class CassandraReader implements Reader<Row> {
+        tCassandraInputDIProperties props;
         ResultSet rs;
         Row row;
 
         CassandraReader(tCassandraInputDIProperties props, Session connection, Split split) {
+            this.props = props;
             if (split instanceof SingleSplit) {
                 rs = connection.execute(props.query.getStringValue());
             }
@@ -97,10 +100,12 @@ public class CassandraSource implements Source<Row> {
         @Override
         public void close() {
         }
+
+        @Override
+        public List<SchemaElement> getSchema() {
+            return ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
+        }
     }
 
-    @Override
-    public String getFamilyName() {
-        return CassandraBaseType.FAMILY_NAME;
-    }
+
 }

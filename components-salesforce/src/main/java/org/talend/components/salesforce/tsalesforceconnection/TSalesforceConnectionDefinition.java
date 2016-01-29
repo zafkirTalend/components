@@ -16,9 +16,11 @@ import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentConnector;
 import org.talend.components.api.component.ComponentConnector.Type;
 import org.talend.components.api.component.ComponentDefinition;
+import org.talend.components.api.component.ConnectionComponentDefinition;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ValidationResult;
 import org.talend.components.api.runtime.ComponentRuntime;
+import org.talend.components.api.runtime.connection.ConnectionManager;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceRuntime;
@@ -27,7 +29,7 @@ import aQute.bnd.annotation.component.Component;
 
 @Component(name = Constants.COMPONENT_BEAN_PREFIX
         + TSalesforceConnectionDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TSalesforceConnectionDefinition extends SalesforceDefinition {
+public class TSalesforceConnectionDefinition extends SalesforceDefinition implements ConnectionComponentDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceConnectionNew"; //$NON-NLS-1$
 
@@ -46,11 +48,11 @@ public class TSalesforceConnectionDefinition extends SalesforceDefinition {
             //
             @Override
             public void inputBegin(ComponentProperties props) throws Exception {
-            	SalesforceConnectionProperties properties = (SalesforceConnectionProperties) props;
-            	ValidationResult result = connectWithResult(properties);
-            	if(ValidationResult.Result.ERROR.equals(result.getStatus())){
-            		throw new Exception(result.getMessage());
-            	}
+                SalesforceConnectionProperties properties = (SalesforceConnectionProperties) props;
+                ValidationResult result = connectWithResult(properties);
+                if (ValidationResult.Result.ERROR.equals(result.getStatus())) {
+                    throw new Exception(result.getMessage());
+                }
             }
 
         };
@@ -66,4 +68,8 @@ public class TSalesforceConnectionDefinition extends SalesforceDefinition {
         return SalesforceConnectionProperties.class;
     }
 
+    @Override
+    public ConnectionManager getConnectionManager() {
+        return new SalesforceConnectionManager();
+    }
 }

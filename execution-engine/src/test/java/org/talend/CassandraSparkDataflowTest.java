@@ -14,7 +14,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.*;
-import org.talend.components.api.component.metadata.Metadata;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.bd.api.component.spark.SparkInputConf;
@@ -67,7 +68,7 @@ public class CassandraSparkDataflowTest {
     }
 
     @Test
-    public void testForSpark() {
+    public void testForSpark() throws TalendConnectionException {
         tCassandraInputSparkProperties props = gettCassandraInputSparkProperties();
         tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
         Metadata m = new CassandraMetadata();
@@ -75,6 +76,7 @@ public class CassandraSparkDataflowTest {
         m.initSchema(outProps);
 
         SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
+        //        conf.set("spark.ui.port", "4041");
         JavaSparkContext jsc = new JavaSparkContext(conf);
         SparkInputConf inputConf = new SparkInputConf();
         JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props);
@@ -92,7 +94,7 @@ public class CassandraSparkDataflowTest {
     }
 
     @Test
-    public void testForSparkWithNativeAPI() {
+    public void testForSparkWithNativeAPI() throws TalendConnectionException {
         tCassandraInputSparkProperties props = gettCassandraInputSparkPropertiesForNativeAPI();
         tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
         Metadata m = new CassandraMetadata();
@@ -100,6 +102,7 @@ public class CassandraSparkDataflowTest {
         m.initSchema(outProps);
 
         SparkConf conf = new SparkConf().setAppName("Test").setMaster("local[1]");
+        //        conf.set("spark.ui.port", "4042");
         JavaSparkContext jsc = new JavaSparkContext(conf);
         SparkInputConf inputConf = new CassandraInputSparkConf();
         JavaRDD<BaseRowStruct> rdd = inputConf.invoke(jsc, props);
@@ -123,7 +126,7 @@ public class CassandraSparkDataflowTest {
      */
     @Ignore
     @Test
-    public void testForSparkDF() {
+    public void testForSparkDF() throws TalendConnectionException {
         tCassandraInputSparkProperties props = gettCassandraInputSparkProperties();
 
         tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();
@@ -154,7 +157,7 @@ public class CassandraSparkDataflowTest {
      */
     @Ignore
     @Test
-    public void testForSparkDFWithNativeInputAPI() {
+    public void testForSparkDFWithNativeInputAPI() throws TalendConnectionException {
         tCassandraInputSparkProperties props = gettCassandraInputSparkPropertiesForNativeAPI();
 
         tCassandraOutputDIProperties outProps = gettCassandraOutputDIProperties();

@@ -12,16 +12,15 @@
 // ============================================================================
 package org.talend.components.api.schema;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * created by pbailly on 5 Nov 2015 Detailled comment
- *
  */
 public class SchemaElementTest {
 
@@ -31,8 +30,25 @@ public class SchemaElementTest {
      */
     @Test
     public void testEnum() {
-        List<String> ref = Arrays.asList("STRING", "BOOLEAN", "INT", "DATE", "DATETIME", "DECIMAL", "FLOAT", "DOUBLE",
-                "BYTE_ARRAY", "ENUM", "DYNAMIC", "GROUP", "SCHEMA");
+        List<String> ref = Arrays.asList("STRING",
+                "BOOLEAN",
+                "INT",
+                "LONG",
+                "DATE",
+                "DATETIME",
+                "DECIMAL",
+                "FLOAT",
+                "DOUBLE",
+                "BYTE_ARRAY",
+                "ENUM",
+                "DYNAMIC",
+                "GROUP",
+                "SCHEMA",
+                "OBJECT",
+                "CHARACTER",
+                "LIST",
+                "SHORT",
+                "BYTE");
         List<SchemaElement.Type> types = Arrays.asList(SchemaElement.Type.values());
         assertEquals(ref.size(), types.size());
         assertEquals(ref.toString(), types.toString());

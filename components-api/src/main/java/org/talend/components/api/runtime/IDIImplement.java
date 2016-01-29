@@ -1,7 +1,7 @@
 package org.talend.components.api.runtime;
 
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.output.Sink;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.output.Sink;
 
 /**
  * Created by bchen on 16-1-25.

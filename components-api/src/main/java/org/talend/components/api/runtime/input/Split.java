@@ -1,4 +1,4 @@
-package org.talend.components.api.component.input;
+package org.talend.components.api.runtime.input;
 
 import java.io.DataInput;
 import java.io.DataOutput;

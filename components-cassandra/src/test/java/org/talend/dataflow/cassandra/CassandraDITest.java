@@ -7,12 +7,13 @@ import com.datastax.driver.core.Session;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.talend.components.api.component.input.Reader;
-import org.talend.components.api.component.input.SingleSplit;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.metadata.Metadata;
-import org.talend.components.api.component.output.Sink;
-import org.talend.components.api.component.output.Writer;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.metadata.Metadata;
+import org.talend.components.api.runtime.output.Sink;
+import org.talend.components.api.runtime.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.TypeMapping;
@@ -55,7 +56,7 @@ public class CassandraDITest {
     }
 
     @Test
-    public void test() {
+    public void test() throws TalendConnectionException {
         tCassandraInputDIProperties props = new tCassandraInputDIProperties("tCassandraInput_1");
         props.init();
         props.host.setValue(HOST);
@@ -86,15 +87,15 @@ public class CassandraDITest {
         sink.init(outProps);
         Writer writer = sink.getRecordWriter();
 
-        Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
 
-        List<SchemaElement> fields = source.getSchema();
+
+        Reader recordReader = source.getRecordReader(new SingleSplit());
+        List<SchemaElement> fields = recordReader.getSchema();
+        Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
         for (SchemaElement field : fields) {
             row_metadata.put(field.getName(), field.getType());
         }
         BaseRowStruct baseRowStruct = new BaseRowStruct(row_metadata);
-
-        Reader recordReader = source.getRecordReader(new SingleSplit());
         while (recordReader.advance()) {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;

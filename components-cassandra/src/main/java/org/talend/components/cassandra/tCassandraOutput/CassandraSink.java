@@ -4,8 +4,9 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import org.talend.components.api.component.output.Sink;
-import org.talend.components.api.component.output.Writer;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.output.Sink;
+import org.talend.components.api.runtime.output.Writer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.Schema;
@@ -13,6 +14,8 @@ import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.cassandra.type.CassandraBaseType;
+
+import java.util.List;
 
 /**
  * Created by bchen on 16-1-17.
@@ -24,7 +27,7 @@ public class CassandraSink implements Sink {
     tCassandraOutputDIProperties props;
 
     @Override
-    public void init(ComponentProperties properties) {
+    public void init(ComponentProperties properties) throws TalendConnectionException {
         props = (tCassandraOutputDIProperties) properties;
         Cluster.Builder clusterBuilder = Cluster.builder().addContactPoints(props.host.getStringValue().split(",")).withPort(Integer.valueOf(props.port.getStringValue()));
         if (props.useAuth.getBooleanValue()) {
@@ -56,6 +59,11 @@ public class CassandraSink implements Sink {
     @Override
     public void initDest() {
         //create keyspace/columnFamily
+    }
+
+    @Override
+    public List<SchemaElement> getSchema() {
+        return null;
     }
 
     public class CassandraRecordWriter implements Writer {

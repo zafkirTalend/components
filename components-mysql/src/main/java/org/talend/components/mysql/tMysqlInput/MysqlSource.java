@@ -1,9 +1,10 @@
 package org.talend.components.mysql.tMysqlInput;
 
-import org.talend.components.api.component.input.Reader;
-import org.talend.components.api.component.input.SingleSplit;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.input.Split;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
@@ -25,7 +26,7 @@ public class MysqlSource implements Source {
     Connection conn;
 
     @Override
-    public void init(ComponentProperties properties) {
+    public void init(ComponentProperties properties) throws TalendConnectionException {
 
         props = (tMysqlInputProperties) properties;
         try {
@@ -54,7 +55,7 @@ public class MysqlSource implements Source {
     @Override
     public Reader getRecordReader(Split split) {
         if (split != null && !(split instanceof SingleSplit)) {
-            List<SchemaElement> columns = getSchema();
+            List<SchemaElement> columns = ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
             StringBuilder columnsStr = new StringBuilder();
             boolean removeEnd = false;
             for (SchemaElement column : columns) {
@@ -106,11 +107,6 @@ public class MysqlSource implements Source {
     }
 
     @Override
-    public List<SchemaElement> getSchema() {
-        return ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
-    }
-
-    @Override
     public String getFamilyName() {
         return MysqlBaseType.FAMILY_NAME;
     }
@@ -156,6 +152,11 @@ public class MysqlSource implements Source {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+
+        @Override
+        public List<SchemaElement> getSchema() {
+            return ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
         }
     }
 

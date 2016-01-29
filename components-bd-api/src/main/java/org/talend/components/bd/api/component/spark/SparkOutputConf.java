@@ -2,7 +2,7 @@ package org.talend.components.bd.api.component.spark;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.api.java.JavaRDD;
-import org.talend.components.api.component.output.Sink;
+import org.talend.components.api.runtime.output.Sink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.IDIImplement;
 import org.talend.components.api.runtime.row.BaseRowStruct;
