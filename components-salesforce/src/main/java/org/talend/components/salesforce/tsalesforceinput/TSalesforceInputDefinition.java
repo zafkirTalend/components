@@ -13,8 +13,7 @@
 package org.talend.components.salesforce.tsalesforceinput;
 
 import org.talend.components.api.Constants;
-import org.talend.components.api.component.ComponentConnector;
-import org.talend.components.api.component.ComponentConnector.Type;
+import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.InputComponentDefinition;
 import org.talend.components.api.runtime.input.Source;
@@ -39,7 +38,7 @@ public class TSalesforceInputDefinition extends SalesforceDefinition implements 
     public TSalesforceInputDefinition() {
         super(COMPONENT_NAME);
 
-        setConnectors(new Connector(ConnectorType.FLOW, 0, 1));
+        setConnectors(new Connector(Connector.ConnectorType.FLOW, 0, 1));
         setTriggers(new Trigger(TriggerType.ITERATE, 1, 1), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
                 new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
     }

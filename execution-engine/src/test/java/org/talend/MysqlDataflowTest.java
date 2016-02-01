@@ -8,6 +8,7 @@ import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.runtime.metadata.Metadata;
@@ -63,6 +64,7 @@ public class MysqlDataflowTest {
     }
 
     @Test
+    @Ignore
     public void test() throws TalendConnectionException {
         tMysqlInputProperties props = new tMysqlInputProperties("tMysqlInput_1");
         props.initForRuntime();

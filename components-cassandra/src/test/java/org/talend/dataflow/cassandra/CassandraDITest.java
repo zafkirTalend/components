@@ -6,6 +6,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.runtime.input.Reader;
@@ -56,6 +57,7 @@ public class CassandraDITest {
     }
 
     @Test
+    @Ignore
     public void test() throws TalendConnectionException {
         tCassandraInputDIProperties props = new tCassandraInputDIProperties("tCassandraInput_1");
         props.init();

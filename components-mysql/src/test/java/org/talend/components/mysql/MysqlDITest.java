@@ -2,6 +2,7 @@ package org.talend.components.mysql;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.runtime.input.Reader;
@@ -66,6 +67,7 @@ public class MysqlDITest {
     }
 
     @Test
+    @Ignore
     public void testSplit() throws TalendConnectionException {
         tMysqlInputProperties props = new tMysqlInputProperties("tMysqlInput_1");
         props.initForRuntime();

@@ -282,14 +282,16 @@ public class PropertiesTest {
 
     @Test
     public void testPropertyValueEvaluation() {
-        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
+        final TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
         props.userId.setValue("java.io.tmpdir");
         assertEquals("java.io.tmpdir", props.userId.getValue());
         props.setValueEvaluator(new PropertyValueEvaluator() {
 
             @Override
             public Object evaluate(Property property, Object storedValue) {
-                return System.getProperty((String) storedValue);
+                if (property == props.userId)
+                    return System.getProperty((String) storedValue);
+                return storedValue;
             }
         });
         assertEquals(System.getProperty("java.io.tmpdir"), props.userId.getValue());

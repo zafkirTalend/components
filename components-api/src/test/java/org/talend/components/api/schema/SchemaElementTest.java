@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * created by pbailly on 5 Nov 2015 Detailled comment
+ *
  */
 public class SchemaElementTest {
 

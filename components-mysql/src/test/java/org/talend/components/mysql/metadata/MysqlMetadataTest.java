@@ -2,6 +2,7 @@ package org.talend.components.mysql.metadata;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
@@ -53,6 +54,7 @@ public class MysqlMetadataTest {
     }
 
     @Test
+    @Ignore
     public void test() {
         MysqlMetadataProperties props = new MysqlMetadataProperties("Metadata");
         props.initForRuntime();
