@@ -12,14 +12,6 @@
 // ============================================================================
 package org.talend.components.test;
 
-import static org.hamcrest.CoreMatchers.*;
-// import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.util.List;
-import java.util.Set;
-
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.NamedThing;
 import org.talend.components.api.component.ComponentDefinition;
@@ -29,6 +21,15 @@ import org.talend.components.api.properties.presentation.Form;
 import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.wizard.ComponentWizardDefinition;
 import org.talend.components.api.wizard.WizardImageType;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Set;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
+
+// import static org.hamcrest.Matchers.*;
 
 public class ComponentTestUtils {
 
@@ -71,10 +72,10 @@ public class ComponentTestUtils {
 
     /**
      * check all properties of a component for i18n, check form i18n, check ComponentProperties title is i18n
-     * 
+     *
      * @param componentService where to get all the components
-     * @param errorCollector used to collect all errors at once. @see
-     * <a href="http://junit.org/apidocs/org/junit/rules/ErrorCollector.html">ErrorCollector</a>
+     * @param errorCollector   used to collect all errors at once. @see
+     *                         <a href="http://junit.org/apidocs/org/junit/rules/ErrorCollector.html">ErrorCollector</a>
      */
     static public void testAlli18n(ComponentService componentService, ErrorCollector errorCollector) {
         Set<ComponentDefinition> allComponents = componentService.getAllComponents();
@@ -93,10 +94,9 @@ public class ComponentTestUtils {
 
     /**
      * check that all Components have theirs internationnalisation properties setup correctly.
-     * 
+     *
      * @param errorCollector
-     * 
-     * @param componentService service to get the components to be checked.
+     * @param checkedProps   service to get the components to be checked.
      */
     static public void checkAllI18N(ComponentProperties checkedProps, ErrorCollector errorCollector) {
         if (checkedProps == null) {
@@ -135,7 +135,7 @@ public class ComponentTestUtils {
 
     /**
      * check that all Components and Wizards have theirs images properly set.
-     * 
+     *
      * @param componentService service to get the components to be checked.
      */
     public static void testAllImages(ComponentService componentService) {
@@ -173,7 +173,7 @@ public class ComponentTestUtils {
 
     /**
      * check that all Components have a runtime not null.
-     * 
+     *
      * @param componentService service to get the components to be checked.
      */
     public static void testAllRuntimeAvaialble(ComponentService componentService) {

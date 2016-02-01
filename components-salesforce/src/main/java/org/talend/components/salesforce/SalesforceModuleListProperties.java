@@ -12,11 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.*;
-
-import java.util.List;
-
+import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.NameAndLabel;
 import org.talend.components.api.properties.Property;
@@ -26,6 +22,12 @@ import org.talend.components.api.properties.presentation.Widget;
 import org.talend.components.api.schema.Schema;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.service.ComponentService;
+import org.talend.components.salesforce.metadata.SalesforceMetadata;
+
+import java.util.List;
+
+import static org.talend.components.api.properties.PropertyFactory.newString;
+import static org.talend.components.api.properties.presentation.Widget.widget;
 
 public class SalesforceModuleListProperties extends ComponentProperties {
 
@@ -71,20 +73,15 @@ public class SalesforceModuleListProperties extends ComponentProperties {
     }
 
     public void beforeFormPresentMain() throws Exception {
-        SalesforceRuntime conn = new SalesforceRuntime();
-        conn.connect(connectionProps);
-        moduleNames = conn.getSchemaNames();
+        SalesforceMetadata metadata = new SalesforceMetadata();
+        moduleNames = metadata.getSchemasName(connectionProps);
         moduleName.setPossibleValues(moduleNames);
         getForm(Form.MAIN).setAllowBack(true);
         getForm(Form.MAIN).setAllowFinish(true);
     }
 
-    public ValidationResult afterFormFinishMain() throws Exception {
-        SalesforceRuntime conn = new SalesforceRuntime();
-        ValidationResult vr = conn.connectWithResult(connectionProps);
-        if (vr.getStatus() != ValidationResult.Result.OK) {
-            return vr;
-        }
+    public ValidationResult afterFormFinishMain() {
+        SalesforceMetadata metadata = new SalesforceMetadata();
 
         String connRepLocation = compService.storeComponentProperties(connectionProps, (String) connectionProps.name.getValue(),
                 repositoryLocation, null);
@@ -93,11 +90,17 @@ public class SalesforceModuleListProperties extends ComponentProperties {
         List<NameAndLabel> selectedModuleNames = (List<NameAndLabel>) moduleName.getValue();
         for (NameAndLabel nl : selectedModuleNames) {
             SalesforceModuleProperties modProps = new SalesforceModuleProperties(nl.getName()).setConnection(connectionProps);
-            modProps.init();
-            Schema schema = conn.getSchema(nl.getName());
+            modProps.initForRuntime();
             modProps.moduleName.setValue(nl.getName());
-            modProps.schema.schema.setValue(schema);
-            compService.storeComponentProperties(modProps, nl.getName(), connRepLocation, schema);
+            try {
+                metadata.initSchema(modProps);
+            } catch (TalendConnectionException e) {
+                ValidationResult vr = new ValidationResult();
+                vr.setMessage(e.getMessage());
+                vr.setStatus(ValidationResult.Result.ERROR);
+                return vr;
+            }
+            compService.storeComponentProperties(modProps, nl.getName(), connRepLocation, (Schema) modProps.schema.schema.getValue());
         }
         return ValidationResult.OK;
     }

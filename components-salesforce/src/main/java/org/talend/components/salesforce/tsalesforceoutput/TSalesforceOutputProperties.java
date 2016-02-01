@@ -12,9 +12,6 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceoutput;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.*;
-
 import org.talend.components.api.properties.Property;
 import org.talend.components.api.properties.ValidationResult;
 import org.talend.components.api.properties.presentation.Form;
@@ -25,6 +22,9 @@ import org.talend.components.api.schema.SchemaElement.Type;
 import org.talend.components.common.SchemaProperties;
 import org.talend.components.salesforce.SalesforceConnectionModuleProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
+
+import static org.talend.components.api.properties.PropertyFactory.*;
+import static org.talend.components.api.properties.presentation.Widget.widget;
 
 public class TSalesforceOutputProperties extends SalesforceConnectionModuleProperties {
 
@@ -37,10 +37,10 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
     public static final String ACTION_DELETE = "DELETE";
 
     public enum OutputAction {
-                              INSERT,
-                              UPDATE,
-                              UPSERT,
-                              DELETE
+        INSERT,
+        UPDATE,
+        UPSERT,
+        DELETE
     }
 
     public Property outputAction = newEnum("outputAction", ACTION_INSERT, ACTION_UPDATE, ACTION_UPSERT, ACTION_DELETE); // $NON-NLS-1$
@@ -85,7 +85,7 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
         }
 
         @Override
-        public ValidationResult afterModuleName() throws Exception {
+        public ValidationResult afterModuleName() {
             ValidationResult validationResult = super.afterModuleName();
             Schema s = (Schema) schema.schema.getValue();
             // FIXME - we probably only want the names, not the SchemaElements

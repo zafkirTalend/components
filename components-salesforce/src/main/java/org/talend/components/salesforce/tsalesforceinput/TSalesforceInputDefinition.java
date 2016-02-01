@@ -13,21 +13,26 @@
 package org.talend.components.salesforce.tsalesforceinput;
 
 import org.talend.components.api.Constants;
-import org.talend.components.api.component.Connector;
-import org.talend.components.api.component.Connector.ConnectorType;
+import org.talend.components.api.component.ComponentConnector;
+import org.talend.components.api.component.ComponentConnector.Type;
 import org.talend.components.api.component.ComponentDefinition;
+import org.talend.components.api.component.InputComponentDefinition;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.schema.column.type.TypesRegistry;
 import org.talend.components.api.component.Trigger;
 import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.salesforce.SalesforceDefinition;
 
 import aQute.bnd.annotation.component.Component;
+import org.talend.components.salesforce.type.SalesforceTalendTypesRegistry;
 
 /**
  * Component that can connect to a salesforce system and get some data out of it.
  */
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceInputDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TSalesforceInputDefinition extends SalesforceDefinition {
+@Component(name = Constants.COMPONENT_BEAN_PREFIX
+        + TSalesforceInputDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+public class TSalesforceInputDefinition extends SalesforceDefinition implements InputComponentDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceInputNew"; //$NON-NLS-1$
 
@@ -49,4 +54,13 @@ public class TSalesforceInputDefinition extends SalesforceDefinition {
         return TSalesforceInputProperties.class;
     }
 
+    @Override
+    public Source getInputRuntime() {
+        return new SalesforceSource();
+    }
+
+    @Override
+    public TypesRegistry getTypesRegistry() {
+        return new SalesforceTalendTypesRegistry();
+    }
 }

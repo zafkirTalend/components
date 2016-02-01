@@ -2,10 +2,11 @@ package org.talend.components.bd.api.component.spark;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.*;
-import org.talend.components.api.component.input.Reader;
-import org.talend.components.api.component.input.SingleSplit;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.input.Split;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
@@ -42,7 +43,11 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
 
     @Override
     public RecordReader<NullWritable, BaseRowStruct> getRecordReader(InputSplit inputSplit, JobConf jobConf, Reporter reporter) throws IOException {
-        return new BDRecordReader(source.getRecordReader(((BDInputSplit) inputSplit).getRealSplit()), source.getSchema(), source.getFamilyName());
+        try {
+            return new BDRecordReader(source.getRecordReader(((BDInputSplit) inputSplit).getRealSplit()), source.getFamilyName());
+        } catch (TalendConnectionException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     @Override
@@ -60,7 +65,11 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
         String componentPropertiesString = jobConf.get("input.props");
         ComponentProperties.Deserialized deserialized = ComponentProperties.fromSerialized(componentPropertiesString);
         ComponentProperties properties = deserialized.properties;
-        this.source.init(properties);
+        try {
+            this.source.init(properties);
+        } catch (TalendConnectionException e) {
+            e.printStackTrace();
+        }
     }
 
     static class BDRecordReader implements RecordReader<NullWritable, BaseRowStruct> {
@@ -68,9 +77,9 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
         private List<SchemaElement> schema;
         private String familyName;
 
-        BDRecordReader(Reader reader, List<SchemaElement> schema, String familyName) {
+        BDRecordReader(Reader reader, String familyName) {
             this.reader = reader;
-            this.schema = schema;
+            this.schema = reader.getSchema();
             this.familyName = familyName;
         }
 

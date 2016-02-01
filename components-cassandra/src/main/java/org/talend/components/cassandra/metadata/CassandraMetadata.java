@@ -3,7 +3,9 @@ package org.talend.components.cassandra.metadata;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
-import org.talend.components.api.component.metadata.Metadata;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.properties.NameAndLabel;
+import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaFactory;
 import org.talend.components.cassandra.type.*;
@@ -52,5 +54,20 @@ public class CassandraMetadata implements Metadata {
             DataType type = column.getType();
             props.schema.addSchemaChild(SchemaFactory.newDataSchemaElement(CassandraBaseType.FAMILY_NAME, column.getName(), mapping.get(type.getName())));
         }
+    }
+
+    @Override
+    public void initSchemaForDynamic(ComponentProperties properties) throws TalendConnectionException {
+
+    }
+
+    @Override
+    public void initSchemaForDynamicWithFirstRow(ComponentProperties properties, Object firstRow) throws TalendConnectionException {
+
+    }
+
+    @Override
+    public List<NameAndLabel> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
+        return null;
     }
 }

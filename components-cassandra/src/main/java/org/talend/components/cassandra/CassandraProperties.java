@@ -1,7 +1,7 @@
 package org.talend.components.cassandra;
 
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.output.Sink;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.output.Sink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.bd.api.component.BDImplement;
 import org.talend.components.bd.api.component.BDType;

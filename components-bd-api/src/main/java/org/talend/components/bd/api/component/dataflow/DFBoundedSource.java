@@ -6,9 +6,10 @@ import com.google.cloud.dataflow.sdk.coders.StringUtf8Coder;
 import com.google.cloud.dataflow.sdk.io.BoundedSource;
 import com.google.cloud.dataflow.sdk.options.DataflowPipelineWorkerPoolOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import org.talend.components.api.component.input.SingleSplit;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.input.Split;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.TypeMapping;
@@ -32,7 +33,11 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-        this.source.init(props);
+        try {
+            this.source.init(props);
+        } catch (TalendConnectionException e) {
+            e.printStackTrace();
+        }
     }
 
     public DFBoundedSource(Split split) {
@@ -68,7 +73,11 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
     @Override
     public BoundedReader createReader(PipelineOptions options) throws IOException {
-        return new DFBoundedReader(this, source.getRecordReader(split));
+        try {
+            return new DFBoundedReader(this, source.getRecordReader(split));
+        } catch (TalendConnectionException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     @Override
@@ -83,9 +92,9 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
     public class DFBoundedReader extends BoundedReader<Map<String, String>> {
         DFBoundedSource dfsource;
-        org.talend.components.api.component.input.Reader reader;
+        org.talend.components.api.runtime.input.Reader reader;
 
-        public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.component.input.Reader reader) {
+        public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.runtime.input.Reader reader) {
             this.dfsource = dfsource;
             this.reader = reader;
         }
@@ -103,7 +112,7 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
         @Override
         public Map<String, String> getCurrent() throws NoSuchElementException {
             Map<String, String> result = new HashMap<>();
-            List<SchemaElement> fields = source.getSchema();
+            List<SchemaElement> fields = reader.getSchema();
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {

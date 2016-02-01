@@ -6,7 +6,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.talend.components.api.component.input.Source;
+import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.IDIImplement;
 import org.talend.components.api.runtime.row.BaseRowStruct;

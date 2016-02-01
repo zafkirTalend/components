@@ -12,11 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.*;
-
-import java.util.List;
-
+import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.NameAndLabel;
 import org.talend.components.api.properties.Property;
@@ -24,9 +20,16 @@ import org.talend.components.api.properties.ValidationResult;
 import org.talend.components.api.properties.presentation.Form;
 import org.talend.components.api.properties.presentation.Widget;
 import org.talend.components.common.SchemaProperties;
+import org.talend.components.salesforce.metadata.SalesforceMetadata;
+
+import java.util.List;
+
+import static org.talend.components.api.properties.PropertyFactory.newEnum;
+import static org.talend.components.api.properties.presentation.Widget.widget;
 
 public class SalesforceModuleProperties extends ComponentProperties {
 
+    //TODO: why not use extend instead of property
     private SalesforceConnectionProperties connection;
 
     //
@@ -47,6 +50,10 @@ public class SalesforceModuleProperties extends ComponentProperties {
         return this;
     }
 
+    public SalesforceConnectionProperties getConnection() {
+        return connection;
+    }
+
     @Override
     public void setupLayout() {
         super.setupLayout();
@@ -63,23 +70,30 @@ public class SalesforceModuleProperties extends ComponentProperties {
 
     // consider beforeActivate and beforeRender (change after to afterActivate)l
 
-    public ValidationResult beforeModuleName() throws Exception {
-        SalesforceRuntime conn = new SalesforceRuntime();
-        ValidationResult vr = conn.connectWithResult(connection);
-        if (vr.getStatus() == ValidationResult.Result.OK) {
-            List<NameAndLabel> moduleNames = conn.getSchemaNames();
+    public ValidationResult beforeModuleName() {
+        SalesforceMetadata metadata = new SalesforceMetadata();
+        try {
+            List<NameAndLabel> moduleNames = metadata.getSchemasName(connection);
             moduleName.setPossibleValues(moduleNames);
+        } catch (TalendConnectionException e) {
+            ValidationResult vr = new ValidationResult();
+            vr.setStatus(ValidationResult.Result.ERROR);
+            vr.setMessage(e.getMessage());
         }
-        return vr;
+        return ValidationResult.OK;
     }
 
-    public ValidationResult afterModuleName() throws Exception {
-        SalesforceRuntime conn = new SalesforceRuntime();
-        ValidationResult vr = conn.connectWithResult(connection);
-        if (vr.getStatus() == ValidationResult.Result.OK) {
-            schema.schema.setValue(conn.getSchema(moduleName.getStringValue()));
+    public ValidationResult afterModuleName() {
+        SalesforceMetadata metadata = new SalesforceMetadata();
+        try {
+            metadata.initSchema(this);
+        } catch (TalendConnectionException e) {
+            ValidationResult vr = new ValidationResult();
+            vr.setStatus(ValidationResult.Result.ERROR);
+            vr.setMessage(e.getMessage());
+            return vr;
         }
-        return vr;
+        return ValidationResult.OK;
     }
 
 }

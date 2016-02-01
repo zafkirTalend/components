@@ -12,18 +12,16 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import java.io.BufferedWriter;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.namespace.QName;
-
+import com.sforce.async.AsyncApiException;
+import com.sforce.async.BulkConnection;
+import com.sforce.soap.partner.*;
+import com.sforce.soap.partner.Error;
+import com.sforce.soap.partner.fault.LoginFault;
+import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.ConnectionException;
+import com.sforce.ws.ConnectorConfig;
+import com.sforce.ws.SessionRenewer;
+import com.sforce.ws.bind.XmlObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,25 +41,11 @@ import org.talend.components.salesforce.tsalesforceconnection.TSalesforceConnect
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
 
-import com.sforce.async.AsyncApiException;
-import com.sforce.async.BulkConnection;
-import com.sforce.soap.partner.DeleteResult;
-import com.sforce.soap.partner.DescribeGlobalResult;
-import com.sforce.soap.partner.DescribeGlobalSObjectResult;
-import com.sforce.soap.partner.DescribeSObjectResult;
-import com.sforce.soap.partner.Error;
-import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.PartnerConnection;
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.SaveResult;
-import com.sforce.soap.partner.SessionHeader_element;
-import com.sforce.soap.partner.UpsertResult;
-import com.sforce.soap.partner.fault.LoginFault;
-import com.sforce.soap.partner.sobject.SObject;
-import com.sforce.ws.ConnectionException;
-import com.sforce.ws.ConnectorConfig;
-import com.sforce.ws.SessionRenewer;
-import com.sforce.ws.bind.XmlObject;
+import javax.xml.namespace.QName;
+import java.io.BufferedWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.*;
 
 public class SalesforceRuntime extends ComponentRuntime {
 
@@ -184,11 +168,11 @@ public class SalesforceRuntime extends ComponentRuntime {
         bulkConfig.setCompression(true);
         bulkConfig.setTraceMessage(false);
         bulkConnection = new BulkConnection(bulkConfig);
-        if(container!=null){
-        	String currentComponent = container.getCurrentComponentName();
-        	if(currentComponent!=null && currentComponent.startsWith(TSalesforceConnectionDefinition.COMPONENT_NAME)){
-        		container.getGlobalMap().put(currentComponent,bulkConnection);
-        	}
+        if (container != null) {
+            String currentComponent = container.getCurrentComponentName();
+            if (currentComponent != null && currentComponent.startsWith(TSalesforceConnectionDefinition.COMPONENT_NAME)) {
+                container.getGlobalMap().put(currentComponent, bulkConnection);
+            }
         }
     }
 
@@ -201,11 +185,11 @@ public class SalesforceRuntime extends ComponentRuntime {
             config.setAuthEndpoint(SalesforceConnectionProperties.URL);
         }
         connection = new PartnerConnection(config);
-        if(container!=null){
-        	String currentComponent = container.getCurrentComponentName();
-        	if(currentComponent!=null && currentComponent.startsWith(TSalesforceConnectionDefinition.COMPONENT_NAME)){
-        		container.getGlobalMap().put(currentComponent,connection);
-        	}
+        if (container != null) {
+            String currentComponent = container.getCurrentComponentName();
+            if (currentComponent != null && currentComponent.startsWith(TSalesforceConnectionDefinition.COMPONENT_NAME)) {
+                container.getGlobalMap().put(currentComponent, connection);
+            }
         }
         if (properties.bulkConnection.getBooleanValue()) {
             connectBulk(properties, config);
@@ -233,13 +217,13 @@ public class SalesforceRuntime extends ComponentRuntime {
 
     @Override
     public void connect(ComponentProperties p) throws ConnectionException, AsyncApiException {
-    	SalesforceConnectionProperties properties = (SalesforceConnectionProperties) p;
+        SalesforceConnectionProperties properties = (SalesforceConnectionProperties) p;
         String refedComponentId = properties.referencedComponentId.getStringValue();
         if (refedComponentId != null && container != null) {
-            if(!refedComponentId.equals(container.getCurrentComponentName())){
-                connection = (PartnerConnection)container.getGlobalMap().get(refedComponentId);
-                if(connection == null){
-                    throw new ConnectionException("Can't find the shared connection instance with refedComponentId: "+refedComponentId);
+            if (!refedComponentId.equals(container.getCurrentComponentName())) {
+                connection = (PartnerConnection) container.getGlobalMap().get(refedComponentId);
+                if (connection == null) {
+                    throw new ConnectionException("Can't find the shared connection instance with refedComponentId: " + refedComponentId);
                 }
                 return;
             }
@@ -293,6 +277,7 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
+    @Deprecated
     public List<NameAndLabel> getSchemaNames() throws ConnectionException {
         List<NameAndLabel> returnList = new ArrayList<>();
         DescribeGlobalResult result = connection.describeGlobal();
@@ -304,6 +289,7 @@ public class SalesforceRuntime extends ComponentRuntime {
         return returnList;
     }
 
+    @Deprecated
     public void setupSchemaElement(Field field, SchemaElement element) {
         String type = field.getType().toString();
         if (type.equals("boolean")) { //$NON-NLS-1$
@@ -334,12 +320,13 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
+    @Deprecated
     public Schema getSchema(String module) throws ConnectionException {
         Schema schema = SchemaFactory.newSchema();
         SchemaElement root = SchemaFactory.newSchemaElement("Root");
         schema.setRoot(root);
 
-        DescribeSObjectResult[] describeSObjectResults = connection.describeSObjects(new String[] { module });
+        DescribeSObjectResult[] describeSObjectResults = connection.describeSObjects(new String[]{module});
         Field fields[] = describeSObjectResults[0].getFields();
         for (Field field : fields) {
             SchemaElement child = PropertyFactory.newProperty(field.getName());
@@ -502,18 +489,18 @@ public class SalesforceRuntime extends ComponentRuntime {
             }
 
             switch ((TSalesforceOutputProperties.OutputAction) sprops.outputAction.getValue()) {
-            case INSERT:
-                insert(so);
-                break;
-            case UPDATE:
-                update(so);
-                break;
-            case UPSERT:
-                upsert(so);
-                break;
-            case DELETE:
-                // See below
-                throw new RuntimeException("Impossible");
+                case INSERT:
+                    insert(so);
+                    break;
+                case UPDATE:
+                    update(so);
+                    break;
+                case UPSERT:
+                    upsert(so);
+                    break;
+                case DELETE:
+                    // See below
+                    throw new RuntimeException("Impossible");
             }
         } else { // DELETE
             String id = getIdValue(row);
@@ -556,16 +543,16 @@ public class SalesforceRuntime extends ComponentRuntime {
     protected void addSObjectField(SObject sObject, SchemaElement se, Object value) {
         Object valueToAdd;
         switch (se.getType()) {
-        case BYTE_ARRAY:
-            valueToAdd = Charset.defaultCharset().decode(ByteBuffer.wrap((byte[]) value)).toString();
-            break;
-        case DATE:
-        case DATETIME:
-            valueToAdd = container.formatDate((Date) value, se.getPattern());
-            break;
-        default:
-            valueToAdd = value;
-            break;
+            case BYTE_ARRAY:
+                valueToAdd = Charset.defaultCharset().decode(ByteBuffer.wrap((byte[]) value)).toString();
+                break;
+            case DATE:
+            case DATETIME:
+                valueToAdd = container.formatDate((Date) value, se.getPattern());
+                break;
+            default:
+                valueToAdd = value;
+                break;
         }
         sObject.setField(se.getName(), valueToAdd);
     }

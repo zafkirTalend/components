@@ -3,10 +3,11 @@ package org.talend.components.mysql;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.talend.components.api.component.input.Reader;
-import org.talend.components.api.component.input.Source;
-import org.talend.components.api.component.input.Split;
-import org.talend.components.api.component.metadata.Metadata;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
+import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.api.schema.column.type.TypeMapping;
@@ -65,7 +66,7 @@ public class MysqlDITest {
     }
 
     @Test
-    public void testSplit() {
+    public void testSplit() throws TalendConnectionException {
         tMysqlInputProperties props = new tMysqlInputProperties("tMysqlInput_1");
         props.initForRuntime();
         props.HOST.setValue(HOST);
@@ -85,15 +86,15 @@ public class MysqlDITest {
 
         Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
 
-        List<SchemaElement> fields = source.getSchema();
-        for (SchemaElement field : fields) {
-            row_metadata.put(field.getName(), field.getType());
-        }
         List<BaseRowStruct> rows = new ArrayList<>();
 
         Split[] splits = source.getSplit(2);
 
         Reader reader = source.getRecordReader(splits[0]);
+        List<SchemaElement> fields = reader.getSchema();
+        for (SchemaElement field : fields) {
+            row_metadata.put(field.getName(), field.getType());
+        }
         while (reader.advance()) {
             BaseRowStruct baseRowStruct = new BaseRowStruct(row_metadata);
             for (SchemaElement column : fields) {
