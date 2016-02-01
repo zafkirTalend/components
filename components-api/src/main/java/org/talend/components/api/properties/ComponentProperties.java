@@ -12,8 +12,14 @@
 // ============================================================================
 package org.talend.components.api.properties;
 
-import com.cedarsoftware.util.io.JsonReader;
-import com.cedarsoftware.util.io.JsonWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import org.talend.components.api.ComponentDesigner;
 import org.talend.components.api.NamedThing;
 import org.talend.components.api.ToStringIndent;
@@ -30,12 +36,8 @@ import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.security.CryptoHelper;
 
-import javax.validation.constraints.NotNull;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import com.cedarsoftware.util.io.JsonReader;
+import com.cedarsoftware.util.io.JsonWriter;
 
 /**
  * The {@code ComponentProperties} class contains the definitions of the properties associated with a component. These
@@ -44,16 +46,16 @@ import java.util.List;
  * definition and as well no custom graphical UI is required for most components. The types of UIs that can be defined
  * include those for desktop (Eclipse), web, and scripting. All of these will use the code defined here for their
  * construction and validation.
- * <p>
+ * <p/>
  * All aspects of the properties are defined in a subclass of this class using the {@link Property},
  * {@Link PresentationItem}, {@link Widget}, and {@link Form} classes. In addition in cases where user interface
  * decisions are made in code, methods can be added to the subclass to influence the flow of the user interface and help
  * with validation.
- * <p>
+ * <p/>
  * Each property can be a Java type, both simple types and collections are permitted. In addition,
  * {@code ComponentProperties} classes can be composed allowing hierarchies of properties and collections of properties
  * to be reused.
- * <p>
+ * <p/>
  * A property is defined using a field in a subclass of this class. Each property field is initialized with one of the
  * following:
  * <ol>
@@ -63,11 +65,11 @@ import java.util.List;
  * <li>For a presentation item that's not actually a property, but is necessary for the user interface, a
  * {@link PresentationItem}.</li>
  * </ol>
- * <p>
+ * <p/>
  * For construction of user interfaces, properties are grouped into {@link Form} objects which can be presented in
  * various ways by the user interface (for example, a wizard page, a tab in a property sheet, or a dialog). The same
  * property can appear in multiple forms.
- * <p>
+ * <p/>
  * Methods can be added in subclasses according to the conventions below to help direct the UI. These methods will be
  * automatically called by the UI code.
  * <ul>
@@ -79,7 +81,7 @@ import java.util.List;
  * This will return a {@link ValidationResult} object with any error information.</li>
  * <li>{@code beforeForm&lt;FormName&gt;} - Called before the form is displayed.</li>
  * </ul>
- * <p>
+ * <p/>
  * <b>WARNING</b> - A property shall be created as instance field before the constructor is called so that this abstract
  * constructor can attach i18n translator to the properties. If you want to create the property later you'll have to
  * call {@link SchemaElement#setI18nMessageFormater(I18nMessages)} manually.
@@ -155,6 +157,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
             Thread.currentThread().setContextClassLoader(ComponentProperties.class.getClassLoader());
             d.properties = (ComponentProperties) JsonReader.jsonToJava(serialized);
             d.properties.handlePropEncryption(!ENCRYPT);
+            d.properties.setupPropertiesPostDeserialization();
         } finally {
             Thread.currentThread().setContextClassLoader(originalContextClassLoader);
         }
@@ -162,9 +165,25 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
     }
 
     /**
+     * This will setup all ComponentProperties after the deserialization process. For now it will just setup i18N
+     */
+    private void setupPropertiesPostDeserialization() {
+        initLayout();
+        List<NamedThing> properties = getProperties();
+        for (NamedThing prop : properties) {
+            if (prop instanceof ComponentProperties) {
+                ((ComponentProperties) prop).setupPropertiesPostDeserialization();
+            } else {
+                prop.setI18nMessageFormater(getI18nMessageFormater());
+            }
+        }
+
+    }
+
+    /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
-     *
+     * 
      * @param name, uniquely identify the property among other properties when used as nested properties.
      */
     public ComponentProperties(String name) {
@@ -174,7 +193,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * Must be called once the class is instanciated to setup the properties and the layout
-     *
+     * 
      * @return this instance
      */
     public ComponentProperties init() {
@@ -186,7 +205,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * only initilize the properties but not the layout.
-     *
+     * 
      * @return this instance
      */
     public ComponentProperties initForRuntime() {
@@ -233,10 +252,12 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
     }
 
     /**
-     * DOC sgandon Comment method "initializeField".
+     * This shall set the value holder for all the properties, set the i18n formatter of this current class to the
+     * properties so that the i18n values are computed agains this class message properties. This calls the
+     * initProperties for all field of type ComponentProperties
      *
-     * @param f
-     * @param value
+     * @param f field to be initialized
+     * @param value associated with this field, never null
      */
     public void initializeField(Field f, NamedThing value) {
         // check that field name matches the NamedThing name
@@ -287,7 +308,11 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
      */
     public String toSerialized() {
         handlePropEncryption(ENCRYPT);
+        List<Form> forms = internal.getForms();
+        // The forms are recreated upon deserialization
+        internal.resetForms();
         String ser = JsonWriter.objectToJson(this);
+        internal.setforms(forms);
         handlePropEncryption(!ENCRYPT);
         return ser;
     }
@@ -318,7 +343,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * This is called every time the presentation of the components properties needs to be updated.
-     * <p>
+     *
      * Note: This is automatically called at startup after all of the setupLayout() calls are done. It only needs to be
      * called after that when the layout has been changed.
      */
@@ -352,7 +377,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * Returns the list of properties associated with this object.
-     *
+     * 
      * @return all properties associated with this object (including those defined in superclasses).
      */
     public List<NamedThing> getProperties() {
@@ -367,7 +392,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
                         NamedThing se = (NamedThing) fValue;
                         properties.add(se);
                     } // else not initalized but this is already handled in the initProperties that must be called
-                    // before the getProperties
+                      // before the getProperties
                 }
             } catch (IllegalAccessException e) {
                 throw new ComponentException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
@@ -378,7 +403,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * is this object of type Property or ComponenetProperties, the properties type handle by this class.
-     *
+     * 
      * @param clazz, the class to be tested
      * @return true if the clazz inherites from Property or ComponenetProperties
      */
@@ -389,13 +414,13 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
     /**
      * Returns Property or a CompoentProperties as specified by a qualifed property name string representing the field
      * name.
-     * <p>
+     * <p/>
      * The first component is the property name within this object. The optional subsequent components, separated by a
      * "." are property names in the nested {@link ComponentProperties} objects.
      *
      * @param name a qualified property name
      * @return the Property or Componenent denoted with the name or null if the final field is not found
-     * @throws IllegalArgumentException is the path before the last does not point to a CompoenentProperties
+     * @exception IllegalArgumentException is the path before the last does not point to a CompoenentProperties
      */
     public NamedThing getProperty(@NotNull String name) {
         // TODO make the same behaviour if the nested ComponentProperties name is not found or the last properties is
@@ -437,7 +462,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
 
     /**
      * Returns the property in this object specified by a the simple (unqualified) property name.
-     *
+     * 
      * @param name a simple property name.
      */
     protected NamedThing getLocalProperty(@NotNull String name) {
@@ -458,6 +483,10 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
         ((Property) p).setValue(value);
     }
 
+    public void setValueEvaluator(PropertyValueEvaluator ve) {
+        internal.setValueEvaluator(ve);
+    }
+
     /**
      * Returns the {@link ValidationResult} for the property being validated if requested.
      *
@@ -470,7 +499,7 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
     /**
      * Copy all of the values from the specified {@link ComponentProperties} object. This includes the values from any
      * nested objects.
-     *
+     * 
      * @param props
      */
     public void copyValuesFrom(ComponentProperties props) {
@@ -653,4 +682,5 @@ public abstract class ComponentProperties extends TranslatableImpl implements Na
         }
         return sb.toString();
     }
+
 }

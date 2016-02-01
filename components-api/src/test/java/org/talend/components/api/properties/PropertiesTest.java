@@ -16,7 +16,9 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 import org.talend.components.api.NamedThing;
 import org.talend.components.api.properties.presentation.Form;
 import org.talend.components.api.service.testcomponent.ComponentPropertiesWithDefinedI18N;
@@ -28,10 +30,13 @@ import org.talend.components.test.ComponentTestUtils;
 
 public class PropertiesTest {
 
+    @Rule
+    public ErrorCollector errorCollector = new ErrorCollector();
+
     @Test
     public void testSerializeProp() {
         ComponentProperties props = new TestComponentProperties("test").init();
-        ComponentTestUtils.checkSerialize(props);
+        ComponentTestUtils.checkSerialize(props, errorCollector);
     }
 
     @Test
@@ -45,7 +50,7 @@ public class PropertiesTest {
         NestedComponentProperties nestedProp = (NestedComponentProperties) props.getProperty("nestedProps");
         nestedProp.aGreatProperty.setValue("greatness");
         assertNotNull(nestedProp);
-        props = (TestComponentProperties) ComponentTestUtils.checkSerialize(props);
+        props = (TestComponentProperties) ComponentTestUtils.checkSerialize(props, errorCollector);
 
         // Should be encrypted
         assertFalse(props.toSerialized().contains("testPassword"));
@@ -62,6 +67,15 @@ public class PropertiesTest {
         assertEquals("userId", props.getProperty("userId").getName());
         assertEquals("integer", props.getProperty("integer").getName());
         assertEquals("aGreatProperty", props.getProperty("nestedProps.aGreatProperty").getName());
+    }
+
+    @Test
+    public void testGetValue(){
+        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").init();
+        props.integer.setValue(1000);
+        assertEquals(1000,props.integer.getIntValue());
+        props.integer.setValue("1000");
+        assertEquals(1000,props.integer.getIntValue());
     }
 
     @Test
@@ -165,7 +179,7 @@ public class PropertiesTest {
         TestComponentProperties componentProperties = (TestComponentProperties) new TestComponentProperties("test").init();
         List<NamedThing> pList = componentProperties.getProperties();
         assertTrue(pList.get(0) != null);
-        assertEquals(13, pList.size());
+        assertEquals(14, pList.size());
     }
 
     @Test
@@ -215,7 +229,16 @@ public class PropertiesTest {
     @Test
     public void testSerialize() {
         TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").init();
-        ComponentTestUtils.checkSerialize(props);
+        ComponentTestUtils.checkSerialize(props, errorCollector);
+    }
+
+    @Test
+    // TCOMP-73 Form layout not right after properties deserialized
+    public void testSerializeRefresh() {
+        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").init();
+        props.suppressDate.setValue(Boolean.TRUE);
+        props = (TestComponentProperties) ComponentTestUtils.checkSerialize(props, errorCollector);
+        assertFalse(props.getForm("restoreTest").getWidget("date").isVisible());
     }
 
     @Test
@@ -231,6 +254,76 @@ public class PropertiesTest {
         TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
         assertNull(props.initLater.getValue());
         assertNull(props.mainForm);
+    }
+
+    @Test
+    public void testTaggedValue() {
+        Property property = new Property("haha"); //$NON-NLS-1$
+        assertNull(property.getTaggedValue("foo"));
+        assertNull(property.getTaggedValue("bar"));
+        property.setTaggedValue("foo", "fooValue");
+        property.setTaggedValue("bar", "barValue");
+        assertEquals("fooValue", property.getTaggedValue("foo"));
+        assertEquals("barValue", property.getTaggedValue("bar"));
+    }
+
+    @Test
+    public void testTaggedValuesSerialization() {
+        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
+        assertNull(props.initLater.getTaggedValue("foo"));
+        assertNull(props.initLater.getTaggedValue("bar"));
+        props.initLater.setTaggedValue("foo", "fooValue");
+        props.initLater.setTaggedValue("bar", "barValue");
+        String s = props.toSerialized();
+        ComponentProperties desProp = ComponentProperties.fromSerialized(s).properties;
+        assertEquals("fooValue", ((Property) desProp.getProperty("initLater")).getTaggedValue("foo"));
+        assertEquals("barValue", ((Property) desProp.getProperty("initLater")).getTaggedValue("bar"));
+    }
+
+    @Test
+    public void testPropertyValueEvaluation() {
+        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
+        props.userId.setValue("java.io.tmpdir");
+        assertEquals("java.io.tmpdir", props.userId.getValue());
+        props.setValueEvaluator(new PropertyValueEvaluator() {
+
+            @Override
+            public Object evaluate(Property property, Object storedValue) {
+                return System.getProperty((String) storedValue);
+            }
+        });
+        assertEquals(System.getProperty("java.io.tmpdir"), props.userId.getValue());
+        String s = props.toSerialized();
+        TestComponentProperties desProp = (TestComponentProperties) ComponentProperties.fromSerialized(s).properties;
+        assertEquals("java.io.tmpdir", desProp.userId.getValue());
+
+    }
+
+    @Test
+    public void testPropertyValueEvaluationWithTaggedValueExample() {
+        TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("test").initForRuntime();
+        props.userId.setValue("java.io.tmpdir");
+        // use tagged value to tell the proprty is a system property.
+        props.userId.setTaggedValue("value.language", "sys.prop");
+        assertEquals("java.io.tmpdir", props.userId.getValue());
+        props.setValueEvaluator(new PropertyValueEvaluator() {
+
+            @Override
+            public Object evaluate(Property property, Object storedValue) {
+                // if the prop is a system property then evaluate it.
+                Object taggedValue = property.getTaggedValue("value.language");
+                if (taggedValue != null && ((String) taggedValue).equals("sys.prop")) {
+                    return System.getProperty((String) storedValue);
+                } else {// otherwise just return the value.
+                    return storedValue;
+                }
+            }
+        });
+        assertEquals(System.getProperty("java.io.tmpdir"), props.userId.getValue());
+        String s = props.toSerialized();
+        TestComponentProperties desProp = (TestComponentProperties) ComponentProperties.fromSerialized(s).properties;
+        assertEquals("java.io.tmpdir", desProp.userId.getValue());
+
     }
 
 }
