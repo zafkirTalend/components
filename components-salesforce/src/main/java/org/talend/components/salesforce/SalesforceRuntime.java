@@ -12,16 +12,18 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import com.sforce.async.AsyncApiException;
-import com.sforce.async.BulkConnection;
-import com.sforce.soap.partner.*;
-import com.sforce.soap.partner.Error;
-import com.sforce.soap.partner.fault.LoginFault;
-import com.sforce.soap.partner.sobject.SObject;
-import com.sforce.ws.ConnectionException;
-import com.sforce.ws.ConnectorConfig;
-import com.sforce.ws.SessionRenewer;
-import com.sforce.ws.bind.XmlObject;
+import java.io.BufferedWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.namespace.QName;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +43,25 @@ import org.talend.components.salesforce.tsalesforceconnection.TSalesforceConnect
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
 
-import javax.xml.namespace.QName;
-import java.io.BufferedWriter;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.*;
+import com.sforce.async.AsyncApiException;
+import com.sforce.async.BulkConnection;
+import com.sforce.soap.partner.DeleteResult;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeGlobalSObjectResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
+import com.sforce.soap.partner.Error;
+import com.sforce.soap.partner.Field;
+import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.SaveResult;
+import com.sforce.soap.partner.SessionHeader_element;
+import com.sforce.soap.partner.UpsertResult;
+import com.sforce.soap.partner.fault.LoginFault;
+import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.ConnectionException;
+import com.sforce.ws.ConnectorConfig;
+import com.sforce.ws.SessionRenewer;
+import com.sforce.ws.bind.XmlObject;
 
 public class SalesforceRuntime extends ComponentRuntime {
 
@@ -277,7 +293,6 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
-    @Deprecated
     public List<NameAndLabel> getSchemaNames() throws ConnectionException {
         List<NameAndLabel> returnList = new ArrayList<>();
         DescribeGlobalResult result = connection.describeGlobal();
@@ -289,7 +304,6 @@ public class SalesforceRuntime extends ComponentRuntime {
         return returnList;
     }
 
-    @Deprecated
     public void setupSchemaElement(Field field, SchemaElement element) {
         String type = field.getType().toString();
         if (type.equals("boolean")) { //$NON-NLS-1$
@@ -320,7 +334,6 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
-    @Deprecated
     public Schema getSchema(String module) throws ConnectionException {
         Schema schema = SchemaFactory.newSchema();
         SchemaElement root = SchemaFactory.newSchemaElement("Root");
@@ -465,7 +478,7 @@ public class SalesforceRuntime extends ComponentRuntime {
     @Override
     public void outputMain(Map<String, Object> row) throws Exception {
         TSalesforceOutputProperties sprops = (TSalesforceOutputProperties) properties;
-        if (sprops.outputAction.getValue() != TSalesforceOutputProperties.OutputAction.DELETE) {
+        if (!TSalesforceOutputProperties.ACTION_DELETE.equals(sprops.outputAction.getValue())) {
             SObject so = new SObject();
             so.setType(sprops.module.moduleName.getStringValue());
 
@@ -488,19 +501,19 @@ public class SalesforceRuntime extends ComponentRuntime {
                 }
             }
 
-            switch ((TSalesforceOutputProperties.OutputAction) sprops.outputAction.getValue()) {
-                case INSERT:
-                    insert(so);
-                    break;
-                case UPDATE:
-                    update(so);
-                    break;
-                case UPSERT:
-                    upsert(so);
-                    break;
-                case DELETE:
-                    // See below
-                    throw new RuntimeException("Impossible");
+            switch (TSalesforceOutputProperties.OutputAction.valueOf(sprops.outputAction.getStringValue())) {
+            case INSERT:
+                insert(so);
+                break;
+            case UPDATE:
+                update(so);
+                break;
+            case UPSERT:
+                upsert(so);
+                break;
+            case DELETE:
+                // See below
+                throw new RuntimeException("Impossible");
             }
         } else { // DELETE
             String id = getIdValue(row);
