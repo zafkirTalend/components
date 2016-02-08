@@ -2,7 +2,7 @@ package org.talend.components.api.runtime.output;
 
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.SchemaElement;
+import org.talend.daikon.schema.SchemaElement;
 
 import java.io.Serializable;
 import java.util.List;

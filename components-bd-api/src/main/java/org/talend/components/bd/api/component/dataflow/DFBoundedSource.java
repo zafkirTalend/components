@@ -11,9 +11,9 @@ import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.TypeMapping;
-import org.talend.components.api.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.io.IOException;
 import java.util.*;

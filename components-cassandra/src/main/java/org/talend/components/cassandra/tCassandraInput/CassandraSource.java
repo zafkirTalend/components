@@ -10,9 +10,9 @@ import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.cassandra.type.CassandraBaseType;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
 
 import java.util.List;
 

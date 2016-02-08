@@ -1,10 +1,10 @@
 package org.talend.components.cassandra.tCassandraConfiguration;
 
-import org.talend.components.api.properties.Property;
 import org.talend.components.cassandra.CassandraProperties;
+import org.talend.daikon.properties.Property;
 
-import static org.talend.components.api.properties.PropertyFactory.newBoolean;
-import static org.talend.components.api.properties.PropertyFactory.newString;
+import static org.talend.daikon.properties.PropertyFactory.newBoolean;
+import static org.talend.daikon.properties.PropertyFactory.newString;
 
 /**
  * Created by bchen on 16-1-11.

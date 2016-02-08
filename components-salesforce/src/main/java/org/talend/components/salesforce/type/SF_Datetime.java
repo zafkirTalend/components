@@ -1,8 +1,8 @@
 package org.talend.components.salesforce.type;
 
 import com.sforce.soap.partner.sobject.SObject;
-import org.talend.components.api.schema.column.type.utils.FastDateParser;
-import org.talend.components.api.schema.column.type.utils.ParserUtils;
+import org.talend.daikon.schema.type.utils.FastDateParser;
+import org.talend.daikon.schema.type.utils.ParserUtils;
 
 import java.text.DateFormat;
 import java.util.Date;

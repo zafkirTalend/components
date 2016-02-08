@@ -9,13 +9,13 @@ import org.talend.components.api.runtime.input.Reader;
 import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.salesforce.metadata.SalesforceMetadata;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionObject;
 import org.talend.components.salesforce.type.SalesforceBaseType;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -4,11 +4,11 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
 import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.properties.NameAndLabel;
 import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.SchemaFactory;
 import org.talend.components.cassandra.type.*;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.schema.SchemaFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +67,7 @@ public class CassandraMetadata implements Metadata {
     }
 
     @Override
-    public List<NameAndLabel> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
+    public List<NamedThing> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
         return null;
     }
 }

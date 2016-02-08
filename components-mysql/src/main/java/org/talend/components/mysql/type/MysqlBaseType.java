@@ -1,6 +1,6 @@
 package org.talend.components.mysql.type;
 
-import org.talend.components.api.schema.column.type.ExternalBaseType;
+import org.talend.daikon.schema.type.ExternalBaseType;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

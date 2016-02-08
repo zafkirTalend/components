@@ -1,8 +1,13 @@
 package org.talend.components.cassandra.tCassandraInput;
 
-import org.talend.components.api.properties.Property;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
+import org.talend.daikon.properties.Property;
+
+import static org.talend.daikon.properties.PropertyFactory.newBoolean;
+import static org.talend.daikon.properties.PropertyFactory.newEnum;
+import static org.talend.daikon.properties.PropertyFactory.newLong;
+import static org.talend.daikon.properties.PropertyFactory.newString;
+import static org.talend.daikon.properties.PropertyFactory.newTable;
 
 /**
  * Created by bchen on 16-1-13.

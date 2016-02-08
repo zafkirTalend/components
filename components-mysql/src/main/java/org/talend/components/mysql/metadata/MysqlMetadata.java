@@ -1,13 +1,13 @@
 package org.talend.components.mysql.metadata;
 
 import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.properties.NameAndLabel;
 import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.SchemaFactory;
 import org.talend.components.mysql.type.MysqlBaseType;
 import org.talend.components.mysql.type.Mysql_INT;
 import org.talend.components.mysql.type.Mysql_VARCHAR;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.schema.SchemaFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -62,7 +62,7 @@ public class MysqlMetadata implements Metadata {
     }
 
     @Override
-    public List<NameAndLabel> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
+    public List<NamedThing> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
         return null;
     }
 

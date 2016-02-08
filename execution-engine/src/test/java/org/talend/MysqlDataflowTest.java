@@ -12,12 +12,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.runtime.metadata.Metadata;
-import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
 import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
 import org.talend.components.bd.api.component.dataflow.DFBoundedSource;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

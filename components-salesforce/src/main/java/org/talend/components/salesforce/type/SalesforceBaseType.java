@@ -1,7 +1,7 @@
 package org.talend.components.salesforce.type;
 
 import com.sforce.soap.partner.sobject.SObject;
-import org.talend.components.api.schema.column.type.ExternalBaseType;
+import org.talend.daikon.schema.type.ExternalBaseType;
 
 /**
  * Created by bchen on 16-1-27.

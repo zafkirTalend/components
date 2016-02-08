@@ -6,18 +6,19 @@ import com.sforce.ws.ConnectionException;
 import com.sforce.ws.bind.XmlObject;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.NameAndLabel;
 import org.talend.components.api.runtime.metadata.Metadata;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.SchemaFactory;
-import org.talend.components.api.schema.column.type.TypeMapping;
-import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionObject;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
 import org.talend.components.salesforce.type.*;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.SchemaFactory;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.util.*;
 
@@ -147,8 +148,8 @@ public class SalesforceMetadata implements Metadata {
     }
 
     @Override
-    public List<NameAndLabel> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
-        List<NameAndLabel> returnList = new ArrayList<>();
+    public List<NamedThing> getSchemasName(ComponentProperties properties) throws TalendConnectionException {
+        List<NamedThing> returnList = new ArrayList<>();
         SalesforceConnectionProperties props = (SalesforceConnectionProperties) properties;
         SalesforceConnectionManager connManager = new SalesforceConnectionManager();
         SalesforceConnectionObject connection = null;
@@ -163,7 +164,7 @@ public class SalesforceMetadata implements Metadata {
             }
             DescribeGlobalSObjectResult[] sobjects = describeGlobalResult.getSobjects();
             for (DescribeGlobalSObjectResult sobject : sobjects) {
-                returnList.add(new NameAndLabel(sobject.getName(), sobject.getLabel()));
+                returnList.add(new SimpleNamedThing(sobject.getName(), sobject.getLabel()));
             }
         } finally {
             connManager.destoryConnection(connection);

@@ -9,9 +9,9 @@ import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.TypeMapping;
-import org.talend.components.api.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.talend.components.api.properties.ComponentProperties.*;
 
 /**
  * Created by bchen on 16-1-10.
@@ -63,8 +65,8 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
             e.printStackTrace();
         }
         String componentPropertiesString = jobConf.get("input.props");
-        ComponentProperties.Deserialized deserialized = ComponentProperties.fromSerialized(componentPropertiesString);
-        ComponentProperties properties = deserialized.properties;
+        Deserialized deserialized = org.talend.daikon.properties.Properties.fromSerialized(componentPropertiesString, ComponentProperties.class);
+        ComponentProperties properties = (ComponentProperties) deserialized.properties;
         try {
             this.source.init(properties);
         } catch (TalendConnectionException e) {

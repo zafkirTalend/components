@@ -74,7 +74,7 @@ public class SalesforceModuleProperties extends ComponentProperties {
     public ValidationResult beforeModuleName() {
         SalesforceMetadata metadata = new SalesforceMetadata();
         try {
-            List<NameAndLabel> moduleNames = metadata.getSchemasName(connection);
+            List<NamedThing> moduleNames = metadata.getSchemasName(connection);
             moduleName.setPossibleValues(moduleNames);
         } catch (TalendConnectionException e) {
             ValidationResult vr = new ValidationResult();

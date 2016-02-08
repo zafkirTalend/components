@@ -1,8 +1,8 @@
 package org.talend.components.cassandra.tCassandraOutput;
 
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.PropertyFactory;
 import org.talend.components.cassandra.metadata.CassandraMetadataProperties;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.PropertyFactory;
 
 /**
  * Created by bchen on 16-1-17.

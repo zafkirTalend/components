@@ -2,7 +2,7 @@ package org.talend.components.cassandra.type;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Row;
-import org.talend.components.api.schema.column.type.ExternalBaseType;
+import org.talend.daikon.schema.type.ExternalBaseType;
 
 /**
  * Created by bchen on 16-1-10.

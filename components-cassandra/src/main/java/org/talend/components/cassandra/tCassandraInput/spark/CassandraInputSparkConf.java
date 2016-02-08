@@ -7,9 +7,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.bd.api.component.spark.SparkInputConf;
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputSparkProperties;
+import org.talend.daikon.schema.SchemaElement;
 
 import java.util.HashMap;
 import java.util.Map;

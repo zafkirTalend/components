@@ -20,11 +20,11 @@ import org.talend.components.api.component.Trigger;
 import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.OutputComponentDefinition;
 import org.talend.components.api.runtime.output.Sink;
-import org.talend.components.api.schema.column.type.TypesRegistry;
 import org.talend.components.salesforce.SalesforceDefinition;
 
 import aQute.bnd.annotation.component.Component;
 import org.talend.components.salesforce.type.SalesforceTalendTypesRegistry;
+import org.talend.daikon.schema.type.TypesRegistry;
 
 /**
  * Component that can connect to a salesforce system and put some data into it.

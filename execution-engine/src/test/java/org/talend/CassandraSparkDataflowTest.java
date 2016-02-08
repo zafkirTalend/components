@@ -17,7 +17,6 @@ import org.junit.*;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.column.type.TypeMapping;
 import org.talend.components.bd.api.component.spark.SparkInputConf;
 import org.talend.components.bd.api.component.spark.SparkOutputConf;
 import org.talend.components.bd.api.component.x_dataflow.DataflowIO;
@@ -28,6 +27,7 @@ import org.talend.components.cassandra.tCassandraInput.spark.CassandraInputSpark
 import org.talend.components.cassandra.tCassandraInput.tCassandraInputSparkProperties;
 import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.type.CassandraTalendTypesRegistry;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.util.ArrayList;
 import java.util.List;

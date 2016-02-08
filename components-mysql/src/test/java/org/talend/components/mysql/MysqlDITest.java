@@ -10,13 +10,13 @@ import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.runtime.metadata.Metadata;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.TypeMapping;
-import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
 import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

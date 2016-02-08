@@ -4,13 +4,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.TypeMapping;
-import org.talend.components.api.schema.internal.DataSchemaElement;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
 import org.talend.components.mysql.type.Mysql_INT;
 import org.talend.components.mysql.type.Mysql_VARCHAR;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.TypeMapping;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

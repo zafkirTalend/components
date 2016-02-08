@@ -1,6 +1,6 @@
 package org.talend.components.api.runtime.row;
 
-import org.talend.components.api.schema.SchemaElement;
+import org.talend.daikon.schema.SchemaElement;
 
 import java.util.HashMap;
 import java.util.Map;

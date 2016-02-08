@@ -17,13 +17,13 @@ import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.InputComponentDefinition;
 import org.talend.components.api.runtime.input.Source;
-import org.talend.components.api.schema.column.type.TypesRegistry;
 import org.talend.components.api.component.Trigger;
 import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.salesforce.SalesforceDefinition;
 
 import aQute.bnd.annotation.component.Component;
 import org.talend.components.salesforce.type.SalesforceTalendTypesRegistry;
+import org.talend.daikon.schema.type.TypesRegistry;
 
 /**
  * Component that can connect to a salesforce system and get some data out of it.

@@ -1,9 +1,9 @@
 package org.talend.components.cassandra.tCassandraOutput;
 
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.column.type.ExternalBaseType;
-import org.talend.components.api.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.ExternalBaseType;
 
 import java.util.ArrayList;
 import java.util.List;

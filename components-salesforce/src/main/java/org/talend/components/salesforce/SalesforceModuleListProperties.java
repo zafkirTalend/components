@@ -12,8 +12,8 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.PropertyFactory.newString;
+import static org.talend.daikon.properties.presentation.Widget.widget;
 
 import java.util.List;
 
@@ -101,7 +101,7 @@ public class SalesforceModuleListProperties extends ComponentProperties {
                 vr.setStatus(ValidationResult.Result.ERROR);
                 return vr;
             }
-            compService.storeComponentProperties(modProps, nl.getName(), connRepLocation, (Schema) modProps.schema.schema.getValue());
+            compService.storeProperties(modProps, nl.getName(), connRepLocation, (Schema) modProps.schema.schema.getValue());
         }
         return ValidationResult.OK;
     }

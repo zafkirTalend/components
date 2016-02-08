@@ -5,11 +5,11 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.output.Sink;
 import org.talend.components.api.runtime.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
 import org.talend.components.salesforce.metadata.SalesforceMetadata;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionObject;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
 
 import java.util.List;
 

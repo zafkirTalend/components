@@ -1,9 +1,9 @@
 package org.talend.components.mysql.metadata;
 
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.PropertyFactory;
 import org.talend.components.common.SchemaProperties;
 import org.talend.components.mysql.tMysqlConnection.tMysqlConnectionProperties;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.PropertyFactory;
 
 /**
  * Created by bchen on 16-1-17.

@@ -30,8 +30,8 @@ public class SparkOutputFunction implements VoidFunction<Iterator<BaseRowStruct>
         try {
             aClass = (Class<? extends Sink>) Class.forName(className);
             sink = aClass.newInstance();
-            ComponentProperties.Deserialized deserialized = ComponentProperties.fromSerialized(props);
-            ComponentProperties properties = deserialized.properties;
+            ComponentProperties.Deserialized deserialized = ComponentProperties.fromSerialized(props, ComponentProperties.class);
+            ComponentProperties properties = (ComponentProperties) deserialized.properties;
             sink.init(properties);
             Writer writer = sink.getRecordWriter();
             while (baseRowStructIterator.hasNext()) {
