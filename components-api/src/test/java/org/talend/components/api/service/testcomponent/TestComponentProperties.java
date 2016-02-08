@@ -12,8 +12,8 @@
 // ============================================================================
 package org.talend.components.api.service.testcomponent;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.presentation.Widget.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,15 +21,16 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.PresentationItem;
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.ValidationResult;
-import org.talend.components.api.properties.ValidationResult.Result;
-import org.talend.components.api.properties.presentation.Form;
-import org.talend.components.api.properties.presentation.Widget;
-import org.talend.components.api.schema.SchemaElement.Type;
 import org.talend.components.api.service.testcomponent.nestedprop.NestedComponentProperties;
 import org.talend.components.api.service.testcomponent.nestedprop.inherited.InheritedComponentProperties;
+import org.talend.daikon.properties.PresentationItem;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.presentation.Widget.WidgetType;
+import org.talend.daikon.schema.SchemaElement.Type;
 
 public class TestComponentProperties extends ComponentProperties {
 
@@ -44,7 +45,7 @@ public class TestComponentProperties extends ComponentProperties {
     public Property userId = (Property) newProperty(USER_ID_PROP_NAME).setRequired(true);
 
     public Property password = ((Property) newProperty("password").setRequired(true))
-            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING, Property.Flags.UI_PASSWORD));
+            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
     public Property nameList = newProperty("nameList");
 
@@ -111,7 +112,7 @@ public class TestComponentProperties extends ComponentProperties {
         Form form = Form.create(this, Form.MAIN, "Test Component");
         mainForm = form;
         form.addRow(userId);
-        form.addRow(password);
+        form.addRow(widget(password).setWidgetType(WidgetType.HIDDEN_TEXT));
         form.addRow(testPI);
         form.addRow(widget(nameList).setWidgetType(Widget.WidgetType.NAME_SELECTION_AREA));
         form.addRow(widget(nameListRef).setWidgetType(Widget.WidgetType.NAME_SELECTION_REFERENCE));

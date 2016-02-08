@@ -12,20 +12,21 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.NameAndLabel;
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.ValidationResult;
-import org.talend.components.api.properties.presentation.Form;
-import org.talend.components.api.properties.presentation.Widget;
-import org.talend.components.common.SchemaProperties;
-import org.talend.components.salesforce.metadata.SalesforceMetadata;
-
 import java.util.List;
 
-import static org.talend.components.api.properties.PropertyFactory.newEnum;
-import static org.talend.components.api.properties.presentation.Widget.widget;
+import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.presentation.Widget.*;
+
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.common.SchemaProperties;
+import org.talend.components.salesforce.metadata.SalesforceMetadata;
+import org.talend.components.api.exception.TalendConnectionException;
+
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
 
 public class SalesforceModuleProperties extends ComponentProperties {
 

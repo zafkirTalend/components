@@ -13,19 +13,19 @@
 package org.talend.components.salesforce.tsalesforceconnection;
 
 import org.talend.components.api.Constants;
+import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.Connector.ConnectorType;
-import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.Trigger;
 import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.ConnectionComponentDefinition;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.ValidationResult;
 import org.talend.components.api.runtime.ComponentRuntime;
 import org.talend.components.api.runtime.connection.ConnectionManager;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceRuntime;
+import org.talend.daikon.properties.ValidationResult;
 
 import aQute.bnd.annotation.component.Component;
 

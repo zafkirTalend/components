@@ -28,20 +28,21 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.NameAndLabel;
-import org.talend.components.api.properties.PropertyFactory;
-import org.talend.components.api.properties.ValidationResult;
 import org.talend.components.api.runtime.ComponentDynamicHolder;
 import org.talend.components.api.runtime.ComponentRuntime;
 import org.talend.components.api.runtime.ComponentRuntimeContainer;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.schema.SchemaFactory;
 import org.talend.components.api.service.ComponentService;
 import org.talend.components.salesforce.connection.oauth.SalesforceOAuthConnection;
 import org.talend.components.salesforce.tsalesforceconnection.TSalesforceConnectionDefinition;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.properties.PropertyFactory;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.SchemaFactory;
 
 import com.sforce.async.AsyncApiException;
 import com.sforce.async.BulkConnection;
@@ -195,7 +196,8 @@ public class SalesforceRuntime extends ComponentRuntime {
     protected void doConnection(SalesforceConnectionProperties properties, ConnectorConfig config)
             throws AsyncApiException, ConnectionException {
         if (SalesforceConnectionProperties.LOGIN_OAUTH.equals(properties.loginType.getValue())) {
-            SalesforceOAuthConnection oauthConnection = new SalesforceOAuthConnection(properties.oauth, SalesforceConnectionProperties.OAUTH_URL, API_VERSION);
+            SalesforceOAuthConnection oauthConnection = new SalesforceOAuthConnection(properties.oauth,
+                    SalesforceConnectionProperties.OAUTH_URL, API_VERSION);
             oauthConnection.login(config);
         } else {
             config.setAuthEndpoint(SalesforceConnectionProperties.URL);
@@ -239,7 +241,8 @@ public class SalesforceRuntime extends ComponentRuntime {
             if (!refedComponentId.equals(container.getCurrentComponentName())) {
                 connection = (PartnerConnection) container.getGlobalMap().get(refedComponentId);
                 if (connection == null) {
-                    throw new ConnectionException("Can't find the shared connection instance with refedComponentId: " + refedComponentId);
+                    throw new ConnectionException(
+                            "Can't find the shared connection instance with refedComponentId: " + refedComponentId);
                 }
                 return;
             }
@@ -293,13 +296,13 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
-    public List<NameAndLabel> getSchemaNames() throws ConnectionException {
-        List<NameAndLabel> returnList = new ArrayList<>();
+    public List<NamedThing> getSchemaNames() throws ConnectionException {
+        List<NamedThing> returnList = new ArrayList<>();
         DescribeGlobalResult result = connection.describeGlobal();
         DescribeGlobalSObjectResult[] objects = result.getSobjects();
         for (DescribeGlobalSObjectResult obj : objects) {
             LOG.debug("module label: " + obj.getLabel() + " name: " + obj.getName());
-            returnList.add(new NameAndLabel(obj.getName(), obj.getLabel()));
+            returnList.add(new SimpleNamedThing(obj.getName(), obj.getLabel()));
         }
         return returnList;
     }
@@ -339,7 +342,7 @@ public class SalesforceRuntime extends ComponentRuntime {
         SchemaElement root = SchemaFactory.newSchemaElement("Root");
         schema.setRoot(root);
 
-        DescribeSObjectResult[] describeSObjectResults = connection.describeSObjects(new String[]{module});
+        DescribeSObjectResult[] describeSObjectResults = connection.describeSObjects(new String[] { module });
         Field fields[] = describeSObjectResults[0].getFields();
         for (Field field : fields) {
             SchemaElement child = PropertyFactory.newProperty(field.getName());
@@ -556,16 +559,16 @@ public class SalesforceRuntime extends ComponentRuntime {
     protected void addSObjectField(SObject sObject, SchemaElement se, Object value) {
         Object valueToAdd;
         switch (se.getType()) {
-            case BYTE_ARRAY:
-                valueToAdd = Charset.defaultCharset().decode(ByteBuffer.wrap((byte[]) value)).toString();
-                break;
-            case DATE:
-            case DATETIME:
-                valueToAdd = container.formatDate((Date) value, se.getPattern());
-                break;
-            default:
-                valueToAdd = value;
-                break;
+        case BYTE_ARRAY:
+            valueToAdd = Charset.defaultCharset().decode(ByteBuffer.wrap((byte[]) value)).toString();
+            break;
+        case DATE:
+        case DATETIME:
+            valueToAdd = container.formatDate((Date) value, se.getPattern());
+            break;
+        default:
+            valueToAdd = value;
+            break;
         }
         sObject.setField(se.getName(), valueToAdd);
     }

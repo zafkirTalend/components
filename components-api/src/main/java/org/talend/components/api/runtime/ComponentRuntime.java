@@ -12,13 +12,14 @@
 // ============================================================================
 package org.talend.components.api.runtime;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.NameAndLabel;
-import org.talend.components.api.properties.ValidationResult;
-import org.talend.components.api.schema.Schema;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.schema.Schema;
 
 /**
  * Code to execute the component's runtime. This can be used at runtime or design time as required.
@@ -55,9 +56,9 @@ public abstract class ComponentRuntime {
      * Get the list of schema names available on the current connection. {@link #connect(ComponentProperties)} must be
      * called must be called first.
      */
-    public List<NameAndLabel> getSchemaNames() throws Exception {
+    public List<NamedThing> getSchemaNames() throws Exception {
         // subclass as required
-        return null;
+        return Collections.EMPTY_LIST;
     }
 
     /**

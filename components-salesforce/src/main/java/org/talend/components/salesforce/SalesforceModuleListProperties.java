@@ -12,22 +12,23 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.NameAndLabel;
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.ValidationResult;
-import org.talend.components.api.properties.presentation.Form;
-import org.talend.components.api.properties.presentation.Widget;
-import org.talend.components.api.schema.Schema;
-import org.talend.components.api.schema.SchemaElement;
-import org.talend.components.api.service.ComponentService;
-import org.talend.components.salesforce.metadata.SalesforceMetadata;
+import static org.talend.components.api.properties.PropertyFactory.*;
+import static org.talend.components.api.properties.presentation.Widget.*;
 
 import java.util.List;
 
-import static org.talend.components.api.properties.PropertyFactory.newString;
-import static org.talend.components.api.properties.presentation.Widget.widget;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.service.ComponentService;
+import org.talend.components.salesforce.metadata.SalesforceMetadata;
+
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.SchemaElement;
 
 public class SalesforceModuleListProperties extends ComponentProperties {
 
@@ -35,7 +36,7 @@ public class SalesforceModuleListProperties extends ComponentProperties {
 
     private String repositoryLocation;
 
-    private List<NameAndLabel> moduleNames;
+    private List<NamedThing> moduleNames;
 
     transient private ComponentService compService;
 
@@ -83,14 +84,14 @@ public class SalesforceModuleListProperties extends ComponentProperties {
     public ValidationResult afterFormFinishMain() {
         SalesforceMetadata metadata = new SalesforceMetadata();
 
-        String connRepLocation = compService.storeComponentProperties(connectionProps, (String) connectionProps.name.getValue(),
+        String connRepLocation = compService.storeProperties(connectionProps, (String) connectionProps.name.getValue(),
                 repositoryLocation, null);
 
         @SuppressWarnings("unchecked")
-        List<NameAndLabel> selectedModuleNames = (List<NameAndLabel>) moduleName.getValue();
-        for (NameAndLabel nl : selectedModuleNames) {
+        List<NamedThing> selectedModuleNames = (List<NamedThing>) moduleName.getValue();
+        for (NamedThing nl : selectedModuleNames) {
             SalesforceModuleProperties modProps = new SalesforceModuleProperties(nl.getName()).setConnection(connectionProps);
-            modProps.initForRuntime();
+            modProps.init();
             modProps.moduleName.setValue(nl.getName());
             try {
                 metadata.initSchema(modProps);

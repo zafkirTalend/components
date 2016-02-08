@@ -12,18 +12,20 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.components.api.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.presentation.Widget.*;
 
 import java.util.EnumSet;
 
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.presentation.Form;
 import org.talend.components.common.UserPasswordProperties;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
 
 public class SalesforceUserPasswordProperties extends UserPasswordProperties {
 
     public Property securityKey = ((Property) newProperty("securityKey").setRequired(true))
-            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING, Property.Flags.UI_PASSWORD));
+            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
     public SalesforceUserPasswordProperties(String name) {
         super(name);
@@ -33,7 +35,8 @@ public class SalesforceUserPasswordProperties extends UserPasswordProperties {
     public void setupLayout() {
         super.setupLayout();
         Form form = getForm(Form.MAIN);
-        form.addColumn(securityKey);
+        form.addColumn(widget(securityKey).setWidgetType(Widget.WidgetType.HIDDEN_TEXT));
+
     }
 
 }

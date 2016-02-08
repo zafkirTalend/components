@@ -12,21 +12,21 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
+import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.presentation.Widget.*;
+
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.PresentationItem;
-import org.talend.components.api.properties.Property;
-import org.talend.components.api.properties.ValidationResult;
-import org.talend.components.api.properties.presentation.Form;
-import org.talend.components.api.properties.presentation.Widget;
-import org.talend.components.api.properties.presentation.Widget.WidgetType;
 import org.talend.components.common.ProxyProperties;
 import org.talend.components.common.oauth.OauthProperties;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
 import org.talend.components.salesforce.tsalesforceconnection.TSalesforceConnectionDefinition;
-
-import static org.talend.components.api.properties.PropertyFactory.*;
-import static org.talend.components.api.properties.presentation.Widget.widget;
+import org.talend.daikon.properties.PresentationItem;
+import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.presentation.Widget.WidgetType;
 
 public class SalesforceConnectionProperties extends ComponentProperties {
 
