@@ -1,31 +1,35 @@
 package org.talend.components.salesforce.type;
 
-import com.sforce.soap.partner.sobject.SObject;
 import org.talend.daikon.schema.type.ExternalBaseType;
+
+import com.sforce.soap.partner.sobject.SObject;
 
 /**
  * Created by bchen on 16-1-27.
  */
-public abstract class SalesforceBaseType<AppType extends Object, TalendType extends Object> extends ExternalBaseType {
-    //TODO pull this up to Definition or Properties?
+public abstract class SalesforceBaseType<AppType extends Object, TalendType extends Object>
+        extends ExternalBaseType<AppType, TalendType, SObject, SObject> {
+
+    // TODO pull this up to Definition or Properties?
     public static final String FAMILY_NAME = "Salesforce";
+
     @Override
-    protected Object getValue(Object obj, String key) {
+    public AppType readValue(SObject obj, String key) {
         return getAppValue((SObject) obj, key);
     }
 
     @Override
-    protected void setValue(Object app, String key, Object value) {
+    public void writeValue(SObject app, String key, AppType value) {
         setAppValue((SObject) app, key, (AppType) value);
     }
 
     @Override
-    protected Object c2AType(Object value) {
+    public AppType convertFromKnown(TalendType value) {
         return convert2AType((TalendType) value);
     }
 
     @Override
-    protected TalendType c2TType(Object value) {
+    public TalendType convertToKnown(AppType value) {
         return convert2TType((AppType) value);
     }
 

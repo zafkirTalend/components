@@ -14,6 +14,9 @@ import org.talend.components.cassandra.tCassandraOutput.CassandraSink;
  * Created by bchen on 16-1-25.
  */
 public class CassandraProperties extends ComponentProperties implements IBDImplement {
+    
+    public static final String FAMILY_NAME = "Cassandra";
+    
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.

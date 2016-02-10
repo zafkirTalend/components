@@ -1,5 +1,14 @@
 package org.talend.components.mysql;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,28 +25,28 @@ import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
 import org.talend.daikon.schema.SchemaElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.ExternalBaseType;
 import org.talend.daikon.schema.type.TypeMapping;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bchen on 16-1-18.
  */
 public class MysqlDITest {
+
     public static final String HOST = "localhost";
+
     public static final String PORT = "3306";
+
     public static final String USER = "root";
+
     public static final String PASS = "mysql";
+
     public static final String DBNAME = "tuj";
+
     public static final String TABLE = "test";
+
     public static final String PROPERTIES = "noDatetimeStringSync=true";
+
     Connection conn;
 
     @Before
@@ -102,7 +111,10 @@ public class MysqlDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
+                    ExternalBaseType converter = dataFiled.getAppColType().newInstance();
+                    Object dataValue = converter
+                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -121,7 +133,10 @@ public class MysqlDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())));
+                    ExternalBaseType converter = dataFiled.getAppColType().newInstance();
+                    Object dataValue = converter
+                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

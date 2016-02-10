@@ -1,18 +1,5 @@
 package org.talend.components.bd.api.component.spark;
 
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.*;
-import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.runtime.input.Reader;
-import org.talend.components.api.runtime.input.SingleSplit;
-import org.talend.components.api.runtime.input.Source;
-import org.talend.components.api.runtime.input.Split;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.internal.DataSchemaElement;
-import org.talend.daikon.schema.type.TypeMapping;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -20,13 +7,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.talend.components.api.properties.ComponentProperties.*;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobConfigurable;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.runtime.input.Reader;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
+import org.talend.components.api.runtime.row.BaseRowStruct;
+import org.talend.daikon.properties.Properties.Deserialized;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.ExternalBaseType;
+import org.talend.daikon.schema.type.TypeMapping;
 
 /**
  * Created by bchen on 16-1-10.
  */
-//TODO better to and a talend InputFormat to avoid the dependency of MapReduce, just need a method getSplits;no close method for InputFormat?
+// TODO better to and a talend InputFormat to avoid the dependency of MapReduce, just need a method getSplits;no close
+// method for InputFormat?
 public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, JobConfigurable {
+
     private Source source;
 
     @Override
@@ -39,12 +46,13 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
             }
             return bdInputSplits;
         } else {
-            return new BDInputSplit[]{new BDInputSplit(new SingleSplit())};
+            return new BDInputSplit[] { new BDInputSplit(new SingleSplit()) };
         }
     }
 
     @Override
-    public RecordReader<NullWritable, BaseRowStruct> getRecordReader(InputSplit inputSplit, JobConf jobConf, Reporter reporter) throws IOException {
+    public RecordReader<NullWritable, BaseRowStruct> getRecordReader(InputSplit inputSplit, JobConf jobConf, Reporter reporter)
+            throws IOException {
         try {
             return new BDRecordReader(source.getRecordReader(((BDInputSplit) inputSplit).getRealSplit()), source.getFamilyName());
         } catch (TalendConnectionException e) {
@@ -65,7 +73,8 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
             e.printStackTrace();
         }
         String componentPropertiesString = jobConf.get("input.props");
-        Deserialized deserialized = org.talend.daikon.properties.Properties.fromSerialized(componentPropertiesString, ComponentProperties.class);
+        Deserialized deserialized = org.talend.daikon.properties.Properties.fromSerialized(componentPropertiesString,
+                ComponentProperties.class);
         ComponentProperties properties = (ComponentProperties) deserialized.properties;
         try {
             this.source.init(properties);
@@ -75,8 +84,11 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
     }
 
     static class BDRecordReader implements RecordReader<NullWritable, BaseRowStruct> {
+
         private Reader reader;
+
         private List<SchemaElement> schema;
+
         private String familyName;
 
         BDRecordReader(Reader reader, String familyName) {
@@ -93,7 +105,9 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
                 for (SchemaElement column : schema) {
                     DataSchemaElement col = (DataSchemaElement) column;
                     try {
-                        baseRowStruct.put(col.getName(), TypeMapping.convert(familyName, col, col.getAppColType().newInstance().retrieveTValue(row, col.getAppColName())));
+                        ExternalBaseType converter = col.getAppColType().newInstance();
+                        Object dataValue = converter.convertToKnown(converter.readValue(row, col.getAppColName()));
+                        baseRowStruct.put(col.getName(), TypeMapping.convert(familyName, col, dataValue));
                     } catch (InstantiationException e) {
                         e.printStackTrace();
                     } catch (IllegalAccessException e) {
@@ -137,6 +151,7 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
     }
 
     static class BDInputSplit implements InputSplit, Comparable<BDInputSplit> {
+
         private Split split;
 
         public BDInputSplit() {

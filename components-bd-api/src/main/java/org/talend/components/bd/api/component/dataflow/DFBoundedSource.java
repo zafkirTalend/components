@@ -1,28 +1,36 @@
 package org.talend.components.bd.api.component.dataflow;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.talend.components.api.exception.TalendConnectionException;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.runtime.input.SingleSplit;
+import org.talend.components.api.runtime.input.Source;
+import org.talend.components.api.runtime.input.Split;
+import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.ExternalBaseType;
+import org.talend.daikon.schema.type.TypeMapping;
+
 import com.google.cloud.dataflow.sdk.coders.Coder;
 import com.google.cloud.dataflow.sdk.coders.MapCoder;
 import com.google.cloud.dataflow.sdk.coders.StringUtf8Coder;
 import com.google.cloud.dataflow.sdk.io.BoundedSource;
 import com.google.cloud.dataflow.sdk.options.DataflowPipelineWorkerPoolOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import org.talend.components.api.exception.TalendConnectionException;
-import org.talend.components.api.runtime.input.SingleSplit;
-import org.talend.components.api.runtime.input.Source;
-import org.talend.components.api.runtime.input.Split;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.internal.DataSchemaElement;
-import org.talend.daikon.schema.type.TypeMapping;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Created by bchen on 16-1-17.
  */
 public class DFBoundedSource extends BoundedSource<Map<String, String>> {
+
     Source source;
+
     Split split;
 
     public DFBoundedSource(Class<? extends Source> sourceClazz, ComponentProperties props) {
@@ -45,10 +53,10 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
     }
 
     @Override
-    public List<? extends BoundedSource<Map<String, String>>> splitIntoBundles(long desiredBundleSizeBytes, PipelineOptions options) throws Exception {
+    public List<? extends BoundedSource<Map<String, String>>> splitIntoBundles(long desiredBundleSizeBytes,
+            PipelineOptions options) throws Exception {
         List<DFBoundedSource> sourceList = new ArrayList<>();
-        DataflowPipelineWorkerPoolOptions poolOptions =
-                options.as(DataflowPipelineWorkerPoolOptions.class);
+        DataflowPipelineWorkerPoolOptions poolOptions = options.as(DataflowPipelineWorkerPoolOptions.class);
         if (source.supportSplit() && poolOptions.getNumWorkers() > 1) {
             Split[] split = source.getSplit(poolOptions.getNumWorkers());
             for (Split s : split) {
@@ -62,7 +70,7 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
     @Override
     public long getEstimatedSizeBytes(PipelineOptions options) throws Exception {
-        //TODO source.getCount?
+        // TODO source.getCount?
         return 0;
     }
 
@@ -91,7 +99,9 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
     }
 
     public class DFBoundedReader extends BoundedReader<Map<String, String>> {
+
         DFBoundedSource dfsource;
+
         org.talend.components.api.runtime.input.Reader reader;
 
         public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.runtime.input.Reader reader) {
@@ -116,7 +126,10 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    result.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(reader.getCurrent(), dataFiled.getAppColName())).toString());
+                    ExternalBaseType converter = dataFiled.getAppColType().newInstance();
+                    Object dataValue = converter
+                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
+                    result.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue).toString());
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

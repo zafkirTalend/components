@@ -1,9 +1,10 @@
 package org.talend.dataflow.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -24,20 +25,25 @@ import org.talend.components.cassandra.tCassandraOutput.tCassandraOutputDIProper
 import org.talend.components.cassandra.type.CassandraTalendTypesRegistry;
 import org.talend.daikon.schema.SchemaElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
+import org.talend.daikon.schema.type.ExternalBaseType;
 import org.talend.daikon.schema.type.TypeMapping;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
 
 /**
  * Created by bchen on 16-1-10.
  */
 public class CassandraDITest {
+
     private static final String HOST = "localhost";
+
     private static final String PORT = "9042";
+
     private static final String KEYSPACE = "ks";
+
     Session connect;
 
     @Before
@@ -68,7 +74,6 @@ public class CassandraDITest {
         props.columnFamily.setValue("test");
         props.query.setValue("select name from ks.test");
 
-
         tCassandraOutputDIProperties outProps = new tCassandraOutputDIProperties("tCassandraOutput_1");
         outProps.init();
         outProps.host.setValue(HOST);
@@ -89,8 +94,6 @@ public class CassandraDITest {
         sink.init(outProps);
         Writer writer = sink.getRecordWriter();
 
-
-
         Reader recordReader = source.getRecordReader(new SingleSplit());
         List<SchemaElement> fields = recordReader.getSchema();
         Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
@@ -102,7 +105,11 @@ public class CassandraDITest {
             for (SchemaElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
-                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataFiled.getAppColType().newInstance().retrieveTValue(recordReader.getCurrent(), dataFiled.getAppColName())));
+
+                    ExternalBaseType converter = dataFiled.getAppColType().newInstance();
+                    Object dataValue = converter
+                            .convertToKnown(converter.readValue(recordReader.getCurrent(), dataFiled.getAppColName()));
+                    baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

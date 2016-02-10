@@ -8,26 +8,26 @@ import java.sql.ResultSet;
 /**
  * Created by bchen on 16-1-18.
  */
-public abstract class MysqlBaseType<AppType extends Object, TalendType extends Object> extends ExternalBaseType {
+public abstract class MysqlBaseType<AppType extends Object, TalendType extends Object> extends ExternalBaseType<AppType, TalendType, ResultSet, PreparedStatement> {
     public static final String FAMILY_NAME = "Mysql";
 
     @Override
-    protected Object getValue(Object obj, String key) {
+    public AppType readValue(ResultSet obj, String key) {
         return getAppValue((ResultSet) obj, key);
     }
 
     @Override
-    protected void setValue(Object app, String key, Object value) {
+    public void writeValue(PreparedStatement app, String key, AppType value) {
         setAppValue((PreparedStatement) app, key, (AppType) value);
     }
 
     @Override
-    protected Object c2AType(Object value) {
+    public AppType convertFromKnown(TalendType value) {
         return convert2AType((TalendType) value);
     }
 
     @Override
-    protected Object c2TType(Object value) {
+    public TalendType convertToKnown(AppType value) {
         return convert2TType((AppType) value);
     }
 
