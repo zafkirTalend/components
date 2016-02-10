@@ -5,24 +5,24 @@ import com.sforce.soap.partner.sobject.SObject;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Int extends SalesforceBaseType<Integer, Integer> {
+public class SF_Int implements SalesforceBaseType<Integer, Integer> {
     @Override
-    protected Integer convert2AType(Integer value) {
+    public Integer convertFromKnown(Integer value) {
         return null;
     }
 
     @Override
-    protected Integer convert2TType(Integer value) {
+    public Integer convertToKnown(Integer value) {
         return null;
     }
 
     @Override
-    protected Integer getAppValue(SObject app, String key) {
+    public Integer readValue(SObject app, String key) {
         return null;
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, Integer value) {
+    public void writeValue(SObject app, String key, Integer value) {
 
     }
 }

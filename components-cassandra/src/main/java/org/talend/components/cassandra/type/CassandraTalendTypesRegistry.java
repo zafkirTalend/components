@@ -120,14 +120,14 @@ public class CassandraTalendTypesRegistry implements TypesRegistry<CassandraTale
     /**
      * All of the Cassandra data can be read from {@link Row} and written to a {@link BoundStatement}.
      */
-    public abstract static class CassandraBaseType<SpecificT, KnownT>
+    public static interface CassandraBaseType<SpecificT, KnownT>
             extends ExternalBaseType<SpecificT, KnownT, Row, BoundStatement> {
     }
 
     /**
      * A special converter that does not need to convert to and from a specific and known type.
      */
-    public abstract static class CassandraUnconvertedBaseType<T> extends CassandraBaseType<T, T> {
+    public abstract static class CassandraUnconvertedBaseType<T> implements CassandraBaseType<T, T> {
 
         @Override
         public final T convertFromKnown(T value) {
@@ -171,7 +171,7 @@ public class CassandraTalendTypesRegistry implements TypesRegistry<CassandraTale
 
     }
 
-    public static class Cassandra_BLOB extends CassandraBaseType<ByteBuffer, byte[]> {
+    public static class Cassandra_BLOB implements CassandraBaseType<ByteBuffer, byte[]> {
 
         @Override
         public ByteBuffer convertFromKnown(byte[] value) {
@@ -359,7 +359,7 @@ public class CassandraTalendTypesRegistry implements TypesRegistry<CassandraTale
 
     }
 
-    public static class Cassandra_UUID extends CassandraBaseType<java.util.UUID, String> {
+    public static class Cassandra_UUID implements CassandraBaseType<java.util.UUID, String> {
 
         @Override
         public java.util.UUID convertFromKnown(String value) {

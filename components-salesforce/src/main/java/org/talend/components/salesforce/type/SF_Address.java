@@ -6,24 +6,24 @@ import com.sforce.soap.partner.sobject.SObject;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Address extends SalesforceBaseType<Address, String> {
+public class SF_Address implements SalesforceBaseType<Address, String> {
     @Override
-    protected Address convert2AType(String value) {
+    public Address convertFromKnown(String value) {
         return null;
     }
 
     @Override
-    protected String convert2TType(Address value) {
+    public String convertToKnown(Address value) {
         return null;
     }
 
     @Override
-    protected Address getAppValue(SObject app, String key) {
+    public Address readValue(SObject app, String key) {
         return null;
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, Address value) {
+    public void writeValue(SObject app, String key, Address value) {
 
     }
 }

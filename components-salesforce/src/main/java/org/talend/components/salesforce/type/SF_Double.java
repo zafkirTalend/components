@@ -5,9 +5,9 @@ import com.sforce.soap.partner.sobject.SObject;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Double extends SalesforceBaseType<String, Double> {
+public class SF_Double implements SalesforceBaseType<String, Double> {
     @Override
-    protected String convert2AType(Double value) {
+    public String convertFromKnown(Double value) {
         if (value == Double.NaN) {
             return "NaN";
         } else if (value == Double.POSITIVE_INFINITY) {
@@ -20,7 +20,7 @@ public class SF_Double extends SalesforceBaseType<String, Double> {
     }
 
     @Override
-    protected Double convert2TType(String value) {
+    public Double convertToKnown(String value) {
         if ("NaN".equals(value)) {
             return Double.NaN;
         } else if ("INF".equals(value)) {
@@ -33,12 +33,12 @@ public class SF_Double extends SalesforceBaseType<String, Double> {
     }
 
     @Override
-    protected String getAppValue(SObject app, String key) {
+    public String readValue(SObject app, String key) {
         return app.getChild(key).getValue().toString();
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, String value) {
+    public void writeValue(SObject app, String key, String value) {
         app.setField(key, value);
     }
 }

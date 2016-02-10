@@ -6,24 +6,24 @@ import com.sforce.soap.partner.sobject.SObject;
  * Created by bchen on 16-1-28.
  */
 //TODO from API, it's byte?
-public class SF_Byte extends SalesforceBaseType<Byte, Byte> {
+public class SF_Byte implements SalesforceBaseType<Byte, Byte> {
     @Override
-    protected Byte convert2AType(Byte value) {
+    public Byte convertFromKnown(Byte value) {
         return null;
     }
 
     @Override
-    protected Byte convert2TType(Byte value) {
+    public Byte convertToKnown(Byte value) {
         return null;
     }
 
     @Override
-    protected Byte getAppValue(SObject app, String key) {
+    public Byte readValue(SObject app, String key) {
         return null;
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, Byte value) {
+    public void writeValue(SObject app, String key, Byte value) {
 
     }
 }

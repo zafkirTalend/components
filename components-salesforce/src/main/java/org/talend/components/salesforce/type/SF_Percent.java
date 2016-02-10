@@ -5,24 +5,24 @@ import com.sforce.soap.partner.sobject.SObject;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Percent extends SalesforceBaseType<Double,Double> {
+public class SF_Percent implements SalesforceBaseType<Double,Double> {
     @Override
-    protected Double convert2AType(Double value) {
+    public Double convertFromKnown(Double value) {
         return null;
     }
 
     @Override
-    protected Double convert2TType(Double value) {
+    public Double convertToKnown(Double value) {
         return null;
     }
 
     @Override
-    protected Double getAppValue(SObject app, String key) {
+    public Double readValue(SObject app, String key) {
         return null;
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, Double value) {
+    public void writeValue(SObject app, String key, Double value) {
 
     }
 }

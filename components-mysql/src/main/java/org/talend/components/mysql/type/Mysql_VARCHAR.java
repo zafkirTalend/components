@@ -7,20 +7,21 @@ import java.sql.SQLException;
 /**
  * Created by bchen on 16-1-18.
  */
-public class Mysql_VARCHAR extends MysqlBaseType<String, String> {
+public class Mysql_VARCHAR implements MysqlBaseType<String, String> {
+
     @Override
-    protected String convert2AType(String value) {
+    public String convertFromKnown(String value) {
         return value;
     }
 
     @Override
-    protected String convert2TType(String value) {
+    public String convertToKnown(String value) {
         return value;
     }
 
     @Override
-    protected String getAppValue(ResultSet app, String key) {
-        //TODO throw Talend exception
+    public String readValue(ResultSet app, String key) {
+        // TODO throw Talend exception
         String value = null;
         try {
             value = app.getString(key);
@@ -31,8 +32,8 @@ public class Mysql_VARCHAR extends MysqlBaseType<String, String> {
     }
 
     @Override
-    protected void setAppValue(PreparedStatement app, String key, String value) {
-        //TODO throw Talend exception
+    public void writeValue(PreparedStatement app, String key, String value) {
+        // TODO throw Talend exception
         try {
             app.setString(Integer.valueOf(key), value);
         } catch (SQLException e) {

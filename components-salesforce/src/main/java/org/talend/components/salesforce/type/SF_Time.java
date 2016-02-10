@@ -7,24 +7,24 @@ import java.util.Date;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Time extends SalesforceBaseType<String, Date> {
+public class SF_Time implements SalesforceBaseType<String, Date> {
     @Override
-    protected String convert2AType(Date value) {
+    public String convertFromKnown(Date value) {
         return null;
     }
 
     @Override
-    protected Date convert2TType(String value) {
+    public Date convertToKnown(String value) {
         return null;
     }
 
     @Override
-    protected String getAppValue(SObject app, String key) {
+    public String readValue(SObject app, String key) {
         return null;
     }
 
     @Override
-    protected void setAppValue(SObject app, String key, String value) {
+    public void writeValue(SObject app, String key, String value) {
 
     }
 }
