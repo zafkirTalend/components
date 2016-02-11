@@ -8,6 +8,7 @@ import java.util.Date;
  * Created by bchen on 16-1-28.
  */
 public class SF_Date implements SalesforceBaseType<Date, Date> {
+
     @Override
     public Date convertFromKnown(Date value) {
         return null;

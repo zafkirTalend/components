@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.internal.DataSchemaElement;
-import org.talend.daikon.schema.type.ExternalBaseType;
-import org.talend.daikon.schema.type.TypeMapping;
+import org.talend.daikon.schema.type.AvroConverterRegistry;
 
 import com.google.cloud.dataflow.sdk.coders.Coder;
 import com.google.cloud.dataflow.sdk.coders.MapCoder;
@@ -102,9 +102,10 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
         DFBoundedSource dfsource;
 
-        org.talend.components.api.runtime.input.Reader reader;
+        org.talend.components.api.runtime.input.Reader<? extends IndexedRecord> reader;
 
-        public DFBoundedReader(DFBoundedSource dfsource, org.talend.components.api.runtime.input.Reader reader) {
+        public DFBoundedReader(DFBoundedSource dfsource,
+                org.talend.components.api.runtime.input.Reader<? extends IndexedRecord> reader) {
             this.dfsource = dfsource;
             this.reader = reader;
         }
@@ -121,22 +122,13 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
         @Override
         public Map<String, String> getCurrent() throws NoSuchElementException {
-            Map<String, String> result = new HashMap<>();
-            List<SchemaElement> fields = reader.getSchema();
-            for (SchemaElement column : fields) {
-                DataSchemaElement dataFiled = (DataSchemaElement) column;
-                try {
-                    ExternalBaseType converter = dataFiled.getAppColType().newInstance();
-                    Object dataValue = converter
-                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
-                    result.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue).toString());
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+            IndexedRecord in = AvroConverterRegistry.getAsIndexedRecord(reader.getCurrent());
+            Map<String, String> out = new HashMap<>();
+            Schema schema = in.getSchema();
+            for (Field f : schema.getFields()) {
+                out.put(f.name(), String.valueOf(in.get(f.pos())));
             }
-            return result;
+            return out;
         }
 
         @Override

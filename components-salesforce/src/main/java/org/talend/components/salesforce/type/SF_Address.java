@@ -7,6 +7,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * Created by bchen on 16-1-28.
  */
 public class SF_Address implements SalesforceBaseType<Address, String> {
+
     @Override
     public Address convertFromKnown(String value) {
         return null;

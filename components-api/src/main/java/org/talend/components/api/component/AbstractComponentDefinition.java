@@ -37,7 +37,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
     @Override
     public String[] getFamilies() {
         // Subclass me
-        return new String[]{};
+        return new String[] {};
     }
 
     @Override
@@ -75,7 +75,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
                 return null;// TODO throw an exception
             } // else keep going
             Constructor c = propertyClass.getConstructor(String.class);
-            compProp = (ComponentProperties) c.newInstance(new Object[]{"root"});
+            compProp = (ComponentProperties) c.newInstance(new Object[] { "root" });
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {

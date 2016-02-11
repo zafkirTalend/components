@@ -6,6 +6,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * Created by bchen on 16-1-28.
  */
 public class SF_Email implements SalesforceBaseType<String, String> {
+
     @Override
     public String convertFromKnown(String value) {
         return value;

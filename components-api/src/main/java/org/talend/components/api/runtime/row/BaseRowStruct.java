@@ -1,24 +1,28 @@
 package org.talend.components.api.runtime.row;
 
-import org.talend.daikon.schema.SchemaElement;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.avro.Schema;
 
 /**
  * Created by bchen on 16-1-10.
  */
 public class BaseRowStruct {
-    Map<String, Object> content = new HashMap<>();
 
-    Map<String, SchemaElement.Type> metadata = new HashMap<>();
+    private Map<String, Object> content = new HashMap<>();
 
-    public BaseRowStruct(Map<String, SchemaElement.Type> metadata) {
-        this.metadata = metadata;
+    private Schema mSchema;
+
+    public BaseRowStruct() {
     }
 
-    public SchemaElement.Type getType(String key) {
-        return metadata.get(key);
+    public void setSchema(Schema schema) {
+        mSchema = schema;
+    }
+
+    public Schema getType(String key) {
+        return mSchema.getField(key).schema();
     }
 
     public Object get(String key) {
@@ -26,12 +30,12 @@ public class BaseRowStruct {
     }
 
     public void put(String key, Object value) {
-//        if (metadata.get(key).equals(value)) {
+        // if (metadata.get(key).equals(value)) {
         content.put(key, value);
-//        } else {
-//            // FIXME use talend exception
-//            throw new RuntimeException("unsupport set " + value.getClass() + " type to " + metadata.get(key));
-//        }
+        // } else {
+        // // FIXME use talend exception
+        // throw new RuntimeException("unsupport set " + value.getClass() + " type to " + metadata.get(key));
+        // }
     }
 
     @Override

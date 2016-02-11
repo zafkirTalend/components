@@ -29,8 +29,7 @@ import org.talend.daikon.properties.ValidationResult;
 
 import aQute.bnd.annotation.component.Component;
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TSalesforceConnectionDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceConnectionDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceConnectionDefinition extends SalesforceDefinition implements ConnectionComponentDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceConnectionNew"; //$NON-NLS-1$
@@ -38,13 +37,14 @@ public class TSalesforceConnectionDefinition extends SalesforceDefinition implem
     public TSalesforceConnectionDefinition() {
         super(COMPONENT_NAME);
         setConnectors(new Connector(ConnectorType.FLOW, 0, 0));
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override
     public ComponentRuntime createRuntime() {
         return new SalesforceRuntime() {
+
             //
             // FIXME - change me
             // Need to adjust the override after we have a finally solution to split Runtime class

@@ -16,12 +16,13 @@ import org.talend.components.bd.api.component.spark.SparkOutputConf;
 /**
  * Created by bchen on 16-1-25.
  */
-public class DataflowOutputTransformEvaluator implements TransformEvaluator<DataflowIO.Write.Component<String>>{
+public class DataflowOutputTransformEvaluator implements TransformEvaluator<DataflowIO.Write.Component<String>> {
+
     @Override
     public void evaluate(DataflowIO.Write.Component<String> transform, EvaluationContext context) {
         ComponentProperties properties = transform.getProperties();
         IBDImplement bdProps = null;
-        //TODO check if it's default, should be done in SparkInputConf, not in here, refactor later
+        // TODO check if it's default, should be done in SparkInputConf, not in here, refactor later
         boolean isDefault = true;
         if (properties instanceof IBDImplement) {
             bdProps = (IBDImplement) properties;
@@ -32,7 +33,8 @@ public class DataflowOutputTransformEvaluator implements TransformEvaluator<Data
             sparkOutputConf = new SparkOutputConf();
         } else {
             try {
-                sparkOutputConf = (SparkOutputConf) Class.forName(bdProps.getImplementClassName(BDType.SparkOutputConf)).newInstance();
+                sparkOutputConf = (SparkOutputConf) Class.forName(bdProps.getImplementClassName(BDType.SparkOutputConf))
+                        .newInstance();
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -41,15 +43,14 @@ public class DataflowOutputTransformEvaluator implements TransformEvaluator<Data
                 e.printStackTrace();
             }
         }
-        JavaRDD<BaseRowStruct> last =
-                ((JavaRDDLike<WindowedValue<BaseRowStruct>, ?>) context.getInputRDD(transform))
-                        .map(WindowingHelpers.<BaseRowStruct>unwindowFunction())
-                        .map(new Function<BaseRowStruct, BaseRowStruct>() {
-                            @Override
-                            public BaseRowStruct call(BaseRowStruct t) throws Exception {
-                                return t;
-                            }
-                        });
+        JavaRDD<BaseRowStruct> last = ((JavaRDDLike<WindowedValue<BaseRowStruct>, ?>) context.getInputRDD(transform)).map(
+                WindowingHelpers.<BaseRowStruct> unwindowFunction()).map(new Function<BaseRowStruct, BaseRowStruct>() {
+
+            @Override
+            public BaseRowStruct call(BaseRowStruct t) throws Exception {
+                return t;
+            }
+        });
         sparkOutputConf.invoke(last, transform.getProperties());
     }
 }

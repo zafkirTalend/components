@@ -13,8 +13,8 @@ import org.talend.components.salesforce.metadata.SalesforceMetadata;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionObject;
 import org.talend.components.salesforce.type.SalesforceBaseType;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
 
 import java.util.ArrayList;
@@ -24,13 +24,15 @@ import java.util.List;
  * Created by bchen on 16-1-28.
  */
 public class SalesforceSource implements Source<SObject> {
+
     TSalesforceInputProperties props;
+
     SalesforceConnectionObject conn;
 
     @Override
     public void init(ComponentProperties properties) throws TalendConnectionException {
         props = (TSalesforceInputProperties) properties;
-        //even use exist connection, but connection information has been store in input properties before call source
+        // even use exist connection, but connection information has been store in input properties before call source
         String refedComponentId = props.connection.referencedComponentId.getStringValue();
         SalesforceConnectionManager connManager = new SalesforceConnectionManager();
         if (refedComponentId == null) {
@@ -60,20 +62,25 @@ public class SalesforceSource implements Source<SObject> {
         return new Split[0];
     }
 
-
     @Override
     public String getFamilyName() {
         return SalesforceBaseType.FAMILY_NAME;
     }
 
     public class SalesforceReader implements Reader<SObject> {
+
         SalesforceConnectionObject conn;
+
         QueryResult query;
+
         SObject[] records;
+
         SObject current;
+
         int currentIndex = 0;
 
-        SalesforceReader(TSalesforceInputProperties props, SalesforceConnectionObject conn, Split split) throws TalendConnectionException {
+        SalesforceReader(TSalesforceInputProperties props, SalesforceConnectionObject conn, Split split)
+                throws TalendConnectionException {
             if (split instanceof SingleSplit) {
                 String queryText;
                 SalesforceMetadata metadata = new SalesforceMetadata();
@@ -82,9 +89,9 @@ public class SalesforceSource implements Source<SObject> {
                 } else {
                     metadata.initSchemaForDynamic(props.module);
                     List<String> columnsName = new ArrayList<>();
-                    for (SchemaElement se : ((Schema) props.module.schema.schema.getValue()).getRoot().getChildren()) {
-                        if (se.getType() == SchemaElement.Type.DYNAMIC) {
-                            for (SchemaElement seInDyn : se.getChildren()) {
+                    for (MakoElement se : ((DataSchema) props.module.schema.schema.getValue()).getRoot().getChildren()) {
+                        if (se.getType() == MakoElement.Type.DYNAMIC) {
+                            for (MakoElement seInDyn : se.getChildren()) {
                                 columnsName.add(((DataSchemaElement) seInDyn).getAppColName());
                             }
                         } else {
@@ -155,8 +162,8 @@ public class SalesforceSource implements Source<SObject> {
         }
 
         @Override
-        public List<SchemaElement> getSchema() {
-            return ((Schema) props.module.schema.schema.getValue()).getRoot().getChildren();
+        public List<MakoElement> getSchema() {
+            return ((DataSchema) props.module.schema.schema.getValue()).getRoot().getChildren();
         }
     }
 }

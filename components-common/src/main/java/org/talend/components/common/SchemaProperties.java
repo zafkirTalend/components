@@ -20,9 +20,9 @@ import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.SchemaFactory;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.DataSchemaFactory;
 
 public class SchemaProperties extends ComponentProperties {
 
@@ -34,12 +34,12 @@ public class SchemaProperties extends ComponentProperties {
     // Properties
     //
     // FIXME - change to Schema
-    public Property schema = newProperty(SchemaElement.Type.SCHEMA, "schema"); //$NON-NLS-1$
+    public Property schema = newProperty(MakoElement.Type.SCHEMA, "schema"); //$NON-NLS-1$
 
     @Override
     public void setupProperties() {
         super.setupProperties();
-        schema.setValue(SchemaFactory.newSchema());
+        schema.setValue(DataSchemaFactory.newSchema());
     }
 
     @Override
@@ -52,20 +52,4 @@ public class SchemaProperties extends ComponentProperties {
         Form schemaRefForm = Form.create(this, Form.REFERENCE, "Schema"); //$NON-NLS-1$
         schemaRefForm.addRow(widget(schema).setWidgetType(Widget.WidgetType.SCHEMA_REFERENCE));
     }
-
-    /**
-     * helper method to add a child schema element to the {@link SchemaProperties#schema} property This creates a Root
-     * named schema is not root exists.
-     */
-    public SchemaElement addSchemaChild(SchemaElement row) {
-        Schema s = (Schema) schema.getValue();
-        SchemaElement root = s.getRoot();
-        if (root == null) {
-            root = PropertyFactory.newProperty("Root"); //$NON-NLS-1$
-            s.setRoot(root);
-        }
-        root.addChild(row);
-        return row;
-    }
-
 }

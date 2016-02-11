@@ -11,6 +11,7 @@ import org.talend.components.salesforce.SalesforceConnectionProperties;
  * Created by bchen on 16-1-28.
  */
 public class SalesforceConnectionManager extends ConnectionManager<SalesforceConnectionObject> {
+
     @Override
     public SalesforceConnectionObject newConnection(ComponentProperties props) throws TalendConnectionException {
         SalesforceConnectionFactory factory = new SalesforceConnectionFactory((SalesforceConnectionProperties) props);
@@ -26,10 +27,9 @@ public class SalesforceConnectionManager extends ConnectionManager<SalesforceCon
         return connection;
     }
 
-
     @Override
     public void destoryConnection(SalesforceConnectionObject partnerConnection) {
-        //nothing to do;
+        // nothing to do;
     }
 
     @Override

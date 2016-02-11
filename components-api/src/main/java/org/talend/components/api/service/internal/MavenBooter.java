@@ -115,8 +115,8 @@ public class MavenBooter {
             request.setSystemProperties(getSystemProperties());
 
             settings = settingsBuilder.build(request).getEffectiveSettings();
-            SettingsDecryptionResult result = newDefaultSettingsDecrypter()
-                    .decrypt(new DefaultSettingsDecryptionRequest(settings));
+            SettingsDecryptionResult result = newDefaultSettingsDecrypter().decrypt(
+                    new DefaultSettingsDecryptionRequest(settings));
             settings.setServers(result.getServers());
             settings.setProxies(result.getProxies());
         }

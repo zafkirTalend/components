@@ -7,6 +7,7 @@ import com.sforce.soap.partner.PartnerConnection;
  * Created by bchen on 16-1-29.
  */
 public class SalesforceConnectionObject {
+
     PartnerConnection partnerConnection;
 
     BulkConnection bulkConnection;

@@ -11,10 +11,12 @@ import org.talend.components.api.properties.ComponentProperties;
  * Created by bchen on 16-1-25.
  */
 public class DataflowIO {
+
     private DataflowIO() {
     }
 
     public static final class Read {
+
         private Read() {
         }
 
@@ -25,6 +27,7 @@ public class DataflowIO {
         public static class Component<T> extends PTransform<PInput, PCollection<T>> {
 
             private boolean streaming = false;
+
             private final ComponentProperties properties;
 
             Component() {
@@ -45,7 +48,7 @@ public class DataflowIO {
                 return new Component<>(name, properties, streaming);
             }
 
-            //TODO set if unbounded in there or ?
+            // TODO set if unbounded in there or ?
             public Component<T> unbounded() {
                 return new Component<>(name, properties, true);
             }
@@ -59,15 +62,14 @@ public class DataflowIO {
                 if (properties == null) {
                     throw new IllegalStateException("need to set the properties of a DataflowIO.Read transform");
                 }
-                return PCollection.<T>createPrimitiveOutputInternal(
-                        input.getPipeline(),
-                        WindowingStrategy.globalDefault(),
+                return PCollection.<T> createPrimitiveOutputInternal(input.getPipeline(), WindowingStrategy.globalDefault(),
                         streaming ? PCollection.IsBounded.UNBOUNDED : PCollection.IsBounded.BOUNDED);
             }
         }
     }
 
     public static final class Write {
+
         private Write() {
 
         }
@@ -77,8 +79,10 @@ public class DataflowIO {
         }
 
         public static class Component<T> extends PTransform<PCollection<T>, PDone> {
+
             private final ComponentProperties properties;
-            //TODO how use streaming for output?
+
+            // TODO how use streaming for output?
             private boolean streaming = false;
 
             Component() {
@@ -99,7 +103,7 @@ public class DataflowIO {
                 return new Component<>(name, properties, streaming);
             }
 
-            //TODO set if unbounded in there or ?
+            // TODO set if unbounded in there or ?
             public Component<T> unbounded() {
                 return new Component<>(name, properties, true);
             }

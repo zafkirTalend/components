@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.talend.daikon.properties.Property;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 /**
  * created by pbailly on 16 Dec 2015 Detailled comment
@@ -44,7 +44,8 @@ public class DefaultComponentRuntimeContainerImplTest {
     public void testGetCurrentComponentName() {
         DefaultComponentRuntimeContainerImpl runtimeContainer = new DefaultComponentRuntimeContainerImpl();
         assertNull(runtimeContainer.getCurrentComponentName());
-        runtimeContainer = new DefaultComponentRuntimeContainerImpl(){
+        runtimeContainer = new DefaultComponentRuntimeContainerImpl() {
+
             @Override
             public String getCurrentComponentName() {
                 return "tSalesforceConnectionNew_1";
@@ -72,7 +73,7 @@ public class DefaultComponentRuntimeContainerImplTest {
         schema.resetValues();
         assertNull(schema.getFieldValue("key"));
 
-        List<SchemaElement> list = new ArrayList<SchemaElement>();
+        List<MakoElement> list = new ArrayList<MakoElement>();
         list.add(new Property("testProperty"));
         assertNull(schema.getSchemaElements());
         schema.setSchemaElements(list);

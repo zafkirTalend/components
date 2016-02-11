@@ -13,6 +13,7 @@ import java.io.Serializable;
  * Created by bchen on 16-1-19.
  */
 public class SparkOutputConf implements Serializable {
+
     public void invoke(JavaRDD<BaseRowStruct> rdd, ComponentProperties properties) {
         Class<? extends Sink> sinkClazz = null;
         if (properties instanceof IDIImplement) {

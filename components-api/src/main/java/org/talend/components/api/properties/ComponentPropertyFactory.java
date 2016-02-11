@@ -13,7 +13,7 @@
 package org.talend.components.api.properties;
 
 import org.talend.daikon.properties.Property;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 /**
  * Make new {@link Property} objects.
@@ -39,7 +39,7 @@ public class ComponentPropertyFactory {
      * @param name the name of the returns property
      * @return a {@link Property}
      */
-    public static Property newReturnProperty(Property returns, SchemaElement.Type type, String name) {
+    public static Property newReturnProperty(Property returns, MakoElement.Type type, String name) {
         // TODO Check if the property's name is equals ComponentProperties.RETURNS
         Property p = new Property(type, name);
         returns.addChild(p);

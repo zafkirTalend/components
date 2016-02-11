@@ -17,11 +17,11 @@ import static org.talend.daikon.properties.PropertyFactory.*;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 public class ProxyProperties extends ComponentProperties {
 
-    public Property useProxy = (Property) newProperty(SchemaElement.Type.BOOLEAN, "useProxy").setRequired(true); //$NON-NLS-1$
+    public Property useProxy = (Property) newProperty(MakoElement.Type.BOOLEAN, "useProxy").setRequired(true); //$NON-NLS-1$
 
     private static final String HOST = "host";
 

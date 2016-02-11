@@ -7,6 +7,7 @@ import java.io.DataOutput;
  * Created by bchen on 16-1-14.
  */
 public class SingleSplit implements Split {
+
     @Override
     public long getLength() {
         return -1;
@@ -14,7 +15,7 @@ public class SingleSplit implements Split {
 
     @Override
     public String[] getLocations() {
-        return new String[]{""};
+        return new String[] { "" };
     }
 
     @Override

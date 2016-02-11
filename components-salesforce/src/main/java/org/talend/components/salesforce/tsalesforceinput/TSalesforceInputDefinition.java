@@ -29,8 +29,7 @@ import org.talend.daikon.schema.type.TypesRegistry;
  * Component that can connect to a salesforce system and get some data out of it.
  */
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TSalesforceInputDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceInputDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceInputDefinition extends SalesforceDefinition implements InputComponentDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceInputNew"; //$NON-NLS-1$
@@ -39,8 +38,8 @@ public class TSalesforceInputDefinition extends SalesforceDefinition implements 
         super(COMPONENT_NAME);
 
         setConnectors(new Connector(Connector.ConnectorType.FLOW, 0, 1));
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 1), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(TriggerType.ITERATE, 1, 1), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override

@@ -4,9 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -22,10 +24,8 @@ import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.daikon.properties.Properties.Deserialized;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.internal.DataSchemaElement;
-import org.talend.daikon.schema.type.ExternalBaseType;
-import org.talend.daikon.schema.type.TypeMapping;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.type.AvroConverterRegistry;
 
 /**
  * Created by bchen on 16-1-10.
@@ -87,32 +87,22 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
 
         private Reader reader;
 
-        private List<SchemaElement> schema;
-
         private String familyName;
 
         BDRecordReader(Reader reader, String familyName) {
             this.reader = reader;
-            this.schema = reader.getSchema();
             this.familyName = familyName;
         }
 
         @Override
         public boolean next(NullWritable nullWritable, BaseRowStruct baseRowStruct) throws IOException {
             if (reader.advance()) {
-                Object row = reader.getCurrent();
 
-                for (SchemaElement column : schema) {
-                    DataSchemaElement col = (DataSchemaElement) column;
-                    try {
-                        ExternalBaseType converter = col.getAppColType().newInstance();
-                        Object dataValue = converter.convertToKnown(converter.readValue(row, col.getAppColName()));
-                        baseRowStruct.put(col.getName(), TypeMapping.convert(familyName, col, dataValue));
-                    } catch (InstantiationException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
+                IndexedRecord in = AvroConverterRegistry.getAsIndexedRecord(reader.getCurrent());
+                Map<String, String> out = new HashMap<>();
+                Schema schema = in.getSchema();
+                for (Field f : schema.getFields()) {
+                    baseRowStruct.put(f.name(), in.get(f.pos()));
                 }
                 return true;
             } else {
@@ -127,11 +117,7 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
 
         @Override
         public BaseRowStruct createValue() {
-            Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
-            for (SchemaElement field : schema) {
-                row_metadata.put(field.getName(), field.getType());
-            }
-            return new BaseRowStruct(row_metadata);
+            return new BaseRowStruct();
         }
 
         @Override

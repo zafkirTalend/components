@@ -26,12 +26,11 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.ComponentRuntime;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceRuntime;
-import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.DataSchema;
 
 import aQute.bnd.annotation.component.Component;
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TSalesforceGetServerTimestampDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceGetServerTimestampDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceGetServerTimestampDefinition extends SalesforceDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceGetServerTimestampNew"; //$NON-NLS-1$
@@ -40,8 +39,8 @@ public class TSalesforceGetServerTimestampDefinition extends SalesforceDefinitio
         super(COMPONENT_NAME);
 
         setConnectors(new Connector(ConnectorType.FLOW, 0, 1));
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override
@@ -50,13 +49,13 @@ public class TSalesforceGetServerTimestampDefinition extends SalesforceDefinitio
 
             Calendar result;
 
-            Schema schema;
+            DataSchema schema;
 
             @Override
             public void inputBegin(ComponentProperties props) throws Exception {
                 TSalesforceGetServerTimestampProperties gdProps = (TSalesforceGetServerTimestampProperties) props;
                 connect(gdProps.connection);
-                schema = (Schema) gdProps.schema.schema.getValue();
+                schema = (DataSchema) gdProps.schema.schema.getValue();
                 result = connection.getServerTimestamp().getTimestamp();
             }
 

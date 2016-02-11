@@ -29,10 +29,10 @@ public class TSalesforceOutputBulkExecDefinition extends SalesforceDefinition {
 
     public TSalesforceOutputBulkExecDefinition() {
         super(COMPONENT_NAME);
-        setConnectors(new Connector(ConnectorType.FLOW, 1, 0), new Connector(ConnectorType.MAIN, 0, 1),
-                new Connector(ConnectorType.REJECT, 0, 1));
-        setTriggers(new Trigger(TriggerType.ITERATE, 0, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setConnectors(new Connector(ConnectorType.FLOW, 1, 0), new Connector(ConnectorType.MAIN, 0, 1), new Connector(
+                ConnectorType.REJECT, 0, 1));
+        setTriggers(new Trigger(TriggerType.ITERATE, 0, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override

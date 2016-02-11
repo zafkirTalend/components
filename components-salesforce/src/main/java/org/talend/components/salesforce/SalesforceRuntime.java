@@ -40,9 +40,9 @@ import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.ValidationResult;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.SchemaFactory;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.DataSchemaFactory;
 
 import com.sforce.async.AsyncApiException;
 import com.sforce.async.BulkConnection;
@@ -102,28 +102,28 @@ public class SalesforceRuntime extends ComponentRuntime {
 
     protected String upsertKeyColumn;
 
-    protected Map<String, SchemaElement> fieldMap;
+    protected Map<String, MakoElement> fieldMap;
 
-    protected List<SchemaElement> fieldList;
+    protected List<MakoElement> fieldList;
 
     /*
      * Used on input only, this is read from the module schema, it contains all of the fields from the salesforce
      * definition of the module that are not already in the field list.
      */
-    protected List<SchemaElement> dynamicFieldList;
+    protected List<MakoElement> dynamicFieldList;
 
-    protected Map<String, SchemaElement> dynamicFieldMap;
+    protected Map<String, MakoElement> dynamicFieldMap;
 
     /*
      * The actual fields we read on input which is a combination of the fields specified in the schema and the dynamic
      * fields.
      */
-    protected List<SchemaElement> inputFieldsToUse;
+    protected List<MakoElement> inputFieldsToUse;
 
     /*
      * The dynamic column that is specified on the input schema.
      */
-    protected SchemaElement dynamicField;
+    protected MakoElement dynamicField;
 
     public SalesforceRuntime() {
         commitLevel = 1;
@@ -193,8 +193,8 @@ public class SalesforceRuntime extends ComponentRuntime {
         }
     }
 
-    protected void doConnection(SalesforceConnectionProperties properties, ConnectorConfig config)
-            throws AsyncApiException, ConnectionException {
+    protected void doConnection(SalesforceConnectionProperties properties, ConnectorConfig config) throws AsyncApiException,
+            ConnectionException {
         if (SalesforceConnectionProperties.LOGIN_OAUTH.equals(properties.loginType.getValue())) {
             SalesforceOAuthConnection oauthConnection = new SalesforceOAuthConnection(properties.oauth,
                     SalesforceConnectionProperties.OAUTH_URL, API_VERSION);
@@ -241,8 +241,8 @@ public class SalesforceRuntime extends ComponentRuntime {
             if (!refedComponentId.equals(container.getCurrentComponentName())) {
                 connection = (PartnerConnection) container.getGlobalMap().get(refedComponentId);
                 if (connection == null) {
-                    throw new ConnectionException(
-                            "Can't find the shared connection instance with refedComponentId: " + refedComponentId);
+                    throw new ConnectionException("Can't find the shared connection instance with refedComponentId: "
+                            + refedComponentId);
                 }
                 return;
             }
@@ -307,26 +307,26 @@ public class SalesforceRuntime extends ComponentRuntime {
         return returnList;
     }
 
-    public void setupSchemaElement(Field field, SchemaElement element) {
+    public void setupSchemaElement(Field field, MakoElement element) {
         String type = field.getType().toString();
         if (type.equals("boolean")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.BOOLEAN);
+            element.setType(MakoElement.Type.BOOLEAN);
         } else if (type.equals("int")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.INT);
+            element.setType(MakoElement.Type.INT);
         } else if (type.equals("date")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.DATE);
+            element.setType(MakoElement.Type.DATE);
             element.setPattern("\"yyyy-MM-dd\""); //$NON-NLS-1$
         } else if (type.equals("datetime")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.DATETIME);
+            element.setType(MakoElement.Type.DATETIME);
             element.setPattern("\"yyyy-MM-dd\'T\'HH:mm:ss\'.000Z\'\""); //$NON-NLS-1$
         } else if (type.equals("double")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.DOUBLE);
+            element.setType(MakoElement.Type.DOUBLE);
         } else if (type.equals("currency")) { //$NON-NLS-1$
-            element.setType(SchemaElement.Type.DECIMAL);
+            element.setType(MakoElement.Type.DECIMAL);
         }
         element.setNullable(field.getNillable());
 
-        if (element.getType() == SchemaElement.Type.STRING) {
+        if (element.getType() == MakoElement.Type.STRING) {
             element.setSize(field.getLength());
             element.setPrecision(field.getPrecision());
         } else {
@@ -337,15 +337,15 @@ public class SalesforceRuntime extends ComponentRuntime {
     }
 
     @Override
-    public Schema getSchema(String module) throws ConnectionException {
-        Schema schema = SchemaFactory.newSchema();
-        SchemaElement root = SchemaFactory.newSchemaElement("Root");
+    public DataSchema getSchema(String module) throws ConnectionException {
+        DataSchema schema = DataSchemaFactory.newSchema();
+        MakoElement root = DataSchemaFactory.newSchemaElement("Root");
         schema.setRoot(root);
 
         DescribeSObjectResult[] describeSObjectResults = connection.describeSObjects(new String[] { module });
         Field fields[] = describeSObjectResults[0].getFields();
         for (Field field : fields) {
-            SchemaElement child = PropertyFactory.newProperty(field.getName());
+            MakoElement child = PropertyFactory.newProperty(field.getName());
             setupSchemaElement(field, child);
             root.addChild(child);
         }
@@ -361,12 +361,12 @@ public class SalesforceRuntime extends ComponentRuntime {
         SalesforceConnectionModuleProperties sprops = (SalesforceConnectionModuleProperties) props;
         connect(sprops.connection);
 
-        Schema schema = sprops.getSchema();
+        DataSchema schema = sprops.getSchema();
         fieldMap = schema.getRoot().getChildMap();
         fieldList = schema.getRoot().getChildren();
 
-        for (SchemaElement se : fieldList) {
-            if (se.getType() == SchemaElement.Type.DYNAMIC) {
+        for (MakoElement se : fieldList) {
+            if (se.getType() == MakoElement.Type.DYNAMIC) {
                 dynamicField = se;
                 break;
             }
@@ -386,10 +386,10 @@ public class SalesforceRuntime extends ComponentRuntime {
          */
         if (dynamicField != null) {
             dynamicFieldMap = new HashMap<>();
-            List<SchemaElement> filteredDynamicFields = new ArrayList<>();
-            Schema dynSchema = getSchema(sprops.module.moduleName.getStringValue());
+            List<MakoElement> filteredDynamicFields = new ArrayList<>();
+            DataSchema dynSchema = getSchema(sprops.module.moduleName.getStringValue());
 
-            for (SchemaElement se : dynSchema.getRoot().getChildren()) {
+            for (MakoElement se : dynSchema.getRoot().getChildren()) {
                 if (fieldMap.containsKey(se.getName())) {
                     continue;
                 }
@@ -400,8 +400,8 @@ public class SalesforceRuntime extends ComponentRuntime {
         }
 
         inputFieldsToUse = new ArrayList<>();
-        for (SchemaElement s : fieldList) {
-            if (s.getType() == SchemaElement.Type.DYNAMIC) {
+        for (MakoElement s : fieldList) {
+            if (s.getType() == MakoElement.Type.DYNAMIC) {
                 continue;
             }
             inputFieldsToUse.add(s);
@@ -417,7 +417,7 @@ public class SalesforceRuntime extends ComponentRuntime {
             StringBuilder sb = new StringBuilder();
             sb.append("select ");
             int count = 0;
-            for (SchemaElement se : inputFieldsToUse) {
+            for (MakoElement se : inputFieldsToUse) {
                 if (count++ > 0) {
                     sb.append(", ");
                 }
@@ -488,8 +488,8 @@ public class SalesforceRuntime extends ComponentRuntime {
             for (String key : row.keySet()) {
                 Object value = row.get(key);
                 if (value != null) {
-                    SchemaElement se = fieldMap.get(key);
-                    if (se != null && se.getType() != SchemaElement.Type.DYNAMIC) {
+                    MakoElement se = fieldMap.get(key);
+                    if (se != null && se.getType() != MakoElement.Type.DYNAMIC) {
                         addSObjectField(so, se, value);
                     }
                 }
@@ -497,8 +497,8 @@ public class SalesforceRuntime extends ComponentRuntime {
 
             if (dynamicField != null) {
                 ComponentDynamicHolder dynamic = (ComponentDynamicHolder) row.get(dynamicField.getName());
-                List<SchemaElement> dynamicSes = dynamic.getSchemaElements();
-                for (SchemaElement dynamicSe : dynamicSes) {
+                List<MakoElement> dynamicSes = dynamic.getSchemaElements();
+                for (MakoElement dynamicSe : dynamicSes) {
                     Object value = dynamic.getFieldValue(dynamicSe.getName());
                     addSObjectField(so, dynamicSe, value);
                 }
@@ -534,8 +534,8 @@ public class SalesforceRuntime extends ComponentRuntime {
     protected String getIdValue(Map<String, Object> row) {
         String ID = "Id";
         if (row.get(ID) != null) {
-            SchemaElement se = fieldMap.get(ID);
-            if (se.getType() != SchemaElement.Type.DYNAMIC) {
+            MakoElement se = fieldMap.get(ID);
+            if (se.getType() != MakoElement.Type.DYNAMIC) {
                 return (String) row.get(ID);
             }
         }
@@ -545,8 +545,8 @@ public class SalesforceRuntime extends ComponentRuntime {
         }
 
         ComponentDynamicHolder dynamic = (ComponentDynamicHolder) row.get(dynamicField.getName());
-        List<SchemaElement> dynamicSes = dynamic.getSchemaElements();
-        for (SchemaElement dynamicSe : dynamicSes) {
+        List<MakoElement> dynamicSes = dynamic.getSchemaElements();
+        for (MakoElement dynamicSe : dynamicSes) {
             if (dynamicSe.getName().equals(ID)) {
                 return (String) dynamic.getFieldValue(ID);
             }
@@ -556,7 +556,7 @@ public class SalesforceRuntime extends ComponentRuntime {
         throw new RuntimeException(ID + " not found in dynamic columns");
     }
 
-    protected void addSObjectField(SObject sObject, SchemaElement se, Object value) {
+    protected void addSObjectField(SObject sObject, MakoElement se, Object value) {
         Object valueToAdd;
         switch (se.getType()) {
         case BYTE_ARRAY:
@@ -705,8 +705,8 @@ public class SalesforceRuntime extends ComponentRuntime {
         if (success) {
             // TODO: send back the ID
         } else {
-            errors = addLog(resultErrors,
-                    batchIdx < changedItemKeys.length ? changedItemKeys[batchIdx] : "Batch index out of bounds");
+            errors = addLog(resultErrors, batchIdx < changedItemKeys.length ? changedItemKeys[batchIdx]
+                    : "Batch index out of bounds");
         }
         if (exceptionForErrors && errors.toString().length() > 0) {
             if (logWriter != null) {

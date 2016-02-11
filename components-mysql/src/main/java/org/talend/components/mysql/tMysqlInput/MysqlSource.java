@@ -9,8 +9,8 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.mysql.DBTableSplit;
 import org.talend.components.mysql.JDBCHelper;
 import org.talend.components.mysql.type.MysqlBaseType;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
 
 import java.io.IOException;
@@ -23,6 +23,7 @@ import java.util.List;
 public class MysqlSource implements Source {
 
     tMysqlInputProperties props;
+
     Connection conn;
 
     @Override
@@ -34,8 +35,9 @@ public class MysqlSource implements Source {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        //TODO dbproperties should not empty, need check first
-        String url = "jdbc:mysql://" + props.HOST.getStringValue() + ":" + props.PORT.getStringValue() + "/" + props.DBNAME.getStringValue() + "?" + props.PROPERTIES.getStringValue();
+        // TODO dbproperties should not empty, need check first
+        String url = "jdbc:mysql://" + props.HOST.getStringValue() + ":" + props.PORT.getStringValue() + "/"
+                + props.DBNAME.getStringValue() + "?" + props.PROPERTIES.getStringValue();
         try {
             conn = DriverManager.getConnection(url, props.USER.getStringValue(), props.PASS.getStringValue());
         } catch (SQLException e) {
@@ -55,10 +57,10 @@ public class MysqlSource implements Source {
     @Override
     public Reader getRecordReader(Split split) {
         if (split != null && !(split instanceof SingleSplit)) {
-            List<SchemaElement> columns = ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
+            List<MakoElement> columns = ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren();
             StringBuilder columnsStr = new StringBuilder();
             boolean removeEnd = false;
-            for (SchemaElement column : columns) {
+            for (MakoElement column : columns) {
                 columnsStr.append(((DataSchemaElement) column).getAppColName());
                 columnsStr.append(",");
                 removeEnd = true;
@@ -112,7 +114,9 @@ public class MysqlSource implements Source {
     }
 
     public class MysqlReader implements Reader {
+
         private ResultSet rs;
+
         private Statement statement;
 
         MysqlReader(Connection conn, String splitQuery) {
@@ -155,8 +159,8 @@ public class MysqlSource implements Source {
         }
 
         @Override
-        public List<SchemaElement> getSchema() {
-            return ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
+        public List<MakoElement> getSchema() {
+            return ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren();
         }
     }
 

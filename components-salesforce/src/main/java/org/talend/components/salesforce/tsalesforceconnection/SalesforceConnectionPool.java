@@ -9,6 +9,7 @@ import org.talend.components.salesforce.SalesforceConnectionProperties;
  * Created by bchen on 16-1-28.
  */
 public class SalesforceConnectionPool {
+
     private static volatile ObjectPool<SalesforceConnectionObject> pool;
 
     private SalesforceConnectionPool() {
@@ -27,7 +28,7 @@ public class SalesforceConnectionPool {
 
     private static ObjectPool<SalesforceConnectionObject> createPool(SalesforceConnectionProperties props) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-        //TODO how to config pool for DI/BD?
+        // TODO how to config pool for DI/BD?
         return new GenericObjectPool<SalesforceConnectionObject>(new SalesforceConnectionFactory(props), config);
     }
 }

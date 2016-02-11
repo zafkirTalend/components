@@ -34,8 +34,8 @@ public class SalesforceConnectionWizard extends ComponentWizard {
         cProps.init();
         addForm(cProps.getForm(SalesforceConnectionProperties.FORM_WIZARD));
 
-        mProps = new SalesforceModuleListProperties("mProps").setConnection(cProps).setRepositoryLocation(getRepositoryLocation())
-                .setComponentService(compService);
+        mProps = new SalesforceModuleListProperties("mProps").setConnection(cProps)
+                .setRepositoryLocation(getRepositoryLocation()).setComponentService(compService);
         mProps.init();
         addForm(mProps.getForm(Form.MAIN));
     }

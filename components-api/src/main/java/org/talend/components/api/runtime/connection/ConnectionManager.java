@@ -11,13 +11,14 @@ import java.util.Map;
  * Created by bchen on 16-1-28.
  */
 public abstract class ConnectionManager<T> {
+
     public abstract T newConnection(ComponentProperties props) throws TalendConnectionException;
 
     public abstract void destoryConnection(T t);
 
     protected static Map<String, Object> cache = new HashMap<>();
 
-    //TODO need to separate to two method? create and get?
+    // TODO need to separate to two method? create and get?
     public synchronized T getConnectionByKey(String key, ComponentProperties props) throws TalendConnectionException {
         if (key == null) {
             return newConnection(props);
@@ -42,6 +43,6 @@ public abstract class ConnectionManager<T> {
 
     public abstract ObjectPool<T> getConnectionPool(ComponentProperties props);
 
-    //TODO implement getConnectionPoolByKey
+    // TODO implement getConnectionPoolByKey
 
 }

@@ -75,8 +75,8 @@ public class SalesforceOAuthConnection {
                     OauthClient oauthClient;
                     try {
                         oauthClient = new OauthClient.RefreshTokenBuilder(new URL(url + "/token"),
-                                oauth.clientId.getStringValue(), oauth.clientSecret.getStringValue())
-                                        .setRefreshToken(storedRefreshToken).build();
+                                oauth.clientId.getStringValue(), oauth.clientSecret.getStringValue()).setRefreshToken(
+                                storedRefreshToken).build();
                         token = oauthClient.getToken(SalesforceOAuthAccessTokenResponse.class);
                         session_id = token.getAccessToken();
                         refreshToken = token.getRefreshToken();
@@ -93,10 +93,10 @@ public class SalesforceOAuthConnection {
             try {
                 oauthClient = new OauthClient.AuthorizationCodeBuilder(new URL(url + "/token"), //$NON-NLS-1$
                         oauth.clientId.getStringValue(), oauth.clientSecret.getStringValue())
-                                .setAuthorizationLocation(new URL(url + "/authorize")) //$NON-NLS-1$
-                                .setCallbackURL(new URL("https://" + oauth.callbackHost.getStringValue() + ":"
-                                        + oauth.callbackPort.getIntValue()))
-                                .setResponseType("code").build();
+                        .setAuthorizationLocation(new URL(url + "/authorize")) //$NON-NLS-1$
+                        .setCallbackURL(
+                                new URL("https://" + oauth.callbackHost.getStringValue() + ":" + oauth.callbackPort.getIntValue()))
+                        .setResponseType("code").build();
                 token = oauthClient.getToken(SalesforceOAuthAccessTokenResponse.class);
                 session_id = token.getAccessToken();
                 refreshToken = token.getRefreshToken();

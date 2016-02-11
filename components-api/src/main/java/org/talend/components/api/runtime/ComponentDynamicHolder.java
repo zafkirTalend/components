@@ -14,7 +14,7 @@ package org.talend.components.api.runtime;
 
 import java.util.List;
 
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 /**
  * A holder for dynamic schema information.
@@ -26,14 +26,14 @@ import org.talend.daikon.schema.SchemaElement;
 public interface ComponentDynamicHolder {
 
     /**
-     * Returns the {@link SchemaElement}s represented by this dynamic object.
+     * Returns the {@link MakoElement}s represented by this dynamic object.
      */
-    public List<SchemaElement> getSchemaElements();
+    public List<MakoElement> getSchemaElements();
 
     /**
-     * Sets the {@link SchemaElement}s associated with this dynamic object.
+     * Sets the {@link MakoElement}s associated with this dynamic object.
      */
-    public void setSchemaElements(List<SchemaElement> elements);
+    public void setSchemaElements(List<MakoElement> elements);
 
     /**
      * Returns the value associated with the specified field name.

@@ -28,13 +28,21 @@ import java.sql.Statement;
  * Created by bchen on 16-1-18.
  */
 public class MysqlDataflowTest {
+
     public static final String HOST = "localhost";
+
     public static final String PORT = "3306";
+
     public static final String USER = "root";
+
     public static final String PASS = "mysql";
+
     public static final String DBNAME = "tuj";
+
     public static final String TABLE = "test";
+
     public static final String PROPERTIES = "noDatetimeStringSync=true";
+
     Connection conn;
 
     @Before
@@ -83,7 +91,8 @@ public class MysqlDataflowTest {
         DFBoundedSource source = new DFBoundedSource(MysqlSource.class, props);
         PipelineOptions options = PipelineOptionsFactory.create();
         Pipeline p = Pipeline.create(options);
-        p.apply(Read.from(source).named("tMysqlInput_1")).apply(TextIO.Write.named("out").withCoder(MapCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())).to("/tmp/dffile"));
+        p.apply(Read.from(source).named("tMysqlInput_1")).apply(
+                TextIO.Write.named("out").withCoder(MapCoder.of(StringUtf8Coder.of(), StringUtf8Coder.of())).to("/tmp/dffile"));
 
         p.run();
 

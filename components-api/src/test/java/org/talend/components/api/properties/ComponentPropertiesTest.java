@@ -16,8 +16,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.talend.daikon.properties.Property;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.SchemaElement.Type;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.MakoElement.Type;
 
 /**
  * created by sgandon on 1 févr. 2016
@@ -26,7 +26,7 @@ public class ComponentPropertiesTest {
 
     @Test
     public void testSetReturnsProperty() {
-        SchemaElement element = ComponentProperties.setReturnsProperty();
+        MakoElement element = ComponentProperties.setReturnsProperty();
         assertEquals("returns", element.getName());
         assertEquals(Type.STRING, element.getType());
     }

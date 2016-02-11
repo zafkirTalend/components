@@ -20,9 +20,10 @@ import javax.xml.namespace.QName;
  * Created by bchen on 16-1-28.
  */
 public class SalesforceConnectionFactory extends BasePooledObjectFactory<SalesforceConnectionObject> {
+
     private SalesforceConnectionProperties props;
 
-    private static final String API_VERSION = "34.0";//TODO should not fixed in here
+    private static final String API_VERSION = "34.0";// TODO should not fixed in here
 
     public SalesforceConnectionFactory(SalesforceConnectionProperties props) {
         this.props = props;
@@ -69,7 +70,8 @@ public class SalesforceConnectionFactory extends BasePooledObjectFactory<Salesfo
 
     }
 
-    protected SalesforceConnectionObject doConnection(SalesforceConnectionProperties properties, ConnectorConfig config) throws ConnectionException {
+    protected SalesforceConnectionObject doConnection(SalesforceConnectionProperties properties, ConnectorConfig config)
+            throws ConnectionException {
         if (SalesforceConnectionProperties.LOGIN_OAUTH.equals(properties.loginType.getValue())) {
             new SalesforceOAuthConnection(properties.oauth, SalesforceConnectionProperties.OAUTH_URL, API_VERSION).login(config);
         } else {

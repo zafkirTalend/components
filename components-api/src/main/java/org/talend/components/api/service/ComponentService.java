@@ -142,8 +142,8 @@ public interface ComponentService extends PropertiesService<ComponentProperties>
      * list all the depencencies required for this component to be executed at runtime
      * 
      * @param componentName name of the component to get the dependencies of.
-     * @return a set of maven uri following the pax-maven uri scheme @see
-     * <a href="https://ops4j1.jira.com/wiki/display/paxurl/Mvn+Protocol">https://ops4j1.jira.com/wiki/display/paxurl/
+     * @return a set of maven uri following the pax-maven uri scheme @see <a
+     * href="https://ops4j1.jira.com/wiki/display/paxurl/Mvn+Protocol">https://ops4j1.jira.com/wiki/display/paxurl/
      * Mvn+Protocol</a>
      */
     Set<String> getMavenUriDependencies(String componentName);

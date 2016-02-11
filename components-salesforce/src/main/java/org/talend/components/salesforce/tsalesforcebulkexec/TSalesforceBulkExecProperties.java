@@ -19,7 +19,7 @@ import org.talend.components.salesforce.SalesforceBulkProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 public class TSalesforceBulkExecProperties extends TSalesforceOutputProperties {
 

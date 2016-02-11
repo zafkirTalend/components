@@ -22,7 +22,7 @@ public class DBTableSplit implements Split {
      * Convenience Constructor
      *
      * @param start the index of the first row to select
-     * @param end   the index of the last row to select
+     * @param end the index of the last row to select
      */
     public DBTableSplit(long start, long end) {
         this.start = start;
@@ -35,7 +35,7 @@ public class DBTableSplit implements Split {
     @Override
     public String[] getLocations() {
         // TODO Add a layer to enable SQL "sharding" and support locality
-        return new String[]{};
+        return new String[] {};
     }
 
     /**

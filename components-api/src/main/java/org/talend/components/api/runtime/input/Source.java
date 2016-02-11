@@ -7,6 +7,7 @@ import org.talend.components.api.properties.ComponentProperties;
  * Created by bchen on 16-1-10.
  */
 public interface Source<T> {
+
     /**
      * this method in-charge to open resource
      *

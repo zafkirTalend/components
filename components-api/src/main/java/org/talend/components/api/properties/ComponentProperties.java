@@ -22,7 +22,7 @@ import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 /**
  * The {@code ComponentProperties} class contains the definitions of the properties associated with a component. These
@@ -32,10 +32,10 @@ import org.talend.daikon.schema.SchemaElement;
  * include those for desktop (Eclipse), web, and scripting. All of these will use the code defined here for their
  * construction and validation.
  * <p/>
- * All aspects of the properties are defined in a subclass of this class using the {@link Property},
- * {@Link PresentationItem}, {@link Widget}, and {@link Form} classes. In addition in cases where user interface
- * decisions are made in code, methods can be added to the subclass to influence the flow of the user interface and help
- * with validation.
+ * All aspects of the properties are defined in a subclass of this class using the {@link Property}, {@Link
+ * PresentationItem}, {@link Widget}, and {@link Form} classes. In addition in cases where user interface decisions are
+ * made in code, methods can be added to the subclass to influence the flow of the user interface and help with
+ * validation.
  * <p/>
  * Each property can be a Java type, both simple types and collections are permitted. In addition,
  * {@code ComponentProperties} classes can be composed allowing hierarchies of properties and collections of properties
@@ -69,7 +69,7 @@ import org.talend.daikon.schema.SchemaElement;
  * <p/>
  * <b>WARNING</b> - A property shall be created as instance field before the constructor is called so that this abstract
  * constructor can attach i18n translator to the properties. If you want to create the property later you'll have to
- * call {@link SchemaElement#setI18nMessageFormater(I18nMessages)} manually.
+ * call {@link MakoElement#setI18nMessageFormater(I18nMessages)} manually.
  */
 
 public abstract class ComponentProperties extends Properties {
@@ -80,7 +80,7 @@ public abstract class ComponentProperties extends Properties {
     public static final String RETURNS = "returns";
 
     /**
-     * A special property for the values that a component returns. If this is used, this will be a {@link SchemaElement}
+     * A special property for the values that a component returns. If this is used, this will be a {@link MakoElement}
      * that contains each of the values the component returns.
      */
     public Property returns;

@@ -29,8 +29,7 @@ import com.sforce.soap.partner.GetDeletedResult;
 
 import aQute.bnd.annotation.component.Component;
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TSalesforceGetDeletedDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceGetDeletedDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceGetDeletedDefinition extends SalesforceDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceGetDeletedNew"; //$NON-NLS-1$

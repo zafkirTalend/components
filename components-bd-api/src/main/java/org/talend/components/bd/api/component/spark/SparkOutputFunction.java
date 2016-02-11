@@ -14,9 +14,10 @@ import java.util.Iterator;
  * Created by bchen on 16-1-18.
  */
 public class SparkOutputFunction implements VoidFunction<Iterator<BaseRowStruct>>, Serializable {
-    String className;
-    String props;
 
+    String className;
+
+    String props;
 
     public SparkOutputFunction(JobConf conf) {
         className = conf.get("output.sink");

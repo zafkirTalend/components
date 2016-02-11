@@ -26,9 +26,9 @@ import org.talend.daikon.exception.error.ErrorCode;
  */
 public enum ComponentsErrorCode implements ErrorCode {
 
-                                                      WRONG_COMPONENT_NAME(HttpServletResponse.SC_BAD_REQUEST, "name"), //$NON-NLS-1$
-                                                      WRONG_WIZARD_NAME(HttpServletResponse.SC_BAD_REQUEST, "name"), //$NON-NLS-1$
-                                                      COMPUTE_DEPENDENCIES_FAILED(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    WRONG_COMPONENT_NAME(HttpServletResponse.SC_BAD_REQUEST, "name"), //$NON-NLS-1$
+    WRONG_WIZARD_NAME(HttpServletResponse.SC_BAD_REQUEST, "name"), //$NON-NLS-1$
+    COMPUTE_DEPENDENCIES_FAILED(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
     /** The http status to use. */
     private int httpStatus;

@@ -17,9 +17,9 @@ import org.talend.components.common.SchemaProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaFactory;
-import org.talend.daikon.schema.SchemaElement.Type;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.DataSchemaFactory;
+import org.talend.daikon.schema.MakoElement.Type;
 
 public class TSalesforceGetServerTimestampProperties extends ComponentProperties {
 
@@ -38,8 +38,8 @@ public class TSalesforceGetServerTimestampProperties extends ComponentProperties
     @Override
     public void setupProperties() {
         super.setupProperties();
-        Schema s = (Schema) schema.schema.getValue();
-        s.setRoot(SchemaFactory.newSchemaElement(Type.GROUP, "Root"));
+        DataSchema s = (DataSchema) schema.schema.getValue();
+        s.setRoot(DataSchemaFactory.newSchemaElement(Type.GROUP, "Root"));
         s.getRoot().addChild(PropertyFactory.newDate("ServerTimestamp"));
     }
 

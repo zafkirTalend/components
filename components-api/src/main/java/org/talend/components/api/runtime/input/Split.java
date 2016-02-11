@@ -8,6 +8,7 @@ import java.io.DataOutput;
  */
 
 public interface Split {
+
     long getLength();
 
     String[] getLocations();

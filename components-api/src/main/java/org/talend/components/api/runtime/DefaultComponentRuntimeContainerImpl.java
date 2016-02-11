@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 /**
  * An implementation of a runtime container for testing purposes.
@@ -26,7 +26,7 @@ import org.talend.daikon.schema.SchemaElement;
 public class DefaultComponentRuntimeContainerImpl implements ComponentRuntimeContainer {
 
     private Map<String, Object> globalMap = new HashMap<>();
-    
+
     private String currentComponentName;
 
     @Override
@@ -36,17 +36,17 @@ public class DefaultComponentRuntimeContainerImpl implements ComponentRuntimeCon
 
     class Dynamic implements ComponentDynamicHolder {
 
-        private List<SchemaElement> schemaElements;
+        private List<MakoElement> schemaElements;
 
         private Map<String, Object> values = new HashMap<>();
 
         @Override
-        public List<SchemaElement> getSchemaElements() {
+        public List<MakoElement> getSchemaElements() {
             return schemaElements;
         }
 
         @Override
-        public void setSchemaElements(List<SchemaElement> elements) {
+        public void setSchemaElements(List<MakoElement> elements) {
             this.schemaElements = elements;
         }
 
@@ -77,9 +77,9 @@ public class DefaultComponentRuntimeContainerImpl implements ComponentRuntimeCon
         return new Dynamic();
     }
 
-	@Override
-	public String getCurrentComponentName() {
-		return currentComponentName;
-	}
+    @Override
+    public String getCurrentComponentName() {
+        return currentComponentName;
+    }
 
 }

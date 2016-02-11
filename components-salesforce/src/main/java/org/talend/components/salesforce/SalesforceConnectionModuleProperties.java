@@ -14,7 +14,7 @@ package org.talend.components.salesforce;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.DataSchema;
 
 /**
  * Properties common to input and output Salesforce components.
@@ -38,8 +38,8 @@ public class SalesforceConnectionModuleProperties extends ComponentProperties {
         module = new SalesforceModuleProperties("module").setConnection(connection);
     }
 
-    public Schema getSchema() {
-        return (Schema) module.schema.schema.getValue();
+    public DataSchema getSchema() {
+        return (DataSchema) module.schema.schema.getValue();
     }
 
     @Override

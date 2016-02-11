@@ -8,8 +8,8 @@ import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.components.salesforce.metadata.SalesforceMetadata;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionObject;
 import org.talend.components.salesforce.tsalesforceconnection.SalesforceConnectionManager;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
 
 import java.util.List;
 
@@ -17,7 +17,9 @@ import java.util.List;
  * Created by bchen on 16-1-28.
  */
 public class SalesforceSink implements Sink {
+
     private TSalesforceOutputProperties props;
+
     private SalesforceConnectionObject conn;
 
     @Override
@@ -50,8 +52,8 @@ public class SalesforceSink implements Sink {
     }
 
     @Override
-    public List<SchemaElement> getSchema() {
-        return ((Schema) props.module.schema.schema.getValue()).getRoot().getChildren();
+    public List<MakoElement> getSchema() {
+        return ((DataSchema) props.module.schema.schema.getValue()).getRoot().getChildren();
     }
 
     public class SalesforceWriter implements Writer {

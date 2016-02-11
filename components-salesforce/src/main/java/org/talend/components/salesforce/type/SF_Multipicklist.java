@@ -7,7 +7,8 @@ import java.util.List;
 /**
  * Created by bchen on 16-1-28.
  */
-public class SF_Multipicklist implements SalesforceBaseType<List, List>{
+public class SF_Multipicklist implements SalesforceBaseType<List, List> {
+
     @Override
     public List convertFromKnown(List value) {
         return null;

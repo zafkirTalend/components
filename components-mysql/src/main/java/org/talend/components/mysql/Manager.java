@@ -5,6 +5,7 @@ import org.talend.components.api.runtime.input.Split;
 import java.io.IOException;
 
 public class Manager {
+
     protected String firstColumn;
 
     protected String getSelectedColumns(String columnsStr) {
@@ -30,7 +31,8 @@ public class Manager {
     }
 
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select * from (" + dbQuery + ") talendTable LIMIT " + split.getLength() + " OFFSET " + ((DBTableSplit) split).getStart();
+        String sql = "select * from (" + dbQuery + ") talendTable LIMIT " + split.getLength() + " OFFSET "
+                + ((DBTableSplit) split).getStart();
         return sql;
     }
 
@@ -82,6 +84,7 @@ public class Manager {
 }
 
 class MysqlManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "`";
@@ -94,6 +97,7 @@ class MysqlManager extends Manager {
 }
 
 class MSSQLManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "[";
@@ -106,49 +110,31 @@ class MSSQLManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as rownum ," + columnsStr + " from (" + dbQuery + ") talend_alias_one) talend_alias_two where rownum>" + ((DBTableSplit) split).getStart() + " and rownum<=" + ((DBTableSplit) split).getEnd();
+        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as rownum ,"
+                + columnsStr + " from (" + dbQuery + ") talend_alias_one) talend_alias_two where rownum>"
+                + ((DBTableSplit) split).getStart() + " and rownum<=" + ((DBTableSplit) split).getEnd();
         return sql;
     }
 }
 
 class NetezzaManager extends Manager {
-    private String[] netezzaReservedWords = {
-            "ABORT", "DEC", "LEADING", "RESET", "ADMIN",
-            "DECIMAL", "LEFT", "REUSE", "AGGREGATE", "DECODE",
-            "LIKE", "RIGHT", "ALIGN", "DEFAULT", "LIMIT",
-            "ROWS", "ALL", "DEFERRABLE", "LISTEN",
-            "ROWSETLIMIT", "ALLOCATE", "DESC", "LOAD", "RULE",
-            "ANALYSE", "DISTINCT", "LOCAL", "SEARCH",
-            "ANALYZE", "DISTRIBUTE", "LOCK", "SELECT", "AND",
-            "DO", "MATERIALIZED", "SEQUENCE", "ANY", "ELSE",
-            "MINUS", "SESSION_USER", "AS", "END", "MOVE",
-            "SETOF", "ASC", "EXCEPT", "NATURAL", "SHOW",
-            "BETWEEN", "EXCLUDE", "NCHAR", "SOME", "BINARY",
-            "EXISTS", "NEW", "SUBSTRING", "BIT", "EXPLAIN",
-            "NOT", "SYSTEM", "BOTH", "EXPRESS", "NOTNULL",
-            "TABLE", "CASE", "EXTEND", "NULL", "THEN", "CAST",
-            "EXTERNAL", "NULLIF", "TIES", "CHAR", "EXTRACT",
-            "NULLS", "TIME", "CHARACTER", "FALSE", "NUMERIC",
-            "TIMESTAMP", "CHECK", "FIRST", "NVL", "TO",
-            "CLUSTER", "FLOAT", "NVL2", "TRAILING", "COALESCE",
-            "FOLLOWING", "OFF", "TRANSACTION", "COLLATE",
-            "FOR", "OFFSET", "TRIGGER", "COLLATION", "FOREIGN",
-            "OLD", "TRIM", "COLUMN", "FROM", "ON", "TRUE",
-            "CONSTRAINT", "FULL", "ONLINE", "UNBOUNDED", "COPY",
-            "FUNCTION", "ONLY", "UNION", "CROSS", "GENSTATS",
-            "OR", "UNIQUE", "CURRENT", "GLOBAL", "ORDER", "USER",
-            "CURRENT_CATALOG", "GROUP", "OTHERS", "USING",
-            "CURRENT_DATE", "HAVING", "OUT", "VACUUM",
-            "CURRENT_DB", "IDENTIFIER_CASE", "OUTER", "VARCHAR",
-            "CURRENT_SCHEMA", "ILIKE", "OVER", "VERBOSE",
-            "CURRENT_SID", "IN", "OVERLAPS", "VERSION",
-            "CURRENT_TIME", "INDEX", "PARTITION", "VIEW",
-            "CURRENT_TIMESTAMP", "INITIALLY", "POSITION", "WHEN",
-            "CURRENT_USER", "INNER", "PRECEDING", "WHERE",
-            "CURRENT_USERID", "INOUT", "PRECISION", "WITH",
-            "CURRENT_USEROID", "INTERSECT", "PRESERVE", "WRITE",
-            "DEALLOCATE", "INTERVAL", "PRIMARY", "RESET", "INTOREUSE"
-    };
+
+    private String[] netezzaReservedWords = { "ABORT", "DEC", "LEADING", "RESET", "ADMIN", "DECIMAL", "LEFT", "REUSE",
+            "AGGREGATE", "DECODE", "LIKE", "RIGHT", "ALIGN", "DEFAULT", "LIMIT", "ROWS", "ALL", "DEFERRABLE", "LISTEN",
+            "ROWSETLIMIT", "ALLOCATE", "DESC", "LOAD", "RULE", "ANALYSE", "DISTINCT", "LOCAL", "SEARCH", "ANALYZE", "DISTRIBUTE",
+            "LOCK", "SELECT", "AND", "DO", "MATERIALIZED", "SEQUENCE", "ANY", "ELSE", "MINUS", "SESSION_USER", "AS", "END",
+            "MOVE", "SETOF", "ASC", "EXCEPT", "NATURAL", "SHOW", "BETWEEN", "EXCLUDE", "NCHAR", "SOME", "BINARY", "EXISTS",
+            "NEW", "SUBSTRING", "BIT", "EXPLAIN", "NOT", "SYSTEM", "BOTH", "EXPRESS", "NOTNULL", "TABLE", "CASE", "EXTEND",
+            "NULL", "THEN", "CAST", "EXTERNAL", "NULLIF", "TIES", "CHAR", "EXTRACT", "NULLS", "TIME", "CHARACTER", "FALSE",
+            "NUMERIC", "TIMESTAMP", "CHECK", "FIRST", "NVL", "TO", "CLUSTER", "FLOAT", "NVL2", "TRAILING", "COALESCE",
+            "FOLLOWING", "OFF", "TRANSACTION", "COLLATE", "FOR", "OFFSET", "TRIGGER", "COLLATION", "FOREIGN", "OLD", "TRIM",
+            "COLUMN", "FROM", "ON", "TRUE", "CONSTRAINT", "FULL", "ONLINE", "UNBOUNDED", "COPY", "FUNCTION", "ONLY", "UNION",
+            "CROSS", "GENSTATS", "OR", "UNIQUE", "CURRENT", "GLOBAL", "ORDER", "USER", "CURRENT_CATALOG", "GROUP", "OTHERS",
+            "USING", "CURRENT_DATE", "HAVING", "OUT", "VACUUM", "CURRENT_DB", "IDENTIFIER_CASE", "OUTER", "VARCHAR",
+            "CURRENT_SCHEMA", "ILIKE", "OVER", "VERBOSE", "CURRENT_SID", "IN", "OVERLAPS", "VERSION", "CURRENT_TIME", "INDEX",
+            "PARTITION", "VIEW", "CURRENT_TIMESTAMP", "INITIALLY", "POSITION", "WHEN", "CURRENT_USER", "INNER", "PRECEDING",
+            "WHERE", "CURRENT_USERID", "INOUT", "PRECISION", "WITH", "CURRENT_USEROID", "INTERSECT", "PRESERVE", "WRITE",
+            "DEALLOCATE", "INTERVAL", "PRIMARY", "RESET", "INTOREUSE" };
 
     protected boolean isNetezzaReservedWord(String keyword) {
         for (String netezzaReservedWord : netezzaReservedWords) {
@@ -198,12 +184,15 @@ class NetezzaManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as rownum ," + columnsStr + " from (" + dbQuery + ") talend_alias_one) talend_alias_two where rownum>" + ((DBTableSplit) split).getStart() + " and rownum<=" + ((DBTableSplit) split).getEnd();
+        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as rownum ,"
+                + columnsStr + " from (" + dbQuery + ") talend_alias_one) talend_alias_two where rownum>"
+                + ((DBTableSplit) split).getStart() + " and rownum<=" + ((DBTableSplit) split).getEnd();
         return sql;
     }
 }
 
 class ParaccelManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "\"";
@@ -216,26 +205,16 @@ class ParaccelManager extends Manager {
 }
 
 class VerticaManager extends Manager {
-    private String[] verticaReservedWords = {
-            "ALL", "ANALYSE", "ANALYZE", "AND", "ANY", "ARRAY",
-            "AS", "ASC", "BINARY", "BOTH", "CASE", "CAST", "CHECK",
-            "COLUMN", "CONSTRAINT", "CORRELATION", "CREATE",
-            "CURRENT_DATABASE", "CURRENT_DATE", "CURRENT_SCHEMA",
-            "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_USER",
-            "DEFAULT", "DEFERRABLE", "DESC", "DISTINCT", "DO",
-            "ELSE", "ENCODED", "END", "EXCEPT", "FALSE", "FOR",
-            "FOREIGN", "FROM", "GRANT", "GROUP", "GROUPED", "HAVING",
-            "IN", "INITIALLY", "INTERSECT", "INTERVAL", "INTERVALYM",
-            "INTO", "JOIN", "KSAFE", "LEADING", "LIMIT", "LOCALTIME",
-            "LOCALTIMESTAMP", "MATCH", "NEW", "NOT", "NULL",
-            "NULLSEQUAL", "OFF", "OFFSET", "OLD", "ON", "ONLY", "OR",
-            "ORDER", "PINNED", "PLACING", "PRIMARY", "PROJECTION",
-            "REFERENCES", "SCHEMA", "SEGMENTED", "SELECT",
-            "SESSION_USER", "SOME", "SYSDATE", "TABLE", "THEN",
-            "TIMESERIES", "TO", "TRAILING", "TRUE", "UNBOUNDED",
-            "UNION", "UNIQUE", "UNSEGMENTED", "USER", "USING", "WHEN",
-            "WHERE", "WINDOW", "WITH", "WITHIN"
-    };
+
+    private String[] verticaReservedWords = { "ALL", "ANALYSE", "ANALYZE", "AND", "ANY", "ARRAY", "AS", "ASC", "BINARY", "BOTH",
+            "CASE", "CAST", "CHECK", "COLUMN", "CONSTRAINT", "CORRELATION", "CREATE", "CURRENT_DATABASE", "CURRENT_DATE",
+            "CURRENT_SCHEMA", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_USER", "DEFAULT", "DEFERRABLE", "DESC", "DISTINCT",
+            "DO", "ELSE", "ENCODED", "END", "EXCEPT", "FALSE", "FOR", "FOREIGN", "FROM", "GRANT", "GROUP", "GROUPED", "HAVING",
+            "IN", "INITIALLY", "INTERSECT", "INTERVAL", "INTERVALYM", "INTO", "JOIN", "KSAFE", "LEADING", "LIMIT", "LOCALTIME",
+            "LOCALTIMESTAMP", "MATCH", "NEW", "NOT", "NULL", "NULLSEQUAL", "OFF", "OFFSET", "OLD", "ON", "ONLY", "OR", "ORDER",
+            "PINNED", "PLACING", "PRIMARY", "PROJECTION", "REFERENCES", "SCHEMA", "SEGMENTED", "SELECT", "SESSION_USER", "SOME",
+            "SYSDATE", "TABLE", "THEN", "TIMESERIES", "TO", "TRAILING", "TRUE", "UNBOUNDED", "UNION", "UNIQUE", "UNSEGMENTED",
+            "USER", "USING", "WHEN", "WHERE", "WINDOW", "WITH", "WITHIN" };
 
     @Override
     protected String getLProtectedChar() {
@@ -287,6 +266,7 @@ class VerticaManager extends Manager {
 }
 
 class PostgreManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "\"";
@@ -299,6 +279,7 @@ class PostgreManager extends Manager {
 }
 
 class TeradataManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "\"";
@@ -311,12 +292,15 @@ class TeradataManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as RowNum," + columnsStr + " from (" + dbQuery + ") talend_alias_one qualify RowNum between " + (((DBTableSplit) split).getStart() + 1) + " and " + ((DBTableSplit) split).getEnd() + ") talend_alias_two";
+        String sql = "select " + columnsStr + " from (select row_number() over(order by " + firstColumn + ") as RowNum,"
+                + columnsStr + " from (" + dbQuery + ") talend_alias_one qualify RowNum between "
+                + (((DBTableSplit) split).getStart() + 1) + " and " + ((DBTableSplit) split).getEnd() + ") talend_alias_two";
         return sql;
     }
 }
 
 class InformixManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "";
@@ -329,12 +313,14 @@ class InformixManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select skip " + ((DBTableSplit) split).getStart() + " first " + split.getLength() + " " + columnsStr + " from (" + dbQuery + ")";
+        String sql = "select skip " + ((DBTableSplit) split).getStart() + " first " + split.getLength() + " " + columnsStr
+                + " from (" + dbQuery + ")";
         return sql;
     }
 }
 
 class AS400Manager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "";
@@ -347,12 +333,16 @@ class AS400Manager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select " + columnsStr + " from (" + dbQuery + ") talend_alias_one ORDER BY " + firstColumn + " asc fetch first " + ((DBTableSplit) split).getEnd() + " rows only) talend_alias_two ORDER BY " + firstColumn + " desc fetch first " + split.getLength() + " rows only";
+        String sql = "select " + columnsStr + " from (select " + columnsStr + " from (" + dbQuery
+                + ") talend_alias_one ORDER BY " + firstColumn + " asc fetch first " + ((DBTableSplit) split).getEnd()
+                + " rows only) talend_alias_two ORDER BY " + firstColumn + " desc fetch first " + split.getLength()
+                + " rows only";
         return sql;
     }
 }
 
 class DB2Manager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "\"";
@@ -365,12 +355,15 @@ class DB2Manager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select row_number() over() as rownum ," + columnsStr + " from (" + dbQuery + ") talend_alias_one) talend_alias_two where rownum>" + ((DBTableSplit) split).getStart() + " and rownum<=" + ((DBTableSplit) split).getEnd();
+        String sql = "select " + columnsStr + " from (select row_number() over() as rownum ," + columnsStr + " from (" + dbQuery
+                + ") talend_alias_one) talend_alias_two where rownum>" + ((DBTableSplit) split).getStart() + " and rownum<="
+                + ((DBTableSplit) split).getEnd();
         return sql;
     }
 }
 
 class IngresManager extends Manager {
+
     @Override
     protected String getLProtectedChar() {
         return "\"";
@@ -383,66 +376,32 @@ class IngresManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "SELECT * FROM (" + dbQuery + ") talend_alias OFFSET " + ((DBTableSplit) split).getStart() + " FETCH FIRST " + split.getLength() + " ROWS ONLY";
+        String sql = "SELECT * FROM (" + dbQuery + ") talend_alias OFFSET " + ((DBTableSplit) split).getStart() + " FETCH FIRST "
+                + split.getLength() + " ROWS ONLY";
         return sql;
     }
 }
 
 class MaxDBManager extends Manager {
-    private String[] maxDBKeyWords = {
-            "ABS", "ABSOLUTE", "ACOS",
-            "ADDDATE", "ADDTIME", "ALL",
-            "ALPHA", "ALTER", "ANY", "ASCII",
-            "ASIN", "ATAN", "ATAN2", "AVG",
-            "BINARY", "BIT", "BOOLEAN", "BYTE",
-            "CASE", "CEIL", "CEILING", "CHAR",
-            "CHARACTER", "CHECK", "CHR",
-            "COLUMN", "CONCAT", "CONSTRAINT",
-            "COS", "COSH", "COT", "COUNT",
-            "CROSS", "CURDATE", "CURRENT",
-            "CURTIME", "DATABASE", "DATE",
-            "DATEDIFF", "DAY", "DAYNAME",
-            "DAYOFMONTH", "DAYOFWEEK",
-            "DAYOFYEAR", "DEC", "DECIMAL",
-            "DECODE", "DEFAULT", "DEGREES",
-            "DELETE", "DIGITS", "DISTINCT",
-            "DOUBLE", "EXCEPT", "EXISTS", "EXP",
-            "EXPAND", "FIRST", "FIXED", "FLOAT",
-            "FLOOR", "FOR", "FROM", "FULL",
-            "GET_OBJECTNAME", "GET_SCHEMA",
-            "GRAPHIC", "GREATEST", "GROUP",
-            "HAVING", "HEX", "HEXTORAW", "HOUR",
-            "IFNULL", "IGNORE", "INDEX", "INITCAP",
-            "INNER", "INSERT", "INT", "INTEGER",
-            "INTERNAL", "INTERSECT", "INTO", "JOIN",
-            "KEY", "LAST", "LCASE", "LEAST", "LEFT",
-            "LENGTH", "LFILL", "LIST", "LN", "LOCATE",
-            "LOG", "LOG10", "LONG", "LONGFILE",
-            "LOWER", "LPAD", "LTRIM", "MAKEDATE",
-            "MAKETIME", "MAPCHAR", "MAX", "MBCS",
-            "MICROSECOND", "MIN", "MINUTE", "MOD",
-            "MONTH", "MONTHNAME", "NATURAL", "NCHAR",
-            "NEXT", "NO", "NOROUND", "NOT", "NOW",
-            "NULL", "NUM", "NUMERIC", "OBJECT", "OF",
-            "ON", "ORDER", "PACKED", "PI", "POWER",
-            "PREV", "PRIMARY", "RADIANS", "REAL",
-            "REJECT", "RELATIVE", "REPLACE", "RFILL",
-            "RIGHT", "ROUND", "ROWID", "ROWNO", "RPAD",
-            "RTRIM", "SECOND", "SELECT", "SELUPD",
-            "SERIAL", "SET", "SHOW", "SIGN", "SIN",
-            "SINH", "SMALLINT", "SOME", "SOUNDEX", "SPACE",
-            "SQRT", "STAMP", "STATISTICS", "STDDEV",
-            "SUBDATE", "SUBSTR", "SUBSTRING", "SUBTIME",
-            "SUM", "SYSDBA", "TABLE", "TAN", "TANH", "TIME",
-            "TIMEDIFF", "TIMESTAMP", "TIMEZONE", "TO",
-            "TOIDENTIFIER", "TRANSACTION", "TRANSLATE",
-            "TRIM", "TRUNC", "TRUNCATE", "UCASE", "UID",
-            "UNICODE", "UNION", "UPDATE", "UPPER", "USER",
-            "USERGROUP", "USING", "UTCDATE", "UTCDIFF",
-            "VALUE", "VALUES", "VARCHAR", "VARGRAPHIC",
-            "VARIANCE", "WEEK", "WEEKOFYEAR", "WHEN",
-            "WHERE", "WITH", "YEAR", "ZONED"
-    };
+
+    private String[] maxDBKeyWords = { "ABS", "ABSOLUTE", "ACOS", "ADDDATE", "ADDTIME", "ALL", "ALPHA", "ALTER", "ANY", "ASCII",
+            "ASIN", "ATAN", "ATAN2", "AVG", "BINARY", "BIT", "BOOLEAN", "BYTE", "CASE", "CEIL", "CEILING", "CHAR", "CHARACTER",
+            "CHECK", "CHR", "COLUMN", "CONCAT", "CONSTRAINT", "COS", "COSH", "COT", "COUNT", "CROSS", "CURDATE", "CURRENT",
+            "CURTIME", "DATABASE", "DATE", "DATEDIFF", "DAY", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK", "DAYOFYEAR", "DEC",
+            "DECIMAL", "DECODE", "DEFAULT", "DEGREES", "DELETE", "DIGITS", "DISTINCT", "DOUBLE", "EXCEPT", "EXISTS", "EXP",
+            "EXPAND", "FIRST", "FIXED", "FLOAT", "FLOOR", "FOR", "FROM", "FULL", "GET_OBJECTNAME", "GET_SCHEMA", "GRAPHIC",
+            "GREATEST", "GROUP", "HAVING", "HEX", "HEXTORAW", "HOUR", "IFNULL", "IGNORE", "INDEX", "INITCAP", "INNER", "INSERT",
+            "INT", "INTEGER", "INTERNAL", "INTERSECT", "INTO", "JOIN", "KEY", "LAST", "LCASE", "LEAST", "LEFT", "LENGTH",
+            "LFILL", "LIST", "LN", "LOCATE", "LOG", "LOG10", "LONG", "LONGFILE", "LOWER", "LPAD", "LTRIM", "MAKEDATE",
+            "MAKETIME", "MAPCHAR", "MAX", "MBCS", "MICROSECOND", "MIN", "MINUTE", "MOD", "MONTH", "MONTHNAME", "NATURAL",
+            "NCHAR", "NEXT", "NO", "NOROUND", "NOT", "NOW", "NULL", "NUM", "NUMERIC", "OBJECT", "OF", "ON", "ORDER", "PACKED",
+            "PI", "POWER", "PREV", "PRIMARY", "RADIANS", "REAL", "REJECT", "RELATIVE", "REPLACE", "RFILL", "RIGHT", "ROUND",
+            "ROWID", "ROWNO", "RPAD", "RTRIM", "SECOND", "SELECT", "SELUPD", "SERIAL", "SET", "SHOW", "SIGN", "SIN", "SINH",
+            "SMALLINT", "SOME", "SOUNDEX", "SPACE", "SQRT", "STAMP", "STATISTICS", "STDDEV", "SUBDATE", "SUBSTR", "SUBSTRING",
+            "SUBTIME", "SUM", "SYSDBA", "TABLE", "TAN", "TANH", "TIME", "TIMEDIFF", "TIMESTAMP", "TIMEZONE", "TO",
+            "TOIDENTIFIER", "TRANSACTION", "TRANSLATE", "TRIM", "TRUNC", "TRUNCATE", "UCASE", "UID", "UNICODE", "UNION",
+            "UPDATE", "UPPER", "USER", "USERGROUP", "USING", "UTCDATE", "UTCDIFF", "VALUE", "VALUES", "VARCHAR", "VARGRAPHIC",
+            "VARIANCE", "WEEK", "WEEKOFYEAR", "WHEN", "WHERE", "WITH", "YEAR", "ZONED" };
 
     protected boolean isMaxDBKeyword(String keyword) {
         for (int i = 0; i < maxDBKeyWords.length; i++) {
@@ -485,35 +444,17 @@ class MaxDBManager extends Manager {
 }
 
 class OracleManager extends Manager {
-    private String[] oracleKeyWords = {
-            "ACCESS", "AUDIT", "COMPRESS", "DESC",
-            "ADD", "CONNECT", "DISTINCT",
-            "ALL", "BY", "CREATE", "DROP",
-            "ALTER", "CHAR", "CURRENT", "ELSE",
-            "AND", "CHECK", "DATE", "EXCLUSIVE",
-            "ANY", "CLUSTER", "DECIMAL", " EXISTS",
-            "AS", "COLUMN", "DEFAULT", "FILE",
-            "ASC", "COMMENT", "DELETE", "FLOAT",
-            "FOR", "LONG", "PCTFREE", "SUCCESSFUL",
-            "FROM", "MAXEXTENTS", "PRIOR", "SYNONYM",
-            "GRANT", "MINUS", "PRIVILEGES", "SYSDATE",
-            "GROUP", "MODE", "PUBLIC", "TABLE",
-            "HAVING", "MODIFY", "RAW", "THEN",
-            "IDENTIFIED", "NETWORK", "RENAME", "TO",
-            "IMMEDIATE", "NOAUDIT", "RESOURCE", "TRIGGER",
-            "IN", "NOCOMPRESS", "REVOKE", "UID",
-            "INCREMENT", "NOT", "ROW", "UNION",
-            "INDEX", "NOWAIT", "ROWID", "UNIQUE",
-            "INITIAL", "NULL", "ROWNUM", "UPDATE",
-            "INSERT", "NUMBER", "ROWS", "USER",
-            "INTEGER", "OF", "SELECT", "VALIDATE",
-            "INTERSECT", "OFFLINE", "SESSION", "VALUES",
-            "INTO", "ON", "SET", "VARCHAR",
-            "IS", "ONLINE", "SHARE", "VARCHAR2",
-            "LEVEL", "OPTION", "SIZE", "VIEW",
-            "LIKE", "OR", "SMALLINT", "WHENEVER",
-            "LOCK", "ORDER", "START", "WHERE", "WITH"
-    };
+
+    private String[] oracleKeyWords = { "ACCESS", "AUDIT", "COMPRESS", "DESC", "ADD", "CONNECT", "DISTINCT", "ALL", "BY",
+            "CREATE", "DROP", "ALTER", "CHAR", "CURRENT", "ELSE", "AND", "CHECK", "DATE", "EXCLUSIVE", "ANY", "CLUSTER",
+            "DECIMAL", " EXISTS", "AS", "COLUMN", "DEFAULT", "FILE", "ASC", "COMMENT", "DELETE", "FLOAT", "FOR", "LONG",
+            "PCTFREE", "SUCCESSFUL", "FROM", "MAXEXTENTS", "PRIOR", "SYNONYM", "GRANT", "MINUS", "PRIVILEGES", "SYSDATE",
+            "GROUP", "MODE", "PUBLIC", "TABLE", "HAVING", "MODIFY", "RAW", "THEN", "IDENTIFIED", "NETWORK", "RENAME", "TO",
+            "IMMEDIATE", "NOAUDIT", "RESOURCE", "TRIGGER", "IN", "NOCOMPRESS", "REVOKE", "UID", "INCREMENT", "NOT", "ROW",
+            "UNION", "INDEX", "NOWAIT", "ROWID", "UNIQUE", "INITIAL", "NULL", "ROWNUM", "UPDATE", "INSERT", "NUMBER", "ROWS",
+            "USER", "INTEGER", "OF", "SELECT", "VALIDATE", "INTERSECT", "OFFLINE", "SESSION", "VALUES", "INTO", "ON", "SET",
+            "VARCHAR", "IS", "ONLINE", "SHARE", "VARCHAR2", "LEVEL", "OPTION", "SIZE", "VIEW", "LIKE", "OR", "SMALLINT",
+            "WHENEVER", "LOCK", "ORDER", "START", "WHERE", "WITH" };
 
     @Override
     protected String getLProtectedChar() {
@@ -565,7 +506,9 @@ class OracleManager extends Manager {
 
     @Override
     protected String getDBSql(Split split, String dbQuery, String columnsStr, String firstColumn) throws IOException {
-        String sql = "select " + columnsStr + " from (select rownum rm," + columnsStr + " from (" + dbQuery + ") where rownum <=" + ((DBTableSplit) split).getEnd() + " ) talend_alias_one where talend_alias_one.rm>" + ((DBTableSplit) split).getStart();
+        String sql = "select " + columnsStr + " from (select rownum rm," + columnsStr + " from (" + dbQuery + ") where rownum <="
+                + ((DBTableSplit) split).getEnd() + " ) talend_alias_one where talend_alias_one.rm>"
+                + ((DBTableSplit) split).getStart();
         return sql;
     }
 }

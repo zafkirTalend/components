@@ -1,4 +1,4 @@
-package org.talend.components.cassandra.tCassandraOutput;
+package org.talend.components.cassandra.runtime;
 
 import java.util.List;
 
@@ -7,9 +7,10 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.output.Sink;
 import org.talend.components.api.runtime.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.cassandra.CassandraProperties;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.components.cassandra.CassandraTypeRegistry;
+import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
 import org.talend.daikon.schema.type.ExternalBaseType;
 import org.talend.daikon.schema.type.TypeMapping;
@@ -43,7 +44,7 @@ public class CassandraSink implements Sink {
         cluster = clusterBuilder.build();
         connection = cluster.connect();
 
-        CQLManager cqlManager = new CQLManager(props, ((Schema) props.schema.schema.getValue()).getRoot().getChildren());
+        CQLManager cqlManager = new CQLManager(props, ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren());
         PreparedStatement preparedStatement = connection.prepare(cqlManager.generatePreActionSQL());
         if (props.useUnloggedBatch.getBooleanValue()) {
             // TODO
@@ -69,7 +70,7 @@ public class CassandraSink implements Sink {
     }
 
     @Override
-    public List<SchemaElement> getSchema() {
+    public List<MakoElement> getSchema() {
         return null;
     }
 
@@ -83,11 +84,11 @@ public class CassandraSink implements Sink {
 
         @Override
         public void write(BaseRowStruct rowStruct) {
-            for (SchemaElement column : ((Schema) props.schema.schema.getValue()).getRoot().getChildren()) {
+            for (MakoElement column : ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren()) {
                 DataSchemaElement col = (DataSchemaElement) column;
                 try {
                     ExternalBaseType converter = col.getAppColType().newInstance();
-                    Object value = TypeMapping.convert(CassandraProperties.FAMILY_NAME, col, rowStruct.get(col.getName()));
+                    Object value = TypeMapping.convert(CassandraTypeRegistry.FAMILY_NAME, col, rowStruct.get(col.getName()));
                     converter.writeValue(boundStatement, col.getAppColName(), converter.convertFromKnown(value));
                 } catch (InstantiationException e) {
                     e.printStackTrace();

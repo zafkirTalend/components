@@ -39,8 +39,8 @@ public class ComponentTestUtils {
      * check all properties of a component for i18n, check form i18n, check ComponentProperties title is i18n
      * 
      * @param componentService where to get all the components
-     * @param errorCollector used to collect all errors at once. @see
-     * <a href="http://junit.org/apidocs/org/junit/rules/ErrorCollector.html">ErrorCollector</a>
+     * @param errorCollector used to collect all errors at once. @see <a
+     * href="http://junit.org/apidocs/org/junit/rules/ErrorCollector.html">ErrorCollector</a>
      */
     static public void testAlli18n(ComponentService componentService, ErrorCollector errorCollector) {
         Set<ComponentDefinition> allComponents = componentService.getAllComponents();

@@ -31,8 +31,8 @@ public class TSalesforceWaveOutputBulkExecDefinition extends SalesforceDefinitio
         super(COMPONENT_NAME);
 
         setConnectors(new Connector(ConnectorType.FLOW, 1, 0));
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override

@@ -74,7 +74,7 @@ import org.talend.daikon.properties.service.PropertiesServiceImpl;
  * Main Component Service implementation that is not related to any framework (neither OSGI, nor Spring) it uses a
  * ComponentRegistry implementation that will be provided by framework specific Service classes
  */
-public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentProperties>implements ComponentService {
+public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentProperties> implements ComponentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ComponentServiceImpl.class);
 
@@ -236,8 +236,8 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
 
     @Override
     public InputStream getWizardPngImage(String wizardName, WizardImageType imageType) {
-        ComponentWizardDefinition wizardDefinition = componentRegistry.getComponentWizards()
-                .get(Constants.COMPONENT_WIZARD_BEAN_PREFIX + wizardName);
+        ComponentWizardDefinition wizardDefinition = componentRegistry.getComponentWizards().get(
+                Constants.COMPONENT_WIZARD_BEAN_PREFIX + wizardName);
         if (wizardDefinition != null) {
             return getImageStream(wizardDefinition, wizardDefinition.getPngImagePath(imageType));
         } else {
@@ -248,13 +248,13 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
 
     @Override
     public InputStream getComponentPngImage(String componentName, ComponentImageType imageType) {
-        ComponentDefinition componentDefinition = componentRegistry.getComponents()
-                .get(Constants.COMPONENT_BEAN_PREFIX + componentName);
+        ComponentDefinition componentDefinition = componentRegistry.getComponents().get(
+                Constants.COMPONENT_BEAN_PREFIX + componentName);
         if (componentDefinition != null) {
             return getImageStream(componentDefinition, componentDefinition.getPngImagePath(imageType));
         } else {
-            throw new ComponentException(ComponentsErrorCode.WRONG_COMPONENT_NAME,
-                    ExceptionContext.build().put("name", componentName)); //$NON-NLS-1$
+            throw new ComponentException(ComponentsErrorCode.WRONG_COMPONENT_NAME, ExceptionContext.build().put(
+                    "name", componentName)); //$NON-NLS-1$
         }
     }
 
@@ -341,8 +341,9 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
         }
         RepositorySystem repoSystem = booter.newRepositorySystem();
         DefaultRepositorySystemSession repoSession = booter.newRepositorySystemSession(repoSystem);
-        DependencySelector depFilter = new AndDependencySelector(new ScopeDependencySelector(null, Arrays.asList(excludedScopes)),
-                new OptionalDependencySelector(), new ExclusionDependencySelector());
+        DependencySelector depFilter = new AndDependencySelector(
+                new ScopeDependencySelector(null, Arrays.asList(excludedScopes)), new OptionalDependencySelector(),
+                new ExclusionDependencySelector());
         repoSession.setDependencySelector(depFilter);
 
         List<RemoteRepository> remoteRepos = booter.getRemoteRepositoriesWithAuthentification(repoSystem, repoSession);

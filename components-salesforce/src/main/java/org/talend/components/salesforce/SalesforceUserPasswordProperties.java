@@ -24,8 +24,8 @@ import org.talend.daikon.properties.presentation.Widget;
 
 public class SalesforceUserPasswordProperties extends UserPasswordProperties {
 
-    public Property securityKey = ((Property) newProperty("securityKey").setRequired(true))
-            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
+    public Property securityKey = ((Property) newProperty("securityKey").setRequired(true)).setFlags(EnumSet.of(
+            Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
     public SalesforceUserPasswordProperties(String name) {
         super(name);

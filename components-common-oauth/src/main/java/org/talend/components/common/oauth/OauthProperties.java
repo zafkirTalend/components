@@ -17,7 +17,7 @@ import static org.talend.daikon.properties.PropertyFactory.*;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 
 public class OauthProperties extends ComponentProperties {
 
@@ -27,7 +27,7 @@ public class OauthProperties extends ComponentProperties {
 
     public Property callbackHost = (Property) newProperty("callbackHost").setRequired(true); //$NON-NLS-1$
 
-    public Property callbackPort = (Property) newProperty(SchemaElement.Type.INT, "callbackPort").setRequired(true); //$NON-NLS-1$
+    public Property callbackPort = (Property) newProperty(MakoElement.Type.INT, "callbackPort").setRequired(true); //$NON-NLS-1$
 
     public Property tokenFile = (Property) newProperty("tokenFile").setRequired(true); //$NON-NLS-1$
 

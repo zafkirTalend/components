@@ -23,7 +23,7 @@ import org.talend.components.mysql.metadata.MysqlMetadata;
 import org.talend.components.mysql.tMysqlInput.MysqlSource;
 import org.talend.components.mysql.tMysqlInput.tMysqlInputProperties;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.MakoElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
 import org.talend.daikon.schema.type.ExternalBaseType;
 import org.talend.daikon.schema.type.TypeMapping;
@@ -95,25 +95,25 @@ public class MysqlDITest {
         Source source = new MysqlSource();
         source.init(props);
 
-        Map<String, SchemaElement.Type> row_metadata = new HashMap<>();
+        Map<String, MakoElement.Type> row_metadata = new HashMap<>();
 
         List<BaseRowStruct> rows = new ArrayList<>();
 
         Split[] splits = source.getSplit(2);
 
         Reader reader = source.getRecordReader(splits[0]);
-        List<SchemaElement> fields = reader.getSchema();
-        for (SchemaElement field : fields) {
+        List<MakoElement> fields = reader.getSchema();
+        for (MakoElement field : fields) {
             row_metadata.put(field.getName(), field.getType());
         }
         while (reader.advance()) {
             BaseRowStruct baseRowStruct = new BaseRowStruct(row_metadata);
-            for (SchemaElement column : fields) {
+            for (MakoElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
                     ExternalBaseType converter = dataFiled.getAppColType().newInstance();
-                    Object dataValue = converter
-                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
+                    Object dataValue = converter.convertToKnown(converter.readValue(reader.getCurrent(),
+                            dataFiled.getAppColName()));
                     baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue));
                 } catch (InstantiationException e) {
                     e.printStackTrace();
@@ -130,12 +130,12 @@ public class MysqlDITest {
         reader = source.getRecordReader(splits[1]);
         while (reader.advance()) {
             BaseRowStruct baseRowStruct = new BaseRowStruct(row_metadata);
-            for (SchemaElement column : fields) {
+            for (MakoElement column : fields) {
                 DataSchemaElement dataFiled = (DataSchemaElement) column;
                 try {
                     ExternalBaseType converter = dataFiled.getAppColType().newInstance();
-                    Object dataValue = converter
-                            .convertToKnown(converter.readValue(reader.getCurrent(), dataFiled.getAppColName()));
+                    Object dataValue = converter.convertToKnown(converter.readValue(reader.getCurrent(),
+                            dataFiled.getAppColName()));
                     baseRowStruct.put(dataFiled.getName(), TypeMapping.convert(source.getFamilyName(), dataFiled, dataValue));
                 } catch (InstantiationException e) {
                     e.printStackTrace();

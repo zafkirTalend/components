@@ -35,8 +35,8 @@ public class TestComponentDefinition extends AbstractComponentDefinition impleme
 
     public TestComponentDefinition() {
         setConnectors(new Connector(ConnectorType.FLOW, 0, 0));
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(
+                TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     protected TestComponentProperties properties;

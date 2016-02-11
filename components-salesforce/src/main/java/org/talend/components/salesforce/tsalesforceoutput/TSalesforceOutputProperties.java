@@ -24,9 +24,9 @@ import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.SchemaElement.Type;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.MakoElement.Type;
 
 public class TSalesforceOutputProperties extends SalesforceConnectionModuleProperties {
 
@@ -39,10 +39,10 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
     public static final String ACTION_DELETE = "DELETE";
 
     public enum OutputAction {
-                              INSERT,
-                              UPDATE,
-                              UPSERT,
-                              DELETE
+        INSERT,
+        UPDATE,
+        UPSERT,
+        DELETE
     }
 
     public Property outputAction = newEnum("outputAction", ACTION_INSERT, ACTION_UPDATE, ACTION_UPSERT, ACTION_DELETE); // $NON-NLS-1$
@@ -65,7 +65,7 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
     // FIXME - should be file
     public Property logFileName = newString("logFileName"); //$NON-NLS-1$
 
-    public Property upsertRelation = (Property) newProperty("upsertRelation").setOccurMaxTimes(SchemaElement.INFINITE); //$NON-NLS-1$
+    public Property upsertRelation = (Property) newProperty("upsertRelation").setOccurMaxTimes(MakoElement.INFINITE); //$NON-NLS-1$
 
     //
     // Collections
@@ -89,7 +89,7 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
         @Override
         public ValidationResult afterModuleName() {
             ValidationResult validationResult = super.afterModuleName();
-            Schema s = (Schema) schema.schema.getValue();
+            DataSchema s = (DataSchema) schema.schema.getValue();
             // FIXME - we probably only want the names, not the SchemaElements
             upsertKeyColumn.setPossibleValues(s.getRoot().getChildren());
             upsertRelation.getChild("columnName").setPossibleValues(s.getRoot().getChildren());
@@ -115,9 +115,9 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
     public void setupProperties() {
         super.setupProperties();
         returns = ComponentProperties.setReturnsProperty();
-        ComponentPropertyFactory.newReturnProperty(returns, SchemaElement.Type.INT, "NB_LINE"); //$NON-NLS-1$
-        ComponentPropertyFactory.newReturnProperty(returns, SchemaElement.Type.INT, "NB_SUCCESS"); //$NON-NLS-1$
-        ComponentPropertyFactory.newReturnProperty(returns, SchemaElement.Type.INT, "NB_REJECT"); //$NON-NLS-1$
+        ComponentPropertyFactory.newReturnProperty(returns, MakoElement.Type.INT, "NB_LINE"); //$NON-NLS-1$
+        ComponentPropertyFactory.newReturnProperty(returns, MakoElement.Type.INT, "NB_SUCCESS"); //$NON-NLS-1$
+        ComponentPropertyFactory.newReturnProperty(returns, MakoElement.Type.INT, "NB_REJECT"); //$NON-NLS-1$
 
         schemaReject.addSchemaChild(newProperty("errorCode")); //$NON-NLS-1$
         schemaReject.addSchemaChild(newProperty("errorFields")); //$NON-NLS-1$
@@ -157,7 +157,7 @@ public class TSalesforceOutputProperties extends SalesforceConnectionModulePrope
         super.refreshLayout(form);
 
         if (form.getName().equals(Form.ADVANCED)) {
-            ((Schema) schemaFlow.schema.getValue()).setRoot(null);
+            ((DataSchema) schemaFlow.schema.getValue()).setRoot(null);
             if (!extendInsert.getBooleanValue() && retrieveInsertId.getStringValue() != null
                     && ACTION_INSERT.equals(outputAction.getValue())) {
                 schemaFlow.addSchemaChild(newProperty("salesforce_id"));

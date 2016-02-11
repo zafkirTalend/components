@@ -8,6 +8,7 @@ import org.talend.daikon.properties.PropertyFactory;
  * Created by bchen on 16-1-18.
  */
 public class tMysqlConnectionProperties extends ComponentProperties {
+
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
@@ -19,11 +20,15 @@ public class tMysqlConnectionProperties extends ComponentProperties {
     }
 
     public Property HOST = PropertyFactory.newString("HOST");
-    public Property PORT = PropertyFactory.newString("PORT");
-    public Property DBNAME = PropertyFactory.newString("DBNAME");
-    public Property PROPERTIES = PropertyFactory.newString("PROPERTIES", "noDatetimeStringSync=true");
-    public Property USER = PropertyFactory.newString("USER");
-    public Property PASS = PropertyFactory.newString("PASS");
 
+    public Property PORT = PropertyFactory.newString("PORT");
+
+    public Property DBNAME = PropertyFactory.newString("DBNAME");
+
+    public Property PROPERTIES = PropertyFactory.newString("PROPERTIES", "noDatetimeStringSync=true");
+
+    public Property USER = PropertyFactory.newString("USER");
+
+    public Property PASS = PropertyFactory.newString("PASS");
 
 }

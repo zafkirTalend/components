@@ -7,8 +7,8 @@ import org.junit.Test;
 import org.talend.components.mysql.type.MysqlTalendTypesRegistry;
 import org.talend.components.mysql.type.Mysql_INT;
 import org.talend.components.mysql.type.Mysql_VARCHAR;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
 import org.talend.daikon.schema.internal.DataSchemaElement;
 import org.talend.daikon.schema.type.TypeMapping;
 
@@ -24,11 +24,17 @@ import java.util.List;
 public class MysqlMetadataTest {
 
     public static final String HOST = "localhost";
+
     public static final String PORT = "3306";
+
     public static final String USER = "root";
+
     public static final String PASS = "mysql";
+
     public static final String DBNAME = "tuj";
+
     public static final String TABLE = "test";
+
     public static final String PROPERTIES = "noDatetimeStringSync=true";
 
     @Before
@@ -67,13 +73,13 @@ public class MysqlMetadataTest {
         props.TABLE.setValue(TABLE);
         MysqlMetadata metadata = new MysqlMetadata();
         metadata.initSchema(props);
-        List<SchemaElement> columns = ((Schema) props.schema.schema.getValue()).getRoot().getChildren();
+        List<MakoElement> columns = ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren();
         Assert.assertEquals(2, columns.size());
         Assert.assertEquals("id", columns.get(0).getName());
-        Assert.assertEquals(SchemaElement.Type.INT, columns.get(0).getType());
+        Assert.assertEquals(MakoElement.Type.INT, columns.get(0).getType());
         Assert.assertEquals(Mysql_INT.class, ((DataSchemaElement) columns.get(0)).getAppColType());
         Assert.assertEquals("name", columns.get(1).getName());
-        Assert.assertEquals(SchemaElement.Type.STRING, columns.get(1).getType());
+        Assert.assertEquals(MakoElement.Type.STRING, columns.get(1).getType());
         Assert.assertEquals(Mysql_VARCHAR.class, ((DataSchemaElement) columns.get(1)).getAppColType());
 
     }

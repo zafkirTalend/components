@@ -6,6 +6,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * Created by bchen on 16-1-28.
  */
 public class SF_AnyType implements SalesforceBaseType<Object, Object> {
+
     @Override
     public Object convertFromKnown(Object value) {
         return value;

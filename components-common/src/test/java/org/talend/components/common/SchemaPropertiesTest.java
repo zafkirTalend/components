@@ -18,9 +18,9 @@ import org.junit.Test;
 import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.internal.SchemaImpl;
+import org.talend.daikon.schema.DataSchema;
+import org.talend.daikon.schema.MakoElement;
+import org.talend.daikon.schema.internal.DataSchemaImpl;
 
 /**
  * created by pbailly on 10 Dec 2015 Detailled comment
@@ -40,7 +40,7 @@ public class SchemaPropertiesTest {
 
         assertEquals("schema", schemaProperties.schema.getName());
         assertNotNull(schemaProperties.schema.getValue());
-        assertEquals(SchemaImpl.class, schemaProperties.schema.getValue().getClass());
+        assertEquals(DataSchemaImpl.class, schemaProperties.schema.getValue().getClass());
 
         // check the automatic getLayer
         assertEquals(2, schemaProperties.getForms().size());
@@ -58,16 +58,6 @@ public class SchemaPropertiesTest {
         assertEquals(1, schemaProperties.getForm(Form.REFERENCE).getWidget(schemaProperties.schema.getName()).getRow());
         assertEquals(Widget.WidgetType.SCHEMA_REFERENCE,
                 schemaProperties.getForm(Form.REFERENCE).getWidget(schemaProperties.schema.getName()).getWidgetType());
-
-        // add element
-        Schema schema = (Schema) schemaProperties.schema.getValue();
-        assertNull(schema.getRoot());
-        SchemaElement element = PropertyFactory.newBoolean("testBoolean", false);
-        schemaProperties.addSchemaChild(element);
-        assertNotNull(schema.getRoot());
-        SchemaElement root = schema.getRoot();
-        assertEquals(1, root.getChildMap().size());
-        assertEquals(root.getChild("testBoolean"), element);
     }
 
 }

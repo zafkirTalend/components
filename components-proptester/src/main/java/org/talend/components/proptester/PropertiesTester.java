@@ -37,7 +37,7 @@ import jline.console.completer.StringsCompleter;
 /**
  * Component properties test class
  */
-@ComponentScan(basePackages = "org.talend.components", nameGenerator = BndToSpringBeanNameGenerator.class, includeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = aQute.bnd.annotation.component.Component.class) , excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*Osgi") )
+@ComponentScan(basePackages = "org.talend.components", nameGenerator = BndToSpringBeanNameGenerator.class, includeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = aQute.bnd.annotation.component.Component.class), excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*Osgi"))
 @Service
 public class PropertiesTester {
 
@@ -153,8 +153,8 @@ public class PropertiesTester {
                     @Override
                     void setupCompleter() {
                         StringsCompleter sc = new StringsCompleter(getNameList());
-                        console.addCompleter(
-                                new ArgumentCompleter(sc, new StringsCompleter(componentService.getAllComponentNames())));
+                        console.addCompleter(new ArgumentCompleter(sc, new StringsCompleter(componentService
+                                .getAllComponentNames())));
                     }
                 }, //
                 new Command(new String[] { "showProps", "sp" }, "Show previously created properties") {
@@ -191,8 +191,7 @@ public class PropertiesTester {
                         p.setValue(value);
                     }
                 }, //
-                new Command(new String[] { "beforePresent", "bp" },
-                        "Call the beforePresent service with the specified property") {
+                new Command(new String[] { "beforePresent", "bp" }, "Call the beforePresent service with the specified property") {
 
                     @Override
                     void run() {

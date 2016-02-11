@@ -26,8 +26,7 @@ import org.talend.components.salesforce.SalesforceRuntime;
 
 import aQute.bnd.annotation.component.Component;
 
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TSalesforceGetUpdatedDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
+@Component(name = Constants.COMPONENT_BEAN_PREFIX + TSalesforceGetUpdatedDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceGetUpdatedDefinition extends SalesforceDefinition {
 
     public static final String COMPONENT_NAME = "tSalesforceGetUpdatedNew"; //$NON-NLS-1$

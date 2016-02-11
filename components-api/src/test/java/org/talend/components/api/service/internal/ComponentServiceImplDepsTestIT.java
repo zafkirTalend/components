@@ -120,9 +120,14 @@ public class ComponentServiceImplDepsTestIT {
     private void checkDependencies(List<Dependency> dependencies, String scope, String... mvnStrings) {
         List<String> mvnStringList = Arrays.asList(mvnStrings);
         for (Dependency dep : dependencies) {
-            String mvnStr = "mvn:" + dep.getGroupId() + "/" + dep.getArtifactId() + "/" + dep.getVersion()
-                    + (dep.getType() == null ? ""
-                            : "/" + dep.getType() + (dep.getClassifier() == null ? "" : "/" + dep.getClassifier()));
+            String mvnStr = "mvn:"
+                    + dep.getGroupId()
+                    + "/"
+                    + dep.getArtifactId()
+                    + "/"
+                    + dep.getVersion()
+                    + (dep.getType() == null ? "" : "/" + dep.getType()
+                            + (dep.getClassifier() == null ? "" : "/" + dep.getClassifier()));
             if (!mvnStringList.contains(mvnStr) && scope.equals(dep.getScope())) {
                 fail("dependency [" + dep + "] was not found in expected dependencies.");
             }

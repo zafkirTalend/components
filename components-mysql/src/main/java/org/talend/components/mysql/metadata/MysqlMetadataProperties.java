@@ -9,6 +9,7 @@ import org.talend.daikon.properties.PropertyFactory;
  * Created by bchen on 16-1-17.
  */
 public class MysqlMetadataProperties extends tMysqlConnectionProperties {
+
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
@@ -20,5 +21,6 @@ public class MysqlMetadataProperties extends tMysqlConnectionProperties {
     }
 
     public Property TABLE = PropertyFactory.newString("TABLE");
+
     public SchemaProperties schema = new SchemaProperties("schema");
 }

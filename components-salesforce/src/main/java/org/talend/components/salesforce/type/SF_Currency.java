@@ -6,6 +6,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * Created by bchen on 16-1-28.
  */
 public class SF_Currency implements SalesforceBaseType<String, Double> {
+
     @Override
     public String convertFromKnown(Double value) {
         if (value == Double.NaN) {

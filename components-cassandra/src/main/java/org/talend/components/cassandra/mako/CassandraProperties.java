@@ -1,22 +1,20 @@
-package org.talend.components.cassandra;
+package org.talend.components.cassandra.mako;
 
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.output.Sink;
-import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.bd.api.component.BDImplement;
 import org.talend.components.bd.api.component.BDType;
 import org.talend.components.bd.api.component.IBDImplement;
-import org.talend.components.cassandra.tCassandraInput.CassandraSource;
-import org.talend.components.cassandra.tCassandraInput.spark.CassandraInputSparkConf;
-import org.talend.components.cassandra.tCassandraOutput.CassandraSink;
+import org.talend.components.cassandra.runtime.CassandraSink;
+import org.talend.components.cassandra.runtime.CassandraSource;
+import org.talend.components.cassandra.runtime.spark.CassandraInputSparkConf;
 
 /**
  * Created by bchen on 16-1-25.
  */
 public class CassandraProperties extends ComponentProperties implements IBDImplement {
-    
-    public static final String FAMILY_NAME = "Cassandra";
-    
+
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
@@ -27,7 +25,7 @@ public class CassandraProperties extends ComponentProperties implements IBDImple
         super(name);
     }
 
-    //TODO this method should be in XXXDefinition?
+    // TODO this method should be in XXXDefinition?
     @Override
     public String getImplementClassName(BDType type) {
         if (type == BDType.SparkInputConf) {

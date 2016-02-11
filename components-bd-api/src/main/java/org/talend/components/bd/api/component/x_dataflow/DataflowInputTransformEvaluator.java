@@ -16,11 +16,12 @@ import org.talend.components.bd.api.component.spark.SparkInputConf;
  * Created by bchen on 16-1-25.
  */
 public class DataflowInputTransformEvaluator implements TransformEvaluator<DataflowIO.Read.Component<String>> {
+
     @Override
     public void evaluate(DataflowIO.Read.Component<String> transform, EvaluationContext context) {
         ComponentProperties properties = transform.getProperties();
         IBDImplement bdProps = null;
-        //TODO check if it's default, should be done in SparkInputConf, not in here, refactor later
+        // TODO check if it's default, should be done in SparkInputConf, not in here, refactor later
         boolean isDefault = true;
         if (properties instanceof IBDImplement) {
             bdProps = (IBDImplement) properties;
@@ -30,13 +31,14 @@ public class DataflowInputTransformEvaluator implements TransformEvaluator<Dataf
         if (context instanceof StreamingEvaluationContext) {
 
         } else {
-            //Spark Batch
+            // Spark Batch
             SparkInputConf sparkInputConf = null;
             if (isDefault) {
                 sparkInputConf = new SparkInputConf();
             } else {
                 try {
-                    sparkInputConf = (SparkInputConf) Class.forName(bdProps.getImplementClassName(BDType.SparkInputConf)).newInstance();
+                    sparkInputConf = (SparkInputConf) Class.forName(bdProps.getImplementClassName(BDType.SparkInputConf))
+                            .newInstance();
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -45,10 +47,8 @@ public class DataflowInputTransformEvaluator implements TransformEvaluator<Dataf
                     e.printStackTrace();
                 }
             }
-            JavaRDD<BaseRowStruct> last =
-                    sparkInputConf.invoke(context.getSparkContext(), transform.getProperties());
-            JavaRDD<WindowedValue<BaseRowStruct>> rdd = last
-                    .map(WindowingHelpers.<BaseRowStruct>windowFunction());
+            JavaRDD<BaseRowStruct> last = sparkInputConf.invoke(context.getSparkContext(), transform.getProperties());
+            JavaRDD<WindowedValue<BaseRowStruct>> rdd = last.map(WindowingHelpers.<BaseRowStruct> windowFunction());
             context.setOutputRDD(transform, rdd);
         }
     }

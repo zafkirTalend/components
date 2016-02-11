@@ -19,7 +19,7 @@ import java.util.Map;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
-import org.talend.daikon.schema.Schema;
+import org.talend.daikon.schema.DataSchema;
 
 /**
  * Code to execute the component's runtime. This can be used at runtime or design time as required.
@@ -67,7 +67,7 @@ public abstract class ComponentRuntime {
      * 
      * @param schemaName
      */
-    public Schema getSchema(String schemaName) throws Exception {
+    public DataSchema getSchema(String schemaName) throws Exception {
         // subclass as required
         return null;
     }

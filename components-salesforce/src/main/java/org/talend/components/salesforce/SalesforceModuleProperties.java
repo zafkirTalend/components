@@ -30,7 +30,7 @@ import org.talend.daikon.properties.presentation.Widget;
 
 public class SalesforceModuleProperties extends ComponentProperties {
 
-    //TODO: why not use extend instead of property
+    // TODO: why not use extend instead of property
     private SalesforceConnectionProperties connection;
 
     //
