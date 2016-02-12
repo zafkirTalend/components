@@ -5,7 +5,7 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.input.Reader;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
-import org.talend.components.cassandra.CassandraTypeRegistry;
+import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraInputDIProperties;
 
 import com.datastax.driver.core.Row;
@@ -44,7 +44,7 @@ public class CassandraSource implements Source<Row> {
 
     @Override
     public String getFamilyName() {
-        return CassandraTypeRegistry.FAMILY_NAME;
+        return CassandraAvroRegistry.FAMILY_NAME;
     }
 
     public class CassandraReader implements Reader<Row> {

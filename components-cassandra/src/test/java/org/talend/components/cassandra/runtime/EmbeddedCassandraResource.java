@@ -15,7 +15,8 @@ public class EmbeddedCassandraResource extends ExternalResource {
 
     public static final String HOST = "localhost";
 
-    public static final String PORT = "9042";
+    /** Must match cassandra.yml */
+    public static final String PORT = "59042";
 
     private Session mConnection;
 
@@ -46,13 +47,23 @@ public class EmbeddedCassandraResource extends ExternalResource {
     }
 
     /** @return An input test table name in the form 'keyspace.' + testMethodName + "Src". */
-    public String getTableSrc() {
-        return mKeySpace + "." + mName + "Src";
+    public String getKsTableSrc() {
+        return mKeySpace + "." + getTableSrc();
     }
 
     /** @return The output test table name in the form 'keyspace.' + testMethodName + "Dst". */
+    public String getKsTableDst() {
+        return mKeySpace + "." + getTableDst();
+    }
+
+    /** @return An input test table name in the form testMethodName + "Src". */
+    public String getTableSrc() {
+        return mName + "Src";
+    }
+
+    /** @return The output test table name in the form testMethodName + "Dst". */
     public String getTableDst() {
-        return mKeySpace + "." + mName + "Dst";
+        return mName + "Dst";
     }
 
     @Override
@@ -65,12 +76,12 @@ public class EmbeddedCassandraResource extends ExternalResource {
     protected void before() throws Throwable {
         Cluster cluster = new Cluster.Builder().addContactPoints(HOST).withPort(Integer.valueOf(PORT)).build();
         mConnection = cluster.connect();
-        mConnection.execute("CREATE KEYSPACE " + getKeySpace()
-                + " WITH replication={'class' : 'SimpleStrategy', 'replication_factor':1}");
-        mConnection.execute("CREATE TABLE " + getTableSrc() + " (name text PRIMARY KEY)");
-        mConnection.execute("INSERT INTO " + getTableSrc() + " (name) values ('hello')");
-        mConnection.execute("INSERT INTO " + getTableSrc() + " (name) values ('world')");
-        mConnection.execute("CREATE TABLE " + getTableDst() + " (name text PRIMARY KEY)");
+        mConnection.execute(
+                "CREATE KEYSPACE " + getKeySpace() + " WITH replication={'class' : 'SimpleStrategy', 'replication_factor':1}");
+        mConnection.execute("CREATE TABLE " + getKsTableSrc() + " (name text PRIMARY KEY)");
+        mConnection.execute("INSERT INTO " + getKsTableSrc() + " (name) values ('hello')");
+        mConnection.execute("INSERT INTO " + getKsTableSrc() + " (name) values ('world')");
+        mConnection.execute("CREATE TABLE " + getKsTableDst() + " (name text PRIMARY KEY)");
     };
 
     @Override

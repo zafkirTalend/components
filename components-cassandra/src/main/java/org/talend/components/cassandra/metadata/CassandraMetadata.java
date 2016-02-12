@@ -8,7 +8,7 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.metadata.Metadata;
-import org.talend.components.cassandra.CassandraTypeRegistry;
+import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.daikon.NamedThing;
 
 import com.datastax.driver.core.Cluster;
@@ -20,7 +20,7 @@ import com.datastax.driver.core.DataType;
  */
 public class CassandraMetadata implements Metadata {
 
-    CassandraTypeRegistry registry = new CassandraTypeRegistry();
+    CassandraAvroRegistry registry = new CassandraAvroRegistry();
 
     @Override
     public void initSchema(ComponentProperties properties) {

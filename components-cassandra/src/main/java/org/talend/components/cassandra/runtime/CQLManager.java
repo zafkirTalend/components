@@ -3,18 +3,18 @@ package org.talend.components.cassandra.runtime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
-import org.talend.daikon.schema.MakoElement;
-import org.talend.daikon.schema.internal.DataSchemaElement;
-import org.talend.daikon.schema.type.ExternalBaseType;
 
 /**
  * Created by bchen on 16-1-17.
  */
 class Column {
 
-    DataSchemaElement column;
+    private final Field f;
 
     private String mark = "?";
 
@@ -24,37 +24,43 @@ class Column {
 
     private boolean asColumnKey = false;
 
-    public Column(MakoElement column) {
-        this.column = (DataSchemaElement) column;
+    public Column(Field f) {
+        this.f = f;
+    }
+
+    public Schema getSchema() {
+        return f.schema();
     }
 
     public String getName() {
-        return column.getName();
+        return f.name();
     }
 
     public String getDBName() {
-        return column.getAppColName();
+        // TODO: get the dbname from the field schema if it is different than the record name.
+        String dbName = getSchema().getProp("talend.dbname");
+        return dbName == null ? getName() : dbName;
     }
 
-    public MakoElement.Type getTalendType() {
-        return column.getType();
-    }
-
-    public Class<? extends ExternalBaseType> getDBType() {
-        return column.getAppColType();
-    }
+    // public MakoElement.Type getTalendType() {
+    // return column.getType();
+    // }
+    //
 
     // public JavaType getJavaType() {
     // return JavaTypesManager.getJavaTypeFromId(getTalendType());
     // }
 
-    // TODO isNullable is enough?
-    public boolean isObject() {
-        return column.isNullable();
-    }
+    // // TODO isNullable is enough?
+    // public boolean isObject() {
+    // return column.isNullable();
+    // }
+    //
 
     public boolean isKey() {
-        return column.isKey();
+        // TODO: get the key from the field schema if it is different than the record name.
+        String isKey = f.schema().getProp("talend.key");
+        return isKey != null && "true".equals(isKey);
     }
 
     public String getMark() {
@@ -114,24 +120,18 @@ class CQLManager {
 
     private List<Column> valueColumns;
 
-    public CQLManager(ComponentProperties props, List<MakoElement> columnList) {
+    public CQLManager(ComponentProperties props, Schema schema) {
         this.props = (tCassandraOutputDIProperties) props;
         this.action = this.props.dataAction.getStringValue();
         this.keyspace = this.props.keyspace.getStringValue();
-        if (!this.keyspace.startsWith("\"")) {
-            this.keyspace = "\"" + this.keyspace + "\"";
-        }
         this.tableName = this.props.columnFamily.getStringValue();
-        if (!this.tableName.startsWith("\"")) {
-            this.tableName = "\"" + this.tableName + "\"";
-        }
         this.tableName = this.keyspace + "." + this.tableName;
-        createColumnList(columnList);
+        createColumnList(schema);
         this.valueColumns = collectValueColumns();
     }
 
-    public CQLManager(ComponentProperties props, List<MakoElement> columnList, boolean useSpark) {
-        this(props, columnList);
+    public CQLManager(ComponentProperties props, Schema schema, boolean useSpark) {
+        this(props, schema);
         this.useSpark = useSpark;
     }
 
@@ -147,11 +147,12 @@ class CQLManager {
 
     private Column timestamp;
 
-    private void createColumnList(List<MakoElement> columnList) {
+    private void createColumnList(Schema schema) {
         all = new ArrayList<Column>();
-        for (MakoElement column : columnList) {
-            all.add(new Column(column));
+        for (Field f : schema.getFields()) {
+            all.add(new Column(f));
         }
+        // TODO(rskraba): keys???
         keys = new ArrayList<Column>();
         normals = new ArrayList<Column>();
         conditions = new ArrayList<Column>();
@@ -378,7 +379,7 @@ class CQLManager {
         for (Column column : columns) {
             createSQL.append(wrapProtectedChar(column.getDBName()));
             createSQL.append(" ");
-            createSQL.append(validateDBType(column));
+            createSQL.append(CassandraAvroRegistry.getDataType(column.getSchema()));
             if (count < columns.size()) {
                 createSQL.append(",");
             }
@@ -409,7 +410,8 @@ class CQLManager {
             columns.addAll(normals);
         }
         for (Column column : columns) {
-            if (unsupportTypes.contains(validateDBType(column))) {
+            if (unsupportTypes
+                    .contains(CassandraAvroRegistry.getDataType(column.getSchema()).getName().toString().toLowerCase())) {
                 return true;
             }
         }
@@ -641,12 +643,6 @@ class CQLManager {
     // preDeleteSQL.append("\"");
     // return preDeleteSQL.toString();
     // }
-
-    private Class<? extends ExternalBaseType> validateDBType(Column column) {
-        Class<? extends ExternalBaseType> dbType = column.getDBType();
-        // TODO it's ok? compare old implement
-        return dbType;
-    }
 
     // private String generateSetStmt(String assignStmt, Column column, String inConnName, int index) {
     // Class<? extends ExternalBaseType> dbType = validateDBType(column);

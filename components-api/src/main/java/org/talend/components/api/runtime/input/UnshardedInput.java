@@ -10,7 +10,7 @@ import java.util.Iterator;
  *
  * @param <T> The type of row that this source will generate.
  */
-public interface NonPartitionableInput<T> extends Iterator<T>, Serializable, Closeable {
+public interface UnshardedInput<T> extends Iterator<T>, Serializable, Closeable {
 
     public void setup();
 }

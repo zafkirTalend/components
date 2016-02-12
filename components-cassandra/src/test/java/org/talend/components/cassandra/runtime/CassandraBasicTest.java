@@ -30,7 +30,7 @@ public class CassandraBasicTest {
     @Test
     public void testEmbeddedCassandra() {
         // Just get the result set from the automatically created table.
-        ResultSet rs = mCass.getConnection().execute("SELECT name FROM " + mCass.getTableSrc());
+        ResultSet rs = mCass.getConnection().execute("SELECT name FROM " + mCass.getKsTableSrc());
         List<String> result = new ArrayList<>();
         for (Row r : rs) {
             result.add(r.getString("name"));

@@ -24,8 +24,8 @@ import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.daikon.properties.Properties.Deserialized;
-import org.talend.daikon.schema.MakoElement;
-import org.talend.daikon.schema.type.AvroConverterRegistry;
+import org.talend.daikon.schema.type.DatumRegistry;
+import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 /**
  * Created by bchen on 16-1-10.
@@ -98,7 +98,13 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
         public boolean next(NullWritable nullWritable, BaseRowStruct baseRowStruct) throws IOException {
             if (reader.advance()) {
 
-                IndexedRecord in = AvroConverterRegistry.getAsIndexedRecord(reader.getCurrent());
+                Object datum = reader.getCurrent();
+                @SuppressWarnings("unchecked")
+                // TODO(rskraba): This should only be done once.
+                IndexedRecordFacadeFactory<Object> irff = (IndexedRecordFacadeFactory<Object>) DatumRegistry
+                        .getFacadeFactory(datum.getClass());
+                IndexedRecord in = irff.createFacade(datum);
+
                 Map<String, String> out = new HashMap<>();
                 Schema schema = in.getSchema();
                 for (Field f : schema.getFields()) {

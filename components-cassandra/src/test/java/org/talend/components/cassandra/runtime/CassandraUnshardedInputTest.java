@@ -25,12 +25,13 @@ public class CassandraUnshardedInputTest {
     public void testBasic() {
         tCassandraInputDIProperties props = new tCassandraInputSparkProperties("tCassandraInput_1");
         props.initForRuntime();
+        
         props.host.setValue(EmbeddedCassandraResource.HOST);
         props.port.setValue(EmbeddedCassandraResource.PORT);
         props.useAuth.setValue(false);
         props.keyspace.setValue(mCass.getKeySpace());
-        props.columnFamily.setValue("test");
-        props.query.setValue("SELECT name FROM " + mCass.getTableSrc());
+        props.columnFamily.setValue(mCass.getTableSrc());
+        props.query.setValue("SELECT name FROM " + mCass.getKsTableSrc());
 
         try (CassandraUnshardedInput cIn = new CassandraUnshardedInput(props)) {
             cIn.setup();

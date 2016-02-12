@@ -2,12 +2,13 @@ package org.talend.components.cassandra.runtime;
 
 import java.util.List;
 
+import org.apache.avro.Schema;
 import org.talend.components.api.exception.TalendConnectionException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.output.Sink;
 import org.talend.components.api.runtime.output.Writer;
 import org.talend.components.api.runtime.row.BaseRowStruct;
-import org.talend.components.cassandra.CassandraTypeRegistry;
+import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
 import org.talend.daikon.schema.DataSchema;
 import org.talend.daikon.schema.MakoElement;
@@ -44,7 +45,7 @@ public class CassandraSink implements Sink {
         cluster = clusterBuilder.build();
         connection = cluster.connect();
 
-        CQLManager cqlManager = new CQLManager(props, ((DataSchema) props.schema.schema.getValue()).getRoot().getChildren());
+        CQLManager cqlManager = new CQLManager(props, ((Schema) props.schema.schema.getValue()));
         PreparedStatement preparedStatement = connection.prepare(cqlManager.generatePreActionSQL());
         if (props.useUnloggedBatch.getBooleanValue()) {
             // TODO
@@ -88,7 +89,7 @@ public class CassandraSink implements Sink {
                 DataSchemaElement col = (DataSchemaElement) column;
                 try {
                     ExternalBaseType converter = col.getAppColType().newInstance();
-                    Object value = TypeMapping.convert(CassandraTypeRegistry.FAMILY_NAME, col, rowStruct.get(col.getName()));
+                    Object value = TypeMapping.convert(CassandraAvroRegistry.FAMILY_NAME, col, rowStruct.get(col.getName()));
                     converter.writeValue(boundStatement, col.getAppColName(), converter.convertFromKnown(value));
                 } catch (InstantiationException e) {
                     e.printStackTrace();

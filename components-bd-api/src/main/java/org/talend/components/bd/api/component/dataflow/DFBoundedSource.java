@@ -15,7 +15,8 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
-import org.talend.daikon.schema.type.AvroConverterRegistry;
+import org.talend.daikon.schema.type.DatumRegistry;
+import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.google.cloud.dataflow.sdk.coders.Coder;
 import com.google.cloud.dataflow.sdk.coders.MapCoder;
@@ -122,7 +123,13 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
 
         @Override
         public Map<String, String> getCurrent() throws NoSuchElementException {
-            IndexedRecord in = AvroConverterRegistry.getAsIndexedRecord(reader.getCurrent());
+            Object datum = reader.getCurrent();
+            @SuppressWarnings("unchecked")
+            // TODO(rskraba): This should only be done once.
+            IndexedRecordFacadeFactory<Object> irff= (IndexedRecordFacadeFactory<Object>) DatumRegistry
+                    .getFacadeFactory(datum.getClass());
+            IndexedRecord in = irff.createFacade(datum);
+
             Map<String, String> out = new HashMap<>();
             Schema schema = in.getSchema();
             for (Field f : schema.getFields()) {

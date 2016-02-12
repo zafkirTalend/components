@@ -1,9 +1,10 @@
 package org.talend.components.cassandra;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaBuilder.FieldAssembler;
 import org.apache.avro.generic.IndexedRecord;
-import org.talend.components.cassandra.RowReadOnlyWrapper.RowIndexedRecord;
-import org.talend.daikon.schema.type.AvroConverter;
+import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
@@ -11,13 +12,9 @@ import com.datastax.driver.core.Row;
 
 /**
  */
-public class RowReadOnlyWrapper implements AvroConverter<Row, RowIndexedRecord> {
+public class RowReadOnlyWrapper implements IndexedRecordFacadeFactory<Row> {
 
-    @Override
-    public Schema getAvroSchema() {
-        // TODO(rskraba): set where the schema maps to the row object...
-        return null;
-    }
+    private Schema mSchema;
 
     @Override
     public Class<Row> getSpecificClass() {
@@ -25,13 +22,34 @@ public class RowReadOnlyWrapper implements AvroConverter<Row, RowIndexedRecord> 
     }
 
     @Override
-    public Row convertFromAvro(RowIndexedRecord value) {
-        throw new UnsupportedOperationException("Should not write to a read-only item.");
+    public Schema getSchema() {
+        return mSchema;
     }
 
     @Override
-    public RowIndexedRecord convertToAvro(Row value) {
-        return new RowIndexedRecord(value, getAvroSchema());
+    public void setSchema(Schema schema) {
+        mSchema = schema;
+    }
+
+    @Override
+    public IndexedRecord createFacade(Row row) {
+        if (mSchema == null) {
+            mSchema = inferSchema(row);
+        }
+        return new RowIndexedRecord(row, getSchema());
+    }
+
+    public static Schema inferSchema(Row row) {
+        ColumnDefinitions cd = row.getColumnDefinitions();
+
+        // Generate a schema from the columns.
+        String recordName = cd.size() == 0 ? "Record" : cd.getTable(0) + "Record";
+        FieldAssembler<Schema> fa = SchemaBuilder.record(recordName).fields();
+        for (int i = 0; i < cd.size(); i++) {
+            DataType type = cd.getType(i);
+            fa = fa.name(cd.getName(i)).type(CassandraAvroRegistry.getSchema(type)).noDefault();
+        }
+        return fa.endRecord();
     }
 
     public static class RowIndexedRecord implements IndexedRecord {
@@ -75,7 +93,7 @@ public class RowReadOnlyWrapper implements AvroConverter<Row, RowIndexedRecord> 
             ColumnDefinitions columns = mRow.getColumnDefinitions();
             DataType type = columns.getType(name);
 
-            return CassandraTypeRegistry.getReader(type).readValue(mRow, name);
+            return CassandraAvroRegistry.getReader(type).readValue(mRow, name);
         }
     }
 }

@@ -21,7 +21,7 @@ import org.talend.components.bd.api.component.spark.SparkOutputConf;
 import org.talend.components.bd.api.component.x_dataflow.DataflowIO;
 import org.talend.components.bd.api.component.x_dataflow.DataflowInputTransformEvaluator;
 import org.talend.components.bd.api.component.x_dataflow.DataflowOutputTransformEvaluator;
-import org.talend.components.cassandra.CassandraTypeRegistry;
+import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraInputSparkProperties;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
 import org.talend.components.cassandra.metadata.CassandraMetadata;
@@ -55,7 +55,7 @@ public class CassandraSparkDataflowTest {
     public static void init() throws Exception {
         EmbeddedCassandraServerHelper.startEmbeddedCassandra("cassandra.yml");
 
-        TypeMapping.registryTypes(new CassandraTypeRegistry());
+        // TypeMapping.registryTypes(new CassandraAvroRegistry());
         TransformTranslator.addTransformEvaluator(DataflowIO.Read.Component.class, new DataflowInputTransformEvaluator());
         TransformTranslator.addTransformEvaluator(DataflowIO.Write.Component.class, new DataflowOutputTransformEvaluator());
     }

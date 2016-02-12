@@ -12,9 +12,9 @@ import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.talend.daikon.schema.type.AvroConverter;
-import org.talend.daikon.schema.type.AvroConverterRegistry;
 import org.talend.daikon.schema.type.ContainerReader;
 import org.talend.daikon.schema.type.ContainerWriter;
+import org.talend.daikon.schema.type.DatumRegistry;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.DataType;
@@ -23,7 +23,7 @@ import com.datastax.driver.core.Row;
 /**
  * https://docs.datastax.com/en/latest-java-driver/java-driver/reference/javaClass2Cql3Datatypes.html
  */
-public class CassandraTypeRegistry {
+public class CassandraAvroRegistry {
 
     public static final String FAMILY_NAME = "Cassandra";
 
@@ -31,7 +31,7 @@ public class CassandraTypeRegistry {
         return FAMILY_NAME;
     }
 
-    private static final AvroConverterRegistry mConverterRegistry = new AvroConverterRegistry();
+    private static final DatumRegistry mConverterRegistry = new DatumRegistry();
 
     private static final Map<DataType.Name, Class<?>> sCassandraTypes;
 
@@ -39,7 +39,7 @@ public class CassandraTypeRegistry {
 
     static {
         // Ensure that other components know how to process Row objects.
-        AvroConverterRegistry.registerRecordWrapper(Row.class, new RowReadOnlyWrapper());
+        DatumRegistry.registerFacadeFactory(Row.class, RowReadOnlyWrapper.class);
 
         // Maps from the Cassandra DataType.Name to the Avro Schema that should represent it.
         {
@@ -109,6 +109,10 @@ public class CassandraTypeRegistry {
         }
     }
 
+    public static <T> AvroConverter<T, ?> getConverter(Class<T> specificClass) {
+        return mConverterRegistry.getConverter(specificClass);
+    }
+
     public static Schema getSchema(DataType type) {
         Class<?> specificClass = sCassandraTypes.get(type.getName());
         if (specificClass == null) {
@@ -153,6 +157,43 @@ public class CassandraTypeRegistry {
             throw new RuntimeException("The DataType " + type + " is not handled.");
         }
         return writer;
+    }
+
+    public static DataType getDataType(Schema schema) {
+        // TODO(rskraba): parse overrideDataType
+        String overrideDataType = schema.getProp("talend.dbtype");
+        if (null != overrideDataType) {
+        }
+
+        switch (schema.getType()) {
+        case BOOLEAN:
+            return DataType.cboolean();
+        case BYTES:
+            return DataType.blob();
+        case DOUBLE:
+            return DataType.cdouble();
+        case FIXED:
+            return DataType.blob();
+        case FLOAT:
+            return DataType.cfloat();
+        case INT:
+            return DataType.cint();
+        case LONG:
+            return DataType.bigint();
+        case STRING:
+            return DataType.text();
+        case ENUM:
+        case ARRAY:
+        case MAP:
+            // return DataType.map(keyType, valueType);
+        case NULL:
+        case RECORD:
+        case UNION:
+        default:
+            // TODO(rskraba): add these types.
+            break;
+        }
+        return null;
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.talend.components.cassandra.runtime;
 
-import org.talend.components.api.runtime.input.NonPartitionableInput;
+import org.talend.components.api.runtime.input.UnshardedInput;
 import org.talend.components.cassandra.mako.tCassandraInputDIProperties;
 
 import com.datastax.driver.core.Cluster;
@@ -11,7 +11,7 @@ import com.datastax.driver.core.Session;
 /**
  * A simple interface for reading all rows from a table.
  */
-public class CassandraUnshardedInput implements NonPartitionableInput<Row> {
+public class CassandraUnshardedInput implements UnshardedInput<Row> {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
