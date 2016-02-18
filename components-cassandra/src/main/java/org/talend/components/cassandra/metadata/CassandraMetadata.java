@@ -20,7 +20,7 @@ import com.datastax.driver.core.DataType;
  */
 public class CassandraMetadata implements Metadata {
 
-    CassandraAvroRegistry registry = new CassandraAvroRegistry();
+    CassandraAvroRegistry registry = CassandraAvroRegistry.get();
 
     @Override
     public void initSchema(ComponentProperties properties) {
@@ -37,7 +37,7 @@ public class CassandraMetadata implements Metadata {
         FieldAssembler<Schema> fa = SchemaBuilder.record(source + "Record").fields();
         for (ColumnMetadata column : columns) {
             DataType type = column.getType();
-            fa = fa.name(column.getName()).type(registry.getSchema(type)).noDefault();
+            fa = fa.name(column.getName()).type(registry.inferSchema(type)).noDefault();
         }
         props.schema.schema.setValue(fa.endRecord());
     }

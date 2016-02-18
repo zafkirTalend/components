@@ -10,15 +10,17 @@ import org.talend.components.api.runtime.output.Output;
 import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
 import org.talend.daikon.schema.type.AvroConverter;
-import org.talend.daikon.schema.type.ContainerWriter;
+import org.talend.daikon.schema.type.ContainerWriterByIndex;
 import org.talend.daikon.schema.type.DatumRegistry;
 import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SettableByIndexData;
 
 /**
  * A simple interface to write all incoming rows.
@@ -37,9 +39,11 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
     private transient BoundStatement boundStatement;
 
-    private transient IndexedRecordFacadeFactory<Object> mFactory;
+    private transient ColumnDefinitions mColumns;
 
-    CassandraOutput(tCassandraOutputDIProperties properties) {
+    private transient IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> mFactory;
+
+    public CassandraOutput(tCassandraOutputDIProperties properties) {
         this.properties = properties;
     }
 
@@ -58,6 +62,7 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
         CQLManager cqlManager = new CQLManager(properties, (Schema) properties.schema.schema.getValue());
         PreparedStatement preparedStatement = connection.prepare(cqlManager.generatePreActionSQL());
+        mColumns = preparedStatement.getVariables();
         if (properties.useUnloggedBatch.getBooleanValue()) {
             // TODO
         } else {
@@ -71,29 +76,28 @@ public class CassandraOutput implements Output, Closeable, Serializable {
             return;
 
         if (mFactory == null)
-            mFactory = (IndexedRecordFacadeFactory<Object>) DatumRegistry.getFacadeFactory(datum.getClass());
+            mFactory = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) DatumRegistry.getFacadeFactory(datum
+                    .getClass());
 
-        IndexedRecord ir = mFactory.createFacade(datum);
+        IndexedRecord ir = mFactory.convertToAvro(datum);
 
         for (Field f : ir.getSchema().getFields()) {
-            int index = f.pos();
-            Object value = ir.get(index);
+            int fieldIndex = f.pos();
+            DataType fieldType = mColumns.getType(fieldIndex);
+            Object fieldValue = ir.get(fieldIndex);
 
-            if (value == null) {
-                boundStatement.setToNull(index);
+            if (fieldValue == null) {
+                boundStatement.setToNull(fieldIndex);
                 continue;
             }
 
-            @SuppressWarnings("unchecked")
-            AvroConverter<Object, Object> valueConverter = (AvroConverter<Object, Object>) CassandraAvroRegistry
-                    .getConverter(value.getClass());
+            AvroConverter<Object, Object> valueConverter = (AvroConverter<Object, Object>) CassandraAvroRegistry.get()
+                    .getConverter(fieldValue.getClass(), fieldType, f.schema());
 
-            DataType columnType = CassandraAvroRegistry.getDataType(f.schema());
-            @SuppressWarnings("unchecked")
-            ContainerWriter<BoundStatement, Object> writer = (ContainerWriter<BoundStatement, Object>) CassandraAvroRegistry
-                    .getWriter(columnType);
+            ContainerWriterByIndex<SettableByIndexData<?>, Object> writer = (ContainerWriterByIndex<SettableByIndexData<?>, Object>) CassandraAvroRegistry
+                    .get().getWriter(fieldType);
 
-            writer.writeValue(boundStatement, f.pos(), valueConverter.convertFromAvro(value));
+            writer.writeValue(boundStatement, f.pos(), valueConverter.convertFromAvro(fieldValue));
         }
         connection.execute(boundStatement);
     }

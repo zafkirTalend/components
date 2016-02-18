@@ -101,9 +101,9 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
                 Object datum = reader.getCurrent();
                 @SuppressWarnings("unchecked")
                 // TODO(rskraba): This should only be done once.
-                IndexedRecordFacadeFactory<Object> irff = (IndexedRecordFacadeFactory<Object>) DatumRegistry
+                IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> irff = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) DatumRegistry
                         .getFacadeFactory(datum.getClass());
-                IndexedRecord in = irff.createFacade(datum);
+                IndexedRecord in = irff.convertToAvro(datum);
 
                 Map<String, String> out = new HashMap<>();
                 Schema schema = in.getSchema();

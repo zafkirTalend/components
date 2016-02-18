@@ -13,6 +13,12 @@
 	<artifactId>components-cassandra</artifactId>
 	<version>0.3.0.BUILD-SNAPSHOT</version>
 	<packaging>bundle</packaging>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
@@ -135,9 +141,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
-
 	</build>
 	<dependencyManagement>
 		<dependencies>
@@ -145,6 +149,7 @@
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>18.0</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>

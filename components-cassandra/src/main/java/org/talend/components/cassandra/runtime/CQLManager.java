@@ -37,7 +37,8 @@ class Column {
     }
 
     public String getDBName() {
-        // TODO: get the dbname from the field schema if it is different than the record name.
+        // TODO: get the dbname from the field schema if it is different than the
+        // record name.
         String dbName = getSchema().getProp("talend.dbname");
         return dbName == null ? getName() : dbName;
     }
@@ -58,7 +59,8 @@ class Column {
     //
 
     public boolean isKey() {
-        // TODO: get the key from the field schema if it is different than the record name.
+        // TODO: get the key from the field schema if it is different than the
+        // record name.
         String isKey = f.schema().getProp("talend.key");
         return isKey != null && "true".equals(isKey);
     }
@@ -178,7 +180,8 @@ class CQLManager {
                 continue;
             }
             // TODO make if condition work first
-            // if ("UPDATE".equals(action) || ("DELETE".equals(action) && !props.deleteIfExists.getBooleanValue())) {
+            // if ("UPDATE".equals(action) || ("DELETE".equals(action) &&
+            // !props.deleteIfExists.getBooleanValue())) {
             // List<Map<String, String>> ifCoditions = (List<Map<String, String>>)
             // ElementParameterParser.getObjectValue(node, "__IF_CONDITION__");
             // boolean matched = false;
@@ -197,14 +200,17 @@ class CQLManager {
         }
         if ("UPDATE".equals(action)) {
             // TODO make assign operations works first
-            // List<Map<String, String>> assignOperations = (List<Map<String, String>>)
-            // ElementParameterParser.getObjectValue(node, "__ASSIGNMENT_OPERATION__");
+            // List<Map<String, String>> assignOperations = (List<Map<String,
+            // String>>)
+            // ElementParameterParser.getObjectValue(node,
+            // "__ASSIGNMENT_OPERATION__");
             // List<Column> keyColumns = new ArrayList<Column>();
             // for (Column column : normals) {
             // for (Map<String, String> operation : assignOperations) {
             // String updateColumnKeyName = operation.get("KEY_COLUMN");
             // String updateColumnOperation = operation.get("OPERATION");
-            // if ("p/k".equals(updateColumnOperation) && column.getName().equals(updateColumnKeyName)) {
+            // if ("p/k".equals(updateColumnOperation) &&
+            // column.getName().equals(updateColumnKeyName)) {
             // keyColumns.add(column);
             // }
             // }
@@ -232,7 +238,8 @@ class CQLManager {
         if ("DELETE".equals(action)) {
             // TODO make delete columns works first
             // List<Map<String, String>> columnsKey = (List<Map<String, String>>)
-            // ElementParameterParser.getObjectValue(node, "__DELETE_COLUMN_BY_POSITION_KEY__");
+            // ElementParameterParser.getObjectValue(node,
+            // "__DELETE_COLUMN_BY_POSITION_KEY__");
             // for (Column column : normals) {
             // for (Map<String, String> columnKey : columnsKey) {
             // if (column.getName().equals(columnKey.get("COLUMN_NAME"))) {
@@ -291,7 +298,7 @@ class CQLManager {
     }
 
     private String wrapProtectedChar(String keyword) {
-        if (keyword.matches("^[a-z]+$")) {
+        if (keyword.matches("^[a-z0-9_]+$")) {
             return keyword;
         } else {
             return getLProtectedChar(keyword) + keyword + getRProtectedChar(keyword);
@@ -327,17 +334,22 @@ class CQLManager {
     // createKSSQL.append("\" + ");
     // createKSSQL.append(this.keyspace);
     // createKSSQL.append(" + \"");
-    // createKSSQL.append("WITH REPLICATION = {\'class\' : \'" + ElementParameterParser.getValue(this.node,
+    // createKSSQL.append("WITH REPLICATION = {\'class\' : \'" +
+    // ElementParameterParser.getValue(this.node,
     // "__REPLICA_STRATEGY__") + "\',");
-    // if ("SimpleStrategy".equals(ElementParameterParser.getValue(this.node, "__REPLICA_STRATEGY__"))) {
-    // createKSSQL.append("'replication_factor' : \" + " + ElementParameterParser.getValue(this.node,
+    // if ("SimpleStrategy".equals(ElementParameterParser.getValue(this.node,
+    // "__REPLICA_STRATEGY__"))) {
+    // createKSSQL.append("'replication_factor' : \" + " +
+    // ElementParameterParser.getValue(this.node,
     // "__SIMEPLE_REPLICA_NUMBER__") + " + \"}\"");
     // } else {
-    // List<Map<String, String>> replicas = ElementParameterParser.getTableValue(this.node,
+    // List<Map<String, String>> replicas =
+    // ElementParameterParser.getTableValue(this.node,
     // "__NETWORK_REPLICA_TABLE__");
     // int count = 1;
     // for (Map<String, String> replica : replicas) {
-    // createKSSQL.append("\'\" + " + replica.get("DATACENTER_NAME") + " + \"\' : \" + " + replica.get("REPLICA_NUMBER")
+    // createKSSQL.append("\'\" + " + replica.get("DATACENTER_NAME") + " + \"\' :
+    // \" + " + replica.get("REPLICA_NUMBER")
     // + " + \"");
     // if (count < replicas.size()) {
     // createKSSQL.append(",");
@@ -410,8 +422,7 @@ class CQLManager {
             columns.addAll(normals);
         }
         for (Column column : columns) {
-            if (unsupportTypes
-                    .contains(CassandraAvroRegistry.getDataType(column.getSchema()).getName().toString().toLowerCase())) {
+            if (unsupportTypes.contains(CassandraAvroRegistry.getDataType(column.getSchema()).getName().toString().toLowerCase())) {
                 return true;
             }
         }
@@ -442,7 +453,8 @@ class CQLManager {
     }
 
     // public String generateStmt(String assignStmt, String inConnName) {
-    // if ("INSERT".equals(action) || "UPDATE".equals(action) || "DELETE".equals(action)) {
+    // if ("INSERT".equals(action) || "UPDATE".equals(action) ||
+    // "DELETE".equals(action)) {
     // StringBuilder stmt = new StringBuilder();
     // int index = 0;
     // for (Column column : valueColumns) {
@@ -521,19 +533,24 @@ class CQLManager {
     // int count = 1;
     // for (Column column : normals) {
     //
-    // String assignment = wrapProtectedChar(column.getDBName()) + "=" + column.getMark();
+    // String assignment = wrapProtectedChar(column.getDBName()) + "=" +
+    // column.getMark();
     //
     // if ("+v".equals(column.getAssignmentOperation())) {
-    // assignment = wrapProtectedChar(column.getDBName()) + "=" + wrapProtectedChar(column.getDBName()) + "+" +
+    // assignment = wrapProtectedChar(column.getDBName()) + "=" +
+    // wrapProtectedChar(column.getDBName()) + "+" +
     // column.getMark();
     // } else if ("v+".equals(column.getAssignmentOperation())) {
-    // assignment = wrapProtectedChar(column.getDBName()) + "=" + column.getMark() + "+" +
+    // assignment = wrapProtectedChar(column.getDBName()) + "=" + column.getMark()
+    // + "+" +
     // wrapProtectedChar(column.getDBName());
     // } else if ("-".equals(column.getAssignmentOperation())) {
-    // assignment = wrapProtectedChar(column.getDBName()) + "=" + wrapProtectedChar(column.getDBName()) + "-" +
+    // assignment = wrapProtectedChar(column.getDBName()) + "=" +
+    // wrapProtectedChar(column.getDBName()) + "-" +
     // column.getMark();
     // } else if ("p/k".equals(column.getAssignmentOperation())) {
-    // assignment = wrapProtectedChar(column.getDBName()) + "[?]=" + column.getMark();
+    // assignment = wrapProtectedChar(column.getDBName()) + "[?]=" +
+    // column.getMark();
     // }
     //
     // preUpdateSQL.append(assignment);
@@ -568,7 +585,8 @@ class CQLManager {
     // }
     // }
     // // can't work actually, even it supported on office document
-    // // boolean ifExist = "true".equals(ElementParameterParser.getValue(node, "__UPDATE_IF_EXISTS__"));
+    // // boolean ifExist = "true".equals(ElementParameterParser.getValue(node,
+    // "__UPDATE_IF_EXISTS__"));
     // // if(ifExist){
     // // preUpdateSQL.append(" IF EXISTS");
     // // }
@@ -580,7 +598,8 @@ class CQLManager {
 
     // private boolean rowKeyInList(Column column) {
     // TODO make row key in list properties works first
-    // List<Map<String, String>> rowKeyInList = (List<Map<String, String>>) ElementParameterParser.getObjectValue(node,
+    // List<Map<String, String>> rowKeyInList = (List<Map<String, String>>)
+    // ElementParameterParser.getObjectValue(node,
     // "__ROW_KEY_IN_LIST__");
     // for (Map<String, String> rowKey : rowKeyInList) {
     // if (column.getName().equals(rowKey.get("COLUMN_NAME"))) {
@@ -644,7 +663,8 @@ class CQLManager {
     // return preDeleteSQL.toString();
     // }
 
-    // private String generateSetStmt(String assignStmt, Column column, String inConnName, int index) {
+    // private String generateSetStmt(String assignStmt, Column column, String
+    // inConnName, int index) {
     // Class<? extends ExternalBaseType> dbType = validateDBType(column);
     // String columnValue = inConnName + "." + column.getName();
     // StringBuilder setStmt = new StringBuilder();
@@ -654,44 +674,62 @@ class CQLManager {
     // setStmt.append("} else {");
     // }
     //
-    // if ("ascii".equals(dbType) || "text".equals(dbType) || "varchar".equals(dbType)) {
+    // if ("ascii".equals(dbType) || "text".equals(dbType) ||
+    // "varchar".equals(dbType)) {
     // if (JavaTypesManager.STRING == column.getJavaType()) {
-    // setStmt.append(assignStmt + ".setString(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setString(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if (JavaTypesManager.CHARACTER == column.getJavaType()) {
-    // setStmt.append(assignStmt + ".setString(" + index + ", String.valueOf(" + columnValue + "));\r\n");
+    // setStmt.append(assignStmt + ".setString(" + index + ", String.valueOf(" +
+    // columnValue + "));\r\n");
     // }
     // } else if ("timeuuid".equals(dbType) || "uuid".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setUUID(" + index + ", java.util.UUID.fromString(" + columnValue + "));\r\n");
+    // setStmt.append(assignStmt + ".setUUID(" + index + ",
+    // java.util.UUID.fromString(" + columnValue + "));\r\n");
     // } else if ("varint".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setVarint(" + index + ", (java.math.BigInteger)" + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setVarint(" + index + ",
+    // (java.math.BigInteger)" + columnValue + ");\r\n");
     // } else if ("inet".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setInet(" + index + ", (java.net.InetAddress)" + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setInet(" + index + ",
+    // (java.net.InetAddress)" + columnValue + ");\r\n");
     // } else if ("map".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setMap(" + index + ", (java.util.Map)" + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setMap(" + index + ", (java.util.Map)" +
+    // columnValue + ");\r\n");
     // } else if ("set".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setSet(" + index + ", (java.util.Set)" + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setSet(" + index + ", (java.util.Set)" +
+    // columnValue + ");\r\n");
     // } else if ("list".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setList(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setList(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("boolean".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setBool(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setBool(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("blob".equals(dbType)) {
     // if (useSpark) {
-    // setStmt.append(assignStmt + ".setBytes(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setBytes(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else {
-    // setStmt.append(assignStmt + ".setBytes(" + index + ", java.nio.ByteBuffer.wrap(" + columnValue + "));\r\n");
+    // setStmt.append(assignStmt + ".setBytes(" + index + ",
+    // java.nio.ByteBuffer.wrap(" + columnValue + "));\r\n");
     // }
     // } else if ("timestamp".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setDate(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setDate(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("decimal".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setDecimal(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setDecimal(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("double".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setDouble(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setDouble(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("float".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setFloat(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setFloat(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("int".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setInt(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setInt(" + index + ", " + columnValue +
+    // ");\r\n");
     // } else if ("bigint".equals(dbType) || "count".equals(dbType)) {
-    // setStmt.append(assignStmt + ".setLong(" + index + ", " + columnValue + ");\r\n");
+    // setStmt.append(assignStmt + ".setLong(" + index + ", " + columnValue +
+    // ");\r\n");
     // }
     //
     // if (column.isObject()) {

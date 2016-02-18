@@ -27,7 +27,7 @@ public class CassandraUnshardedInput implements UnshardedInput<Row> {
 
     private transient Row currentRow;
 
-    CassandraUnshardedInput(tCassandraInputDIProperties properties) {
+    public CassandraUnshardedInput(tCassandraInputDIProperties properties) {
         this.properties = properties;
     }
 
@@ -44,6 +44,8 @@ public class CassandraUnshardedInput implements UnshardedInput<Row> {
         // Generate the state for the current connection.
         cluster = clusterBuilder.build();
         connection = cluster.connect();
+        if (null != properties.keyspace.getStringValue())
+            connection.execute("USE " + properties.keyspace.getStringValue());
         rs = connection.execute(properties.query.getStringValue());
     }
 

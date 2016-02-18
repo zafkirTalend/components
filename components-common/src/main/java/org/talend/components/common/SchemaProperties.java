@@ -39,7 +39,7 @@ public class SchemaProperties extends ComponentProperties {
     @Override
     public void setupProperties() {
         super.setupProperties();
-        schema.setValue(DataSchemaFactory.newSchema());
+        // schema.setValue(DataSchemaFactory.newSchema());
     }
 
     @Override
