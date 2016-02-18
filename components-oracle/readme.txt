@@ -1,0 +1,2 @@
+//install the ojdbc7.jar to your local repository firstly.
+mvn install:install-file -DgroupId=org.talend.libraries -DartifactId=ojdbc7 -Dversion=6.2.0 -Dfile=C:/Users/Talend/Desktop/ojdbc7.jar -Dpackaging=jar -DgeneratePom=true
