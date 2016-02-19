@@ -1,5 +1,6 @@
 package org.talend.daikon.schema.avro.util;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import org.talend.daikon.schema.type.AvroConverter;
  * @param <DatumT> The specific elements of the input list.
  * @param <AvroT> The Avro-compatible type that the elements should be seen as.
  */
-public class AvroMapConverter<DatumT, AvroT> implements AvroConverter<Map<?, DatumT>, Map<?, AvroT>> {
+public class ConvertAvroMap<DatumT, AvroT> implements HasNestedAvroConverter<Map<?, DatumT>, Map<?, AvroT>> {
 
     private Schema mSchema;
 
@@ -20,7 +21,7 @@ public class AvroMapConverter<DatumT, AvroT> implements AvroConverter<Map<?, Dat
 
     private final AvroConverter<DatumT, AvroT> mElementConverter;
 
-    public AvroMapConverter(Class<Map<?, DatumT>> datumClass, Schema schema, AvroConverter<DatumT, AvroT> elementConverter) {
+    public ConvertAvroMap(Class<Map<?, DatumT>> datumClass, Schema schema, AvroConverter<DatumT, AvroT> elementConverter) {
         mDatumClass = datumClass;
         mSchema = schema;
         mElementConverter = elementConverter;
@@ -32,20 +33,25 @@ public class AvroMapConverter<DatumT, AvroT> implements AvroConverter<Map<?, Dat
     }
 
     @Override
-    public Class<Map<?, DatumT>> getSpecificClass() {
+    public Class<Map<?, DatumT>> getDatumClass() {
         return mDatumClass;
     }
 
     @Override
-    public Map<?, DatumT> convertFromAvro(Map<?, AvroT> value) {
-        return Collections.unmodifiableMap(new MappedValueMap<>(value, mElementConverter::convertFromAvro,
-                mElementConverter::convertToAvro));
+    public Map<?, DatumT> convertToDatum(Map<?, AvroT> value) {
+        return Collections.unmodifiableMap(
+                new MappedValueMap<>(value, mElementConverter::convertToDatum, mElementConverter::convertToAvro));
     }
 
     @Override
     public Map<?, AvroT> convertToAvro(Map<?, DatumT> value) {
-        return Collections.unmodifiableMap(new MappedValueMap<>(value, mElementConverter::convertToAvro,
-                mElementConverter::convertFromAvro));
+        return Collections.unmodifiableMap(
+                new MappedValueMap<>(value, mElementConverter::convertToAvro, mElementConverter::convertToDatum));
+    }
+
+    @Override
+    public Iterable<AvroConverter<?, ?>> getNestedAvroConverters() {
+        return Arrays.asList(mElementConverter);
     }
 
 }

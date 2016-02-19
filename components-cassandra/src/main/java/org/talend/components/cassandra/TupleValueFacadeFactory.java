@@ -1,60 +1,33 @@
 package org.talend.components.cassandra;
 
-import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.IndexedRecord;
-import org.talend.daikon.schema.type.AvroConverter;
-import org.talend.daikon.schema.type.ContainerWriterByIndex;
 import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.SettableByIndexData;
 import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
 
 /**
  * Creates an {@link IndexedRecordFacadeFactory} that knows how to interpret Cassandra {@link TupleValue} objects.
  */
-public class TupleValueFacadeFactory extends GettableByIndexDataFacadeFactory<TupleValue> {
-
-    private transient TupleType mType;
+public class TupleValueFacadeFactory extends CassandraBaseFacadeFactory<TupleValue, TupleValue, TupleType> {
 
     @Override
-    public Class<TupleValue> getSpecificClass() {
+    public Class<TupleValue> getDatumClass() {
         return TupleValue.class;
     }
 
     @Override
-    protected DataType getType(TupleValue udt, int i) {
-        mType = udt.getType();
-        return mType.getTypeArguments().get(i);
+    protected void setContainerTypeFromInstance(TupleValue tuple) {
+        setContainerType(tuple.getType());
     }
 
     @Override
-    public TupleValue convertFromAvro(IndexedRecord record) {
-        TupleValue value = mType.newValue();
+    protected DataType getFieldType(int i) {
+        return getContainerType().getComponentTypes().get(i);
+    }
 
-        // TODO(rskraba): common place for this, duplicated between
-        // TupleValueFacadeFactory, UDTValueFacade
-        for (Field f : getSchema().getFields()) {
-            int fieldIndex = f.pos();
-            DataType fieldType = mType.getTypeArguments().get(fieldIndex);
-            Object fieldValue = record.get(fieldIndex);
-
-            if (fieldValue == null) {
-                value.setToNull(fieldIndex);
-                continue;
-            }
-
-            AvroConverter<Object, Object> valueConverter = (AvroConverter<Object, Object>) CassandraAvroRegistry.get()
-                    .getConverter(fieldValue.getClass(), fieldType, f.schema());
-
-            ContainerWriterByIndex<SettableByIndexData<?>, Object> writer = (ContainerWriterByIndex<SettableByIndexData<?>, Object>) CassandraAvroRegistry
-                    .get().getWriter(fieldType);
-
-            writer.writeValue(value, f.pos(), valueConverter.convertFromAvro(fieldValue));
-        }
-
-        return value;
-
+    @Override
+    protected TupleValue createOrGetInstance() {
+        return getContainerType().newValue();
     }
 }

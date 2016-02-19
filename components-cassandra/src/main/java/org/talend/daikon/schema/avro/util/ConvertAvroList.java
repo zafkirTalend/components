@@ -1,5 +1,6 @@
 package org.talend.daikon.schema.avro.util;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import org.talend.daikon.schema.type.AvroConverter;
  * @param <DatumT> The specific elements of the input list.
  * @param <AvroT> The Avro-compatible type that the elements should be viewed as.
  */
-public class AvroListConverter<DatumT, AvroT> implements AvroConverter<List<DatumT>, List<AvroT>> {
+public class ConvertAvroList<DatumT, AvroT> implements HasNestedAvroConverter<List<DatumT>, List<AvroT>> {
 
     /**
      * The Avro Schema corresponding to this list. This should be an Schema.Type.ARRAY.
@@ -25,7 +26,7 @@ public class AvroListConverter<DatumT, AvroT> implements AvroConverter<List<Datu
     /** An AvroConverter to and from the element values. */
     private final AvroConverter<DatumT, AvroT> mElementConverter;
 
-    public AvroListConverter(Class<List<DatumT>> datumClass, Schema schema, AvroConverter<DatumT, AvroT> elementConverter) {
+    public ConvertAvroList(Class<List<DatumT>> datumClass, Schema schema, AvroConverter<DatumT, AvroT> elementConverter) {
         mDatumClass = datumClass;
         mSchema = schema;
         mElementConverter = elementConverter;
@@ -37,19 +38,24 @@ public class AvroListConverter<DatumT, AvroT> implements AvroConverter<List<Datu
     }
 
     @Override
-    public Class<List<DatumT>> getSpecificClass() {
+    public Class<List<DatumT>> getDatumClass() {
         return mDatumClass;
     }
 
     @Override
-    public List<DatumT> convertFromAvro(List<AvroT> value) {
-        return Collections.unmodifiableList(new MappedList<>(value, mElementConverter::convertFromAvro,
-                mElementConverter::convertToAvro));
+    public List<DatumT> convertToDatum(List<AvroT> value) {
+        return Collections
+                .unmodifiableList(new MappedList<>(value, mElementConverter::convertToDatum, mElementConverter::convertToAvro));
     }
 
     @Override
     public List<AvroT> convertToAvro(List<DatumT> value) {
-        return Collections.unmodifiableList(new MappedList<>(value, mElementConverter::convertToAvro,
-                mElementConverter::convertFromAvro));
+        return Collections
+                .unmodifiableList(new MappedList<>(value, mElementConverter::convertToAvro, mElementConverter::convertToDatum));
+    }
+
+    @Override
+    public Iterable<AvroConverter<?, ?>> getNestedAvroConverters() {
+        return Arrays.asList(mElementConverter);
     }
 }

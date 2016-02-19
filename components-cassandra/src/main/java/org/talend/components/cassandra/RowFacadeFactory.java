@@ -1,29 +1,34 @@
 package org.talend.components.cassandra;
 
-import org.apache.avro.generic.IndexedRecord;
 import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
+import com.datastax.driver.core.TupleValue;
 
 /**
  * Creates an {@link IndexedRecordFacadeFactory} that knows how to interpret Cassandra {@link Row} objects.
  */
-public class RowFacadeFactory extends GettableByIndexDataFacadeFactory<Row> {
+public class RowFacadeFactory extends CassandraBaseFacadeFactory<Row, TupleValue, Row> {
 
     @Override
-    public Class<Row> getSpecificClass() {
+    public Class<Row> getDatumClass() {
         return Row.class;
     }
 
     @Override
-    protected DataType getType(Row row, int i) {
-        return row.getColumnDefinitions().getType(i);
+    protected void setContainerTypeFromInstance(Row row) {
+        setContainerType(row);
     }
 
     @Override
-    public Row convertFromAvro(IndexedRecord record) {
-        // This should never happen.
-        throw new UnsupportedOperationException("Should not convert back to a Cassandra Row object.");
+    protected DataType getFieldType(int i) {
+        return getContainerType().getColumnDefinitions().getType(i);
+    }
+
+    @Override
+    protected TupleValue createOrGetInstance() {
+        // This should never happen, there is never any reason to create a Row.
+        throw new UnmodifiableFacadeException();
     }
 }

@@ -19,13 +19,14 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
 import org.talend.daikon.schema.avro.AvroRegistry;
-import org.talend.daikon.schema.avro.util.AvroListConverter;
-import org.talend.daikon.schema.avro.util.AvroMapConverter;
+import org.talend.daikon.schema.avro.ContainerRegistry;
+import org.talend.daikon.schema.avro.util.ConvertAvroList;
+import org.talend.daikon.schema.avro.util.ConvertAvroMap;
 import org.talend.daikon.schema.type.AvroConverter;
 import org.talend.daikon.schema.type.ContainerReaderByIndex;
 import org.talend.daikon.schema.type.ContainerWriterByIndex;
-import org.talend.daikon.schema.type.DatumRegistry;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.ColumnMetadata;
@@ -55,42 +56,36 @@ public class CassandraAvroRegistry extends AvroRegistry {
 
     public static final String TUPLE_FIELD_PREFIX = "field";
 
-    public String getFamilyName() {
-        return FAMILY_NAME;
-    }
+    private static final CassandraAvroRegistry sInstance = new CassandraAvroRegistry();
 
-    private static final CassandraAvroRegistry INSTANCE = new CassandraAvroRegistry();
+    private static final CassandraContainerRegistry sContainerReadWrite = new CassandraContainerRegistry();
 
     /**
-     * The sCassandraNativeTypes contains the DataType.Name from Cassandra where we can infer the Object type without
-     * any additional information.
+     * Contains the DataType.Name from Cassandra where we can infer the Object type without any additional information.
      */
-    private final Map<DataType.Name, Class<?>> sCassandraNativeTypes;
+    private final Map<DataType.Name, Class<?>> mCassandraNativeTypes;
 
-    /** Helper adapters for reading data from Cassandra Row. */
-    private final Map<DataType.Name, ContainerReaderByIndex<GettableByIndexData, ?>> sReaders;
-
-    /** Helper adapters for writing data in Cassandra BoundStatements. */
-    private final Map<DataType.Name, ContainerWriterByIndex<SettableByIndexData<?>, ?>> sWriters;
-
+    /**
+     * Hidden constructor: use the singleton.
+     */
     private CassandraAvroRegistry() {
-        // Ensure that other components know how to process Cassandra objects.
-        DatumRegistry.registerFacadeFactory(Row.class, RowFacadeFactory.class);
-        DatumRegistry.registerFacadeFactory(UDTValue.class, UDTValueFacadeFactory.class);
-        DatumRegistry.registerFacadeFactory(TupleValue.class, TupleValueFacadeFactory.class);
+        // Ensure that other components know how to process Cassandra objects by sharing these facades.
+        registerFacadeFactory(Row.class, RowFacadeFactory.class);
+        registerFacadeFactory(UDTValue.class, UDTValueFacadeFactory.class);
+        registerFacadeFactory(TupleValue.class, TupleValueFacadeFactory.class);
 
-        // These are not yet implemented by our version of Cassandra.
-        // DataType.Name.DATE // com.datastax.driver.core.LocalDate
-        // DataType.Name.SMALLINT // short
-        // DataType.Name.TINYINT // byte
+        // Ensure that we know how to get Schemas for these Cassandra objects.
+        registerSchemaInferrer(BoundStatement.class,
+                bs -> inferSchemaColumnDefinitions("BoundStatement", bs.preparedStatement().getVariables()));
+        registerSchemaInferrer(Row.class, row -> inferSchemaColumnDefinitions("Row", row.getColumnDefinitions()));
+        registerSchemaInferrer(ColumnDefinitions.class, cd -> inferSchemaColumnDefinitions("Record", cd));
+        registerSchemaInferrer(UDTValue.class, udt -> inferSchemaDataType(udt.getType()));
+        registerSchemaInferrer(TupleValue.class, tuple -> inferSchemaDataType(tuple.getType()));
+        registerSchemaInferrer(TableMetadata.class, this::inferSchemaTableMetadata);
+        registerSchemaInferrer(DataType.class, this::inferSchemaDataType);
 
-        // These require more information from the DataType and can't be found just
-        // using the name.
-        // DataType.Name.UDT // com.datastax.driver.core.UDTValue
-        // DataType.Name.LIST // java.util.List<T>
-        // DataType.Name.MAP // java.util.Map<K, V>
-        // DataType.Name.SET // java.util.Set<T>
-        sCassandraNativeTypes = new ImmutableMap.Builder<DataType.Name, Class<?>>() //
+        // The DataType.Name that we can convert to Avro-compatible without any additional information.
+        mCassandraNativeTypes = new ImmutableMap.Builder<DataType.Name, Class<?>>() //
                 .put(DataType.Name.ASCII, String.class) //
                 .put(DataType.Name.BIGINT, Long.class) //
                 .put(DataType.Name.BLOB, ByteBuffer.class) //
@@ -109,70 +104,17 @@ public class CassandraAvroRegistry extends AvroRegistry {
                 .put(DataType.Name.VARINT, BigInteger.class) //
                 .build();
 
-        // The following types need more information before they can be directly
-        // read from the row.
-        // DataType.Name.LIST // java.util.List<T>
-        // DataType.Name.MAP // java.util.Map<K, V>
-        // DataType.Name.SET // java.util.Set<T>
-        sReaders = new ImmutableMap.Builder<DataType.Name, ContainerReaderByIndex<GettableByIndexData, ?>>() //
-                .put(DataType.Name.ASCII, (c, i) -> c.getString(i)) //
-                .put(DataType.Name.BIGINT, (c, i) -> c.getLong(i)) //
-                .put(DataType.Name.BLOB, (c, i) -> c.getBytes(i)) //
-                .put(DataType.Name.BOOLEAN, (c, i) -> c.getBool(i)) //
-                .put(DataType.Name.COUNTER, (c, i) -> c.getLong(i)) //
-                .put(DataType.Name.DECIMAL, (c, i) -> c.getDecimal(i)) //
-                .put(DataType.Name.DOUBLE, (c, i) -> c.getDouble(i)) //
-                .put(DataType.Name.FLOAT, (c, i) -> c.getFloat(i)) //
-                .put(DataType.Name.INET, (c, i) -> c.getInet(i)) //
-                .put(DataType.Name.INT, (c, i) -> c.getInt(i)) //
-                .put(DataType.Name.TEXT, (c, i) -> c.getString(i)) //
-                .put(DataType.Name.TIMESTAMP, (c, i) -> c.getDate(i)) //
-                .put(DataType.Name.TIMEUUID, (c, i) -> c.getUUID(i)) //
-                .put(DataType.Name.UUID, (c, i) -> c.getUUID(i)) //
-                .put(DataType.Name.VARCHAR, (c, i) -> c.getString(i)) //
-                .put(DataType.Name.VARINT, (c, i) -> c.getVarint(i)) //
-                // .put(DataType.Name.LIST, (c, i) -> c.getList(i, Class or TypeToken))
-                // //
-                // .put(DataType.Name.MAP, (c, i) -> c.getMap(i, Class or TypeToken,
-                // Class or TypeToken)) //
-                // .put(DataType.Name.SET, (c, i) -> c.getSet(i, Class or TypeToken)) //
-                .put(DataType.Name.TUPLE, (c, i) -> c.getTupleValue(i)) //
-                .put(DataType.Name.UDT, (c, i) -> c.getUDTValue(i)) //
-                .build();
-
-        // All of the types can be written to a container.
-        sWriters = new ImmutableMap.Builder<DataType.Name, ContainerWriterByIndex<SettableByIndexData<?>, ?>>() //
-                .put(DataType.Name.ASCII, (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v)) //
-                .put(DataType.Name.BIGINT, (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v)) //
-                .put(DataType.Name.BLOB, (SettableByIndexData<?> c, int i, ByteBuffer v) -> c.setBytes(i, v)) //
-                .put(DataType.Name.BOOLEAN, (SettableByIndexData<?> c, int i, Boolean v) -> c.setBool(i, v)) //
-                .put(DataType.Name.COUNTER, (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v)) //
-                .put(DataType.Name.DECIMAL, (SettableByIndexData<?> c, int i, BigDecimal v) -> c.setDecimal(i, v)) //
-                .put(DataType.Name.DOUBLE, (SettableByIndexData<?> c, int i, Double v) -> c.setDouble(i, v)) //
-                .put(DataType.Name.FLOAT, (SettableByIndexData<?> c, int i, Float v) -> c.setFloat(i, v)) //
-                .put(DataType.Name.INET, (SettableByIndexData<?> c, int i, InetAddress v) -> c.setInet(i, v)) //
-                .put(DataType.Name.INT, (SettableByIndexData<?> c, int i, Integer v) -> c.setInt(i, v)) //
-                .put(DataType.Name.TEXT, (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v)) //
-                .put(DataType.Name.TIMESTAMP, (SettableByIndexData<?> c, int i, Date v) -> c.setDate(i, v)) //
-                .put(DataType.Name.TIMEUUID, (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v)) //
-                .put(DataType.Name.UUID, (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v)) //
-                .put(DataType.Name.VARCHAR, (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v)) //
-                .put(DataType.Name.VARINT, (SettableByIndexData<?> c, int i, BigInteger v) -> c.setVarint(i, v)) //
-                .put(DataType.Name.LIST, (SettableByIndexData<?> c, int i, List<?> v) -> c.setList(i, v)) //
-                .put(DataType.Name.MAP, (SettableByIndexData<?> c, int i, Map<?, ?> v) -> c.setMap(i, v)) //
-                // .put(DataType.Name.SET, (SettableByIndexData<?> c, int i, Set<?> v)
-                // -> c.setSet(i, v)) //
-                .put(DataType.Name.TUPLE, (SettableByIndexData<?> c, int i, TupleValue v) -> c.setTupleValue(i, v)) //
-                .put(DataType.Name.UDT, (SettableByIndexData<?> c, int i, UDTValue v) -> c.setUDTValue(i, v)) //
-                .build();
+        // These are not yet implemented by our version of Cassandra.
+        // DataType.Name.DATE // com.datastax.driver.core.LocalDate
+        // DataType.Name.SMALLINT // short
+        // DataType.Name.TINYINT // byte
     }
 
-    {
-        registerSchemaInferrer(Row.class, this::inferSchemaRow);
-        registerSchemaInferrer(UDTValue.class, udt -> inferSchemaDataType(udt.getType()));
-        registerSchemaInferrer(TupleValue.class, tuple -> inferSchemaDataType(tuple.getType()));
-        registerSchemaInferrer(TableMetadata.class, this::inferSchemaTableMetadata);
-        registerSchemaInferrer(DataType.class, this::inferSchemaDataType);
+    /**
+     * @return The family that uses the specific objects that this converter knows how to translate.
+     */
+    public String getFamilyName() {
+        return FAMILY_NAME;
     }
 
     /**
@@ -198,27 +140,21 @@ public class CassandraAvroRegistry extends AvroRegistry {
     }
 
     /**
-     * Infers an Avro schema for the given row. This can be an expensive operation so the schema should be cached where
-     * possible. This is always an {@link Schema.Type#RECORD}.
+     * Infers an Avro schema for the given ColumnDefinitions. This can be an expensive operation so the schema should be
+     * cached where possible. This is always an {@link Schema.Type#RECORD}.
      * 
      * @param in the row to analyze.
      * @return the schema for the given row.
      */
-    private Schema inferSchemaRow(Row in) {
-        ColumnDefinitions cds = in.getColumnDefinitions();
-        // Rows without columns.
-        if (cds.size() == 0)
+    private Schema inferSchemaColumnDefinitions(String recordNamePrefix, ColumnDefinitions in) {
+        if (in.size() == 0)
             return Schema.create(Type.NULL);
 
-        Definition cd1 = cds.iterator().next();
-
-        // TODO(rskraba): Check to make sure that the input has one keyspace and
-        // table, maybe disambiguate the
-        // record
-        // name with an ID.
-        FieldAssembler<Schema> fa = SchemaBuilder.record(cd1.getTable()) //
-                .namespace(cd1.getKeyspace()).fields();
-        for (Definition cd : cds) {
+        // Use the first column to get the namespace and record name from the keyspace and table name.
+        Definition cd1 = in.iterator().next();
+        FieldAssembler<Schema> fa = SchemaBuilder.record(cd1.getTable() + recordNamePrefix) //
+                .namespace(cd1.getKeyspace() + '.' + cd1.getTable()).fields();
+        for (Definition cd : in) {
             fa = fa.name(cd.getName()).type(inferSchema(cd.getType())).noDefault();
         }
         return fa.endRecord();
@@ -231,11 +167,11 @@ public class CassandraAvroRegistry extends AvroRegistry {
      * @param in the DataType to analyze.
      * @return the schema for the given row.
      */
-    public Schema inferSchemaDataType(DataType in) {
+    private Schema inferSchemaDataType(DataType in) {
         // Determine if a native type that can be easily mapped to a Schema exists.
-        Class<?> nativeClass = sCassandraNativeTypes.get(in.getName());
+        Class<?> nativeClass = mCassandraNativeTypes.get(in.getName());
         if (nativeClass != null) {
-            AvroConverter<?, ?> ac = DatumRegistry.getConverter(nativeClass);
+            AvroConverter<?, ?> ac = getConverter(nativeClass);
             if (ac == null) {
                 // This should never occur if all of the native DataTypes are handled.
                 throw new RuntimeException("The DataType " + in + " is not handled.");
@@ -265,8 +201,7 @@ public class CassandraAvroRegistry extends AvroRegistry {
             } else if (in.getName().equals(DataType.Name.MAP)) {
                 if (containedTypes == null || containedTypes.size() < 2)
                     throw new RuntimeException("The DataType " + in + " is not handled.");
-                // TODO(rskraba): validate that the key type is Schema.Type.STRING
-                // compatible.
+                // TODO(rskraba): validate that the key type is Schema.Type.STRING compatible.
                 Schema valueSchema = inferSchema(containedTypes.get(1));
                 return wrapAsNullable(SchemaBuilder.map() //
                         .prop(PROP_CASSANDRA_DATATYPE_NAME, in.getName().name()) //
@@ -275,7 +210,6 @@ public class CassandraAvroRegistry extends AvroRegistry {
         } else if (in instanceof TupleType) {
             // TupleTypes are nested records with unnamed fields.
             TupleType tt = (TupleType) in;
-
             // TODO(rskraba): record naming strategy for tuples
             FieldAssembler<Schema> fa = SchemaBuilder.record(TUPLE_RECORD_NAME) //
                     .prop(PROP_CASSANDRA_DATATYPE_NAME, DataType.Name.TUPLE.name()) //
@@ -288,8 +222,8 @@ public class CassandraAvroRegistry extends AvroRegistry {
         } else if (in instanceof UserType) {
             // UserTypes are nested records.
             UserType ut = (UserType) in;
-
             FieldAssembler<Schema> fa = SchemaBuilder.record(ut.getTypeName()) //
+                    .namespace(ut.getKeyspace()) //
                     .prop(PROP_CQL_CREATE, ut.asCQLQuery()) //
                     .prop(PROP_CASSANDRA_DATATYPE_NAME, DataType.Name.UDT.name()) //
                     .fields();
@@ -305,73 +239,65 @@ public class CassandraAvroRegistry extends AvroRegistry {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T> AvroConverter<? super T, ?> getConverter(Class<T> datumClass, DataType type, Schema schema) {
-        if (type != null && sCassandraNativeTypes.containsKey(type.getName())) {
-            AvroConverter<? super T, ?> converter = (AvroConverter<? super T, ?>) DatumRegistry
-                    .getConverter(sCassandraNativeTypes.get(type.getName()));
-            if (converter != null)
-                return converter;
+    /**
+     * Gets an AvroConverter for transforming between Cassandra objects and Avro-compatible objects using Cassandra type
+     * information.
+     * 
+     * @param type
+     * @param schema
+     * @param datumClass
+     * @return
+     */
+    public <T> AvroConverter<? super T, ?> getConverter(DataType type, Schema schema, Class<T> datumClass) {
+        // If the DataType is present, then use it to get the correct converter.
+        if (type != null) {
+            // Primitive types are easiest :)
+            if (mCassandraNativeTypes.containsKey(type.getName())) {
+                AvroConverter<? super T, ?> converter = (AvroConverter<? super T, ?>) getConverter(
+                        mCassandraNativeTypes.get(type.getName()));
+                if (converter != null)
+                    return converter;
+            }
+
+            // The types that can have nested values require more work to put together.
+            switch (type.getName()) {
+            case LIST:
+            case SET:
+                DataType elementType = type.getTypeArguments().get(0);
+                Class<?> elementClass = elementType.asJavaClass();
+                Schema elementSchema = unwrapIfNullable(unwrapIfNullable(schema).getElementType());
+                return (AvroConverter<? super T, ?>) new ConvertAvroList(datumClass, schema,
+                        getConverter(elementType, elementSchema, elementClass));
+            case MAP:
+                DataType valueType = type.getTypeArguments().get(1);
+                Class<?> valueClass = valueType.asJavaClass();
+                Schema valueSchema = unwrapIfNullable(unwrapIfNullable(schema).getValueType());
+                return (AvroConverter<? super T, ?>) new ConvertAvroMap(datumClass, schema,
+                        getConverter(valueType, valueSchema, valueClass));
+            case TUPLE:
+                return (AvroConverter<? super T, ?>) createFacadeFactory(TupleValue.class);
+            case UDT:
+                return (AvroConverter<? super T, ?>) createFacadeFactory(UDTValue.class);
+            default:
+                break;
+            }
         }
 
-        AvroConverter<? super T, ?> converter = DatumRegistry.getConverter(datumClass);
+        // If a converter wasn't found, try and get using the class of the datum.
+        AvroConverter<? super T, ?> converter = getConverter(datumClass);
         if (converter != null)
             return converter;
-
-        if (type.getName() == DataType.Name.LIST || type.getName() == DataType.Name.SET) {
-            DataType elementType = type.getTypeArguments().get(0);
-            Class<?> elementClass = elementType.asJavaClass();
-            Schema elementSchema = unwrapIfNullable(unwrapIfNullable(schema).getElementType());
-            return (AvroConverter<? super T, ?>) new AvroListConverter(datumClass, schema, getConverter(elementClass,
-                    elementType, elementSchema));
-        } else if (type.getName() == DataType.Name.MAP) {
-            DataType valueType = type.getTypeArguments().get(1);
-            Class<?> valueClass = valueType.asJavaClass();
-            Schema valueSchema = unwrapIfNullable(unwrapIfNullable(schema).getValueType());
-            return (AvroConverter<? super T, ?>) new AvroMapConverter(datumClass, schema, getConverter(valueClass, valueType,
-                    valueSchema));
-        } else if (type.getName() == DataType.Name.UDT) {
-            return (AvroConverter<? super T, ?>) DatumRegistry.getFacadeFactory(UDTValue.class);
-        } else if (type.getName() == DataType.Name.TUPLE) {
-            return (AvroConverter<? super T, ?>) DatumRegistry.getFacadeFactory(TupleValue.class);
-        }
 
         // This should never occur.
         throw new RuntimeException("Cannot convert " + type + ".");
     }
 
     public ContainerReaderByIndex<GettableByIndexData, ?> getReader(DataType type) {
-        ContainerReaderByIndex<GettableByIndexData, ?> reader = sReaders.get(type.getName());
-        if (reader != null)
-            return reader;
-
-        if (type.isCollection()) {
-            List<DataType> containedTypes = type.getTypeArguments();
-            if (type.getName().equals(DataType.Name.LIST)) {
-                return (c, i) -> c.getList(i, containedTypes.get(0).asJavaClass());
-            } else if (type.getName().equals(DataType.Name.SET)) {
-                // TODO: is there a better way to enforce a consistent order after read?
-                return (c, i) -> new ArrayList<>(c.getSet(i, containedTypes.get(0).asJavaClass()));
-            } else if (type.getName().equals(DataType.Name.MAP)) {
-                return (c, i) -> c.getMap(i, containedTypes.get(0).asJavaClass(), containedTypes.get(1).asJavaClass());
-            }
-        }
-
-        throw new RuntimeException("The DataType " + type + " is not handled.");
+        return sContainerReadWrite.getReader(type);
     }
 
     public ContainerWriterByIndex<SettableByIndexData<?>, ?> getWriter(DataType type) {
-        ContainerWriterByIndex<SettableByIndexData<?>, ?> writer = sWriters.get(type.getName());
-        if (writer != null)
-            return writer;
-
-        if (type.isCollection()) {
-            if (type.getName().equals(DataType.Name.SET)) {
-                // TODO: is there a better way to enforce a consistent order after read?
-                return (SettableByIndexData<?> c, int i, List<?> v) -> c.setSet(i, new HashSet<>(v));
-            }
-        }
-
-        throw new RuntimeException("The DataType " + type + " is not handled.");
+        return sContainerReadWrite.getWriter(type);
     }
 
     public static DataType getDataType(Schema schema) {
@@ -413,7 +339,141 @@ public class CassandraAvroRegistry extends AvroRegistry {
     }
 
     public static CassandraAvroRegistry get() {
-        return INSTANCE;
+        return sInstance;
+    }
+
+    public void buildFacadesUsingDataType(AvroConverter<?, ?> ac, DataType t) {
+        if (t != null) {
+            switch (t.getName()) {
+            // The container types need to be recursively built.
+            case LIST:
+            case SET:
+                for (AvroConverter<?, ?> nestedAc : ((ConvertAvroList<?, ?>) ac).getNestedAvroConverters())
+                    buildFacadesUsingDataType(nestedAc, t.getTypeArguments().get(0));
+                return;
+            case MAP:
+                for (AvroConverter<?, ?> nestedAc : ((ConvertAvroMap<?, ?>) ac).getNestedAvroConverters())
+                    buildFacadesUsingDataType(nestedAc, t.getTypeArguments().get(1));
+                return;
+            // User defined types need to have their type set, and then fall through to have their fields built.
+            case TUPLE:
+                TupleValueFacadeFactory tvff = (TupleValueFacadeFactory) ac;
+                tvff.setContainerType((TupleType) t);
+                break;
+            case UDT:
+                UDTValueFacadeFactory uvff = (UDTValueFacadeFactory) ac;
+                uvff.setContainerType((UserType) t);
+                break;
+            default:
+                // All other types do not need to be built.
+                return;
+            }
+        }
+
+        // Build all of the fields.
+        if (ac instanceof CassandraBaseFacadeFactory) {
+            CassandraBaseFacadeFactory<?, ?, ?> cbff = (CassandraBaseFacadeFactory<?, ?, ?>) ac;
+            int i = 0;
+            for (AvroConverter<?, ?> nestedAc : cbff.getNestedAvroConverters())
+                buildFacadesUsingDataType(nestedAc, cbff.getFieldType(i++));
+        }
+    }
+
+    /** A utility class for getting callbacks for reading and writing to Cassandra containers. */
+    private static class CassandraContainerRegistry
+            extends ContainerRegistry<DataType, GettableByIndexData, SettableByIndexData<?>> {
+
+        public CassandraContainerRegistry() {
+            // The following types can be read without requiring any additional information.
+            registerReader(DataType.ascii(), (c, i) -> c.getString(i));
+            registerReader(DataType.bigint(), (c, i) -> c.getLong(i));
+            registerReader(DataType.blob(), (c, i) -> c.getBytes(i));
+            registerReader(DataType.cboolean(), (c, i) -> c.getBool(i));
+            registerReader(DataType.counter(), (c, i) -> c.getLong(i));
+            registerReader(DataType.decimal(), (c, i) -> c.getDecimal(i));
+            registerReader(DataType.cdouble(), (c, i) -> c.getDouble(i));
+            registerReader(DataType.cfloat(), (c, i) -> c.getFloat(i));
+            registerReader(DataType.inet(), (c, i) -> c.getInet(i));
+            registerReader(DataType.cint(), (c, i) -> c.getInt(i));
+            registerReader(DataType.text(), (c, i) -> c.getString(i));
+            registerReader(DataType.timestamp(), (c, i) -> c.getDate(i));
+            registerReader(DataType.timeuuid(), (c, i) -> c.getUUID(i));
+            registerReader(DataType.uuid(), (c, i) -> c.getUUID(i));
+            registerReader(DataType.varchar(), (c, i) -> c.getString(i));
+            registerReader(DataType.varint(), (c, i) -> c.getVarint(i));
+
+            // The following types can be written without any additional information.
+            registerWriter(DataType.ascii(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
+            registerWriter(DataType.bigint(), (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v));
+            registerWriter(DataType.blob(), (SettableByIndexData<?> c, int i, ByteBuffer v) -> c.setBytes(i, v));
+            registerWriter(DataType.cboolean(), (SettableByIndexData<?> c, int i, Boolean v) -> c.setBool(i, v));
+            registerWriter(DataType.counter(), (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v));
+            registerWriter(DataType.decimal(), (SettableByIndexData<?> c, int i, BigDecimal v) -> c.setDecimal(i, v));
+            registerWriter(DataType.cdouble(), (SettableByIndexData<?> c, int i, Double v) -> c.setDouble(i, v));
+            registerWriter(DataType.cfloat(), (SettableByIndexData<?> c, int i, Float v) -> c.setFloat(i, v));
+            registerWriter(DataType.inet(), (SettableByIndexData<?> c, int i, InetAddress v) -> c.setInet(i, v));
+            registerWriter(DataType.cint(), (SettableByIndexData<?> c, int i, Integer v) -> c.setInt(i, v));
+            registerWriter(DataType.text(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
+            registerWriter(DataType.timestamp(), (SettableByIndexData<?> c, int i, Date v) -> c.setDate(i, v));
+            registerWriter(DataType.timeuuid(), (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v));
+            registerWriter(DataType.uuid(), (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v));
+            registerWriter(DataType.varchar(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
+            registerWriter(DataType.varint(), (SettableByIndexData<?> c, int i, BigInteger v) -> c.setVarint(i, v));
+        }
+
+        public ContainerReaderByIndex<GettableByIndexData, ?> getReader(DataType type) {
+            ContainerReaderByIndex<GettableByIndexData, ?> reader = super.getReader(type);
+            if (reader != null)
+                return reader;
+
+            if (type.isCollection()) {
+                List<DataType> containedTypes = type.getTypeArguments();
+                if (type.getName().equals(DataType.Name.LIST)) {
+                    return (c, i) -> c.getList(i, containedTypes.get(0).asJavaClass());
+                } else if (type.getName().equals(DataType.Name.SET)) {
+                    // TODO: is there a better way to enforce a consistent order after read?
+                    return (c, i) -> new ArrayList<>(c.getSet(i, containedTypes.get(0).asJavaClass()));
+                } else if (type.getName().equals(DataType.Name.MAP)) {
+                    return (c, i) -> c.getMap(i, containedTypes.get(0).asJavaClass(), containedTypes.get(1).asJavaClass());
+                }
+            }
+
+            switch (type.getName()) {
+            case TUPLE:
+                return (c, i) -> c.getTupleValue(i);
+            case UDT:
+                return (c, i) -> c.getUDTValue(i);
+            default:
+                throw new RuntimeException("The DataType " + type + " is not handled.");
+            }
+        }
+
+        public ContainerWriterByIndex<SettableByIndexData<?>, ?> getWriter(DataType type) {
+            ContainerWriterByIndex<SettableByIndexData<?>, ?> writer = super.getWriter(type);
+            if (writer != null)
+                return writer;
+
+            if (type.isCollection()) {
+                if (type.getName().equals(DataType.Name.LIST)) {
+                    return (SettableByIndexData<?> c, int i, List<?> v) -> c.setList(i, v);
+                } else if (type.getName().equals(DataType.Name.SET)) {
+                    // TODO: is there a better way to enforce a consistent order after read?
+                    return (SettableByIndexData<?> c, int i, List<?> v) -> c.setSet(i, new HashSet<>(v));
+                } else if (type.getName().equals(DataType.Name.MAP)) {
+                    return (SettableByIndexData<?> c, int i, Map<?, ?> v) -> c.setMap(i, v);
+                }
+            }
+
+            switch (type.getName()) {
+            case TUPLE:
+                return (SettableByIndexData<?> c, int i, TupleValue v) -> c.setTupleValue(i, v);
+            case UDT:
+                return (SettableByIndexData<?> c, int i, UDTValue v) -> c.setUDTValue(i, v);
+            default:
+                throw new RuntimeException("The DataType " + type + " is not handled.");
+            }
+        }
+
     }
 
     // We don't need any of this if we're using Java 8 lambdas!

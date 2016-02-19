@@ -39,7 +39,7 @@ public class CassandraAvroRegistryTest {
 
         Schema s = sRegistry.inferSchema(r);
         assertThat(s.toString().replace('"', '\''), //
-                is("{'type':'record','name':'example_src','namespace':'cassandraavroregistrytest','fields':[" //
+                is("{'type':'record','name':'example_srcRow','namespace':'cassandraavroregistrytest.example_src','fields':[" //
                         + "{'name':'st_text'," //
                         + "'type':[{'type':'string','cassandra.datatype.name':'VARCHAR'},'null']}" //
                         + "]}")); //
@@ -58,8 +58,8 @@ public class CassandraAvroRegistryTest {
         Schema s = sRegistry.inferSchema(mCass.execute("SELECT " + fieldName + " FROM " + tableName).one());
         // Rows always return records.
         assertThat(s.getType(), is(Schema.Type.RECORD));
-        assertThat(s.getName(), is(tableName));
-        assertThat(s.getNamespace(), is(mCass.getKeySpace()));
+        assertThat(s.getName(), is(tableName + "Row"));
+        assertThat(s.getNamespace(), is(mCass.getKeySpace() + '.' + tableName));
         // No properties for a row.
         assertThat(s.getObjectProps().size(), is(0));
         // Exactly one field for this example.

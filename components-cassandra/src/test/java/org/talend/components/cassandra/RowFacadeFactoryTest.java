@@ -29,7 +29,7 @@ public class RowFacadeFactoryTest {
     public void testBasic() {
         RowFacadeFactory rff = new RowFacadeFactory();
 
-        assertThat(rff.getSpecificClass(), equalTo(Row.class));
+        assertThat(rff.getDatumClass(), equalTo(Row.class));
         // If it has never been used, there is no schema yet.
         assertThat(rff.getSchema(), nullValue());
 
@@ -39,7 +39,7 @@ public class RowFacadeFactoryTest {
 
         assertThat(ir.get(0), is((Object) "1234567"));
         assertThat(ir.getSchema().toString().replace('"', '\''),
-                is("{'type':'record','name':'example_src','namespace':'rowfacadefactorytest'," //
+                is("{'type':'record','name':'example_srcRow','namespace':'rowfacadefactorytest.example_src'," //
                         + "'fields':[" //
                         + "{'name':'st_text'," //
                         + "'type':[{'type':'string','cassandra.datatype.name':'VARCHAR'},'null']}" //
@@ -53,7 +53,7 @@ public class RowFacadeFactoryTest {
     public void testValidateExampleData() {
         RowFacadeFactory rff = new RowFacadeFactory();
 
-        assertThat(rff.getSpecificClass(), equalTo(Row.class));
+        assertThat(rff.getDatumClass(), equalTo(Row.class));
         // If it has never been used, there is no schema yet.
         assertThat(rff.getSchema(), nullValue());
 

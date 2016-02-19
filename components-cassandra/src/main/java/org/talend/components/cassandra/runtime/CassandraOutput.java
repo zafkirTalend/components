@@ -4,23 +4,17 @@ import java.io.Closeable;
 import java.io.Serializable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.runtime.output.Output;
+import org.talend.components.cassandra.BoundStatementFacadeFactory;
 import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
-import org.talend.daikon.schema.type.AvroConverter;
-import org.talend.daikon.schema.type.ContainerWriterByIndex;
-import org.talend.daikon.schema.type.DatumRegistry;
 import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SettableByIndexData;
 
 /**
  * A simple interface to write all incoming rows.
@@ -37,11 +31,9 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
     private transient Cluster cluster;
 
-    private transient BoundStatement boundStatement;
-
-    private transient ColumnDefinitions mColumns;
-
     private transient IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> mFactory;
+
+    private transient BoundStatementFacadeFactory mOutFactory = new BoundStatementFacadeFactory();
 
     public CassandraOutput(tCassandraOutputDIProperties properties) {
         this.properties = properties;
@@ -62,44 +54,33 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
         CQLManager cqlManager = new CQLManager(properties, (Schema) properties.schema.schema.getValue());
         PreparedStatement preparedStatement = connection.prepare(cqlManager.generatePreActionSQL());
-        mColumns = preparedStatement.getVariables();
         if (properties.useUnloggedBatch.getBooleanValue()) {
             // TODO
         } else {
-            boundStatement = new BoundStatement(preparedStatement);
+            mOutFactory.setContainerType(new BoundStatement(preparedStatement));
+            // Cassandra has some particular constraints where the factory facades need to be fully built to know their
+            // DataType before writing. This only needs to be done once when the factory is built.
+            CassandraAvroRegistry.get().buildFacadesUsingDataType(mOutFactory, null);
         }
     }
 
     @SuppressWarnings("unchecked")
     public void emit(Object datum) {
+        // Ignore empty rows.
         if (datum == null)
             return;
 
+        // This is all we need to do in order to ensure that we can process the incoming value as an IndexedRecord.
         if (mFactory == null)
-            mFactory = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) DatumRegistry.getFacadeFactory(datum
-                    .getClass());
+            mFactory = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get()
+                    .createFacadeFactory(datum.getClass());
+        IndexedRecord input = mFactory.convertToAvro(datum);
 
-        IndexedRecord ir = mFactory.convertToAvro(datum);
+        // We're use the output factory to write the data into the bound statement.
+        BoundStatement bs = mOutFactory.convertToDatum(input);
 
-        for (Field f : ir.getSchema().getFields()) {
-            int fieldIndex = f.pos();
-            DataType fieldType = mColumns.getType(fieldIndex);
-            Object fieldValue = ir.get(fieldIndex);
-
-            if (fieldValue == null) {
-                boundStatement.setToNull(fieldIndex);
-                continue;
-            }
-
-            AvroConverter<Object, Object> valueConverter = (AvroConverter<Object, Object>) CassandraAvroRegistry.get()
-                    .getConverter(fieldValue.getClass(), fieldType, f.schema());
-
-            ContainerWriterByIndex<SettableByIndexData<?>, Object> writer = (ContainerWriterByIndex<SettableByIndexData<?>, Object>) CassandraAvroRegistry
-                    .get().getWriter(fieldType);
-
-            writer.writeValue(boundStatement, f.pos(), valueConverter.convertFromAvro(fieldValue));
-        }
-        connection.execute(boundStatement);
+        // Executing the bound statement inserts the row.
+        connection.execute(bs);
     }
 
     @Override

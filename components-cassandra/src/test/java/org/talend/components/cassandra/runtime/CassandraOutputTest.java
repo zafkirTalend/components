@@ -83,56 +83,6 @@ public class CassandraOutputTest {
      * The data struct being passed into the output component is a Cassandra {@link Row}.
      */
     @Test
-    public void testCassandraExampleInAndOut() {
-
-        // Set up the properties to write to a table.
-        tCassandraOutputDIProperties outProps = new tCassandraOutputDIProperties("tCassandraOutput_1");
-        outProps.initForRuntime();
-        outProps.host.setValue(EmbeddedCassandraResource.HOST);
-        outProps.port.setValue(EmbeddedCassandraResource.PORT);
-        outProps.useAuth.setValue(false);
-        outProps.keyspace.setValue(mCass.getKeySpace());
-        outProps.columnFamily.setValue(mCass.getTableDst());
-        outProps.dataAction.setValue("INSERT");
-        new CassandraMetadata().initSchema(outProps);
-
-        tCassandraInputDIProperties props = new tCassandraInputSparkProperties("tCassandraInput_1");
-        props.initForRuntime();
-
-        props.host.setValue(EmbeddedCassandraResource.HOST);
-        props.port.setValue(EmbeddedCassandraResource.PORT);
-        props.useAuth.setValue(false);
-        props.keyspace.setValue(mCass.getKeySpace());
-        props.columnFamily.setValue(mCass.getTableSrc());
-        props.query.setValue("SELECT * FROM " + mCass.getTableSrc());
-
-        try (CassandraUnshardedInput cIn = new CassandraUnshardedInput(props);
-                CassandraOutput cOut = new CassandraOutput(outProps);) {
-            cIn.setup();
-            cOut.setup();
-
-            while (cIn.hasNext()) {
-                Row r = cIn.next();
-                cOut.emit(r);
-            }
-        }
-
-        // Check the expected results.
-        ResultSet rs = mCass.execute("SELECT key1 FROM " + mCass.getTableDst());
-        List<String> result = new ArrayList<>();
-        for (Row r : rs) {
-            result.add(r.getString("key1"));
-        }
-        assertThat(result, hasSize(2));
-        assertThat(result, containsInAnyOrder("hello", "world"));
-    }
-
-    /**
-     * Test using the input together with the output.
-     * 
-     * The data struct being passed into the output component is a Cassandra {@link Row}.
-     */
-    @Test
     public void testCassandraBasicInAndOut() {
         // Setup.
         mCass.execute("CREATE TABLE helloworld (name text PRIMARY KEY)");
@@ -185,4 +135,55 @@ public class CassandraOutputTest {
         assertThat(result, hasSize(2));
         assertThat(result, containsInAnyOrder("hello", "world"));
     }
+
+    /**
+     * Test using the input together with the output.
+     * 
+     * The data struct being passed into the output component is a Cassandra {@link Row}.
+     */
+    @Test
+    public void testCassandraExampleInAndOut() {
+
+        // Set up the properties to write to a table.
+        tCassandraOutputDIProperties outProps = new tCassandraOutputDIProperties("tCassandraOutput_1");
+        outProps.initForRuntime();
+        outProps.host.setValue(EmbeddedCassandraResource.HOST);
+        outProps.port.setValue(EmbeddedCassandraResource.PORT);
+        outProps.useAuth.setValue(false);
+        outProps.keyspace.setValue(mCass.getKeySpace());
+        outProps.columnFamily.setValue(mCass.getTableDst());
+        outProps.dataAction.setValue("INSERT");
+        new CassandraMetadata().initSchema(outProps);
+
+        tCassandraInputDIProperties props = new tCassandraInputSparkProperties("tCassandraInput_1");
+        props.initForRuntime();
+
+        props.host.setValue(EmbeddedCassandraResource.HOST);
+        props.port.setValue(EmbeddedCassandraResource.PORT);
+        props.useAuth.setValue(false);
+        props.keyspace.setValue(mCass.getKeySpace());
+        props.columnFamily.setValue(mCass.getTableSrc());
+        props.query.setValue("SELECT * FROM " + mCass.getTableSrc());
+
+        try (CassandraUnshardedInput cIn = new CassandraUnshardedInput(props);
+                CassandraOutput cOut = new CassandraOutput(outProps);) {
+            cIn.setup();
+            cOut.setup();
+
+            while (cIn.hasNext()) {
+                Row r = cIn.next();
+                cOut.emit(r);
+            }
+        }
+
+        // Check the expected results.
+        ResultSet rs = mCass.execute("SELECT * FROM " + mCass.getTableDst());
+        List<String> result = new ArrayList<>();
+        for (Row r : rs) {
+            result.add(r.getString("key1"));
+        }
+        assertThat(result, hasSize(6));
+        assertThat(result, containsInAnyOrder(mCass.sExampleSrcRowKeys));
+    }
+
 }
