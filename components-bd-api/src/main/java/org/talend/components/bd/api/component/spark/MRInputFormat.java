@@ -24,8 +24,8 @@ import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
 import org.talend.components.api.runtime.row.BaseRowStruct;
 import org.talend.daikon.properties.Properties.Deserialized;
-import org.talend.daikon.schema.type.DatumRegistry;
-import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
+import org.talend.daikon.schema.avro.AvroRegistry;
+import org.talend.daikon.schema.avro.IndexedRecordAdapterFactory;
 
 /**
  * Created by bchen on 16-1-10.
@@ -85,6 +85,8 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
 
     static class BDRecordReader implements RecordReader<NullWritable, BaseRowStruct> {
 
+        static AvroRegistry registry = new AvroRegistry();
+
         private Reader reader;
 
         private String familyName;
@@ -101,8 +103,8 @@ public class MRInputFormat implements InputFormat<NullWritable, BaseRowStruct>, 
                 Object datum = reader.getCurrent();
                 @SuppressWarnings("unchecked")
                 // TODO(rskraba): This should only be done once.
-                IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> irff = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) DatumRegistry
-                        .getFacadeFactory(datum.getClass());
+                IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> irff = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) registry
+                        .createAdapterFactory(datum.getClass());
                 IndexedRecord in = irff.convertToAvro(datum);
 
                 Map<String, String> out = new HashMap<>();

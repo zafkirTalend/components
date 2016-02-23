@@ -15,9 +15,9 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
 /**
- * Unit tests for the {@link RowFacadeFactory}.
+ * Unit tests for the {@link RowAdapterFactory}.
  */
-public class RowFacadeFactoryTest {
+public class RowAdapterFactoryTest {
 
     @Rule
     public EmbeddedCassandraExampleDataResource mCass = new EmbeddedCassandraExampleDataResource(getClass().getSimpleName());
@@ -27,7 +27,7 @@ public class RowFacadeFactoryTest {
      */
     @Test
     public void testBasic() {
-        RowFacadeFactory rff = new RowFacadeFactory();
+        RowAdapterFactory rff = new RowAdapterFactory();
 
         assertThat(rff.getDatumClass(), equalTo(Row.class));
         // If it has never been used, there is no schema yet.
@@ -39,7 +39,7 @@ public class RowFacadeFactoryTest {
 
         assertThat(ir.get(0), is((Object) "1234567"));
         assertThat(ir.getSchema().toString().replace('"', '\''),
-                is("{'type':'record','name':'example_srcRow','namespace':'rowfacadefactorytest.example_src'," //
+                is("{'type':'record','name':'example_srcRow','namespace':'rowadapterfactorytest.example_src'," //
                         + "'fields':[" //
                         + "{'name':'st_text'," //
                         + "'type':[{'type':'string','cassandra.datatype.name':'VARCHAR'},'null']}" //
@@ -51,7 +51,7 @@ public class RowFacadeFactoryTest {
      */
     @Test
     public void testValidateExampleData() {
-        RowFacadeFactory rff = new RowFacadeFactory();
+        RowAdapterFactory rff = new RowAdapterFactory();
 
         assertThat(rff.getDatumClass(), equalTo(Row.class));
         // If it has never been used, there is no schema yet.
@@ -64,32 +64,4 @@ public class RowFacadeFactoryTest {
             ReflectData.get().validate(ir.getSchema(), ir);
         }
     }
-
-    // /**
-    // * Ensures that all of the records generated in the example set are valid
-    // with the inferred schema.
-    // */
-    // @Test
-    // public void testValidExampleData() {
-    // RowFacadeFactory rff = new RowFacadeFactory();
-    //
-    // assertThat(rff.getSpecificClass(), equalTo(Row.class));
-    // // If it has never been used, there is no schema yet.
-    // assertThat(rff.getSchema(), nullValue());
-    //
-    // // Collect all of the results from the example table.
-    // Integer keyPos = null;
-    // HashMap<String, IndexedRecord> exampleRows = new HashMap<>();
-    // ResultSet rs = mCass.execute("SELECT * FROM " + mCass.getTableSrc());
-    // for (Row exampleRow = rs.one(); exampleRow != null; exampleRow = rs.one())
-    // {
-    // IndexedRecord ir = rff.createFacade(exampleRow);
-    // ReflectData.get().validate(ir.getSchema(), ir);
-    // if (keyPos == null) {
-    // keyPos = ir.getSchema().getField("key1").pos();
-    // }
-    // exampleRows.put((String) ir.get(keyPos), ir);
-    // }
-    // }
-
 }

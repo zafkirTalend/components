@@ -6,10 +6,10 @@ import java.io.Serializable;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.runtime.output.Output;
-import org.talend.components.cassandra.BoundStatementFacadeFactory;
+import org.talend.components.cassandra.BoundStatementAdapterFactory;
 import org.talend.components.cassandra.CassandraAvroRegistry;
 import org.talend.components.cassandra.mako.tCassandraOutputDIProperties;
-import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
+import org.talend.daikon.schema.avro.IndexedRecordAdapterFactory;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -31,9 +31,9 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
     private transient Cluster cluster;
 
-    private transient IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> mFactory;
+    private transient IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> mFactory;
 
-    private transient BoundStatementFacadeFactory mOutFactory = new BoundStatementFacadeFactory();
+    private transient BoundStatementAdapterFactory mOutFactory = new BoundStatementAdapterFactory();
 
     public CassandraOutput(tCassandraOutputDIProperties properties) {
         this.properties = properties;
@@ -57,10 +57,10 @@ public class CassandraOutput implements Output, Closeable, Serializable {
         if (properties.useUnloggedBatch.getBooleanValue()) {
             // TODO
         } else {
-            mOutFactory.setContainerType(new BoundStatement(preparedStatement));
-            // Cassandra has some particular constraints where the factory facades need to be fully built to know their
+            mOutFactory.setContainerDataSpec(new BoundStatement(preparedStatement));
+            // Cassandra has some particular constraints where the factory adapters need to be fully built to know their
             // DataType before writing. This only needs to be done once when the factory is built.
-            CassandraAvroRegistry.get().buildFacadesUsingDataType(mOutFactory, null);
+            CassandraAvroRegistry.get().buildAdaptersUsingDataType(mOutFactory, null);
         }
     }
 
@@ -72,8 +72,8 @@ public class CassandraOutput implements Output, Closeable, Serializable {
 
         // This is all we need to do in order to ensure that we can process the incoming value as an IndexedRecord.
         if (mFactory == null)
-            mFactory = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get()
-                    .createFacadeFactory(datum.getClass());
+            mFactory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get()
+                    .createAdapterFactory(datum.getClass());
         IndexedRecord input = mFactory.convertToAvro(datum);
 
         // We're use the output factory to write the data into the bound statement.

@@ -18,12 +18,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
+import org.talend.daikon.schema.avro.AvroConverter;
 import org.talend.daikon.schema.avro.AvroRegistry;
-import org.talend.daikon.schema.avro.ContainerRegistry;
 import org.talend.daikon.schema.avro.util.ConvertAvroList;
 import org.talend.daikon.schema.avro.util.ConvertAvroMap;
-import org.talend.daikon.schema.type.AvroConverter;
 import org.talend.daikon.schema.type.ContainerReaderByIndex;
+import org.talend.daikon.schema.type.ContainerRegistry;
 import org.talend.daikon.schema.type.ContainerWriterByIndex;
 
 import com.datastax.driver.core.BoundStatement;
@@ -69,10 +69,10 @@ public class CassandraAvroRegistry extends AvroRegistry {
      * Hidden constructor: use the singleton.
      */
     private CassandraAvroRegistry() {
-        // Ensure that other components know how to process Cassandra objects by sharing these facades.
-        registerFacadeFactory(Row.class, RowFacadeFactory.class);
-        registerFacadeFactory(UDTValue.class, UDTValueFacadeFactory.class);
-        registerFacadeFactory(TupleValue.class, TupleValueFacadeFactory.class);
+        // Ensure that other components know how to process Cassandra objects by sharing these adapters.
+        registerAdapterFactory(Row.class, RowAdapterFactory.class);
+        registerAdapterFactory(UDTValue.class, UDTValueAdapterFactory.class);
+        registerAdapterFactory(TupleValue.class, TupleValueAdapterFactory.class);
 
         // Ensure that we know how to get Schemas for these Cassandra objects.
         registerSchemaInferrer(BoundStatement.class,
@@ -275,9 +275,9 @@ public class CassandraAvroRegistry extends AvroRegistry {
                 return (AvroConverter<? super T, ?>) new ConvertAvroMap(datumClass, schema,
                         getConverter(valueType, valueSchema, valueClass));
             case TUPLE:
-                return (AvroConverter<? super T, ?>) createFacadeFactory(TupleValue.class);
+                return (AvroConverter<? super T, ?>) createAdapterFactory(TupleValue.class);
             case UDT:
-                return (AvroConverter<? super T, ?>) createFacadeFactory(UDTValue.class);
+                return (AvroConverter<? super T, ?>) createAdapterFactory(UDTValue.class);
             default:
                 break;
             }
@@ -342,27 +342,30 @@ public class CassandraAvroRegistry extends AvroRegistry {
         return sInstance;
     }
 
-    public void buildFacadesUsingDataType(AvroConverter<?, ?> ac, DataType t) {
+    /**
+     * Fully builds Cassandra adapters including nested, hierarchical subadapters.
+     */
+    public void buildAdaptersUsingDataType(AvroConverter<?, ?> ac, DataType t) {
         if (t != null) {
             switch (t.getName()) {
             // The container types need to be recursively built.
             case LIST:
             case SET:
                 for (AvroConverter<?, ?> nestedAc : ((ConvertAvroList<?, ?>) ac).getNestedAvroConverters())
-                    buildFacadesUsingDataType(nestedAc, t.getTypeArguments().get(0));
+                    buildAdaptersUsingDataType(nestedAc, t.getTypeArguments().get(0));
                 return;
             case MAP:
                 for (AvroConverter<?, ?> nestedAc : ((ConvertAvroMap<?, ?>) ac).getNestedAvroConverters())
-                    buildFacadesUsingDataType(nestedAc, t.getTypeArguments().get(1));
+                    buildAdaptersUsingDataType(nestedAc, t.getTypeArguments().get(1));
                 return;
             // User defined types need to have their type set, and then fall through to have their fields built.
             case TUPLE:
-                TupleValueFacadeFactory tvff = (TupleValueFacadeFactory) ac;
-                tvff.setContainerType((TupleType) t);
+                TupleValueAdapterFactory tvff = (TupleValueAdapterFactory) ac;
+                tvff.setContainerDataSpec((TupleType) t);
                 break;
             case UDT:
-                UDTValueFacadeFactory uvff = (UDTValueFacadeFactory) ac;
-                uvff.setContainerType((UserType) t);
+                UDTValueAdapterFactory uvff = (UDTValueAdapterFactory) ac;
+                uvff.setContainerDataSpec((UserType) t);
                 break;
             default:
                 // All other types do not need to be built.
@@ -371,11 +374,11 @@ public class CassandraAvroRegistry extends AvroRegistry {
         }
 
         // Build all of the fields.
-        if (ac instanceof CassandraBaseFacadeFactory) {
-            CassandraBaseFacadeFactory<?, ?, ?> cbff = (CassandraBaseFacadeFactory<?, ?, ?>) ac;
+        if (ac instanceof CassandraBaseAdapterFactory) {
+            CassandraBaseAdapterFactory<?, ?, ?> cbff = (CassandraBaseAdapterFactory<?, ?, ?>) ac;
             int i = 0;
             for (AvroConverter<?, ?> nestedAc : cbff.getNestedAvroConverters())
-                buildFacadesUsingDataType(nestedAc, cbff.getFieldType(i++));
+                buildAdaptersUsingDataType(nestedAc, cbff.getFieldDataSpec(i++));
         }
     }
 

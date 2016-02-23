@@ -15,8 +15,8 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.runtime.input.SingleSplit;
 import org.talend.components.api.runtime.input.Source;
 import org.talend.components.api.runtime.input.Split;
-import org.talend.daikon.schema.type.DatumRegistry;
-import org.talend.daikon.schema.type.IndexedRecordFacadeFactory;
+import org.talend.daikon.schema.avro.AvroRegistry;
+import org.talend.daikon.schema.avro.IndexedRecordAdapterFactory;
 
 import com.google.cloud.dataflow.sdk.coders.Coder;
 import com.google.cloud.dataflow.sdk.coders.MapCoder;
@@ -29,6 +29,8 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
  * Created by bchen on 16-1-17.
  */
 public class DFBoundedSource extends BoundedSource<Map<String, String>> {
+
+    AvroRegistry registry = new AvroRegistry();
 
     Source source;
 
@@ -126,8 +128,8 @@ public class DFBoundedSource extends BoundedSource<Map<String, String>> {
             Object datum = reader.getCurrent();
             @SuppressWarnings("unchecked")
             // TODO(rskraba): This should only be done once.
-            IndexedRecordFacadeFactory<Object, ? extends IndexedRecord> irff = (IndexedRecordFacadeFactory<Object, ? extends IndexedRecord>) DatumRegistry
-                    .getFacadeFactory(datum.getClass());
+            IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> irff = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) registry
+                    .createAdapterFactory(datum.getClass());
             IndexedRecord in = irff.convertToAvro(datum);
 
             Map<String, String> out = new HashMap<>();
