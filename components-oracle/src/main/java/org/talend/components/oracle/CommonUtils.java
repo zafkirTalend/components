@@ -1,9 +1,9 @@
 package org.talend.components.oracle;
 
+import org.apache.avro.Schema;
 import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.Schema;
 
 public class CommonUtils {
 

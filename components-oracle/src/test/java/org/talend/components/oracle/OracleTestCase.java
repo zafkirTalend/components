@@ -16,12 +16,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.IndexedRecord;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,9 +35,8 @@ import org.talend.components.oracle.runtime.OracleTemplate;
 import org.talend.components.oracle.toracleinput.TOracleInputDefinition;
 import org.talend.components.oracle.toracleinput.TOracleInputProperties;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.properties.ValidationResult;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
 
 public class OracleTestCase {
 
@@ -120,17 +122,48 @@ public class OracleTestCase {
     @Test
     public void testGetSchema() throws Exception {
         Schema schema = source.getSchema(null, "TEST");
-        assertTrue(schema.getRoot() != null);
-        assertTrue(schema.getRoot().getChildren() != null);
-        assertTrue(!schema.getRoot().getChildren().isEmpty());
+        assertEquals("TEST",schema.getName());
+        List<Field> columns = schema.getFields();
+        testMetadata(columns);
+    }
+
+    @Test
+    public void testGetPossibleSchemaFromProperties() throws Exception {
+        Schema schema = source.getPossibleSchemaFromProperties(null);
+        assertEquals("TEST",schema.getName());
+        List<Field> columns = schema.getFields();
+        testMetadata(columns);
+    }
+    
+    private void testMetadata(List<Field> columns) {
+        Schema columnSchema = columns.get(0).schema().getTypes().get(0);
         
-        SchemaElement element = schema.getRoot().getChildren().get(0);
-        assertEquals("ID", element.getName());
-        assertEquals(SchemaElement.Type.DECIMAL, element.getType());
+        assertEquals("ID",columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.STRING,columnSchema.getType());
+        assertEquals(java.sql.Types.DECIMAL,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(38,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(0,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
         
-        element = schema.getRoot().getChildren().get(1);
-        assertEquals("NAME", element.getName());
-        assertEquals(SchemaElement.Type.STRING, element.getType());
+        columnSchema = columns.get(1).schema().getTypes().get(0);
+        
+        assertEquals("NAME",columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.STRING,columnSchema.getType());
+        assertEquals(java.sql.Types.VARCHAR,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(64,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
+    }
+    
+    @Test
+    public void testGetSchemaFromProperties() throws Exception {
+        Schema schema = source.getSchemaFromProperties(null);
+        assertEquals("EmptyRecord", schema.getName());
+        assertEquals(Schema.Type.RECORD, schema.getType());
     }
     
     @Test
@@ -139,29 +172,29 @@ public class OracleTestCase {
 
         reader.start();
 
-        Map<String, Object> row = (Map) reader.getCurrent();
-        String id = (String) row.get("ID");
-        String name = (String) row.get("NAME");
+        IndexedRecord row = (IndexedRecord) reader.getCurrent();
+        BigDecimal id = (BigDecimal) row.get(0);
+        String name = (String) row.get(1);
 
-        assertEquals("1", id);
+        assertEquals(new BigDecimal("1"), id);
         assertEquals("wangwei", name);
 
         reader.advance();
 
-        row = (Map) reader.getCurrent();
-        id = (String) row.get("ID");
-        name = (String) row.get("NAME");
+        row = (IndexedRecord) reader.getCurrent();
+        id = (BigDecimal) row.get(0);
+        name = (String) row.get(1);
 
-        assertEquals("2", id);
+        assertEquals(new BigDecimal("2"), id);
         assertEquals("gaoyan", name);
 
         reader.advance();
 
-        row = (Map) reader.getCurrent();
-        id = (String) row.get("ID");
-        name = (String) row.get("NAME");
+        row = (IndexedRecord) reader.getCurrent();
+        id = (BigDecimal) row.get(0);
+        name = (String) row.get(1);
 
-        assertEquals("3", id);
+        assertEquals(new BigDecimal("3"), id);
         assertEquals("dabao", name);
     }
 

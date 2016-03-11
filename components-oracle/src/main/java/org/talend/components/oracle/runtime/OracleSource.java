@@ -8,16 +8,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.Schema;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.oracle.DBConnectionProperties;
+import org.talend.components.oracle.toracleinput.TOracleInputProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
-import org.talend.daikon.properties.PropertyFactory;
 import org.talend.daikon.properties.ValidationResult;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
-import org.talend.daikon.schema.SchemaFactory;
 
 public class OracleSource extends DBSource {
 
@@ -69,10 +67,6 @@ public class OracleSource extends DBSource {
 
     @Override
     public Schema getSchema(RuntimeContainer adaptor, String schemaName) throws IOException {
-        Schema schema = SchemaFactory.newSchema();
-        SchemaElement root = SchemaFactory.newSchemaElement("Root");
-        schema.setRoot(root);
-        
         Connection conn = null;
 
         try {
@@ -80,12 +74,7 @@ public class OracleSource extends DBSource {
             conn = template.connect(dbprops);
             DatabaseMetaData metadata = conn.getMetaData();
             ResultSet resultset = metadata.getColumns(null, dbprops.dbschema.getStringValue(), schemaName, null);
-            while (resultset.next()) {
-                String columnname = resultset.getString("COLUMN_NAME");
-                SchemaElement child = PropertyFactory.newProperty(columnname);
-                setupSchemaElement(resultset, child);
-                root.addChild(child);
-            }
+            return OracleAvroRegistry.get().inferSchema(resultset);
         } catch (Exception e) {
             throw new ComponentException(e);
         } finally {
@@ -95,7 +84,6 @@ public class OracleSource extends DBSource {
                 e.printStackTrace();
             }
         }
-        return schema;
     }
 
     @Override
@@ -103,27 +91,20 @@ public class OracleSource extends DBSource {
         return new OracleTemplate();
     }
 
-    private void setupSchemaElement(ResultSet resultset, SchemaElement element) throws SQLException {
-        int dbtype = resultset.getInt("DATA_TYPE");
-        if (java.sql.Types.VARCHAR == dbtype || java.sql.Types.CHAR == dbtype) {
-            element.setType(SchemaElement.Type.STRING);
-        } else if (java.sql.Types.BOOLEAN == dbtype) {
-            element.setType(SchemaElement.Type.BOOLEAN);
-        } else if (java.sql.Types.INTEGER == dbtype) {
-            element.setType(SchemaElement.Type.INT);
-        } else if (java.sql.Types.DATE == dbtype) {
-            element.setType(SchemaElement.Type.DATE);
-            element.setPattern("\"yyyy-MM-dd\"");
-        } else if (java.sql.Types.TIMESTAMP == dbtype) {
-            element.setType(SchemaElement.Type.DATETIME);
-            element.setPattern("\"yyyy-MM-dd\'T\'HH:mm:ss\'.000Z\'\"");
-        } else if (java.sql.Types.DOUBLE == dbtype) {
-            element.setType(SchemaElement.Type.DOUBLE);
-        } else if (java.sql.Types.DECIMAL == dbtype) {
-            element.setType(SchemaElement.Type.DECIMAL);
+    @Override
+    public Schema getPossibleSchemaFromProperties(RuntimeContainer adaptor) throws IOException {
+        return getSchema(adaptor, ((TOracleInputProperties) properties).tablename.getStringValue());
+    }
+
+    @Override
+    public Schema getSchemaFromProperties(RuntimeContainer adaptor) throws IOException {
+        String schemaString = null;
+
+        if (properties instanceof TOracleInputProperties) {
+            schemaString = ((TOracleInputProperties) properties).schema.schema.getStringValue();
         }
 
-        element.setNullable(!"NO".equals(resultset.getString("IS_NULLABLE")));
+        return schemaString == null ? null : new Schema.Parser().parse(schemaString);
     }
 
 }

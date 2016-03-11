@@ -17,8 +17,8 @@ import static org.talend.daikon.properties.PropertyFactory.newString;
 import org.talend.components.api.properties.ComponentPropertyFactory;
 import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.Property.Type;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.schema.SchemaElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -49,7 +49,7 @@ public class DBInputProperties extends DBCommonProperties {
         super.setupProperties();
 
         returns = ComponentPropertyFactory.newReturnsProperty();
-        ComponentPropertyFactory.newReturnProperty(returns, SchemaElement.Type.INT, "NB_LINE");
+        ComponentPropertyFactory.newReturnProperty(returns, Type.INT, "NB_LINE");
     }
 
     @Override

@@ -17,45 +17,38 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.IndexedRecord;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
+import org.talend.components.api.component.runtime.RuntimeHelper;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.oracle.DBInputProperties;
-import org.talend.daikon.schema.Schema;
-import org.talend.daikon.schema.SchemaElement;
 
-public class DBReader implements BoundedReader {
+public class DBReader extends DBCommonReader<IndexedRecord> {
 
     private static final Logger          LOG = LoggerFactory.getLogger(DBReader.class);
 
     protected DBInputProperties          properties;
 
-    protected Map<String, SchemaElement> fieldMap;
-
-    protected List<SchemaElement>        fieldList;
-
-    protected DBSource                   source;
-
     protected RuntimeContainer           adaptor;
 
     protected Connection                 conn;
 
-    protected String                     dbschema;
-
     protected ResultSet                  resultSet;
 
     protected DBTemplate                 dbTemplate;
+    
+    private transient ResultSetAdapterFactory factory;
+    
+    private transient Schema querySchema;
 
     public DBReader(RuntimeContainer adaptor, DBSource source, DBInputProperties props) {
-        this.source = source;
+        super(source);
         this.adaptor = adaptor;
         this.properties = props;
     }
@@ -63,13 +56,25 @@ public class DBReader implements BoundedReader {
     public void setDBTemplate(DBTemplate template) {
         this.dbTemplate = template;
     }
+    
+    private Schema getSchema() throws IOException {
+        if (null == querySchema) {
+            querySchema = new Schema.Parser().parse(properties.schema.schema.getStringValue());
+            querySchema = RuntimeHelper.resolveSchema(adaptor, getCurrentSource(), querySchema);
+        }
+        return querySchema;
+    }
+
+    private ResultSetAdapterFactory getFactory() throws IOException {
+        if (null == factory) {
+            factory = new ResultSetAdapterFactory();
+            factory.setSchema(getSchema());
+        }
+        return factory;
+    }
 
     @Override
     public boolean start() throws IOException {
-        Schema schema = source.getSchema(adaptor, properties.tablename.getStringValue());
-        fieldMap = schema.getRoot().getChildMap();
-        fieldList = schema.getRoot().getChildren();
-        
         try {
             conn = dbTemplate.connect(properties.getConnectionProperties());
             Statement statement = conn.createStatement();
@@ -79,7 +84,6 @@ public class DBReader implements BoundedReader {
             e.printStackTrace();
             return false;
         }
-
     }
 
     @Override
@@ -93,20 +97,12 @@ public class DBReader implements BoundedReader {
     }
 
     @Override
-    public Object getCurrent() throws NoSuchElementException {
-        Map<String, Object> row = new HashMap<>();
-
-        for (int i = 0; i < fieldList.size(); i++) {
-            SchemaElement element = fieldList.get(i);
-            // TODO fix the type mapping
-            try {
-                row.put(element.getName(), resultSet.getString(i + 1));
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+    public IndexedRecord getCurrent() throws NoSuchElementException {
+        try {
+            return getFactory().convertToAvro(resultSet);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        return row;
     }
 
     @Override
@@ -128,11 +124,6 @@ public class DBReader implements BoundedReader {
     @Override
     public Double getFractionConsumed() {
         return null;
-    }
-
-    @Override
-    public BoundedSource getCurrentSource() {
-        return source;
     }
 
     @Override
