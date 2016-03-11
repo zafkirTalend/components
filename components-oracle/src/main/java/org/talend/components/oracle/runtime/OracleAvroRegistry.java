@@ -23,7 +23,7 @@ import org.talend.daikon.talend6.Talend6SchemaConstants;
  */
 public class OracleAvroRegistry extends AvroRegistry {
 
-    public static final String              FAMILY_NAME = "Salesforce";            //$NON-NLS-1$
+    public static final String              FAMILY_NAME = "Oracle";            //$NON-NLS-1$
 
     private static final OracleAvroRegistry sInstance   = new OracleAvroRegistry();
 
