@@ -61,8 +61,13 @@ public class TOracleInputDefinition extends DBInputDefinition implements InputCo
     }
 
     @Override
-    public InputStream getMavenPom() {
-        return this.getClass().getResourceAsStream("/org/talend/components/oracle/pom.xml");
+    public String getMavenGroupId() {
+        return "org.talend.components";
+    }
+
+    @Override
+    public String getMavenArtifactId() {
+        return "components-oracle";
     }
 
 }

@@ -49,8 +49,13 @@ public class TOracleConnectionDefinition extends DBConnectionDefinition {
     }
 
     @Override
-    public InputStream getMavenPom() {
-        return this.getClass().getResourceAsStream("/org/talend/components/oracle/pom.xml");
+    public String getMavenGroupId() {
+        return "org.talend.components";
+    }
+
+    @Override
+    public String getMavenArtifactId() {
+        return "components-oracle";
     }
 
 }
