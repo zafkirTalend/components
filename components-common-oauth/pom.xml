@@ -50,21 +50,6 @@
                 <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>default-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>bundle</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>bundle</classifier>
-                            <instructions>
-                                <Import-Package>org.talend*</Import-Package>
-                                <Service-Component>*</Service-Component>
-                                <Embed-Dependency>!components*,*;scope=compile|runtime;inline=false</Embed-Dependency>
-                            </instructions>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>lib-jar</id>
                         <phase>package</phase>
                         <goals>
@@ -74,6 +59,22 @@
                             <instructions>
                                 <Bundle-SymbolicName>org.talend.components.common-oauth.lib</Bundle-SymbolicName>
                                 <Bundle-Name>${project.name} lib</Bundle-Name>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>bundle</classifier>
+                            <instructions>
+                                <Bundle-SymbolicName>org.talend.components.common-oauth</Bundle-SymbolicName>
+                                <Import-Package>org.talend*</Import-Package>
+                                <Service-Component>*</Service-Component>
+                                <Embed-Dependency>!components*,*;scope=compile|runtime;inline=false</Embed-Dependency>
                             </instructions>
                         </configuration>
                     </execution>

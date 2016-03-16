@@ -12,10 +12,12 @@
 // ============================================================================
 package org.talend.components.api.service;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -145,4 +147,22 @@ public class ComponentServiceTest extends AbstractComponentTest {
         ComponentTestUtils.testAllRuntimeAvaialble(getComponentService());
     }
 
+    @Test
+    public void testGetDependencies() {
+        // check the comp def return the proper stream for the pom
+        Set<String> mavenUriDependencies = getComponentService().getMavenUriDependencies(TestComponentDefinition.COMPONENT_NAME);
+        assertEquals(5, mavenUriDependencies.size());
+        assertThat(mavenUriDependencies,
+                containsInAnyOrder("mvn:org.apache.maven/maven-core/3.3.3/jar", //
+                        "mvn:org.eclipse.sisu/org.eclipse.sisu.plexus/0.0.0.M2a/jar", //
+                        "mvn:org.apache.maven/maven-artifact/3.3.3/jar", //
+                        "mvn:org.eclipse.aether/aether-transport-file/1.0.0.v20140518/jar", //
+                        "mvn:org.talend.components/file-input/0.1.0.SNAPSHOT/jar"//
+        ));
+    }
+
+    @Test
+    public void testGetAllDepenendencies() {
+        ComponentTestUtils.testAllDesignDependenciesPresent(getComponentService(), errorCollector);
+    }
 }

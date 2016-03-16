@@ -12,8 +12,10 @@
 // ============================================================================
 package org.talend.components.api.service.internal;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -215,13 +218,116 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
     @Override
     public Set<String> getMavenUriDependencies(String componentName) {
         ComponentDefinition componentDef = getComponentDefinition(componentName);
-        InputStream mavenPomStream = componentDef.getMavenPom();
+        String mavenGroupId = componentDef.getMavenGroupId();
+        String mavenArtifactId = componentDef.getMavenArtifactId();
         try {
-            return computeDependenciesFromPom(mavenPomStream, "test", "provided"); //$NON-NLS-1$
-        } catch (IOException | XmlPullParserException | DependencyCollectionException
-                | org.eclipse.aether.resolution.DependencyResolutionException | ModelBuildingException e) {
-            throw new ComponentException(ComponentsApiErrorCode.COMPUTE_DEPENDENCIES_FAILED, e);
+            return getDesignTimeDependencies(mavenGroupId, mavenArtifactId, componentDef.getClass().getClassLoader());
+        } catch (IOException e) {
+            throw new ComponentException(ComponentsApiErrorCode.COMPUTE_DEPENDENCIES_FAILED, e, ExceptionContext.withBuilder()
+                    .put("path", computeDesignDependenciesPath(mavenGroupId, mavenArtifactId)).build());
         }
+    }
+
+    /**
+     * this will locate the file META-INF/mavenGroupId/mavenArtifactId/depenencies.properties and parse it to extract
+     * the design time dependencies of the component.
+     * 
+     * @param mavenGroupId group id of the component to locate the dep file
+     * @param mavenArtifactId artifact id of the component to locate the dep file.
+     * @param classLoader
+     * @return set of string pax-url formated
+     * @throws IOException if reading the file failed.
+     */
+    private Set<String> getDesignTimeDependencies(String mavenGroupId, String mavenArtifactId, ClassLoader classLoader)
+            throws IOException {
+        String depPath = computeDesignDependenciesPath(mavenGroupId, mavenArtifactId);
+        if (classLoader == null) {
+            classLoader = this.getClass().getClassLoader();
+        }
+        InputStream depStream = classLoader.getResourceAsStream(depPath);
+        if (depStream == null) {
+            throw new ComponentException(ComponentsApiErrorCode.COMPUTE_DEPENDENCIES_FAILED,
+                    ExceptionContext.withBuilder().put("path", depPath).build());
+        } // else we found it so parse it now
+        try {
+            return parseDependencies(depStream);
+        } finally {
+            depStream.close();
+        }
+    }
+
+    /**
+     * DOC sgandon Comment method "computeDesignDepenenciesPath".
+     * 
+     * @param mavenGroupId
+     * @param mavenArtifactId
+     * @return
+     */
+    public String computeDesignDependenciesPath(String mavenGroupId, String mavenArtifactId) {
+        return "META-INF/maven/" + mavenGroupId + "/" + mavenArtifactId + "/dependencies.txt";
+    }
+
+    /**
+     * reads a stream following the maven-dependency-plugin plugin :list format
+     * 
+     * <pre>
+    * {@code
+    
+    The following files have been resolved:
+    org.apache.maven:maven-core:jar:3.3.3:compile
+    org.springframework:spring-beans:jar:4.2.0.RELEASE:test
+    org.talend.components:components-common:jar:0.4.0.BUILD-SNAPSHOT:compile
+    log4j:log4j:jar:1.2.17:test
+    org.eclipse.aether:aether-impl:jar:1.0.0.v20140518:compile
+       * }
+     * </pre>
+     *
+     * @param depStream of the dependencies file
+     * @return a list of maven url strings
+     * @throws IOException if read fails.
+     */
+    private Set<String> parseDependencies(InputStream depStream) throws IOException {
+        Set<String> mvnUris = new HashSet<>();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(depStream, "UTF-8"));
+        reader.lines().filter(s -> StringUtils.countMatches(s, ":") > 3).//
+                filter(s -> !s.endsWith("test")).//
+                forEach(s -> mvnUris.add(parseMvnUri(s)));
+
+        ;
+        return mvnUris;
+    }
+
+    /**
+     * expecting groupId:artifactId:type[:classifier]:version:scope and output.
+     * 
+     * <pre>
+     * {@code
+     * mvn-uri := 'mvn:' [ repository-url '!' ] group-id '/' artifact-id [ '/' [version] [ '/' [type] [ '/' classifier ] ] ] ]
+       * }
+     * </pre>
+     * 
+     * @param s
+     * @return pax-url formatted string
+     */
+    String parseMvnUri(String dependencyString) {
+        String s = dependencyString.trim();
+        int indexOfGpSeparator = s.indexOf(':');
+        String groupId = s.substring(0, indexOfGpSeparator);
+        int indexOfArtIdSep = s.indexOf(':', indexOfGpSeparator + 1);
+        String artifactId = s.substring(indexOfGpSeparator + 1, indexOfArtIdSep);
+        int indexOfTypeSep = s.indexOf(':', indexOfArtIdSep + 1);
+        String type = s.substring(indexOfArtIdSep + 1, indexOfTypeSep);
+        int lastIndex = indexOfTypeSep;
+        String classifier = null;
+        if (StringUtils.countMatches(s, ":") > 4) {// we have a classifier too
+            int indexOfClassifSep = s.indexOf(':', indexOfTypeSep + 1);
+            classifier = s.substring(indexOfTypeSep + 1, indexOfClassifSep);
+            lastIndex = indexOfClassifSep;
+        } // else no classifier.
+        int indexOfVersionSep = s.indexOf(':', lastIndex + 1);
+        String version = s.substring(lastIndex + 1, indexOfVersionSep);
+        // we ignor the scope here
+        return "mvn:" + groupId + '/' + artifactId + '/' + version + '/' + type + (classifier != null ? '/' + classifier : "");
     }
 
     /**
