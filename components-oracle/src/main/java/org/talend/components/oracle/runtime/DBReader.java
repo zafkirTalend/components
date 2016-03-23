@@ -48,7 +48,7 @@ public class DBReader extends DBCommonReader<IndexedRecord> {
     private transient Schema querySchema;
 
     public DBReader(RuntimeContainer adaptor, DBSource source, DBInputProperties props) {
-        super(source);
+        super(adaptor, source);
         this.adaptor = adaptor;
         this.properties = props;
     }

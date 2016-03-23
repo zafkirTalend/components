@@ -13,10 +13,11 @@
 package org.talend.components.oracle.runtime;
 
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
+import org.talend.components.api.container.RuntimeContainer;
 
 public abstract class DBCommonReader<T> extends AbstractBoundedReader<T> {
 
-    public DBCommonReader(DBSource source) {
-        super(source);
+    public DBCommonReader(RuntimeContainer container, DBSource source) {
+        super(container, source);
     }
 }

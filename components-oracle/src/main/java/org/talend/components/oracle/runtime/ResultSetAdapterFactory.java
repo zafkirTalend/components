@@ -65,6 +65,16 @@ public class ResultSetAdapterFactory implements IndexedRecordAdapterFactory<Resu
         @SuppressWarnings("unchecked")
         @Override
         public Object get(int i) {
+            if (names == null) {
+                names = new String[getSchema().getFields().size()];
+                //fieldConverter = new AvroConverter[names.length];
+                for (int j = 0; j < names.length; j++) {
+                    Field f = getSchema().getFields().get(j);
+                    names[j] = f.name();
+                    //fieldConverter[j] = SalesforceAvroRegistry.get().getConverterFromString(f);
+                }
+            }
+            
             try {
                 return value.getObject((names[i]));
             } catch (SQLException e) {

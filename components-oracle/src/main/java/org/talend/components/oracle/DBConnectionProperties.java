@@ -13,18 +13,19 @@
 package org.talend.components.oracle;
 
 import static org.talend.daikon.properties.PropertyFactory.newBoolean;
-import static org.talend.daikon.properties.PropertyFactory.newEnum;
 import static org.talend.daikon.properties.PropertyFactory.newString;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.properties.ComponentReferenceProperties;
+import org.talend.components.api.properties.ComponentReferencePropertiesEnclosing;
 import org.talend.components.common.UserPasswordProperties;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.presentation.Widget.WidgetType;
 
-public class DBConnectionProperties extends ComponentProperties implements DBProvideConnectionProperties {
+public class DBConnectionProperties extends ComponentProperties implements DBProvideConnectionProperties, ComponentReferencePropertiesEnclosing {
 
     // basic setting start
     public Property               host                  = (Property) newString("host").setRequired(true);
@@ -41,7 +42,7 @@ public class DBConnectionProperties extends ComponentProperties implements DBPro
 
     public Property               jdbcparameter         = newString("jdbcparameter");
 
-    public Property               referencedComponentId = newEnum("referencedComponentId");
+    public ComponentReferenceProperties referencedComponent = new ComponentReferenceProperties("referencedComponent", this);
 
     // advanced setting start
     public Property               autocommit            = newBoolean("autocommit");
@@ -71,17 +72,26 @@ public class DBConnectionProperties extends ComponentProperties implements DBPro
 
         // only store it, will use it later
         Form refForm = CommonUtils.addForm(this, Form.REFERENCE);
-        Widget compListWidget = widget(referencedComponentId).setWidgetType(WidgetType.COMPONENT_REFERENCE);
-        compListWidget.setReferencedComponentName(getReferencedComponentName());
+        
+        Widget compListWidget = widget(referencedComponent).setWidgetType(WidgetType.COMPONENT_REFERENCE);
+        referencedComponent.componentType.setValue(getReferencedComponentName());
+        
         refForm.addRow(compListWidget);
         refForm.addRow(mainForm);
+        
+        
     }
 
     protected String getReferencedComponentName() {
         return null;
     }
+    
+    public String getReferencedComponentId() {
+        return referencedComponent.componentInstanceId.getStringValue();
+    }
 
-    public void afterReferencedComponentId() {
+    @Override
+    public void afterReferencedComponent() {
         refreshLayout(getForm(Form.MAIN));
     }
 
@@ -89,24 +99,27 @@ public class DBConnectionProperties extends ComponentProperties implements DBPro
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
 
+        String refComponentIdValue = getReferencedComponentId();
+        boolean useOtherConnection = refComponentIdValue != null
+                && refComponentIdValue.startsWith(getReferencedComponentName());
+        
         if (form.getName().equals(Form.MAIN)) {
-            String id = referencedComponentId.getStringValue();
-            if (id == null || !id.startsWith(getReferencedComponentName())) {
-                form.getWidget(host.getName()).setVisible(true);
-                form.getWidget(port.getName()).setVisible(true);
-                form.getWidget(database.getName()).setVisible(true);
-                form.getWidget(dbschema.getName()).setVisible(true);
-                form.getWidget(userPassword.getName()).setVisible(true);
-                form.getWidget(jdbcparameter.getName()).setVisible(true);
+            if (useOtherConnection) {
+                form.getWidget(host.getName()).setVisible(false);
+                form.getWidget(port.getName()).setVisible(false);
+                form.getWidget(database.getName()).setVisible(false);
+                form.getWidget(dbschema.getName()).setVisible(false);
+                form.getWidget(userPassword.getName()).setVisible(false);
+                form.getWidget(jdbcparameter.getName()).setVisible(false);
                 return;
             }
-
-            form.getWidget(host.getName()).setVisible(false);
-            form.getWidget(port.getName()).setVisible(false);
-            form.getWidget(database.getName()).setVisible(false);
-            form.getWidget(dbschema.getName()).setVisible(false);
-            form.getWidget(userPassword.getName()).setVisible(false);
-            form.getWidget(jdbcparameter.getName()).setVisible(false);
+            
+            form.getWidget(host.getName()).setVisible(true);
+            form.getWidget(port.getName()).setVisible(true);
+            form.getWidget(database.getName()).setVisible(true);
+            form.getWidget(dbschema.getName()).setVisible(true);
+            form.getWidget(userPassword.getName()).setVisible(true);
+            form.getWidget(jdbcparameter.getName()).setVisible(true);
         }
     }
 
