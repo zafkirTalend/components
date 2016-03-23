@@ -11,9 +11,9 @@ import org.talend.daikon.avro.IndexedRecordAdapterFactory;
 
 public class ResultSetAdapterFactory implements IndexedRecordAdapterFactory<ResultSet, IndexedRecord> {
 
-    private Schema schema;
+    private Schema                      schema;
 
-    private String names[];
+    private String                      names[];
 
     /** The cached AvroConverter objects for the fields of this record. */
     @SuppressWarnings("rawtypes")
@@ -65,20 +65,12 @@ public class ResultSetAdapterFactory implements IndexedRecordAdapterFactory<Resu
         @SuppressWarnings("unchecked")
         @Override
         public Object get(int i) {
-            if (names == null) {
-                names = new String[getSchema().getFields().size()];
-                fieldConverter = new AvroConverter[names.length];
-                for (int j = 0; j < names.length; j++) {
-                    Field f = getSchema().getFields().get(j);
-                    names[j] = f.name();
-                    fieldConverter[j] = OracleAvroRegistry.get().getConverterFromString(f);
-                }
-            }
             try {
-                return fieldConverter[i].convertToAvro(value.getObject((names[i])));
+                return value.getObject((names[i]));
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+
             return null;
         }
     }
