@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.IndexedRecord;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,20 +32,25 @@ import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
+import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.api.component.runtime.RuntimeHelper;
 import org.talend.components.oracle.runtime.OracleTemplate;
 import org.talend.components.oracle.toracleinput.TOracleInputDefinition;
 import org.talend.components.oracle.toracleinput.TOracleInputProperties;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.avro.AvroRegistry;
+import org.talend.daikon.avro.IndexedRecordAdapterFactory;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.talend6.Talend6OutgoingSchemaEnforcer;
 
 public class OracleTestCase {
 
     private static DBConnectionProperties properties;
-    
-    private static BoundedSource source;
 
-    private static OracleTemplate template = new OracleTemplate();
+    private static BoundedSource          source;
+
+    private static OracleTemplate         template = new OracleTemplate();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -55,20 +61,20 @@ public class OracleTestCase {
         }
 
         initSource(props);
-        
+
         Connection conn = template.connect(properties);
-        
+
         try {
             dropTestTable(conn);
-        } catch(Exception e) {
-            //do nothing
+        } catch (Exception e) {
+            // do nothing
         }
         createTestTable(conn);
         loadTestData(conn);
-        
+
         conn.close();
     }
-    
+
     private static void initSource(java.util.Properties props) {
         ComponentDefinition definition = new TOracleInputDefinition();
         TOracleInputProperties properties = (TOracleInputProperties) definition.createRuntimeProperties();
@@ -82,13 +88,13 @@ public class OracleTestCase {
 
         properties.setValue("tablename", props.getProperty("tablename"));
         properties.setValue("sql", props.getProperty("sql"));
-        
+
         OracleTestCase.properties = properties.getConnectionProperties();
 
         source = (BoundedSource) ((org.talend.components.api.component.InputComponentDefinition) definition).getRuntime();
         source.initialize(null, properties);
     }
-    
+
     @AfterClass
     public static void destory() throws Exception {
         properties = null;
@@ -101,28 +107,28 @@ public class OracleTestCase {
         ValidationResult result = source.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.OK);
     }
-    
+
     @Test
     public void testGetSchemaNames() throws Exception {
         List<NamedThing> schemaNames = source.getSchemaNames(null);
         assertTrue(schemaNames != null);
         assertTrue(!schemaNames.isEmpty());
-        
+
         boolean exists = false;
-        for(NamedThing name : schemaNames) {
-            if("TEST".equals(name.getName())) {
+        for (NamedThing name : schemaNames) {
+            if ("TEST".equals(name.getName())) {
                 exists = true;
                 break;
             }
         }
-        
+
         assertTrue(exists);
     }
 
     @Test
     public void testGetSchema() throws Exception {
         Schema schema = source.getSchema(null, "TEST");
-        assertEquals("TEST",schema.getName());
+        assertEquals("TEST", schema.getName());
         List<Field> columns = schema.getFields();
         testMetadata(columns);
     }
@@ -130,42 +136,42 @@ public class OracleTestCase {
     @Test
     public void testGetPossibleSchemaFromProperties() throws Exception {
         Schema schema = source.getPossibleSchemaFromProperties(null);
-        assertEquals("TEST",schema.getName());
+        assertEquals("TEST", schema.getName());
         List<Field> columns = schema.getFields();
         testMetadata(columns);
     }
-    
+
     private void testMetadata(List<Field> columns) {
         Schema columnSchema = columns.get(0).schema().getTypes().get(0);
-        
-        assertEquals("ID",columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
-        assertEquals(Schema.Type.STRING,columnSchema.getType());
-        assertEquals(java.sql.Types.DECIMAL,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
-        assertEquals(38,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
-        assertEquals(0,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
-        
+
+        assertEquals("ID", columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.STRING, columnSchema.getType());
+        assertEquals(java.sql.Types.DECIMAL, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(38, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(0, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
+
         columnSchema = columns.get(1).schema().getTypes().get(0);
-        
-        assertEquals("NAME",columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
-        assertEquals(Schema.Type.STRING,columnSchema.getType());
-        assertEquals(java.sql.Types.VARCHAR,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
-        assertEquals(64,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
-        assertEquals(null,columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
+
+        assertEquals("NAME", columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.STRING, columnSchema.getType());
+        assertEquals(java.sql.Types.VARCHAR, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(64, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
     }
-    
+
     @Test
     public void testGetSchemaFromProperties() throws Exception {
         Schema schema = source.getSchemaFromProperties(null);
         assertEquals("EmptyRecord", schema.getName());
         assertEquals(Schema.Type.RECORD, schema.getType());
     }
-    
+
     @Test
     public void testReader() throws Exception {
         BoundedReader reader = source.createReader(null);
@@ -196,6 +202,35 @@ public class OracleTestCase {
 
         assertEquals(new BigDecimal("3"), id);
         assertEquals("dabao", name);
+    }
+
+    @Test
+    public void testType() throws Exception {
+        Reader reader = source.createReader(null);
+
+        //Schema designSchema = source.getSchemaFromProperties(null);
+        Schema designSchema = createTestSchema();
+        Schema runtimeSchema = RuntimeHelper.resolveSchema(null, source, designSchema);
+
+        IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> factory = null;
+        Talend6OutgoingSchemaEnforcer current = new Talend6OutgoingSchemaEnforcer(designSchema, false);
+
+        for (boolean available = reader.start(); available; available = reader.advance()) {
+            if (factory == null)
+                factory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) new AvroRegistry()
+                        .createAdapterFactory(reader.getCurrent().getClass());
+
+            IndexedRecord unenforced = factory.convertToAvro(reader.getCurrent());
+            current.setWrapped(unenforced);
+
+            assertEquals(BigDecimal.class, current.get(0).getClass());
+            assertEquals(String.class, current.get(1).getClass());
+        }
+    }
+
+    private Schema createTestSchema() {
+        return SchemaBuilder.builder().record("TEST").fields().name("ID").type().nullable().intType().noDefault().name("NAME")
+                .type().nullable().stringType().noDefault().endRecord();
     }
 
     private static void createTestTable(Connection conn) throws Exception {

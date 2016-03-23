@@ -12,8 +12,6 @@
 // ============================================================================
 package org.talend.components.oracle.toracleinput;
 
-import java.io.InputStream;
-
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.InputComponentDefinition;
