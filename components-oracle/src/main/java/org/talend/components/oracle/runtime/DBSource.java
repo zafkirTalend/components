@@ -29,8 +29,6 @@ public abstract class DBSource extends DBSourceOrSink implements BoundedSource {
     public DBSource() {
     }
     
-    abstract protected DBTemplate getDBTemplate();
-
     @Override
     public List<? extends BoundedSource> splitIntoBundles(long desiredBundleSizeBytes, RuntimeContainer adaptor) throws Exception {
         List<BoundedSource> list = new ArrayList<>();

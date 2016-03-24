@@ -24,12 +24,13 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.component.runtime.RuntimeHelper;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.oracle.DBInputProperties;
 
-public class DBReader extends DBCommonReader<IndexedRecord> {
+public class DBReader extends AbstractBoundedReader<IndexedRecord> {
 
     private static final Logger          LOG = LoggerFactory.getLogger(DBReader.class);
 
