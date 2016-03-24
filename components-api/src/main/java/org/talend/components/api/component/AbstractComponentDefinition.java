@@ -12,17 +12,16 @@
 // ============================================================================
 package org.talend.components.api.component;
 
+import org.talend.components.api.AbstractTopLevelDefinition;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.daikon.exception.TalendRuntimeException;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.talend.components.api.AbstractTopLevelDefinition;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.exception.TalendRuntimeException;
 
 public abstract class AbstractComponentDefinition extends AbstractTopLevelDefinition implements ComponentDefinition {
 
@@ -36,12 +35,6 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
 
     public void setTriggers(Trigger... conns) {
         this.triggers = conns;
-    }
-
-    @Override
-    public String[] getFamilies() {
-        // Subclass me
-        return new String[]{};
     }
 
     @Override
@@ -151,7 +144,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
      * return the list of ComponentProperties that may be assigned to nested properties of the main ComponentProperties
      * class(see {@link AbstractComponentDefinition#getPropertyClass()} associated with this definiton.<br/>
      * This method uses static class definition to avoid ComponentProperties instanciation.
-     * 
+     *
      * @return return the list of ComponentProperties that may be assigned to a nested property of this component
      * associated ComponentProperties.
      */
