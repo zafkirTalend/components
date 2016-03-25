@@ -71,7 +71,7 @@ public class ResultSetAdapterFactory implements IndexedRecordAdapterFactory<Resu
                 for (int j = 0; j < names.length; j++) {
                     Field f = getSchema().getFields().get(j);
                     names[j] = f.name();
-                    //fieldConverter[j] = SalesforceAvroRegistry.get().getConverterFromString(f);
+                    //fieldConverter[j] = OracleAvroRegistry.get().getConverterFromString(f);
                 }
             }
             
