@@ -6,6 +6,7 @@ import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.Trigger;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.cassandra.CassandraConnectionProperties;
 import org.talend.components.cassandra.CassandraDefinition;
 
 @Component(name = Constants.COMPONENT_BEAN_PREFIX
@@ -23,6 +24,6 @@ public class TCassandraConnectionDefinition extends CassandraDefinition {
 
     @Override
     public Class<? extends ComponentProperties> getPropertyClass() {
-        return TCassandraConnectionProperties.class;
+        return CassandraConnectionProperties.class;
     }
 }

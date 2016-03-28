@@ -1,9 +1,10 @@
-package org.talend.components.cassandra.tcassandraconnection;
+package org.talend.components.cassandra;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.components.api.properties.ComponentReferencePropertiesEnclosing;
 import org.talend.components.api.properties.ConnectionPropertiesProvider;
+import org.talend.components.cassandra.tcassandraconnection.TCassandraConnectionDefinition;
 import org.talend.components.common.UserPasswordProperties;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.Property;
@@ -13,14 +14,14 @@ import org.talend.daikon.properties.presentation.Widget;
 import static org.talend.daikon.properties.PropertyFactory.*;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 
-public class TCassandraConnectionProperties extends ComponentProperties implements ComponentReferencePropertiesEnclosing, ConnectionPropertiesProvider<TCassandraConnectionProperties> {
+public class CassandraConnectionProperties extends ComponentProperties implements ComponentReferencePropertiesEnclosing, ConnectionPropertiesProvider<CassandraConnectionProperties> {
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
      *
      * @param name
      */
-    public TCassandraConnectionProperties(String name) {
+    public CassandraConnectionProperties(String name) {
         super(name);
     }
 
@@ -46,7 +47,6 @@ public class TCassandraConnectionProperties extends ComponentProperties implemen
     public void setupLayout() {
         super.setupLayout();
 
-        version.setValue(V_CASSANDRA_3_0);
         host.setValue("localhost");
         port.setValue("9042");
 
@@ -83,8 +83,8 @@ public class TCassandraConnectionProperties extends ComponentProperties implemen
         return referencedComponent.componentInstanceId.getStringValue();
     }
 
-    public TCassandraConnectionProperties getReferencedConnectionProperties() {
-        TCassandraConnectionProperties refProps = (TCassandraConnectionProperties) referencedComponent.componentProperties;
+    public CassandraConnectionProperties getReferencedConnectionProperties() {
+        CassandraConnectionProperties refProps = (CassandraConnectionProperties) referencedComponent.componentProperties;
         if (refProps != null)
             return refProps;
         return null;
@@ -128,7 +128,7 @@ public class TCassandraConnectionProperties extends ComponentProperties implemen
     }
 
     @Override
-    public TCassandraConnectionProperties getConnectionProperties() {
+    public CassandraConnectionProperties getConnectionProperties() {
         return this;
     }
 }
