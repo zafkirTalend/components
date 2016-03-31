@@ -13,9 +13,11 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ConnectionPropertiesProvider;
 import org.talend.components.cassandra.CassandraConnectionProperties;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.properties.ValidationResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CassandraSourceOrSink implements SourceOrSink {
@@ -68,26 +70,29 @@ public class CassandraSourceOrSink implements SourceOrSink {
         return clusterBuilder.build();
     }
 
+    private List<KeyspaceMetadata> getKeyspaces(RuntimeContainer container){
+        Metadata metadata = createCluster(container).getMetadata();
+        return metadata.getKeyspaces();
+    }
+
+    public List<NamedThing> getKeyspaceNames(RuntimeContainer container) throws IOException {
+        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
+        List<NamedThing> ksNames = new ArrayList<>();
+        for (KeyspaceMetadata keyspace : keyspaces) {
+            ksNames.add(new SimpleNamedThing(keyspace.getName(),keyspace.getName()));
+        }
+        return ksNames;
+    }
+
     @Override
     public List<NamedThing> getSchemaNames(RuntimeContainer container) throws IOException {
-        Metadata metadata = createCluster(container).getMetadata();
-        List<KeyspaceMetadata> keyspaces = metadata.getKeyspaces();
+        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
 
         return null;
     }
 
     @Override
     public Schema getSchema(RuntimeContainer container, String schemaName) throws IOException {
-        return null;
-    }
-
-    @Override
-    public Schema getSchemaFromProperties(RuntimeContainer container) throws IOException {
-        return null;
-    }
-
-    @Override
-    public Schema getPossibleSchemaFromProperties(RuntimeContainer container) throws IOException {
         return null;
     }
 }
