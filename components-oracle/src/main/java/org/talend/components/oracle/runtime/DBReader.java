@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
-import org.talend.components.api.component.runtime.RuntimeHelper;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.oracle.DBInputProperties;
 
@@ -61,7 +60,6 @@ public class DBReader extends AbstractBoundedReader<IndexedRecord> {
     private Schema getSchema() throws IOException {
         if (null == querySchema) {
             querySchema = new Schema.Parser().parse(properties.schema.schema.getStringValue());
-            querySchema = RuntimeHelper.resolveSchema(adaptor, getCurrentSource(), querySchema);
         }
         return querySchema;
     }

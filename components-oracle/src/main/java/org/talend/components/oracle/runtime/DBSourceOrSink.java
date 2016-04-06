@@ -28,7 +28,6 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.oracle.DBConnectionProperties;
-import org.talend.components.oracle.DBInputProperties;
 import org.talend.components.oracle.DBProvideConnectionProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
@@ -122,22 +121,6 @@ public abstract class DBSourceOrSink implements SourceOrSink {
                 e.printStackTrace();
             }
         }
-    }
-    
-    @Override
-    public Schema getPossibleSchemaFromProperties(RuntimeContainer adaptor) throws IOException {
-        return getSchema(adaptor, ((DBInputProperties) properties).tablename.getStringValue());
-    }
-
-    @Override
-    public Schema getSchemaFromProperties(RuntimeContainer adaptor) throws IOException {
-        String schemaString = null;
-
-        if (properties instanceof DBInputProperties) {
-            schemaString = ((DBInputProperties) properties).schema.schema.getStringValue();
-        }
-
-        return schemaString == null ? null : new Schema.Parser().parse(schemaString);
     }
     
 }

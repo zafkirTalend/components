@@ -14,7 +14,12 @@ package org.talend.components.oracle;
 
 import static org.talend.daikon.properties.PropertyFactory.newString;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.avro.Schema;
 import org.talend.components.api.properties.ComponentPropertyFactory;
+import org.talend.components.api.properties.HasSchemaProperty;
 import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.Property.Type;
@@ -22,7 +27,7 @@ import org.talend.daikon.properties.presentation.Form;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DBInputProperties extends DBCommonProperties {
+public class DBInputProperties extends DBCommonProperties implements HasSchemaProperty {
 
     public Property         tablename = (Property) newString("tablename").setRequired(true);
 
@@ -55,6 +60,16 @@ public class DBInputProperties extends DBCommonProperties {
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
+    }
+    
+    @Override
+    public List<Schema> getSchemas() {
+        return Arrays.asList(new Schema[]{new Schema.Parser().parse(schema.schema.getStringValue())});
+    }
+
+    @Override
+    public void setSchemas(List<Schema> schemas) {
+        schema.schema.setValue(schemas.get(0));
     }
 
 }

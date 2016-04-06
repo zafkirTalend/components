@@ -33,7 +33,6 @@ import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.component.runtime.Reader;
-import org.talend.components.api.component.runtime.RuntimeHelper;
 import org.talend.components.oracle.runtime.OracleTemplate;
 import org.talend.components.oracle.toracleinput.TOracleInputDefinition;
 import org.talend.components.oracle.toracleinput.TOracleInputProperties;
@@ -46,7 +45,7 @@ import org.talend.daikon.talend6.Talend6OutgoingSchemaEnforcer;
 
 public class OracleTestCase {
 
-    private static DBConnectionProperties properties;
+    private static TOracleInputProperties db_input_properties;
 
     private static BoundedSource          source;
 
@@ -62,7 +61,7 @@ public class OracleTestCase {
 
         initSource(props);
 
-        Connection conn = template.connect(properties);
+        Connection conn = template.connect(db_input_properties.getConnectionProperties());
 
         try {
             dropTestTable(conn);
@@ -85,11 +84,13 @@ public class OracleTestCase {
         properties.connection.setValue("dbschema", props.getProperty("dbschema"));
         properties.connection.userPassword.setValue("userId", props.getProperty("userId"));
         properties.connection.userPassword.setValue("password", props.getProperty("password"));
-
+        
+        properties.schema.schema.setValue(createTestSchema());
+        
         properties.setValue("tablename", props.getProperty("tablename"));
         properties.setValue("sql", props.getProperty("sql"));
 
-        OracleTestCase.properties = properties.getConnectionProperties();
+        OracleTestCase.db_input_properties = properties;
 
         source = (BoundedSource) ((org.talend.components.api.component.InputComponentDefinition) definition).getRuntime();
         source.initialize(null, properties);
@@ -97,7 +98,7 @@ public class OracleTestCase {
 
     @AfterClass
     public static void destory() throws Exception {
-        properties = null;
+        db_input_properties = null;
         source = null;
         template = null;
     }
@@ -133,14 +134,6 @@ public class OracleTestCase {
         testMetadata(columns);
     }
 
-    @Test
-    public void testGetPossibleSchemaFromProperties() throws Exception {
-        Schema schema = source.getPossibleSchemaFromProperties(null);
-        assertEquals("TEST", schema.getName());
-        List<Field> columns = schema.getFields();
-        testMetadata(columns);
-    }
-
     private void testMetadata(List<Field> columns) {
         Schema columnSchema = columns.get(0).schema().getTypes().get(0);
 
@@ -163,13 +156,6 @@ public class OracleTestCase {
         assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
         assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
         assertEquals(null, columnSchema.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
-    }
-
-    @Test
-    public void testGetSchemaFromProperties() throws Exception {
-        Schema schema = source.getSchemaFromProperties(null);
-        assertEquals("EmptyRecord", schema.getName());
-        assertEquals(Schema.Type.RECORD, schema.getType());
     }
 
     @Test
@@ -207,13 +193,9 @@ public class OracleTestCase {
     @Test
     public void testType() throws Exception {
         Reader reader = source.createReader(null);
-
-        //Schema designSchema = source.getSchemaFromProperties(null);
-        Schema designSchema = createTestSchema();
-        Schema runtimeSchema = RuntimeHelper.resolveSchema(null, source, designSchema);
-
+        
         IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> factory = null;
-        Talend6OutgoingSchemaEnforcer current = new Talend6OutgoingSchemaEnforcer(designSchema, false);
+        Talend6OutgoingSchemaEnforcer current = new Talend6OutgoingSchemaEnforcer(db_input_properties.getSchemas().get(0), false);
 
         for (boolean available = reader.start(); available; available = reader.advance()) {
             if (factory == null)
@@ -228,7 +210,7 @@ public class OracleTestCase {
         }
     }
 
-    private Schema createTestSchema() {
+    private static Schema createTestSchema() {
         return SchemaBuilder.builder().record("TEST").fields().name("ID").type().nullable().intType().noDefault().name("NAME")
                 .type().nullable().stringType().noDefault().endRecord();
     }
