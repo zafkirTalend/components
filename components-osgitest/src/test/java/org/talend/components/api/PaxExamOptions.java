@@ -26,13 +26,15 @@ public class PaxExamOptions {
     /**
      * 
      */
-    private static final String DAIKON_VERSION = "0.6.0-SNAPSHOT";
+    private static final String DAIKON_VERSION = "0.7.0-SNAPSHOT";
 
-    private static final String COMPONENTS_VERSION = "0.5.0-SNAPSHOT";
+    private static final String COMPONENTS_VERSION = "0.6.0-SNAPSHOT";
 
     private static final String APACHE_KARAF_AID = "apache-karaf";
 
     private static final String ORG_APACHE_KARAF_GID = "org.apache.karaf";
+
+    static String localRepo = System.getProperty("maven.repo.local", "");
 
     public static Option[] getOptions() {
         return options(mavenBundle("org.apache.felix", "org.apache.felix.scr"), //
@@ -74,7 +76,8 @@ public class PaxExamOptions {
                 new DefaultCompositeOption(new JUnitBundlesOption(), systemProperty("pax.exam.invoker").value("junit"),
                         bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link")),
                 cleanCaches() //
-                , frameworkProperty("org.osgi.framework.system.packages.extra").value("sun.misc")
+                , frameworkProperty("org.osgi.framework.system.packages.extra").value("sun.misc"),
+                when(localRepo.length() > 0).useOptions(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo))
         // ,vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5010"), systemTimeout(0)//
         );
     }

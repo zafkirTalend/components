@@ -39,6 +39,8 @@ public class SalesforceConnectionProperties extends ComponentProperties
 
     public static final String OAUTH_URL = "https://login.salesforce.com/services/oauth2";
 
+    public Property endpoint = (Property)newString("endpoint").setRequired();
+
     public static final String FORM_WIZARD = "Wizard";
 
     //
@@ -60,7 +62,9 @@ public class SalesforceConnectionProperties extends ComponentProperties
 
     public Property timeout = newInteger("timeout"); //$NON-NLS-1$
 
-    public Property httpTraceMessage = newString("httpTraceMessage"); //$NON-NLS-1$
+    public Property httpTraceMessage = newBoolean("httpTraceMessage"); //$NON-NLS-1$
+
+    public Property httpChunked = newBoolean("httpChunked"); //$NON-NLS-1$
 
     public Property clientId = newString("clientId"); //$NON-NLS-1$
 
@@ -91,10 +95,18 @@ public class SalesforceConnectionProperties extends ComponentProperties
     }
 
     @Override
-    public void setupLayout() {
-        super.setupLayout();
+    public void setupProperties() {
+        super.setupProperties();
 
         loginType.setValue(LOGIN_BASIC);
+        endpoint.setValue(URL);
+        timeout.setValue(60000);
+
+    }
+
+    @Override
+    public void setupLayout() {
+        super.setupLayout();
 
         Form wizardForm = new Form(this, FORM_WIZARD);
         wizardForm.addRow(name);
@@ -110,9 +122,11 @@ public class SalesforceConnectionProperties extends ComponentProperties
         mainForm.addRow(userPassword.getForm(Form.MAIN));
 
         Form advancedForm = new Form(this, Form.ADVANCED);
+        advancedForm.addRow(endpoint);
         advancedForm.addRow(bulkConnection);
         advancedForm.addRow(needCompression);
         advancedForm.addRow(httpTraceMessage);
+        advancedForm.addRow(httpChunked);
         advancedForm.addRow(clientId);
         advancedForm.addRow(timeout);
         advancedForm.addRow(proxy.getForm(Form.MAIN));

@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforcebulkexec;
 
+import aQute.bnd.annotation.component.Component;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.Connector;
@@ -25,13 +26,11 @@ import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.runtime.SalesforceSource;
 
-import aQute.bnd.annotation.component.Component;
-
 @Component(name = Constants.COMPONENT_BEAN_PREFIX
         + TSalesforceBulkExecDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceBulkExecDefinition extends SalesforceDefinition implements InputComponentDefinition {
 
-    public static final String COMPONENT_NAME = "tSalesforceBulkExecNew"; //$NON-NLS-1$
+    public static final String COMPONENT_NAME = "tSalesforceBulkExec"; //$NON-NLS-1$
 
     public TSalesforceBulkExecDefinition() {
         super(COMPONENT_NAME);

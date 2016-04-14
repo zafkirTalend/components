@@ -12,30 +12,39 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceoutputbulkexec;
 
-import static org.talend.daikon.properties.presentation.Widget.*;
-
-import org.talend.components.salesforce.SalesforceBulkProperties;
-import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.properties.VirtualComponentProperties;
+import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecProperties;
+import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkProperties;
 import org.talend.daikon.properties.presentation.Form;
 
-public class TSalesforceOutputBulkExecProperties extends TSalesforceOutputProperties {
+public class TSalesforceOutputBulkExecProperties extends TSalesforceBulkExecProperties implements VirtualComponentProperties {
 
     public TSalesforceOutputBulkExecProperties(String name) {
         super(name);
     }
 
-    @Override
-    public void setupProperties() {
-        super.setupProperties();
-        TSalesforceOutputProperties.setupUpsertRelation(upsertRelation, TSalesforceOutputProperties.POLY);
-    }
-
-    public SalesforceBulkProperties bulkProperties = new SalesforceBulkProperties("bulkProperties");
+    public TSalesforceOutputBulkProperties outputBulkProperties = new TSalesforceOutputBulkProperties("outputBulkProperties");
 
     @Override
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = getForm(Form.MAIN);
-        mainForm.addRow(widget(bulkProperties.getForm(Form.MAIN).setName("bulkProperties")));
+        mainForm.addRow(outputBulkProperties.getForm(Form.REFERENCE));
+
+    }
+
+    @Override
+    public ComponentProperties getInputComponentProperties() {
+        outputBulkProperties.schema.schema.setValue(module.schema.schema.getValue());
+        outputBulkProperties.bulkFilePath.setValue(bulkFilePath.getValue());
+        return outputBulkProperties;
+    }
+
+    @Override
+    public ComponentProperties getOutputComponentProperties() {
+        TSalesforceBulkExecProperties bulkExecProperties = new TSalesforceBulkExecProperties("bulkExecProperties");
+        bulkExecProperties.copyValuesFrom(this);
+        return bulkExecProperties;
     }
 }
