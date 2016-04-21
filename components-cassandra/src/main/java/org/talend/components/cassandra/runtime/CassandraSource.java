@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.cassandra.input.TCassandraInputProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,6 @@ public class CassandraSource extends CassandraSourceOrSink implements BoundedSou
 
     @Override
     public BoundedReader createReader(RuntimeContainer container) {
-        return null;
+        return new CassandraReader(container, this, (TCassandraInputProperties)properties);
     }
 }

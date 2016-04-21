@@ -3,12 +3,15 @@ package org.talend.components.cassandra;
 import org.apache.avro.Schema;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.HasSchemaProperty;
+import org.talend.components.cassandra.runtime.CassandraSourceOrSink;
 import org.talend.components.common.SchemaProperties;
+import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,14 +37,14 @@ public class CassandraSchemaProperties extends ComponentProperties implements Ha
     public SchemaProperties schema = new SchemaProperties("schema");
 
     @Override
-    public void setupProperties(){
+    public void setupProperties() {
         super.setupProperties();
         //FIXME what's the meaning of setTaggedValue
         //schema.schema.setTaggedValue(StudioConstants.CONNECTOR_TYPE_SCHEMA_KEY, Connector.ConnectorType.FLOW);
     }
 
     @Override
-    public void setupLayout(){
+    public void setupLayout() {
         super.setupLayout();
         Form schemaForm = new Form(this, Form.MAIN);
         schemaForm.addRow(Widget.widget(keyspace).setWidgetType(Widget.WidgetType.NAME_SELECTION_AREA));
@@ -56,7 +59,38 @@ public class CassandraSchemaProperties extends ComponentProperties implements Ha
     }
 
     public ValidationResult beforeKeyspace() {
-        return null;
+        CassandraSourceOrSink cassandraSourceOrSink = new CassandraSourceOrSink();
+        cassandraSourceOrSink.initialize(null, connectionProperties);
+        try {
+            List<NamedThing> keyspaceNames = cassandraSourceOrSink.getKeyspaceNames(null);
+            keyspace.setPossibleValues(keyspaceNames);
+        } catch (IOException e) {
+            return new ValidationResult().setStatus(ValidationResult.Result.ERROR).setMessage(e.getMessage());
+        }
+        return ValidationResult.OK;
+    }
+
+    public ValidationResult beforeColumnFamily() {
+        CassandraSourceOrSink cassandraSourceOrSink = new CassandraSourceOrSink();
+        cassandraSourceOrSink.initialize(null, connectionProperties);
+        try {
+            List<NamedThing> tableNames = cassandraSourceOrSink.getTableNames(null, keyspace.getStringValue());
+            columnFamily.setPossibleValues(tableNames);
+        } catch (IOException e) {
+            return new ValidationResult().setStatus(ValidationResult.Result.ERROR).setMessage(e.getMessage());
+        }
+        return ValidationResult.OK;
+    }
+
+    public ValidationResult afterColumnFamily() {
+        CassandraSourceOrSink cassandraSourceOrSink = new CassandraSourceOrSink();
+        cassandraSourceOrSink.initialize(null, connectionProperties);
+        try {
+            schema.schema.setValue(cassandraSourceOrSink.getSchema(null, keyspace.getStringValue(), columnFamily.getStringValue()));
+        } catch (IOException e) {
+            return new ValidationResult().setStatus(ValidationResult.Result.ERROR).setMessage(e.getMessage());
+        }
+        return ValidationResult.OK;
     }
 
     @Override

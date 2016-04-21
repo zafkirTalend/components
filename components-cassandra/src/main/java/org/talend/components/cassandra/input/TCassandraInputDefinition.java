@@ -1,4 +1,4 @@
-package org.talend.components.cassandra.tcassandrainput;
+package org.talend.components.cassandra.input;
 
 import aQute.bnd.annotation.component.Component;
 import org.talend.components.api.Constants;
@@ -22,8 +22,8 @@ public class TCassandraInputDefinition extends CassandraDefinition implements In
 
         setConnectors(new Connector(Connector.ConnectorType.FLOW, 0, 1));
         //FIXME what's the default value of these connector max/min for in/out and if we don't define what's the value, and how to unlimited
-        setTriggers(new Trigger(Trigger.TriggerType.ITERATE, 1, 1), new Trigger(Trigger.TriggerType.SUBJOB_OK, 1, 0),
-            new Trigger(Trigger.TriggerType.SUBJOB_ERROR, 1, 0));
+        setTriggers(new Trigger(Trigger.TriggerType.ITERATE, 1, 0), new Trigger(Trigger.TriggerType.SUBJOB_OK, 1, 1),
+            new Trigger(Trigger.TriggerType.SUBJOB_ERROR, 1, 1));
     }
 
     @Override

@@ -1,9 +1,6 @@
 package org.talend.components.cassandra.runtime;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.exceptions.AuthenticationException;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import org.apache.avro.Schema;
@@ -42,6 +39,7 @@ public class CassandraSourceOrSink implements SourceOrSink {
         return ValidationResult.OK;
     }
 
+    //FIXME can it be connection pool?
     protected Session connect(RuntimeContainer container) throws IOException {
         String referencedComponentId = properties.getConnectionProperties().getReferencedComponentId();
         if (referencedComponentId != null) {
@@ -53,13 +51,13 @@ public class CassandraSourceOrSink implements SourceOrSink {
             }
         }
         try {
-            return createCluster(container).connect();
-        }catch (NoHostAvailableException| IllegalStateException| AuthenticationException ex){
+            return getCluster(container).connect();
+        } catch (NoHostAvailableException | IllegalStateException | AuthenticationException ex) {
             throw new IOException(ex.getMessage());
         }
     }
 
-    protected Cluster createCluster(RuntimeContainer container) {
+    private Cluster getCluster(RuntimeContainer container) {
         CassandraConnectionProperties connProps = properties.getConnectionProperties();
         Cluster.Builder clusterBuilder = Cluster.builder()
                 .addContactPoints(connProps.host.getStringValue().split(","))
@@ -70,24 +68,49 @@ public class CassandraSourceOrSink implements SourceOrSink {
         return clusterBuilder.build();
     }
 
-    private List<KeyspaceMetadata> getKeyspaces(RuntimeContainer container){
-        Metadata metadata = createCluster(container).getMetadata();
+    private List<KeyspaceMetadata> getKeyspaces(RuntimeContainer container) {
+        Metadata metadata = getCluster(container).getMetadata();
         return metadata.getKeyspaces();
     }
 
     public List<NamedThing> getKeyspaceNames(RuntimeContainer container) throws IOException {
-        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
         List<NamedThing> ksNames = new ArrayList<>();
+        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
         for (KeyspaceMetadata keyspace : keyspaces) {
-            ksNames.add(new SimpleNamedThing(keyspace.getName(),keyspace.getName()));
+            ksNames.add(new SimpleNamedThing(keyspace.getName(), keyspace.getName()));
         }
         return ksNames;
     }
 
+    private List<TableMetadata> getTables(RuntimeContainer container, String keyspaceName) {
+        List<TableMetadata> tables = new ArrayList<>();
+        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
+        for (KeyspaceMetadata keyspace : keyspaces) {
+            if (keyspaceName.equals(keyspace.getName())) {
+                for (TableMetadata table : keyspace.getTables()) {
+                    tables.add(table);
+                }
+            }
+        }
+        return tables;
+    }
+
+    public List<NamedThing> getTableNames(RuntimeContainer container, String keyspaceName) throws IOException {
+        List<NamedThing> tableNames = new ArrayList<>();
+        List<TableMetadata> tables = getTables(container, keyspaceName);
+        for (TableMetadata table : tables) {
+            tableNames.add(new SimpleNamedThing(table.getName(), table.getName()));
+        }
+        return tableNames;
+    }
+
+    public Schema getSchema(RuntimeContainer container, String keyspaceName, String tableName) throws IOException {
+        TableMetadata table = getCluster(container).getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+        return CassandraAvroRegistry.get().inferSchema(table);
+    }
+
     @Override
     public List<NamedThing> getSchemaNames(RuntimeContainer container) throws IOException {
-        List<KeyspaceMetadata> keyspaces = getKeyspaces(container);
-
         return null;
     }
 
