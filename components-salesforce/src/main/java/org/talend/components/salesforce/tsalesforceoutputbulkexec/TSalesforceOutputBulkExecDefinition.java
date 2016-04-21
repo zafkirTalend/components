@@ -16,6 +16,7 @@ import org.talend.components.api.Constants;
 import org.talend.components.api.component.*;
 import org.talend.components.api.component.Connector.ConnectorType;
 import org.talend.components.api.component.Trigger.TriggerType;
+import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 
@@ -28,7 +29,7 @@ import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputB
         + TSalesforceOutputBulkExecDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSalesforceOutputBulkExecDefinition extends SalesforceDefinition implements VirtualComponentDefinition {
 
-    public static final String COMPONENT_NAME = "tSalesforceOutputBulkExecNew"; //$NON-NLS-1$
+    public static final String COMPONENT_NAME = "tSalesforceOutputBulkExec"; //$NON-NLS-1$
 
     public TSalesforceOutputBulkExecDefinition() {
         super(COMPONENT_NAME);

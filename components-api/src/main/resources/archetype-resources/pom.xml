@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.talend.components</groupId>
         <artifactId>components-parent</artifactId>
-        <version>0.5.0-SNAPSHOT</version>
+        <version>0.6.0-SNAPSHOT</version>
     </parent>
 
     <name>Components - ${componentName}</name>
@@ -13,9 +13,15 @@
     <artifactId>${artifactId}</artifactId>
     <version>${version}</version>
     <properties>
-        <components.api.version>0.5.0-SNAPSHOT</components.api.version>
+        <components.api.version>0.6.0-SNAPSHOT</components.api.version>
     </properties>
     <packaging>bundle</packaging>
+    <repositories>
+        <repository>
+            <id>snapshots</id>
+            <url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
+        </repository>
+    </repositories>
     <dependencies>
 
         <!-- APIs for all Components -->
@@ -51,9 +57,7 @@
             <artifactId>spring-boot-starter</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
-
     <build>
         <plugins>
             <plugin>

@@ -25,6 +25,15 @@ public class SalesforceServerTimeStampReaderTestIT extends SalesforceTestBase {
 
     @Test
     public void testGetServerTimestamp() throws Throwable {
+        Calendar date = getServerTimestamp();
+        // TODO we need to make sure about the server and local time zone are the same.
+        Calendar now = Calendar.getInstance();
+        assertEquals(now.get(Calendar.YEAR), date.get(Calendar.YEAR));
+        assertEquals(now.get(Calendar.MONTH), date.get(Calendar.MONTH));
+        assertEquals(now.get(Calendar.DATE), date.get(Calendar.DATE));
+    }
+
+    public Calendar getServerTimestamp() throws Throwable {
         TSalesforceGetServerTimestampProperties props = (TSalesforceGetServerTimestampProperties) new TSalesforceGetServerTimestampProperties(
                 "foo").init();
         setupProps(props.connection, !ADD_QUOTES);
@@ -34,16 +43,7 @@ public class SalesforceServerTimeStampReaderTestIT extends SalesforceTestBase {
             assertFalse(bounderReader.advance());
             Object row = bounderReader.getCurrent();
             assertNotNull(row);
-            // TODO we need to make sure about the server and local time zone are the same.
-            Calendar now = Calendar.getInstance();
-            Calendar date = (Calendar) row;
-            long nowMillis = now.getTimeInMillis();
-            long dateMillis = date.getTimeInMillis();
-            System.out.println("now: " + nowMillis);
-            System.out.println(dateMillis);
-            long delta = nowMillis - dateMillis;
-            assertTrue(Math.abs(delta) < 50000);
-
+            return (Calendar) row;
         } finally {
             bounderReader.close();
         }
