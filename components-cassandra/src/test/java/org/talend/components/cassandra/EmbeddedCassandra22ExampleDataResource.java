@@ -6,11 +6,11 @@ import com.google.common.collect.Table;
 /**
  * Provides an Cassandra database for JUnit tests.
  */
-public class EmbeddedCassandraExampleDataResource extends EmbeddedCassandraResource {
+public class EmbeddedCassandra22ExampleDataResource extends EmbeddedCassandraResource {
 
     /** All of the columns in the example_src table. */
-    public static final String[] sExampleSrcColumns = { "key1", "st_ascii", "st_bigint", "st_blob", "st_boolean", "st_decimal",
-            "st_double", "st_float", "st_inet", "st_int", "st_text", "st_timestamp", "st_timeuuid", "st_uuid", "st_varchar",
+    public static final String[] sExampleSrcColumns = { "key1", "st_ascii", "st_bigint", "st_blob", "st_boolean","st_date", "st_decimal",
+            "st_double", "st_float", "st_inet", "st_int","st_smallint", "st_text","st_time", "st_timestamp", "st_timeuuid", "st_uuid","st_tinyint", "st_varchar",
             "st_varint", "st_list", "st_map", "st_set", "st_tuple", "st_udt" };
 
     /** All of the row keys in the example_src table. */
@@ -28,11 +28,11 @@ public class EmbeddedCassandraExampleDataResource extends EmbeddedCassandraResou
 
     private final String mTableDst;
 
-    public EmbeddedCassandraExampleDataResource(String keySpace) {
+    public EmbeddedCassandra22ExampleDataResource(String keySpace) {
         this(keySpace, "example_src", "example_counter", "example_dst");
     }
 
-    public EmbeddedCassandraExampleDataResource(String keySpace, String tableSrc, String tableCounter, String tableDst) {
+    public EmbeddedCassandra22ExampleDataResource(String keySpace, String tableSrc, String tableCounter, String tableDst) {
         super(keySpace);
         mTableSrc = tableSrc.startsWith("\"") ? tableSrc : tableSrc.toLowerCase();
         mTableCounter = tableCounter.startsWith("\"") ? tableCounter : tableCounter.toLowerCase();

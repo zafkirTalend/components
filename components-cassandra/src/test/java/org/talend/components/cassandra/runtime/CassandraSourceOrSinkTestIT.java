@@ -5,23 +5,18 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.cassandra.CassandraConnectionProperties;
+import org.talend.components.cassandra.CassandraTestBase;
 import org.talend.components.cassandra.EmbeddedCassandraExampleDataResource;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
-/**
- * Created by bchen on 16-4-14.
- */
-public class CassandraSourceOrSinkTest {
-    public static final String KS_NAME = CassandraSourceOrSinkTest.class.getSimpleName().toLowerCase();
+public class CassandraSourceOrSinkTestIT extends CassandraTestBase{
+    public static final String KS_NAME = CassandraSourceOrSinkTestIT.class.getSimpleName().toLowerCase();
     @Rule
     public EmbeddedCassandraExampleDataResource mCass = new EmbeddedCassandraExampleDataResource(KS_NAME);
     private CassandraConnectionProperties connProps;
@@ -50,17 +45,6 @@ public class CassandraSourceOrSinkTest {
         assertThat(cassandraSourceOrSink.validate(null), is(ValidationResult.OK));
         cassandraSourceOrSink.initialize(null, wrongConnProps);
         assertThat(cassandraSourceOrSink.validate(null).getStatus(), is(ValidationResult.Result.ERROR));
-    }
-
-    /**
-     * equals method of NamedThing is not compare the content
-     */
-    private List<String> namedThingToString(List<NamedThing> names) {
-        List<String> strs = new ArrayList<>();
-        for (NamedThing keyspaceName : names) {
-            strs.add(keyspaceName.getName());
-        }
-        return strs;
     }
 
     @Test

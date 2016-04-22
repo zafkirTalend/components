@@ -198,7 +198,7 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
             form.getWidget(timestamp.getName()).setVisible(form.getWidget(usingTimestamp.getName()).isVisible() && usingTimestamp.getBooleanValue());
             form.getWidget(ifCondition.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()) || (ACTION_DELETE.equals(dataAction.getValue()) && !deleteIfExists.getBooleanValue()));
             form.getWidget(assignmentOperation.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()));
-            //FIXME how to hidden keyColumn in assignmentOperation when operation is p/k,waiting for TableComponentProperties
+            //FIXME how to hidden keyColumn in assignmentOperation when operation is p/k,waiting for studio support ComponentProperties for table widget
             form.getWidget(deleteColumnByPositionKey.getName()).setVisible(ACTION_DELETE.equals(dataAction.getValue()));
             form.getWidget(rowKeyInList.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()) || ACTION_DELETE.equals(dataAction.getValue()));
         }

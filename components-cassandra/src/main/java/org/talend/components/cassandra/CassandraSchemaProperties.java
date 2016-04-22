@@ -32,8 +32,10 @@ public class CassandraSchemaProperties extends ComponentProperties implements Ha
 
     private CassandraConnectionProperties connectionProperties;
 
-    public Property keyspace = newEnum("keyspace");
-    public Property columnFamily = newEnum("columnFamily");
+    public static final String KEYSPACE = "keyspace";
+    public Property keyspace = newEnum(KEYSPACE);
+    public static final String COLUMN_FAMILY = "columnFamily";
+    public Property columnFamily = newEnum(COLUMN_FAMILY);
     public SchemaProperties schema = new SchemaProperties("schema");
 
     @Override

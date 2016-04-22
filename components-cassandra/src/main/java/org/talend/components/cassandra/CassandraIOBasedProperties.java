@@ -19,20 +19,14 @@ public class CassandraIOBasedProperties extends ComponentProperties implements C
         super(name);
     }
 
-    private CassandraConnectionProperties connectionProperties;
-    private CassandraSchemaProperties schemaProperties;
+    //TODO(bchen) want it private, but can't
+    public CassandraConnectionProperties connectionProperties = new CassandraConnectionProperties("connectionProperties");
+    public CassandraSchemaProperties schemaProperties = new CassandraSchemaProperties("schemaProperties", connectionProperties);
 
     public CassandraSchemaProperties getSchemaProperties() {
         return schemaProperties;
     }
 
-    @Override
-    public void setupProperties() {
-        super.setupProperties();
-        // Allow for subclassing
-        connectionProperties = new CassandraConnectionProperties("connection");
-        schemaProperties = new CassandraSchemaProperties("table", connectionProperties);
-    }
 
     @Override
     public void setupLayout() {

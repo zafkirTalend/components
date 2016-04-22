@@ -26,12 +26,14 @@ public class CassandraReader extends AbstractBoundedReader<IndexedRecord> {
 
     @Override
     public boolean start() throws IOException {
-        Session session = ((CassandraSource) getCurrentSource()).connect(container);
-        String keyspace = properties.getSchemaProperties().keyspace.getStringValue();
-        if (keyspace != null) {
-            session.execute("USE " + keyspace);
+        if (rs == null) {
+            Session session = ((CassandraSource) getCurrentSource()).connect(container);
+            String keyspace = properties.getSchemaProperties().keyspace.getStringValue();
+            if (keyspace != null) {
+                session.execute("USE " + keyspace);
+            }
+            rs = session.execute(properties.query.getStringValue());
         }
-        rs = session.execute(properties.query.getStringValue());
         current = rs.one();
         return current != null;
     }

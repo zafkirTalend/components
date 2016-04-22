@@ -31,9 +31,9 @@ public class CassandraConnectionProperties extends ComponentProperties implement
 
     public Property version = newEnum("version", V_CASSANDRA_2_0, V_CASSANDRA_3_0);
 
-    public Property host = newString("host");
+    public Property host = newString("host", "localhost");
 
-    public Property port = newString("port");
+    public Property port = newString("port", "9042");
 
     public Property needAuth = newBoolean("needAuth", false);
 
@@ -46,9 +46,6 @@ public class CassandraConnectionProperties extends ComponentProperties implement
     @Override
     public void setupLayout() {
         super.setupLayout();
-
-        host.setValue("localhost");
-        port.setValue("9042");
 
         Form wizardForm = new Form(this, "Wizard");
         wizardForm.addRow((Property) newString("name").setRequired());
@@ -90,7 +87,7 @@ public class CassandraConnectionProperties extends ComponentProperties implement
         return null;
     }
 
-    public void afterVersion() {
+    public void afterNeedAuth() {
         refreshLayout(getForm(Form.MAIN));
         refreshLayout(getForm("Wizard"));
     }
@@ -107,21 +104,19 @@ public class CassandraConnectionProperties extends ComponentProperties implement
         boolean useOtherConnection = refComponentIdValue != null && refComponentIdValue.startsWith(TCassandraConnectionDefinition.COMPONENT_NAME);
         if (form.getName().equals(Form.MAIN) || form.getName().equals("Wizard")) {
             if (useOtherConnection) {
-                if (useOtherConnection) {
-                    form.getWidget(version.getName()).setVisible(false);
-                    form.getWidget(host.getName()).setVisible(false);
-                    form.getWidget(port.getName()).setVisible(false);
-                    form.getWidget(needAuth.getName()).setVisible(false);
-                    form.getWidget(userPassword.getName()).setVisible(false);
+                form.getWidget(version.getName()).setVisible(false);
+                form.getWidget(host.getName()).setVisible(false);
+                form.getWidget(port.getName()).setVisible(false);
+                form.getWidget(needAuth.getName()).setVisible(false);
+                form.getWidget(userPassword.getName()).setVisible(false);
+            } else {
+                form.getWidget(version.getName()).setVisible(true);
+                form.getWidget(host.getName()).setVisible(true);
+                form.getWidget(port.getName()).setVisible(true);
+                if (needAuth.getBooleanValue()) {
+                    form.getWidget(userPassword.getName()).setVisible(true);
                 } else {
-                    form.getWidget(version.getName()).setVisible(true);
-                    form.getWidget(host.getName()).setVisible(true);
-                    form.getWidget(port.getName()).setVisible(true);
-                    if (needAuth.getBooleanValue()) {
-                        form.getWidget(userPassword.getName()).setVisible(true);
-                    } else {
-                        form.getWidget(userPassword.getName()).setVisible(false);
-                    }
+                    form.getWidget(userPassword.getName()).setVisible(false);
                 }
             }
         }
