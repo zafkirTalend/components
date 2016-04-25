@@ -38,6 +38,12 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
     }
 
     @Override
+    public String[] getFamilies() {
+        // Subclass me
+        return new String[]{};
+    }
+
+    @Override
     public Connector[] getConnectors() {
         return connectors;
     }
