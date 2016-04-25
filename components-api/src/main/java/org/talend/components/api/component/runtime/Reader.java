@@ -1,8 +1,9 @@
 package org.talend.components.api.component.runtime;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.NoSuchElementException;
+
+import org.joda.time.Instant;
 
 /**
  * The interface that readers of custom input sources must implement.
@@ -54,8 +55,6 @@ import java.util.NoSuchElementException;
  *     reader.close();
  *   }
  * </pre>
- *
- * <p>Note: this interface is a work-in-progress and may change.
  *
  * <p>All {@code Reader} functions except {@link #getCurrentSource} do not need to be thread-safe;
  * they may only be accessed by a single thread at once. However, {@link #getCurrentSource} needs

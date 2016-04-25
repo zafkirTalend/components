@@ -13,13 +13,10 @@
 package org.talend.components.api.component;
 
 /**
- * A trigger links two components together by a logical relationship. If the input component fulfill the condition, the
- * output component will be executed. They can use the context of the input component but will not transmit data to the
- * output component.
- *
- * Trigger connections are used to define the different subjobs of a job.
+ * A trigger links two components together by a logical relationship. If the input component fulfills a condition, the
+ * output component will be executed.
  */
-public class Trigger extends AbstractComponentConnection {
+public class Trigger {
 
     public enum TriggerType {
         ITERATE,
@@ -27,15 +24,19 @@ public class Trigger extends AbstractComponentConnection {
         SUBJOB_ERROR
     }
 
+    private int maxInput;
+
+    private int maxOutput;
+
     protected TriggerType type;
 
     public Trigger(TriggerType type) {
-        super(1, 1);
-        this.type = type;
+        this(type, 1, 1);
     }
 
     public Trigger(TriggerType type, int maxInput, int maxOutput) {
-        super(maxInput, maxOutput);
+        this.maxInput = maxInput;
+        this.maxOutput = maxOutput;
         this.type = type;
     }
 
@@ -43,8 +44,12 @@ public class Trigger extends AbstractComponentConnection {
         return type;
     }
 
-    public void setType(TriggerType type) {
-        this.type = type;
+    public int getMaxInput() {
+        return maxInput;
+    }
+
+    public int getMaxOutput() {
+        return maxOutput;
     }
 
 }

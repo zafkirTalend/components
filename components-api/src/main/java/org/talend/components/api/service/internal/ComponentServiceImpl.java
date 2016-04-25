@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -62,6 +63,7 @@ import org.talend.components.api.Constants;
 import org.talend.components.api.TopLevelDefinition;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.ComponentImageType;
+import org.talend.components.api.component.Connector;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.exception.error.ComponentsApiErrorCode;
 import org.talend.components.api.properties.ComponentProperties;
@@ -289,11 +291,16 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
     private Set<String> parseDependencies(InputStream depStream) throws IOException {
         Set<String> mvnUris = new HashSet<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(depStream, "UTF-8"));
-        reader.lines().filter(s -> StringUtils.countMatches(s, ":") > 3).//
-                filter(s -> !s.endsWith("test")).//
-                forEach(s -> mvnUris.add(parseMvnUri(s)));
-
-        ;
+        // java 8 version
+        // reader.lines().filter(line -> StringUtils.countMatches(line, ":") > 3).//
+        // filter(line -> !line.endsWith("test")).//
+        // forEach(line -> mvnUris.add(parseMvnUri(line)));
+        while (reader.ready()) {
+            String line = reader.readLine();
+            if ((StringUtils.countMatches(line, ":") > 3) && !line.endsWith("test")) {
+                mvnUris.add(parseMvnUri(line));
+            } // else not an expected dependencies so ignor it.
+        }
         return mvnUris;
     }
 
@@ -457,6 +464,22 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
             props.putAll(dominant);
         }
         return props;
+    }
+
+    @Override
+    public Schema getSchema(ComponentProperties cp, Connector connector, boolean isOutputConnection) {
+        return cp.getSchema(connector, isOutputConnection);
+    }
+
+    @Override
+    public Set<? extends Connector> getAvailableConnectors(ComponentProperties componentProperties,
+            Set<? extends Connector> connectedConnetor, boolean isOuput) {
+        return componentProperties.getAvailableConnectors(connectedConnetor, isOuput);
+    }
+
+    @Override
+    public void setSchema(ComponentProperties componentProperties, Connector connector, Schema schema, boolean isOuput) {
+        componentProperties.setConnectedSchema(connector, schema, isOuput);
     }
 
 }

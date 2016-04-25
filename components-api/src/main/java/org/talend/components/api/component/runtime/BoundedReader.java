@@ -12,8 +12,9 @@
  */
 package org.talend.components.api.component.runtime;
 
-import java.time.Instant;
 import java.util.NoSuchElementException;
+
+import org.joda.time.Instant;
 
 /**
  * A {@code Reader} that reads a bounded amount of input and supports some additional operations, such as progress
@@ -43,11 +44,6 @@ import java.util.NoSuchElementException;
  * {@link #splitAtFraction} may be called concurrently with {@link #advance} or {@link #start}. It is critical that
  * their interaction is implemented in a thread-safe way, otherwise data loss is possible.
  *
- * <p>
- * Sources which support dynamic work rebalancing should use {@link com.google.cloud.dataflow.sdk.io.range.RangeTracker}
- * to manage the (source-specific) range of positions that is being split. If your source supports dynamic work
- * rebalancing, please use that class to implement it if possible; if not possible, please contact the team at
- * <i>dataflow-feedback@google.com</i>.
  */
 public interface BoundedReader<T> extends Reader<T> {
 

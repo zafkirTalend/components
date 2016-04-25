@@ -24,28 +24,55 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractComponentDefinition extends AbstractTopLevelDefinition implements ComponentDefinition {
-
-    private Connector[] connectors;
+    
+    /**
+     * Component name.
+     * It is used to define component name, which will be displayed in Studio Palette
+     * Also it is used by bnd library to create OSGi bundle
+     */
+    private String componentName;
 
     private Trigger[] triggers;
-
-    public void setConnectors(Connector... conns) {
-        this.connectors = conns;
+    
+    /**
+     * Constructor sets component name
+     * 
+     * @param componentName component name
+     */
+    public AbstractComponentDefinition(String componentName) {
+        this.componentName = componentName;
     }
 
     public void setTriggers(Trigger... conns) {
         this.triggers = conns;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @return component name
+     */
+    @Override
+    public String getName() {
+        return componentName;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPngImagePath(ComponentImageType imageType) {
+        switch (imageType) {
+        case PALLETE_ICON_32X32:
+            return componentName + "_icon32.png";
+        }
+        return null;
+    }
+    
     @Override
     public String[] getFamilies() {
         // Subclass me
-        return new String[]{};
-    }
-
-    @Override
-    public Connector[] getConnectors() {
-        return connectors;
+        return new String[] {};
     }
 
     @Override
@@ -73,7 +100,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
                 return null;// TODO throw an exception
             } // else keep going
             Constructor<?> c = propertyClass.getConstructor(String.class);
-            compProp = (ComponentProperties) c.newInstance(new Object[]{"root"});
+            compProp = (ComponentProperties) c.newInstance(new Object[] { "root" });
         } catch (Exception e) {
             TalendRuntimeException.unexpectedException(e);
         }
@@ -119,8 +146,9 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
 
     @Override
     public boolean isStartable() {
-        if (this instanceof InputComponentDefinition)
+        if (this instanceof InputComponentDefinition) {
             return true;
+        }
         return false;
     }
 
@@ -158,9 +186,8 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
         return (Class<? extends ComponentProperties>[]) Array.newInstance(Class.class, 0);
     }
 
-
     public Class<? extends ComponentProperties>[] concatPropertiesClasses(Class<? extends ComponentProperties>[] first,
-                                                                          Class<? extends ComponentProperties>[] second) {
+            Class<? extends ComponentProperties>[] second) {
         Class<? extends ComponentProperties>[] result = Arrays.copyOf(first, first.length + second.length);
         System.arraycopy(second, 0, result, first.length, second.length);
         return result;
