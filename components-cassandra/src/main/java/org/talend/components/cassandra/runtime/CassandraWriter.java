@@ -50,9 +50,14 @@ public class CassandraWriter implements Writer<WriterResult> {
             cassandraBatchUtil = new CassandraBatchUtil(session.getCluster(), cqlManager.getKeyspace(), cqlManager.getTableName(), cqlManager.getValueColumns());
             newOne = false;
             batchStatement = new BatchStatement(BatchStatement.Type.UNLOGGED);
-        } else {
+        }
+        if(boundStatement == null){
+            //actually for batch mode, no need init BoundStatement here, but for boundStatementAdapterFactory, need
             boundStatement = new BoundStatement(preparedStatement);
         }
+        boundStatementAdapterFactory.setContainerTypeFromInstance(boundStatement);
+        CassandraAvroRegistry.get().buildAdaptersUsingDataType(boundStatementAdapterFactory, null);
+
     }
 
     @Override
@@ -72,8 +77,8 @@ public class CassandraWriter implements Writer<WriterResult> {
         if (adapterFactory == null) {
             adapterFactory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get().createAdapterFactory(object.getClass());
         }
-        boundStatementAdapterFactory.setContainerTypeFromInstance(boundStatement);
-        boundStatement = boundStatementAdapterFactory.convertToDatum((IndexedRecord) object);
+
+        boundStatement = boundStatementAdapterFactory.convertToDatum(adapterFactory.convertToAvro(object));
 
         if (useBatch) {
             currentKey = cassandraBatchUtil.getKey(boundStatement);

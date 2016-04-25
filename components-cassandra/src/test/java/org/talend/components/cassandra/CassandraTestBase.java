@@ -1,5 +1,6 @@
 package org.talend.components.cassandra;
 
+import org.apache.avro.SchemaBuilder;
 import org.junit.Rule;
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.properties.ComponentProperties;
@@ -12,7 +13,9 @@ import org.talend.components.cassandra.connection.TCassandraConnectionDefinition
 import org.talend.components.cassandra.input.TCassandraInputDefinition;
 import org.talend.components.cassandra.output.TCassandraOutputDefinition;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.service.PropertiesServiceTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,5 +68,18 @@ public class CassandraTestBase extends AbstractComponentTest {
             strs.add(keyspaceName.getName());
         }
         return strs;
+    }
+
+    protected void setupSchemaProps(CassandraIOBasedProperties props, boolean includeAllFields, String ks, String cf) throws Throwable {
+        initConnectionProps(props);
+        props.getSchemaProperties().keyspace.setValue(ks);
+        props.getSchemaProperties().columnFamily.setValue(cf);
+        if(includeAllFields){
+            props.getSchemaProperties().schema.schema.setValue(SchemaBuilder.builder().record("test")
+                    .prop(SchemaConstants.INCLUDE_ALL_FIELDS, "true").fields().endRecord());
+        }else {
+            Form schemaRefForm = props.getSchemaProperties().getForm(Form.REFERENCE);
+            PropertiesServiceTest.checkAndAfter(getComponentService(), schemaRefForm, CassandraSchemaProperties.COLUMN_FAMILY, schemaRefForm.getProperties());
+        }
     }
 }

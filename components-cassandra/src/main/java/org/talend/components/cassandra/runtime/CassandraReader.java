@@ -3,7 +3,6 @@ package org.talend.components.cassandra.runtime;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.cassandra.input.TCassandraInputProperties;
@@ -11,7 +10,7 @@ import org.talend.components.cassandra.input.TCassandraInputProperties;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
-public class CassandraReader extends AbstractBoundedReader<IndexedRecord> {
+public class CassandraReader extends AbstractBoundedReader<Row> {
 
     private TCassandraInputProperties properties;
 
@@ -44,7 +43,7 @@ public class CassandraReader extends AbstractBoundedReader<IndexedRecord> {
     }
 
     @Override
-    public IndexedRecord getCurrent() throws NoSuchElementException {
-        return CassandraAvroRegistry.get().createAdapterFactory(Row.class).convertToAvro(current);
+    public Row getCurrent() throws NoSuchElementException {
+        return current;
     }
 }
