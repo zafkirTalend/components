@@ -75,7 +75,7 @@ public class CassandraTestBase extends AbstractComponentTest {
         props.getSchemaProperties().keyspace.setValue(ks);
         props.getSchemaProperties().columnFamily.setValue(cf);
         if(includeAllFields){
-            props.getSchemaProperties().schema.schema.setValue(SchemaBuilder.builder().record("test")
+            props.getSchemaProperties().main.schema.setValue(SchemaBuilder.builder().record("test")
                     .prop(SchemaConstants.INCLUDE_ALL_FIELDS, "true").fields().endRecord());
         }else {
             Form schemaRefForm = props.getSchemaProperties().getForm(Form.REFERENCE);

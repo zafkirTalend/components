@@ -3,7 +3,6 @@ package org.talend.components.cassandra.connection;
 import aQute.bnd.annotation.component.Component;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.EndpointComponentDefinition;
 import org.talend.components.api.component.Trigger;
 import org.talend.components.api.component.runtime.SourceOrSink;
@@ -20,7 +19,6 @@ public class TCassandraConnectionDefinition extends CassandraDefinition implemen
 
     public TCassandraConnectionDefinition() {
         super(COMPONENT_NAME);
-        setConnectors(new Connector(Connector.ConnectorType.FLOW, 0, 0));
         setTriggers(new Trigger(Trigger.TriggerType.ITERATE, 1, 0), new Trigger(Trigger.TriggerType.SUBJOB_OK, 1, 1),
                 new Trigger(Trigger.TriggerType.SUBJOB_ERROR, 1, 1));
     }

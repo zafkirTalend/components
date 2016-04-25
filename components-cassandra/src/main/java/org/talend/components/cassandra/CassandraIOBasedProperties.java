@@ -1,14 +1,15 @@
 package org.talend.components.cassandra;
 
-import org.apache.avro.Schema;
-import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.component.Connector;
+import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.api.properties.ConnectionPropertiesProvider;
-import org.talend.components.api.properties.HasSchemaProperty;
+import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.daikon.properties.presentation.Form;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
-public class CassandraIOBasedProperties extends ComponentProperties implements ConnectionPropertiesProvider<CassandraConnectionProperties>, HasSchemaProperty {
+public class CassandraIOBasedProperties extends FixedConnectorsComponentProperties implements ConnectionPropertiesProvider<CassandraConnectionProperties> {
     /**
      * named constructor to be used is these properties are nested in other properties. Do not subclass this method for
      * initialization, use {@link #init()} instead.
@@ -23,10 +24,11 @@ public class CassandraIOBasedProperties extends ComponentProperties implements C
     public CassandraConnectionProperties connectionProperties = new CassandraConnectionProperties("connectionProperties");
     public CassandraSchemaProperties schemaProperties = new CassandraSchemaProperties("schemaProperties", connectionProperties);
 
+    protected transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "schemaProperties.main");
+
     public CassandraSchemaProperties getSchemaProperties() {
         return schemaProperties;
     }
-
 
     @Override
     public void setupLayout() {
@@ -42,12 +44,11 @@ public class CassandraIOBasedProperties extends ComponentProperties implements C
     }
 
     @Override
-    public List<Schema> getSchemas() {
-        return schemaProperties.getSchemas();
-    }
-
-    @Override
-    public void setSchemas(List<Schema> schemas) {
-        schemaProperties.setSchemas(schemas);
+    protected Set<PropertyPathConnector> getAllSchemaPropertiesConnectors(boolean isOutputConnection) {
+        if (isOutputConnection) {
+            return Collections.singleton(MAIN_CONNECTOR);
+        } else {
+            return Collections.EMPTY_SET;
+        }
     }
 }

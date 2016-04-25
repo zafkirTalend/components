@@ -110,7 +110,7 @@ class CQLManager {
         this.keyspace = this.props.getSchemaProperties().keyspace.getStringValue();
         this.tableName = this.props.getSchemaProperties().columnFamily.getStringValue();
         this.tableName = this.keyspace + "." + this.tableName;//FIXME(bchen) double quote around
-        createColumnList(this.props.getSchemas().get(0));
+        createColumnList(new Schema.Parser().parse(this.props.getSchemaProperties().main.schema.getStringValue()));
         this.valueColumns = collectValueColumns();
     }
 

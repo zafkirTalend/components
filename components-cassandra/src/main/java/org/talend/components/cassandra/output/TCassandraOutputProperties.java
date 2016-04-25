@@ -26,53 +26,54 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
 
     //TODO(bchen) be common?
     public static final String ACTION_NONE = "NONE";
+
     public static final String ACTION_DROP_CREATE = "DROP_CREATE";
     public static final String ACTION_CREATE = "CREATE";
     public static final String ACTION_CREATE_IF_NOT_EXISTS = "CREATE_IF_NOT_EXISTS";
     public static final String ACTION_DROP_IF_EXISTS_AND_CREATE = "DROP_IF_EXISTS_AND_CREATE";
     public static final String ACTION_TRUNCATE = "TRUNCATE";
-
     //TODO(bchen) any improvement for enum? how to set, how to get, how to check
     public Property actionOnKeyspace = newEnum("actionOnKeyspace", ACTION_NONE, ACTION_DROP_CREATE, ACTION_CREATE, ACTION_CREATE_IF_NOT_EXISTS, ACTION_DROP_IF_EXISTS_AND_CREATE);
 
     public static final String KS_REPLICA_NETWORK = "NetworkTopologyStrategy";
-    public static final String KS_REPLICA_SIMPLE = "SimpleStrategy";
 
+    public static final String KS_REPLICA_SIMPLE = "SimpleStrategy";
     public Property replicaStrategy = newEnum("replicaStrategy", KS_REPLICA_NETWORK, KS_REPLICA_SIMPLE);//SHOW_IF actionOnKeyspace != NONE
 
     public Property simpleReplicaNumber = newInteger("simpleReplicaNumber", 3); //SHOW_IF replica is simple
 
     public Property networkReplicaTable = new Property("networkReplicaTable");
+
     public Property datacenterName = newString("datacenterName");
     public Property replicaNumber = newInteger("replicaNumber", 3);
-
     public Property actionOnColumnFamily = newEnum("actionOnColumnFamily", ACTION_NONE, ACTION_DROP_CREATE, ACTION_CREATE, ACTION_CREATE_IF_NOT_EXISTS, ACTION_DROP_IF_EXISTS_AND_CREATE, ACTION_TRUNCATE);
 
     public static final String ACTION_INSERT = "INSERT";
+
     public static final String ACTION_UPDATE = "UPDATE";
     public static final String ACTION_DELETE = "DELETE";
     public Property dataAction = newEnum("dataAction", ACTION_INSERT, ACTION_UPDATE, ACTION_DELETE);
-
     public Property dieOnError = newBoolean("dieOnError", false);
 
     //Advanced setting
     public Property useUnloggedBatch = newBoolean("useUnloggedBatch", false);
-    public Property batchSize = newInteger("batchSize", 10000);
 
+    public Property batchSize = newInteger("batchSize", 10000);
     public Property insertIfNotExists = newBoolean("insertIfNotExists", false);
 
     public Property deleteIfExists = newBoolean("deleteIfExists", false);
 
     public Property usingTTL = newBoolean("usingTTL", false);
+
     public Property ttl = newEnum("ttl");
-
     public Property usingTimestamp = newBoolean("usingTimestamp", false);
+
     public Property timestamp = newEnum("timestamp");
-
     public Property ifCondition = new Property("ifCondition");
-    public Property ifConditionColumnName = newEnum("ifConditionColumnName");
 
+    public Property ifConditionColumnName = newEnum("ifConditionColumnName");
     public Property assignmentOperation = new Property("assignmentOperation");
+
     public Property assignmentOperationColumnName = newEnum("assignmentOperationColumnName");
     public static final String APPEND = "+v";
     public static final String PREPEND = "v+";
@@ -80,11 +81,11 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
     public static final String POSITION_OR_KEY = "p/k";
     public Property operation = newEnum("operation", APPEND, PREPEND, MINUS, POSITION_OR_KEY);
     public Property keyColumn = newEnum("keyColumn");
-
     public Property deleteColumnByPositionKey = new Property("deleteColumnByPositionKey");
-    public Property deleteColumnByPositionKeyColumnName = newEnum("deleteColumnByPositionKeyColumnName");
 
+    public Property deleteColumnByPositionKeyColumnName = newEnum("deleteColumnByPositionKeyColumnName");
     public Property rowKeyInList = new Property("rowKeyInList");
+
     public Property rowKeyInListColumnName = newEnum("rowKeyInListColumnName");
 
     @Override
@@ -116,13 +117,10 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
 
     private List<String> getColumnNames() {
         List<String> columnNames = new ArrayList<>();
-        List<Schema> schemas = getSchemas();
-        if (schemas.size() == 1) {
-            Schema schema = schemas.get(0);
-            List<Schema.Field> fields = schema.getFields();
-            for (Schema.Field field : fields) {
-                columnNames.add(field.name());
-            }
+        Schema schema = new Schema.Parser().parse(getSchemaProperties().main.schema.getStringValue());
+        List<Schema.Field> fields = schema.getFields();
+        for (Schema.Field field : fields) {
+            columnNames.add(field.name());
         }
         return columnNames;
     }

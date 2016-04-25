@@ -30,7 +30,7 @@ public class CassandraAvroRegistryTestIT extends CassandraTestBase{
 
         Schema s = sRegistry.inferSchema(r);
         assertThat(s.toString().replace('"', '\''), //
-                is("{'type':'record','name':'example_srcRow','namespace':'cassandraavroregistrytest.example_src','fields':[" //
+                is("{'type':'record','name':'example_srcRow','namespace':'cassandratestbase.example_src','fields':[" //
                         + "{'name':'st_text'," //
                         + "'type':[{'type':'string','"+SchemaConstants.TALEND_COLUMN_DB_TYPE+"':'VARCHAR'},'null']}" //
                         + "]}")); //

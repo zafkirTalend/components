@@ -1,8 +1,6 @@
 package org.talend.components.cassandra.runtime;
 
 import com.datastax.driver.core.*;
-import com.datastax.driver.core.exceptions.AuthenticationException;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import org.apache.avro.Schema;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.container.RuntimeContainer;
@@ -52,7 +50,7 @@ public class CassandraSourceOrSink implements SourceOrSink {
         }
         try {
             return getCluster(container).connect();
-        } catch (NoHostAvailableException | IllegalStateException | AuthenticationException ex) {
+        } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         }
     }

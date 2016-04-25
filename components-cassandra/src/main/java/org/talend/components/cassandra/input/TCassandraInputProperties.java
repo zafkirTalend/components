@@ -25,4 +25,5 @@ public class TCassandraInputProperties extends CassandraIOBasedProperties {
         Form form = getForm(Form.MAIN);
         form.addRow(query);
     }
+
 }

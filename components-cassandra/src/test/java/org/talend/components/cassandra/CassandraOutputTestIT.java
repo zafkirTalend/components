@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class CassandraOutputTestIT extends CassandraTestBase {
@@ -31,7 +32,7 @@ public class CassandraOutputTestIT extends CassandraTestBase {
     public void testSchema() throws Throwable {
         TCassandraOutputProperties props = (TCassandraOutputProperties)getComponentService().getComponentProperties(TCassandraOutputDefinition.COMPONENT_NAME);
         initConnectionProps(props);
-        assertThat(props.getForms().size(), is(1));
+        assertThat(props.getForms().size(), is(2));
         Form schemaRefForm = props.getSchemaProperties().getForm(Form.REFERENCE);
 
         PropertiesServiceTest.checkAndBeforeActivate(getComponentService(), schemaRefForm, CassandraSchemaProperties.KEYSPACE, schemaRefForm.getProperties());
@@ -49,8 +50,8 @@ public class CassandraOutputTestIT extends CassandraTestBase {
         columnFamily.setValue("example_src");
 
         PropertiesServiceTest.checkAndAfter(getComponentService(), schemaRefForm, CassandraSchemaProperties.COLUMN_FAMILY, schemaRefForm.getProperties());
-        assertThat(props.getSchemas().size(), is(1));
-        Schema schema = props.getSchemas().get(0);
+        assertNotNull(props.getSchemaProperties().main.schema.getStringValue());
+        Schema schema = new Schema.Parser().parse(props.getSchemaProperties().main.schema.getStringValue());
         System.out.println(schema);
         assertThat(schema.getFields().size(), is(EmbeddedCassandraExampleDataResource.sExampleSrcColumns.length));
     }

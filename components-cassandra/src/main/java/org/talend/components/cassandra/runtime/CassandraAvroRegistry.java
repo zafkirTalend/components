@@ -14,6 +14,7 @@ import org.talend.daikon.avro.container.ContainerWriterByIndex;
 import org.talend.daikon.avro.util.AvroUtils;
 import org.talend.daikon.avro.util.ConvertAvroList;
 import org.talend.daikon.avro.util.ConvertAvroMap;
+import org.talend.daikon.java8.SerializableFunction;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -85,14 +86,48 @@ public class CassandraAvroRegistry extends AvroRegistry {
         registerAdapterFactory(TupleValue.class, TupleValueAdapterFactory.class);
 
         // Ensure that we know how to get Schemas for these Cassandra objects.
-        registerSchemaInferrer(BoundStatement.class,
-                bs -> inferSchemaColumnDefinitions("BoundStatement", bs.preparedStatement().getVariables()));
-        registerSchemaInferrer(Row.class, row -> inferSchemaColumnDefinitions("Row", row.getColumnDefinitions()));
-        registerSchemaInferrer(ColumnDefinitions.class, cd -> inferSchemaColumnDefinitions("Record", cd)); //TODO(bchen) why need "Record" here?
-        registerSchemaInferrer(UDTValue.class, udt -> inferSchemaDataType(udt.getType()));
-        registerSchemaInferrer(TupleValue.class, tuple -> inferSchemaDataType(tuple.getType()));
-        registerSchemaInferrer(TableMetadata.class, this::inferSchemaTableMetadata);
-        registerSchemaInferrer(DataType.class, this::inferSchemaDataType);
+        registerSchemaInferrer(BoundStatement.class, new SerializableFunction<BoundStatement, Schema>() {
+            @Override
+            public Schema apply(BoundStatement boundStatement) {
+                return inferSchemaColumnDefinitions("BoundStatement", boundStatement.preparedStatement().getVariables());
+            }
+        });
+        registerSchemaInferrer(Row.class, new SerializableFunction<Row, Schema>() {
+            @Override
+            public Schema apply(Row row) {
+                return inferSchemaColumnDefinitions("Row", row.getColumnDefinitions());
+            }
+        });
+        registerSchemaInferrer(ColumnDefinitions.class, new SerializableFunction<ColumnDefinitions, Schema>() {
+            @Override
+            public Schema apply(ColumnDefinitions definitions) {
+                return inferSchemaColumnDefinitions("Record", definitions);
+            }
+        });
+        registerSchemaInferrer(UDTValue.class, new SerializableFunction<UDTValue, Schema>() {
+            @Override
+            public Schema apply(UDTValue udtValue) {
+                return inferSchemaDataType(udtValue.getType());
+            }
+        });
+        registerSchemaInferrer(TupleValue.class, new SerializableFunction<TupleValue, Schema>() {
+            @Override
+            public Schema apply(TupleValue tupleValue) {
+                return inferSchemaDataType(tupleValue.getType());
+            }
+        });
+        registerSchemaInferrer(TableMetadata.class, new SerializableFunction<TableMetadata, Schema>() {
+            @Override
+            public Schema apply(TableMetadata metadata) {
+                return inferSchemaTableMetadata(metadata);
+            }
+        });
+        registerSchemaInferrer(DataType.class, new SerializableFunction<DataType, Schema>() {
+            @Override
+            public Schema apply(DataType dataType) {
+                return inferSchemaDataType(dataType);
+            }
+        });
     }
 
     public static CassandraAvroRegistry get() {
@@ -227,7 +262,7 @@ public class CassandraAvroRegistry extends AvroRegistry {
         throw new RuntimeException("The DataType " + in + " is not handled.");
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     /**
      * Gets an AvroConverter for transforming between Cassandra objects and Avro-compatible objects using Cassandra type
      * information.
@@ -292,7 +327,7 @@ public class CassandraAvroRegistry extends AvroRegistry {
     public static String getDataType(Schema schema) {
         schema = AvroUtils.unwrapIfNullable(schema);
         String overrideDataType = schema.getProp(SchemaConstants.TALEND_COLUMN_DB_TYPE);
-        if(overrideDataType == null || "".equals(overrideDataType)){
+        if (overrideDataType == null || "".equals(overrideDataType)) {
             //FIXME(bchen) give the best choice based on the current avro type
         }
         return overrideDataType.toLowerCase();
@@ -335,55 +370,257 @@ public class CassandraAvroRegistry extends AvroRegistry {
         }
     }
 
-    /** A utility class for getting callbacks for reading and writing to Cassandra containers. */
+    /**
+     * A utility class for getting callbacks for reading and writing to Cassandra containers.
+     */
     //TODO(bchen) can it be DataType.Name, to accordance with mCassandraAllTypes
     private static class CassandraContainerRegistry
             extends ContainerRegistry<DataType, GettableByIndexData, SettableByIndexData<?>> {
 
         public CassandraContainerRegistry() {
             // The following types can be read without requiring any additional information.
-            registerReader(DataType.ascii(), (c, i) -> c.getString(i));
-            registerReader(DataType.bigint(), (c, i) -> c.getLong(i));
-            registerReader(DataType.blob(), (c, i) -> c.getBytes(i));
-            registerReader(DataType.cboolean(), (c, i) -> c.getBool(i));
-            registerReader(DataType.counter(), (c, i) -> c.getLong(i));
-            registerReader(DataType.date(), (c, i) -> c.getDate(i)); // from 2.2
-            registerReader(DataType.decimal(), (c, i) -> c.getDecimal(i));
-            registerReader(DataType.cdouble(), (c, i) -> c.getDouble(i));
-            registerReader(DataType.cfloat(), (c, i) -> c.getFloat(i));
-            registerReader(DataType.inet(), (c, i) -> c.getInet(i));
-            registerReader(DataType.cint(), (c, i) -> c.getInt(i));
-            registerReader(DataType.smallint(), (c, i) -> c.getShort(i)); // from 2.2
-            registerReader(DataType.text(), (c, i) -> c.getString(i));
-            registerReader(DataType.time(), (c, i) -> c.getTime(i)); // from 2.2
-            registerReader(DataType.timestamp(), (c, i) -> c.getTimestamp(i)); // FIXME(bchen) different method between 2.1 and 3.0 API
-            registerReader(DataType.timeuuid(), (c, i) -> c.getUUID(i));
-            registerReader(DataType.tinyint(), (c, i) -> c.getByte(i)); // from 2.2
-            registerReader(DataType.uuid(), (c, i) -> c.getUUID(i));
-            registerReader(DataType.varchar(), (c, i) -> c.getString(i));
-            registerReader(DataType.varint(), (c, i) -> c.getVarint(i));
+            registerReader(DataType.ascii(), new ContainerReaderByIndex<GettableByIndexData, String>() {
+                @Override
+                public String readValue(GettableByIndexData obj, int index) {
+                    return obj.getString(index);
+                }
+            });
+            registerReader(DataType.bigint(), new ContainerReaderByIndex<GettableByIndexData, Long>() {
+                @Override
+                public Long readValue(GettableByIndexData obj, int index) {
+                    return obj.getLong(index);
+                }
+            });
+            registerReader(DataType.blob(), new ContainerReaderByIndex<GettableByIndexData, ByteBuffer>() {
+                @Override
+                public ByteBuffer readValue(GettableByIndexData obj, int index) {
+                    return obj.getBytes(index);
+                }
+            });
+            registerReader(DataType.cboolean(), new ContainerReaderByIndex<GettableByIndexData, Boolean>() {
+                @Override
+                public Boolean readValue(GettableByIndexData obj, int index) {
+                    return obj.getBool(index);
+                }
+            });
+            registerReader(DataType.counter(), new ContainerReaderByIndex<GettableByIndexData, Long>() {
+                @Override
+                public Long readValue(GettableByIndexData obj, int index) {
+                    return obj.getLong(index);
+                }
+            });
+            registerReader(DataType.date(), new ContainerReaderByIndex<GettableByIndexData, LocalDate>() {
+                @Override
+                public LocalDate readValue(GettableByIndexData obj, int index) {
+                    return obj.getDate(index);
+                }
+            }); // from 2.2
+            registerReader(DataType.decimal(), new ContainerReaderByIndex<GettableByIndexData, BigDecimal>() {
+                @Override
+                public BigDecimal readValue(GettableByIndexData obj, int index) {
+                    return obj.getDecimal(index);
+                }
+            });
+            registerReader(DataType.cdouble(), new ContainerReaderByIndex<GettableByIndexData, Double>() {
+                @Override
+                public Double readValue(GettableByIndexData obj, int index) {
+                    return obj.getDouble(index);
+                }
+            });
+            registerReader(DataType.cfloat(), new ContainerReaderByIndex<GettableByIndexData, Float>() {
+                @Override
+                public Float readValue(GettableByIndexData obj, int index) {
+                    return obj.getFloat(index);
+                }
+            });
+            registerReader(DataType.inet(), new ContainerReaderByIndex<GettableByIndexData, InetAddress>() {
+                @Override
+                public InetAddress readValue(GettableByIndexData obj, int index) {
+                    return obj.getInet(index);
+                }
+            });
+            registerReader(DataType.cint(), new ContainerReaderByIndex<GettableByIndexData, Integer>() {
+                @Override
+                public Integer readValue(GettableByIndexData obj, int index) {
+                    return obj.getInt(index);
+                }
+            });
+            registerReader(DataType.smallint(), new ContainerReaderByIndex<GettableByIndexData, Short>() {
+                @Override
+                public Short readValue(GettableByIndexData obj, int index) {
+                    return obj.getShort(index);
+                }
+            }); // from 2.2
+            registerReader(DataType.text(), new ContainerReaderByIndex<GettableByIndexData, String>() {
+                @Override
+                public String readValue(GettableByIndexData obj, int index) {
+                    return obj.getString(index);
+                }
+            });
+            registerReader(DataType.time(), new ContainerReaderByIndex<GettableByIndexData, Long>() {
+                @Override
+                public Long readValue(GettableByIndexData obj, int index) {
+                    return obj.getTime(index);
+                }
+            }); // from 2.2
+            registerReader(DataType.timestamp(), new ContainerReaderByIndex<GettableByIndexData, Date>() {
+                @Override
+                public Date readValue(GettableByIndexData obj, int index) {
+                    return obj.getTimestamp(index);
+                }
+            }); // FIXME(bchen) different method between 2.1 and 3.0 API
+            registerReader(DataType.timeuuid(), new ContainerReaderByIndex<GettableByIndexData, UUID>() {
+                @Override
+                public UUID readValue(GettableByIndexData obj, int index) {
+                    return obj.getUUID(index);
+                }
+            });
+            registerReader(DataType.tinyint(), new ContainerReaderByIndex<GettableByIndexData, Byte>() {
+                @Override
+                public Byte readValue(GettableByIndexData obj, int index) {
+                    return obj.getByte(index);
+                }
+            }); // from 2.2
+            registerReader(DataType.uuid(), new ContainerReaderByIndex<GettableByIndexData, UUID>() {
+                @Override
+                public UUID readValue(GettableByIndexData obj, int index) {
+                    return obj.getUUID(index);
+                }
+            });
+            registerReader(DataType.varchar(), new ContainerReaderByIndex<GettableByIndexData, String>() {
+                @Override
+                public String readValue(GettableByIndexData obj, int index) {
+                    return obj.getString(index);
+                }
+            });
+            registerReader(DataType.varint(), new ContainerReaderByIndex<GettableByIndexData, BigInteger>() {
+                @Override
+                public BigInteger readValue(GettableByIndexData obj, int index) {
+                    return obj.getVarint(index);
+                }
+            });
 
             // The following types can be written without any additional information.
-            registerWriter(DataType.ascii(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
-            registerWriter(DataType.bigint(), (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v));
-            registerWriter(DataType.blob(), (SettableByIndexData<?> c, int i, ByteBuffer v) -> c.setBytes(i, v));
-            registerWriter(DataType.cboolean(), (SettableByIndexData<?> c, int i, Boolean v) -> c.setBool(i, v));
-            registerWriter(DataType.counter(), (SettableByIndexData<?> c, int i, Long v) -> c.setLong(i, v));
-            registerWriter(DataType.date(), (SettableByIndexData<?> c, int i, LocalDate v) -> c.setDate(i, v)); // from 2.2
-            registerWriter(DataType.decimal(), (SettableByIndexData<?> c, int i, BigDecimal v) -> c.setDecimal(i, v));
-            registerWriter(DataType.cdouble(), (SettableByIndexData<?> c, int i, Double v) -> c.setDouble(i, v));
-            registerWriter(DataType.cfloat(), (SettableByIndexData<?> c, int i, Float v) -> c.setFloat(i, v));
-            registerWriter(DataType.inet(), (SettableByIndexData<?> c, int i, InetAddress v) -> c.setInet(i, v));
-            registerWriter(DataType.cint(), (SettableByIndexData<?> c, int i, Integer v) -> c.setInt(i, v));
-            registerWriter(DataType.smallint(), (SettableByIndexData<?> c, int i, Short v) -> c.setShort(i, v)); // from 2.2
-            registerWriter(DataType.text(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
-            registerWriter(DataType.time(), (SettableByIndexData<?> c, int i, Long v) -> c.setTime(i, v)); // from 2.2
-            registerWriter(DataType.timestamp(), (SettableByIndexData<?> c, int i, Date v) -> c.setTimestamp(i, v)); // FIXME(bchen) different method between 2.1 and 3.0 API
-            registerWriter(DataType.timeuuid(), (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v));
-            registerWriter(DataType.tinyint(), (SettableByIndexData<?> c, int i, Byte v) -> c.setByte(i, v)); // from 2.2
-            registerWriter(DataType.uuid(), (SettableByIndexData<?> c, int i, UUID v) -> c.setUUID(i, v));
-            registerWriter(DataType.varchar(), (SettableByIndexData<?> c, int i, String v) -> c.setString(i, v));
-            registerWriter(DataType.varint(), (SettableByIndexData<?> c, int i, BigInteger v) -> c.setVarint(i, v));
+            registerWriter(DataType.ascii(), new ContainerWriterByIndex<SettableByIndexData<?>, String>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, String v) {
+                    c.setString(i, v);
+                }
+            });
+            registerWriter(DataType.bigint(), new ContainerWriterByIndex<SettableByIndexData<?>, Long>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Long v) {
+                    c.setLong(i, v);
+                }
+            });
+            registerWriter(DataType.blob(), new ContainerWriterByIndex<SettableByIndexData<?>, ByteBuffer>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, ByteBuffer v) {
+                    c.setBytes(i, v);
+                }
+            });
+            registerWriter(DataType.cboolean(), new ContainerWriterByIndex<SettableByIndexData<?>, Boolean>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Boolean v) {
+                    c.setBool(i, v);
+                }
+            });
+            registerWriter(DataType.counter(), new ContainerWriterByIndex<SettableByIndexData<?>, Long>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Long v) {
+                    c.setLong(i, v);
+                }
+            });
+            registerWriter(DataType.date(), new ContainerWriterByIndex<SettableByIndexData<?>, LocalDate>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, LocalDate v) {
+                    c.setDate(i, v);
+                }
+            }); // from 2.2
+            registerWriter(DataType.decimal(), new ContainerWriterByIndex<SettableByIndexData<?>, BigDecimal>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, BigDecimal v) {
+                    c.setDecimal(i, v);
+                }
+            });
+            registerWriter(DataType.cdouble(), new ContainerWriterByIndex<SettableByIndexData<?>, Double>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Double v) {
+                    c.setDouble(i, v);
+                }
+            });
+            registerWriter(DataType.cfloat(), new ContainerWriterByIndex<SettableByIndexData<?>, Float>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Float v) {
+                    c.setFloat(i, v);
+                }
+            });
+            registerWriter(DataType.inet(), new ContainerWriterByIndex<SettableByIndexData<?>, InetAddress>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, InetAddress v) {
+                    c.setInet(i, v);
+                }
+            });
+            registerWriter(DataType.cint(), new ContainerWriterByIndex<SettableByIndexData<?>, Integer>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Integer v) {
+                    c.setInt(i, v);
+                }
+            });
+            registerWriter(DataType.smallint(), new ContainerWriterByIndex<SettableByIndexData<?>, Short>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Short v) {
+                    c.setShort(i, v);
+                }
+            }); // from 2.2
+            registerWriter(DataType.text(), new ContainerWriterByIndex<SettableByIndexData<?>, String>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, String v) {
+                    c.setString(i, v);
+                }
+            });
+            registerWriter(DataType.time(), new ContainerWriterByIndex<SettableByIndexData<?>, Long>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Long v) {
+                    c.setTime(i, v);
+                }
+            }); // from 2.2
+            registerWriter(DataType.timestamp(), new ContainerWriterByIndex<SettableByIndexData<?>, Date>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Date v) {
+                    c.setTimestamp(i, v);
+                }
+            }); // FIXME(bchen) different method between 2.1 and 3.0 API
+            registerWriter(DataType.timeuuid(), new ContainerWriterByIndex<SettableByIndexData<?>, UUID>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, UUID v) {
+                    c.setUUID(i, v);
+                }
+            });
+            registerWriter(DataType.tinyint(), new ContainerWriterByIndex<SettableByIndexData<?>, Byte>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, Byte v) {
+                    c.setByte(i, v);
+                }
+            }); // from 2.2
+            registerWriter(DataType.uuid(), new ContainerWriterByIndex<SettableByIndexData<?>, UUID>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, UUID v) {
+                    c.setUUID(i, v);
+                }
+            });
+            registerWriter(DataType.varchar(), new ContainerWriterByIndex<SettableByIndexData<?>, String>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, String v) {
+                    c.setString(i, v);
+                }
+            });
+            registerWriter(DataType.varint(), new ContainerWriterByIndex<SettableByIndexData<?>, BigInteger>() {
+                @Override
+                public void writeValue(SettableByIndexData<?> c, int i, BigInteger v) {
+                    c.setVarint(i, v);
+                }
+            });
         }
 
         @Override
@@ -393,22 +630,47 @@ public class CassandraAvroRegistry extends AvroRegistry {
                 return reader;
 
             if (type.isCollection()) {
-                List<DataType> containedTypes = type.getTypeArguments();
+                final List<DataType> containedTypes = type.getTypeArguments();
                 if (type.getName().equals(DataType.Name.LIST)) {
-                    return (c, i) -> c.getList(i, mCassandraAllTypes.get(containedTypes.get(0).getName()));
+                    return new ContainerReaderByIndex<GettableByIndexData, Object>() {
+                        @Override
+                        public Object readValue(GettableByIndexData c, int i) {
+                            return c.getList(i, mCassandraAllTypes.get(containedTypes.get(0).getName()));
+                        }
+                    };
                 } else if (type.getName().equals(DataType.Name.SET)) {
                     // TODO: is there a better way to enforce a consistent order after read?
-                    return (c, i) -> new ArrayList<>(c.getSet(i, mCassandraAllTypes.get(containedTypes.get(0).getName())));
+                    return new ContainerReaderByIndex<GettableByIndexData, Object>() {
+                        @Override
+                        public Object readValue(GettableByIndexData c, int i) {
+                            return new ArrayList<>(c.getSet(i, mCassandraAllTypes.get(containedTypes.get(0).getName())));
+                        }
+                    };
                 } else if (type.getName().equals(DataType.Name.MAP)) {
-                    return (c, i) -> c.getMap(i, mCassandraAllTypes.get(containedTypes.get(0).getName()), mCassandraAllTypes.get(containedTypes.get(1).getName()));
+                    return new ContainerReaderByIndex<GettableByIndexData, Object>() {
+                        @Override
+                        public Object readValue(GettableByIndexData c, int i) {
+                            return c.getMap(i, mCassandraAllTypes.get(containedTypes.get(0).getName()), mCassandraAllTypes.get(containedTypes.get(1).getName()));
+                        }
+                    };
                 }
             }
 
             switch (type.getName()) {
                 case TUPLE:
-                    return (c, i) -> c.getTupleValue(i);
+                    return new ContainerReaderByIndex<GettableByIndexData, Object>() {
+                        @Override
+                        public Object readValue(GettableByIndexData c, int i) {
+                            return c.getTupleValue(i);
+                        }
+                    };
                 case UDT:
-                    return (c, i) -> c.getUDTValue(i);
+                    return new ContainerReaderByIndex<GettableByIndexData, Object>() {
+                        @Override
+                        public Object readValue(GettableByIndexData c, int i) {
+                            return c.getUDTValue(i);
+                        }
+                    };
                 default:
                     throw new RuntimeException("The DataType " + type + " is not handled.");
             }
@@ -422,20 +684,45 @@ public class CassandraAvroRegistry extends AvroRegistry {
 
             if (type.isCollection()) {
                 if (type.getName().equals(DataType.Name.LIST)) {
-                    return (SettableByIndexData<?> c, int i, List<?> v) -> c.setList(i, v);
+                    return new ContainerWriterByIndex<SettableByIndexData<?>, List<?>>() {
+                        @Override
+                        public void writeValue(SettableByIndexData<?> c, int i, List<?> v) {
+                            c.setList(i, v);
+                        }
+                    };
                 } else if (type.getName().equals(DataType.Name.SET)) {
                     // TODO: is there a better way to enforce a consistent order after read?
-                    return (SettableByIndexData<?> c, int i, List<?> v) -> c.setSet(i, new HashSet<>(v));
+                    return new ContainerWriterByIndex<SettableByIndexData<?>, List<?>>() {
+                        @Override
+                        public void writeValue(SettableByIndexData<?> c, int i, List<?> v) {
+                            c.setSet(i, new HashSet<>(v));
+                        }
+                    };
                 } else if (type.getName().equals(DataType.Name.MAP)) {
-                    return (SettableByIndexData<?> c, int i, Map<?, ?> v) -> c.setMap(i, v);
+                    return new ContainerWriterByIndex<SettableByIndexData<?>, Map<?, ?>>() {
+                        @Override
+                        public void writeValue(SettableByIndexData<?> c, int i, Map<?, ?> v) {
+                            c.setMap(i, v);
+                        }
+                    };
                 }
             }
 
             switch (type.getName()) {
                 case TUPLE:
-                    return (SettableByIndexData<?> c, int i, TupleValue v) -> c.setTupleValue(i, v);
+                    return new ContainerWriterByIndex<SettableByIndexData<?>, TupleValue>() {
+                        @Override
+                        public void writeValue(SettableByIndexData<?> c, int i, TupleValue v) {
+                            c.setTupleValue(i, v);
+                        }
+                    };
                 case UDT:
-                    return (SettableByIndexData<?> c, int i, UDTValue v) -> c.setUDTValue(i, v);
+                    return new ContainerWriterByIndex<SettableByIndexData<?>, UDTValue>() {
+                        @Override
+                        public void writeValue(SettableByIndexData<?> c, int i, UDTValue v) {
+                            c.setUDTValue(i, v);
+                        }
+                    };
                 default:
                     throw new RuntimeException("The DataType " + type + " is not handled.");
             }
