@@ -181,6 +181,7 @@
 					<artifactId>maven-scm-plugin</artifactId>
 					<version>1.9.4</version>
 					<configuration>
+                        <connectionUrl>scm:git:https://github.com/Talend/components.git</connectionUrl>
 						<tag>${project.artifactId}-${project.version}</tag>
 					</configuration>
 				</plugin>
