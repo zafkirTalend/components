@@ -5,17 +5,18 @@
 	<parent>
 		<groupId>org.talend.components</groupId>
 		<artifactId>components-parent</artifactId>
-		<version>0.8.0</version>
+		<version>0.8.2</version>
 		<relativePath>../components-parent/pom.xml</relativePath>
 	</parent>
 
 	<properties>
 		<paxexamversion>4.6.0</paxexamversion>
+		<salesforceVersion>0.8.2</salesforceVersion>
 	</properties>
 
 	<name>Component API OSGI tests</name>
 	<artifactId>components-osgitest</artifactId>
-	<version>0.8.0</version>
+	<version>0.8.2</version>
 
 	<dependencies>
 		<dependency>
@@ -57,21 +58,21 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>0.8.1</version>
+			<version>${salesforceVersion}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>0.8.1</version>
+			<version>${salesforceVersion}</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>0.8.1</version>
+			<version>${salesforceVersion}</version>
 			<classifier>bundle</classifier>
 			<scope>test</scope>
 		</dependency>
