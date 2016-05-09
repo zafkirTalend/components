@@ -12,7 +12,7 @@
 
     <name>Component Command Line Property Tester</name>
     <artifactId>components-proptester</artifactId>
-    <version>0.8.0</version>
+    <version>0.8.1</version>
 
     <dependencies>
         <dependency>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-salesforce</artifactId>
-            <version>0.8.0</version>
+            <version>0.8.1</version>
         </dependency>
         <dependency>
             <groupId>jline</groupId>

@@ -12,7 +12,7 @@
     <name>Components - tSplunkEventCollector</name>
     <groupId>org.talend.components</groupId>
     <artifactId>components-splunk</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <properties>
         <components.api.version>0.8.0</components.api.version>
     </properties>

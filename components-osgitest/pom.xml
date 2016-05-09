@@ -57,21 +57,21 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>0.8.1</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>0.8.1</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>0.8.1</version>
 			<classifier>bundle</classifier>
 			<scope>test</scope>
 		</dependency>
