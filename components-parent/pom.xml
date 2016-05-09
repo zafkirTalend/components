@@ -18,6 +18,11 @@
 		<log4j.appender.stdout>org.apache.log4j.ConsoleAppender</log4j.appender.stdout>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<scm>
+		<connection>scm:git:https://github.com/Talend/components.git</connection>
+	</scm>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>talend_nexus_deployment</id>
@@ -171,6 +176,13 @@
 				<plugin>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-maven-plugin</artifactId>
+				</plugin>
+				<plugin>
+					<artifactId>maven-scm-plugin</artifactId>
+					<version>1.9.4</version>
+					<configuration>
+						<tag>${project.artifactId}-${project.version}</tag>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
