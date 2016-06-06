@@ -25,7 +25,6 @@ import org.talend.daikon.avro.IndexedRecordAdapterFactory;
 import org.talend.daikon.avro.util.AvroUtils;
 
 import com.sforce.soap.partner.PartnerConnection;
-import com.sforce.soap.partner.PartnerConnection;
 
 public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
 
@@ -36,6 +35,8 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
     protected transient Schema querySchema;
 
     protected SalesforceConnectionModuleProperties properties;
+
+    protected int dataCount;
 
     public SalesforceReader(RuntimeContainer container, SalesforceSource source) {
         super(container, source);
@@ -54,8 +55,8 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
             if (properties instanceof TSalesforceBulkExecProperties) {
                 useBulkFactory = true;
             } else if (properties instanceof TSalesforceInputProperties) {
-                if (TSalesforceInputProperties.QUERY_BULK
-                        .equals(((TSalesforceInputProperties) properties).queryMode.getStringValue())) {
+                if (TSalesforceInputProperties.QueryMode.Bulk
+                        .equals(((TSalesforceInputProperties) properties).queryMode.getValue())) {
                     useBulkFactory = true;
                 }
             }
@@ -71,7 +72,7 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
 
     protected Schema getSchema() throws IOException {
         if (querySchema == null) {
-            querySchema = (Schema) properties.module.main.schema.getValue();
+            querySchema = properties.module.main.schema.getValue();
             if (AvroUtils.isIncludeAllFields(querySchema)) {
                 String moduleName = null;
                 if (properties instanceof SalesforceConnectionModuleProperties) {
@@ -87,7 +88,7 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
         String condition = null;
         if (properties instanceof TSalesforceInputProperties) {
             TSalesforceInputProperties inProperties = (TSalesforceInputProperties) properties;
-            if (inProperties.manualQuery.getBooleanValue()) {
+            if (inProperties.manualQuery.getValue()) {
                 return inProperties.query.getStringValue();
             } else {
                 condition = inProperties.condition.getStringValue();
@@ -109,5 +110,12 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
             sb.append(condition);
         }
         return sb.toString();
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (container != null) {
+            container.setComponentData(container.getCurrentComponentId(), SalesforceConnectionModuleProperties.NB_LINE_NAME, dataCount);
+        }
     }
 }

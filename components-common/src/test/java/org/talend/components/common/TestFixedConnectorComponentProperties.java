@@ -32,8 +32,8 @@ import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.service.internal.ComponentServiceImpl;
 import org.talend.components.api.test.SimpleComponentDefinition;
 import org.talend.components.api.test.SimpleComponentRegistry;
-import org.talend.daikon.properties.Property;
-import org.talend.daikon.properties.PropertyFactory;
+import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.PropertyFactory;
 
 public class TestFixedConnectorComponentProperties {
 
@@ -108,7 +108,7 @@ public class TestFixedConnectorComponentProperties {
     }
 
     @Test
-    public void testGetAvailableconnectors() {
+    public void testGetAvailableConnectors() {
         ComponentProperties componentProperties = getComponentService().getComponentProperties("foo"); //$NON-NLS-1$
         Set<? extends Connector> availableConnections = componentProperties.getAvailableConnectors(null, true);
         assertThat(availableConnections, hasSize(2));
@@ -116,6 +116,13 @@ public class TestFixedConnectorComponentProperties {
                 true);
         assertThat(availableConnections, hasSize(1));
         assertTrue(availableConnections.contains(TestProperties.REJECT_CONNECTOR));
+    }
+
+    @Test
+    public void testGetAllPossibleConnectors() {
+        ComponentProperties componentProperties = getComponentService().getComponentProperties("foo"); //$NON-NLS-1$
+        Set<? extends Connector> allConnections = componentProperties.getPossibleConnectors(true);
+        assertThat(allConnections, hasSize(2));
     }
 
     @Test

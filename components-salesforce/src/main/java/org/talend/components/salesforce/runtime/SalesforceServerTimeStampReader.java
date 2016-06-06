@@ -23,12 +23,14 @@ import org.talend.components.salesforce.tsalesforcegetservertimestamp.TSalesforc
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
-public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Calendar> {
+public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Long> {
 
-    private transient Calendar result;
+    private transient Long result;
+
+    protected int dataCount;
 
     public SalesforceServerTimeStampReader(RuntimeContainer container, SalesforceSource source,
-            TSalesforceGetServerTimestampProperties props) {
+                                           TSalesforceGetServerTimestampProperties props) {
         super(container, source);
     }
 
@@ -36,8 +38,16 @@ public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Calen
     public boolean start() throws IOException {
         PartnerConnection connection = ((SalesforceSource) getCurrentSource()).connect(container).connection;
         try {
-            result = connection.getServerTimestamp().getTimestamp();
-            return result != null;
+            Calendar serverTimestamp = connection.getServerTimestamp().getTimestamp();
+            if (serverTimestamp != null) {
+                result = serverTimestamp.getTimeInMillis();
+            }
+            if (result != null) {
+                dataCount++;
+                return true;
+            } else {
+                return false;
+            }
         } catch (ConnectionException e) {
             throw new IOException(e);
         }
@@ -49,8 +59,15 @@ public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Calen
     }
 
     @Override
-    public Calendar getCurrent() throws NoSuchElementException {
+    public Long getCurrent() throws NoSuchElementException {
         return result;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (container != null) {
+            container.setComponentData(container.getCurrentComponentId(), TSalesforceGetServerTimestampProperties.NB_LINE_NAME, dataCount);
+        }
     }
 
 }

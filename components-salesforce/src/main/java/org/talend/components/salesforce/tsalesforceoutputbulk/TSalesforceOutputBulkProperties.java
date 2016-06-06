@@ -12,20 +12,25 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceoutputbulk;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
 import static org.talend.daikon.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.avro.Schema;
+import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.common.BulkFileProperties;
-import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
-import org.talend.daikon.properties.Property;
+import org.talend.components.salesforce.UpsertRelationTable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.property.Property;
 
 public class TSalesforceOutputBulkProperties extends BulkFileProperties {
 
-    public Property ignoreNull = newProperty(Property.Type.BOOLEAN, "ignoreNull");
+    public Property<Boolean> ignoreNull = newBoolean("ignoreNull");
 
-    public Property upsertRelation = newProperty("upsertRelation").setOccurMaxTimes(-1); //$NON-NLS-1$
+    public UpsertRelationTable upsertRelationTable = new UpsertRelationTable("upsertRelationTable");
 
     public TSalesforceOutputBulkProperties(String name) {
         super(name);
@@ -34,8 +39,21 @@ public class TSalesforceOutputBulkProperties extends BulkFileProperties {
     @Override
     public void setupProperties() {
         super.setupProperties();
-        TSalesforceOutputProperties.setupUpsertRelation(upsertRelation, TSalesforceOutputProperties.POLY);
-        // schema.schema.setTaggedValue(StudioConstants.CONNECTOR_TYPE_SCHEMA_KEY, ConnectorType.FLOW);
+
+        upsertRelationTable.setUsePolymorphic(true);
+
+        this.setSchemaListener(new ISchemaListener() {
+
+            @Override
+            public void afterSchema() {
+                beforeUpsertRelationTable();
+            }
+
+        });
+    }
+
+    public void beforeUpsertRelationTable() {
+        upsertRelationTable.columnName.setPossibleValues(getFieldNames(schema.schema));
     }
 
     @Override
@@ -50,7 +68,17 @@ public class TSalesforceOutputBulkProperties extends BulkFileProperties {
         refForm.addRow(ignoreNull);
 
         Form advancedForm = new Form(this, Form.ADVANCED);
-        advancedForm.addRow(widget(upsertRelation).setWidgetType(Widget.WidgetType.TABLE));
+        advancedForm.addRow(widget(upsertRelationTable).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+    }
+
+    protected List<String> getFieldNames(Property schema) {
+        String sJson = schema.getStringValue();
+        Schema s = new Schema.Parser().parse(sJson);
+        List<String> fieldNames = new ArrayList<>();
+        for (Schema.Field f : s.getFields()) {
+            fieldNames.add(f.name());
+        }
+        return fieldNames;
     }
 
 }

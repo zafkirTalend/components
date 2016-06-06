@@ -12,24 +12,28 @@
 // ============================================================================
 package org.talend.components.common.oauth;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.properties.Property;
-import org.talend.daikon.properties.Property.Type;
+import java.util.EnumSet;
+
+import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.property.Property;
 
-public class OauthProperties extends ComponentProperties {
+public class OauthProperties extends ComponentPropertiesImpl {
 
-    public Property clientId = (Property) newProperty("clientId").setRequired(true); //$NON-NLS-1$
+    public Property<String> clientId = newProperty("clientId").setRequired(true); //$NON-NLS-1$
 
-    public Property clientSecret = (Property) newProperty("clientSecret").setRequired(true); //$NON-NLS-1$
+    public Property<String> clientSecret = newProperty("clientSecret").setRequired(true)
+            .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));;
 
-    public Property callbackHost = (Property) newProperty("callbackHost").setRequired(true); //$NON-NLS-1$
+    public Property<String> callbackHost = newProperty("callbackHost").setRequired(true); //$NON-NLS-1$
 
-    public Property callbackPort = (Property) newProperty(Type.INT, "callbackPort").setRequired(true); //$NON-NLS-1$
+    public Property<Integer> callbackPort = newInteger("callbackPort").setRequired(true); //$NON-NLS-1$
 
-    public Property tokenFile = (Property) newProperty("tokenFile").setRequired(true); //$NON-NLS-1$
+    public Property<String> tokenFile = newProperty("tokenFile").setRequired(true); //$NON-NLS-1$
 
     public OauthProperties(String name) {
         super(name);
@@ -38,11 +42,11 @@ public class OauthProperties extends ComponentProperties {
     @Override
     public void setupLayout() {
         super.setupLayout();
-        Form form = Form.create(this, Form.MAIN, "OAuth Parameters");
+        Form form = Form.create(this, Form.MAIN);
         form.addRow(clientId);
         form.addColumn(clientSecret);
         form.addRow(callbackHost);
         form.addColumn(callbackPort);
-        form.addRow(tokenFile);
+        form.addRow(widget(tokenFile).setWidgetType(Widget.FILE_WIDGET_TYPE));
     }
 }

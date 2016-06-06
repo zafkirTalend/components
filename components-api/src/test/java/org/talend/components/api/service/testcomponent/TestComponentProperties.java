@@ -12,11 +12,12 @@
 // ============================================================================
 package org.talend.components.api.service.testcomponent;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 import static org.talend.daikon.properties.presentation.Widget.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -25,23 +26,21 @@ import java.util.Set;
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.components.api.properties.ComponentReferencePropertiesEnclosing;
 import org.talend.components.api.service.testcomponent.nestedprop.NestedComponentProperties;
 import org.talend.components.api.service.testcomponent.nestedprop.inherited.InheritedComponentProperties;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.Properties;
-import org.talend.daikon.properties.Property;
-import org.talend.daikon.properties.Property.Type;
+import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-import org.talend.daikon.properties.presentation.Widget.WidgetType;
 import org.talend.daikon.properties.service.Repository;
 
-public class TestComponentProperties extends ComponentProperties implements ComponentReferencePropertiesEnclosing {
+public class TestComponentProperties extends ComponentPropertiesImpl implements ComponentReferencePropertiesEnclosing {
 
     public static final String USER_ID_PROP_NAME = "userId"; //$NON-NLS-1$
 
@@ -49,31 +48,31 @@ public class TestComponentProperties extends ComponentProperties implements Comp
 
     public Form restoreForm;
 
-    public Property mainOutput = newSchema("mainOutput");
+    public Property<Schema> mainOutput = newSchema("mainOutput");
 
     public PresentationItem testPI = new PresentationItem("testPI", "testPI display name");
 
-    public Property userId = newProperty(USER_ID_PROP_NAME).setRequired(true);
+    public Property<String> userId = newProperty(USER_ID_PROP_NAME).setRequired(true);
 
-    public Property password = newProperty("password").setRequired(true)
+    public Property<String> password = newProperty("password").setRequired(true)
             .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
-    public Property nameList = newProperty("nameList");
+    public Property<String> nameList = newProperty("nameList");
 
-    public Property nameListRef = newProperty("nameListRef");
+    public Property<String> nameListRef = newProperty("nameListRef");
 
-    public Property integer = newProperty(Type.INT, "integer");
+    public Property<Integer> integer = newInteger("integer");
 
-    public Property decimal = newProperty(Type.INT, "decimal");
+    public Property<Integer> decimal = newInteger("decimal");
 
-    public Property date = newProperty(Type.DATE, "date");
+    public Property<Date> date = newDate("date");
 
-    public Property dateTime = newProperty(Type.DATETIME, "dateTime");
+    public Property<Date> dateTime = newDate("dateTime");
 
     // Used in testing refreshLayout
-    public Property suppressDate = newProperty(Type.BOOLEAN, "suppressDate");
+    public Property<Boolean> suppressDate = newBoolean("suppressDate");
 
-    public Property initLater = null;
+    public Property<String> initLater = null;
 
     public NestedComponentProperties nestedInitLater = null;
 
@@ -128,15 +127,15 @@ public class TestComponentProperties extends ComponentProperties implements Comp
     @Override
     public void setupLayout() {
         super.setupLayout();
-        Form form = Form.create(this, Form.MAIN, "Test Component");
+        Form form = Form.create(this, Form.MAIN);
         mainForm = form;
         form.addRow(userId);
-        form.addRow(widget(password).setWidgetType(WidgetType.HIDDEN_TEXT));
+        form.addRow(widget(password).setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
         form.addRow(testPI);
-        form.addRow(widget(nameList).setWidgetType(Widget.WidgetType.NAME_SELECTION_AREA));
-        form.addRow(widget(nameListRef).setWidgetType(Widget.WidgetType.NAME_SELECTION_REFERENCE));
+        form.addRow(widget(nameList).setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE));
+        form.addRow(widget(nameListRef).setWidgetType(Widget.NAME_SELECTION_REFERENCE_WIDGET_TYPE));
 
-        form = Form.create(this, "restoreTest", "Restore Test");
+        form = Form.create(this, "restoreTest");
         restoreForm = form;
         form.addRow(userId);
         form.addRow(nameList);
@@ -147,7 +146,7 @@ public class TestComponentProperties extends ComponentProperties implements Comp
         form.addRow(nestedProps.getForm(Form.MAIN));
 
         Form refForm = new Form(this, Form.REFERENCE);
-        Widget compListWidget = widget(referencedComponent).setWidgetType(WidgetType.COMPONENT_REFERENCE);
+        Widget compListWidget = widget(referencedComponent).setWidgetType(Widget.COMPONENT_REFERENCE_WIDGET_TYPE);
         referencedComponent.componentType.setValue("refComp");
         refForm.addRow(compListWidget);
         refForm.addRow(mainForm);
@@ -157,8 +156,8 @@ public class TestComponentProperties extends ComponentProperties implements Comp
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
         if (form.getName().equals("restoreTest")) {
-            if (suppressDate.getBooleanValue()) {
-                form.getWidget("date").setVisible(false);
+            if (suppressDate.getValue()) {
+                form.getWidget("date").setHidden(true);
             }
         }
     }
@@ -166,8 +165,9 @@ public class TestComponentProperties extends ComponentProperties implements Comp
     @Override
     public Schema getSchema(Connector connector, boolean isOutputConnection) {
         if (connector instanceof PropertyPathConnector) {
-            Property property = getValuedProperty(((PropertyPathConnector) connector).getPropertyPath());
-            return property.getType() == Type.SCHEMA ? (Schema) property.getValue() : null;
+            Property<?> property = getValuedProperty(((PropertyPathConnector) connector).getPropertyPath());
+            Object value = property.getValue();
+            return value != null && Schema.class.isAssignableFrom(value.getClass()) ? (Schema) property.getValue() : null;
         } else {// not a connector handled by this class
             return null;
         }

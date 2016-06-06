@@ -12,44 +12,43 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceinput;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
 import java.util.Collections;
 import java.util.Set;
 
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.api.properties.ComponentPropertyFactory;
 import org.talend.components.salesforce.SalesforceConnectionModuleProperties;
-import org.talend.daikon.properties.Property;
-import org.talend.daikon.properties.Property.Type;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TSalesforceInputProperties extends SalesforceConnectionModuleProperties {
 
-    public static final String QUERY_QUERY = "Query";
+    public enum QueryMode {
+        Query,
+        Bulk;
+    }
 
-    public static final String QUERY_BULK = "Bulk";
+    public Property<QueryMode> queryMode = newEnum("queryMode", QueryMode.class);
 
-    public Property queryMode = newProperty(Type.ENUM, "queryMode"); //$NON-NLS-1$
+    public Property<String> condition = newProperty("condition"); //$NON-NLS-1$
 
-    public Property condition = newProperty("condition"); //$NON-NLS-1$
+    public Property<Boolean> manualQuery = newBoolean("manualQuery"); //$NON-NLS-1$
 
-    public Property manualQuery = newProperty(Type.BOOLEAN, "manualQuery"); //$NON-NLS-1$
+    public Property<String> query = newProperty("query"); //$NON-NLS-1$
 
-    public Property query = newProperty("query"); //$NON-NLS-1$
-
-    public Property includeDeleted = newProperty(Type.BOOLEAN, "includeDeleted"); //$NON-NLS-1$
+    public Property<Boolean> includeDeleted = newBoolean("includeDeleted"); //$NON-NLS-1$
 
     //
     // Advanced
     //
-    public Property batchSize = newProperty(Type.INT, "batchSize"); //$NON-NLS-1$
+    public Property<Integer> batchSize = newInteger("batchSize"); //$NON-NLS-1$
 
-    public Property normalizeDelimiter = newProperty("normalizeDelimiter"); //$NON-NLS-1$
+    public Property<String> normalizeDelimiter = newProperty("normalizeDelimiter"); //$NON-NLS-1$
 
-    public Property columnNameDelimiter = newProperty("columnNameDelimiter"); //$NON-NLS-1$
+    public Property<String> columnNameDelimiter = newProperty("columnNameDelimiter"); //$NON-NLS-1$
 
     public TSalesforceInputProperties(@JsonProperty("name") String name) {
         super(name);
@@ -58,15 +57,10 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     @Override
     public void setupProperties() {
         super.setupProperties();
-        returns = ComponentPropertyFactory.newReturnsProperty();
-        ComponentPropertyFactory.newReturnProperty(returns, Type.INT, "NB_LINE");
-
         batchSize.setValue(250);
-        queryMode.setValue(QUERY_QUERY);
+        queryMode.setValue(QueryMode.Query);
         normalizeDelimiter.setValue(";");
         columnNameDelimiter.setValue("_");
-
-        queryMode.setPossibleValues(QUERY_QUERY, QUERY_BULK);
 
     }
 
@@ -88,6 +82,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
 
     public void afterQueryMode() {
         refreshLayout(getForm(Form.MAIN));
+        refreshLayout(getForm(Form.ADVANCED));
     }
 
     public void afterManualQuery() {
@@ -99,10 +94,18 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
             form.getWidget(includeDeleted.getName())
-                    .setVisible(queryMode.getValue() != null && queryMode.getValue().equals(QUERY_QUERY));
+                    .setHidden(!(queryMode.getValue() != null && queryMode.getValue().equals(QueryMode.Query)));
 
-            form.getWidget(query.getName()).setVisible(manualQuery.getBooleanValue());
-            form.getWidget(condition.getName()).setVisible(!manualQuery.getBooleanValue());
+            form.getWidget(query.getName()).setHidden(!manualQuery.getValue());
+            form.getWidget(condition.getName()).setHidden(manualQuery.getValue());
+        }
+        if (Form.ADVANCED.equals(form.getName())) {
+            boolean isBulkQuery = queryMode.getValue().equals(QueryMode.Bulk);
+            form.getWidget(normalizeDelimiter.getName()).setHidden(isBulkQuery);
+            form.getWidget(columnNameDelimiter.getName()).setHidden(isBulkQuery);
+            form.getWidget(batchSize.getName()).setHidden(isBulkQuery);
+            form.getChildForm(connection.getName()).getWidget(connection.bulkConnection.getName()).setHidden(true);
+            form.getChildForm(connection.getName()).getWidget(connection.timeout.getName()).setHidden(isBulkQuery);
         }
     }
 

@@ -12,21 +12,21 @@
 // ============================================================================
 package org.talend.components.common;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
 import static org.talend.daikon.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
 import java.util.EnumSet;
 
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.properties.Property;
+import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.properties.presentation.Widget.WidgetType;
+import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.property.Property;
 
-public class UserPasswordProperties extends ComponentProperties {
+public class UserPasswordProperties extends PropertiesImpl {
 
-    public Property userId = (Property) newProperty("userId").setRequired(true); //$NON-NLS-1$
+    public Property<String> userId = newProperty("userId").setRequired(true); //$NON-NLS-1$
 
-    public Property password = ((Property) newProperty("password").setRequired(true))
+    public Property<String> password = newProperty("password").setRequired(true)
             .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
     public UserPasswordProperties(String name) {
@@ -36,9 +36,9 @@ public class UserPasswordProperties extends ComponentProperties {
     @Override
     public void setupLayout() {
         super.setupLayout();
-        Form form = Form.create(this, Form.MAIN, "User Password");
+        Form form = Form.create(this, Form.MAIN);
         form.addRow(userId);
-        form.addRow(widget(password).setWidgetType(WidgetType.HIDDEN_TEXT));
+        form.addRow(widget(password).setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
     }
 
 }

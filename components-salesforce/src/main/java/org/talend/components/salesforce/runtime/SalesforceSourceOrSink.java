@@ -22,7 +22,7 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.apache.avro.Schema;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.SourceOrSink;
@@ -109,8 +109,8 @@ public class SalesforceSourceOrSink implements SourceOrSink {
         String restEndpoint = soapEndpoint.substring(0, soapEndpoint.indexOf("Soap/")) + "async/" + API_VERSION;
         bulkConfig.setRestEndpoint(restEndpoint);
         // This should only be false when doing debugging.
-        bulkConfig.setCompression(connProps.needCompression.getBooleanValue());
-        bulkConfig.setTraceMessage(connProps.httpTraceMessage.getBooleanValue());
+        bulkConfig.setCompression(connProps.needCompression.getValue());
+        bulkConfig.setTraceMessage(connProps.httpTraceMessage.getValue());
 
         try {
             return new BulkConnection(bulkConfig);
@@ -123,7 +123,7 @@ public class SalesforceSourceOrSink implements SourceOrSink {
         SalesforceConnectionProperties connProps = properties.getConnectionProperties();
         String endpoint = connProps.endpoint.getStringValue();
         endpoint = StringUtils.strip(endpoint, "\"");
-        if (SalesforceConnectionProperties.LOGIN_OAUTH.equals(connProps.loginType.getValue())) {
+        if (SalesforceConnectionProperties.LoginType.OAuth.equals(connProps.loginType.getValue())) {
             SalesforceOAuthConnection oauthConnection = new SalesforceOAuthConnection(connProps.oauth, endpoint, API_VERSION);
             oauthConnection.login(config);
         } else {
@@ -146,13 +146,18 @@ public class SalesforceSourceOrSink implements SourceOrSink {
         final ConnectionHolder ch = new ConnectionHolder();
         SalesforceConnectionProperties connProps = properties.getConnectionProperties();
         String refComponentId = connProps.getReferencedComponentId();
+        Object sharedConn = null;
         // Using another component's connection
         if (refComponentId != null) {
             // In a runtime container
             if (container != null) {
-                PartnerConnection conn = (PartnerConnection) container.getComponentData(refComponentId, KEY_CONNECTION);
-                if (conn != null) {
-                    ch.connection = conn;
+                sharedConn = container.getComponentData(refComponentId, KEY_CONNECTION);
+                if (sharedConn != null) {
+                    if (sharedConn instanceof PartnerConnection) {
+                        ch.connection = (PartnerConnection) sharedConn;
+                    } else if (sharedConn instanceof BulkConnection) {
+                        ch.bulkConnection = (BulkConnection) sharedConn;
+                    }
                     return ch;
                 }
                 throw new IOException("Referenced component: " + refComponentId + " not connected");
@@ -197,14 +202,14 @@ public class SalesforceSourceOrSink implements SourceOrSink {
             }
         });
 
-        if (connProps.timeout.getIntValue() > 0) {
-            config.setConnectionTimeout(connProps.timeout.getIntValue());
+        if (connProps.timeout.getValue() > 0) {
+            config.setConnectionTimeout(connProps.timeout.getValue());
         }
-        config.setCompression(connProps.needCompression.getBooleanValue());
+        config.setCompression(connProps.needCompression.getValue());
         if (false) {
             config.setTraceMessage(true);
         }
-        config.setUseChunkedPost(connProps.httpChunked.getBooleanValue());
+        config.setUseChunkedPost(connProps.httpChunked.getValue());
 
         try {
             ch.connection = doConnection(config);
@@ -215,11 +220,14 @@ public class SalesforceSourceOrSink implements SourceOrSink {
                     ch.connection.setCallOptions(clientId, null);
                 }
             }
-            if (connProps.bulkConnection.getBooleanValue()) {
+            if (connProps.bulkConnection.getValue()) {
                 ch.bulkConnection = connectBulk(ch.connection.getConfig());
+                sharedConn = ch.bulkConnection;
+            } else {
+                sharedConn = ch.connection;
             }
             if (container != null) {
-                container.setComponentData(container.getCurrentComponentId(), KEY_CONNECTION, ch.connection);
+                container.setComponentData(container.getCurrentComponentId(), KEY_CONNECTION, sharedConn);
             }
             return ch;
         } catch (ConnectionException e) {

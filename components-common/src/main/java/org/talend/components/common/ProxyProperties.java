@@ -12,14 +12,13 @@
 // ============================================================================
 package org.talend.components.common;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.properties.Property;
-import org.talend.daikon.properties.Property.Type;
+import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
 
-public class ProxyProperties extends ComponentProperties {
+public class ProxyProperties extends PropertiesImpl {
 
     public enum ProxyType {
         HTTP,
@@ -28,15 +27,15 @@ public class ProxyProperties extends ComponentProperties {
         FTP
     };
 
-    public Property useProxy = (Property) newProperty(Type.BOOLEAN, "useProxy").setRequired(true); //$NON-NLS-1$
+    public Property<Boolean> useProxy = newBoolean("useProxy").setRequired(true); //$NON-NLS-1$
 
     private static final String HOST = "host";
 
-    public Property host = (Property) newProperty(HOST).setRequired(true);
+    public Property<String> host = newProperty(HOST).setRequired(true);
 
     private static final String PORT = "port";
 
-    public Property port = (Property) newInteger(PORT).setRequired(true);
+    public Property<Integer> port = newInteger(PORT).setRequired(true);
 
     private static final String USERPASSWORD = "userPassword";
 
@@ -49,7 +48,7 @@ public class ProxyProperties extends ComponentProperties {
     @Override
     public void setupLayout() {
         super.setupLayout();
-        Form form = Form.create(this, Form.MAIN, "Proxy Parameters");
+        Form form = Form.create(this, Form.MAIN);
         form.addRow(useProxy);
         form.addRow(host);
         form.addRow(port);
@@ -64,10 +63,10 @@ public class ProxyProperties extends ComponentProperties {
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
-            boolean isUseProxy = useProxy.getBooleanValue();
-            form.getWidget(HOST).setVisible(isUseProxy);
-            form.getWidget(PORT).setVisible(isUseProxy);
-            form.getWidget(USERPASSWORD).setVisible(isUseProxy);
+            boolean isUseProxy = useProxy.getValue();
+            form.getWidget(HOST).setHidden(!isUseProxy);
+            form.getWidget(PORT).setHidden(!isUseProxy);
+            form.getWidget(USERPASSWORD).setHidden(!isUseProxy);
         }
     }
 

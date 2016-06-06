@@ -12,34 +12,42 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.properties.Property;
+import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
 
-public class SalesforceBulkProperties extends ComponentProperties {
+public class SalesforceBulkProperties extends ComponentPropertiesImpl {
 
-    public static final String CONCURRENCY_PARALLEL = "Parallel";
+    public enum Concurrency {
+        Parallel,
+        Serial;
+    }
 
-    public static final String CONCURRENCY_SERIAL = "Serial";
+    public Property<Concurrency> concurrencyMode = newEnum("concurrencyMode", Concurrency.class);
 
-    public Property concurrencyMode = newEnum("concurrencyMode", CONCURRENCY_PARALLEL, CONCURRENCY_SERIAL);
+    public Property<Integer> bytesToCommit = newInteger("bytesToCommit", "10485760");
 
-    public Property bytesToCommit = newInteger("bytesToCommit", "10485760");
+    public Property<Integer> rowsToCommit = newInteger("rowsToCommit", "10000");
 
-    public Property rowsToCommit = newInteger("rowsToCommit", "10000");
-
-    public Property waitTimeCheckBatchState = newInteger("waitTimeCheckBatchState");
+    public Property<Integer> waitTimeCheckBatchState = newInteger("waitTimeCheckBatchState");
 
     public SalesforceBulkProperties(String name) {
         super(name);
     }
 
     @Override
+    public void setupProperties() {
+        super.setupProperties();
+
+        waitTimeCheckBatchState.setValue(10000);
+    }
+
+    @Override
     public void setupLayout() {
         super.setupLayout();
-        Form mainForm = Form.create(this, Form.MAIN, "Salesforce Bulk Properties");
+        Form mainForm = Form.create(this, Form.MAIN);
         mainForm.addRow(concurrencyMode);
         mainForm.addRow(rowsToCommit);
         mainForm.addColumn(bytesToCommit);

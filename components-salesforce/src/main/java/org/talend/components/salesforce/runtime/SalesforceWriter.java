@@ -16,7 +16,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
@@ -24,6 +26,8 @@ import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.api.component.runtime.Writer;
 import org.talend.components.api.component.runtime.WriterResult;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.DataRejectException;
+import org.talend.components.salesforce.SalesforceOutputProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
 import org.talend.daikon.avro.IndexedRecordAdapterFactory;
 import org.talend.daikon.avro.util.AvroUtils;
@@ -35,6 +39,7 @@ import com.sforce.soap.partner.SaveResult;
 import com.sforce.soap.partner.UpsertResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
+import com.sforce.ws.bind.XmlObject;
 
 final class SalesforceWriter implements Writer<WriterResult> {
 
@@ -66,6 +71,10 @@ final class SalesforceWriter implements Writer<WriterResult> {
 
     private int dataCount;
 
+    private int successCount;
+
+    private int rejectCount;
+
     private transient IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> factory;
 
     private transient Schema schema;
@@ -90,7 +99,7 @@ final class SalesforceWriter implements Writer<WriterResult> {
         this.uId = uId;
         connection = sink.connect(container).connection;
         if (null == schema) {
-            schema = (Schema) sprops.module.main.schema.getValue();
+            schema = sprops.module.main.schema.getValue();
             if (AvroUtils.isIncludeAllFields(schema)) {
                 schema = sink.getSchema(connection, sprops.module.moduleName.getStringValue());
             } // else schema is fully specified
@@ -101,6 +110,7 @@ final class SalesforceWriter implements Writer<WriterResult> {
     @SuppressWarnings("unchecked")
     @Override
     public void write(Object datum) throws IOException {
+        dataCount++;
         // Ignore empty rows.
         if (null == datum) {
             return;
@@ -113,21 +123,34 @@ final class SalesforceWriter implements Writer<WriterResult> {
         }
         IndexedRecord input = factory.convertToAvro(datum);
 
-        if (!TSalesforceOutputProperties.ACTION_DELETE.equals(sprops.outputAction.getValue())) {
+        if (!TSalesforceOutputProperties.OutputAction.DELETE.equals(sprops.outputAction.getValue())) {
             SObject so = new SObject();
             so.setType(sprops.module.moduleName.getStringValue());
-
+            Map<String, Map<String, String>> referenceFieldsMap = null;
+            boolean isUpsert = SalesforceOutputProperties.OutputAction.UPSERT.equals(sprops.outputAction.getValue());
+            if (isUpsert) {
+                referenceFieldsMap = getReferenceFieldsMap();
+            }
             for (Schema.Field f : input.getSchema().getFields()) {
                 Object value = input.get(f.pos());
                 if (value != null) {
                     Schema.Field se = schema.getField(f.name());
                     if (se != null) {
-                        addSObjectField(so, f, se, value);
+                        if (isUpsert && referenceFieldsMap != null && referenceFieldsMap.get(se.name()) != null) {
+                            Map<String, String> relationMap = referenceFieldsMap.get(se.name());
+                            String lookupFieldName = relationMap.get("lookupFieldName");
+                            so.setField(lookupFieldName, null);
+                            so.getChild(lookupFieldName).setField("type", relationMap.get("lookupFieldModuleName"));
+                            addSObjectField(so.getChild(lookupFieldName), se.schema().getType(),
+                                    relationMap.get("lookupFieldExternalIdName"), value);
+                        } else {
+                            addSObjectField(so, se.schema().getType(), se.name(), value);
+                        }
                     }
                 }
             }
 
-            switch (TSalesforceOutputProperties.OutputAction.valueOf(sprops.outputAction.getStringValue())) {
+            switch (sprops.outputAction.getValue()) {
             case INSERT:
                 insert(so);
                 break;
@@ -147,7 +170,6 @@ final class SalesforceWriter implements Writer<WriterResult> {
                 delete(id);
             }
         }
-        dataCount++;
     }
 
     protected String getIdValue(IndexedRecord input) {
@@ -159,10 +181,10 @@ final class SalesforceWriter implements Writer<WriterResult> {
         throw new RuntimeException(ID + " not found");
     }
 
-    protected void addSObjectField(SObject sObject, Schema.Field actual, Schema.Field expected, Object value) {
+    protected void addSObjectField(XmlObject xmlObject, Schema.Type expected, String fieldName, Object value) {
         Object valueToAdd = null;
         // Convert stuff here
-        switch (expected.schema().getType()) {
+        switch (expected) {
         case BYTES:
             valueToAdd = Charset.defaultCharset().decode(ByteBuffer.wrap((byte[]) value)).toString();
             break;
@@ -174,7 +196,7 @@ final class SalesforceWriter implements Writer<WriterResult> {
             valueToAdd = value;
             break;
         }
-        sObject.setField(expected.name(), valueToAdd);
+        xmlObject.setField(fieldName, valueToAdd);
     }
 
     protected SaveResult[] insert(SObject sObject) throws IOException {
@@ -276,16 +298,47 @@ final class SalesforceWriter implements Writer<WriterResult> {
 
     protected void handleResults(boolean success, Error[] resultErrors, String[] changedItemKeys, int batchIdx)
             throws IOException {
-        StringBuilder errors = new StringBuilder("");
+        // StringBuilder errors = new StringBuilder("");
+
+        Map<String, Object> resultMessage = new HashMap<String, Object>();
+
         if (success) {
+            successCount++;
             // TODO: send back the ID
         } else {
-            errors = SalesforceRuntime.addLog(resultErrors,
-                    batchIdx < changedItemKeys.length ? changedItemKeys[batchIdx] : "Batch index out of bounds", null);
+            // TODO now we use batch mode for commit the data to salesforce, but the batch size is 1 at any time, so the
+            // code is ok now, but we need fix it.
+            rejectCount++;
+            for (Error error : resultErrors) {
+                if (error.getStatusCode() != null) {
+                    resultMessage.put("errorCode", error.getStatusCode().toString());
+                }
+                if (error.getFields() != null) {
+                    StringBuffer fields = new StringBuffer();
+                    for (String field : error.getFields()) {
+                        fields.append(field);
+                        fields.append(",");
+                    }
+                    if (fields.length() > 0) {
+                        fields.deleteCharAt(fields.length() - 1);
+                    }
+                    resultMessage.put("errorFields", fields.toString());
+                }
+                resultMessage.put("errorMessage", error.getMessage());
+            }
+
+            throw new DataRejectException(resultMessage);
+
+            /*
+             * errors = SalesforceRuntime.addLog(resultErrors, batchIdx < changedItemKeys.length ?
+             * changedItemKeys[batchIdx] : "Batch index out of bounds", null);
+             */
         }
-        if (exceptionForErrors && errors.toString().length() > 0) {
-            throw new IOException(errors.toString());
-        }
+
+        /*
+         * if (exceptionForErrors && errors.toString().length() > 0) { throw new IOException(errors.toString()); }
+         */
+
     }
 
     protected DeleteResult[] delete(String id) throws IOException {
@@ -327,6 +380,11 @@ final class SalesforceWriter implements Writer<WriterResult> {
         logout();
         // this should be computed according to the result of the write I guess but I don't know yet how exceptions are
         // handled by Beam.
+        if (container != null) {
+            container.setComponentData(container.getCurrentComponentId(), SalesforceOutputProperties.NB_LINE_NAME, dataCount);
+            container.setComponentData(container.getCurrentComponentId(), SalesforceOutputProperties.NB_SUCCESS_NAME, successCount);
+            container.setComponentData(container.getCurrentComponentId(), SalesforceOutputProperties.NB_REJECT_NAME, rejectCount);
+        }
         return new WriterResult(uId, dataCount);
     }
 
@@ -342,4 +400,25 @@ final class SalesforceWriter implements Writer<WriterResult> {
     public WriteOperation<WriterResult> getWriteOperation() {
         return salesforceWriteOperation;
     }
+
+    protected Map<String, Map<String, String>> getReferenceFieldsMap() {
+        Object value = sprops.upsertRelationTable.columnName.getValue();
+        Map<String, Map<String, String>> referenceFieldsMap = null;
+        if (value != null && value instanceof List) {
+            referenceFieldsMap = new HashMap<>();
+            List<String> columns = (List<String>) value;
+            List<String> lookupFieldModuleNames = sprops.upsertRelationTable.lookupFieldModuleName.getValue();
+            List<String> lookupFieldNames = sprops.upsertRelationTable.lookupFieldName.getValue();
+            List<String> externalIdFromLookupFields = sprops.upsertRelationTable.lookupFieldExternalIdName.getValue();
+            for (int index = 0; index < columns.size(); index++) {
+                Map<String, String> relationMap = new HashMap<>();
+                relationMap.put("lookupFieldModuleName", lookupFieldModuleNames.get(index));
+                relationMap.put("lookupFieldName", lookupFieldNames.get(index));
+                relationMap.put("lookupFieldExternalIdName", externalIdFromLookupFields.get(index));
+                referenceFieldsMap.put(columns.get(index), relationMap);
+            }
+        }
+        return referenceFieldsMap;
+    }
+
 }

@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
+import org.talend.daikon.avro.util.AvroUtils;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -51,26 +52,30 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
         TSalesforceInputProperties inProperties = (TSalesforceInputProperties) properties;
         if (querySchema == null) {
             querySchema = super.getSchema();
-            if (inProperties.manualQuery.getBooleanValue()) {
-                SObject currentSObject = getCurrentSObject();
-                Iterator<XmlObject> children = currentSObject.getChildren();
-                List<String> columnsName = new ArrayList<>();
-                while (children.hasNext()) {
-                    columnsName.add(children.next().getName().getLocalPart());
-                }
-
-                List<Schema.Field> copyFieldList = new ArrayList<>();
-                for (Schema.Field se : querySchema.getFields()) {
-                    if (columnsName.contains(se.name())) {
-                        copyFieldList.add(new Schema.Field(se.name(), se.schema(), se.doc(), se.defaultVal()));
+            if (inProperties.manualQuery.getValue()) {
+                if (AvroUtils.isIncludeAllFields(properties.module.main.schema.getValue())) {
+                    SObject currentSObject = getCurrentSObject();
+                    Iterator<XmlObject> children = currentSObject.getChildren();
+                    List<String> columnsName = new ArrayList<>();
+                    while (children.hasNext()) {
+                        columnsName.add(children.next().getName().getLocalPart());
                     }
+
+                    List<Schema.Field> copyFieldList = new ArrayList<>();
+                    for (Schema.Field se : querySchema.getFields()) {
+                        if (columnsName.contains(se.name())) {
+                            copyFieldList.add(new Schema.Field(se.name(), se.schema(), se.doc(), se.defaultVal()));
+                        }
+                    }
+                    Map<String, Object> objectProps = querySchema.getObjectProps();
+                    querySchema = Schema.createRecord(querySchema.getName(), querySchema.getDoc(), querySchema.getNamespace(),
+                            querySchema.isError());
+                    querySchema.getObjectProps().putAll(objectProps);
+                    querySchema.setFields(copyFieldList);
                 }
-                Map<String, Object> objectProps = querySchema.getObjectProps();
-                querySchema = Schema.createRecord(querySchema.getName(), querySchema.getDoc(), querySchema.getNamespace(),
-                        querySchema.isError());
-                querySchema.getObjectProps().putAll(objectProps);
-                querySchema.setFields(copyFieldList);
             }
+            querySchema.addProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER, inProperties.columnNameDelimiter.getStringValue());
+            querySchema.addProp(SalesforceSchemaConstants.VALUE_DELIMITER, inProperties.normalizeDelimiter.getStringValue());
         }
         return querySchema;
     }
@@ -84,7 +89,11 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
             }
             inputRecords = inputResult.getRecords();
             inputRecordsIndex = 0;
-            return inputRecords.length > 0;
+            boolean startable = inputRecords.length > 0;
+            if (startable) {
+                dataCount++;
+            }
+            return startable;
         } catch (ConnectionException e) {
             // Wrap the exception in an IOException.
             throw new IOException(e);
@@ -97,6 +106,7 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
 
         // Fast return conditions.
         if (inputRecordsIndex < inputRecords.length) {
+            dataCount++;
             return true;
         }
         if (inputResult.isDone()) {
@@ -121,8 +131,12 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
 
     protected QueryResult executeSalesforceQuery() throws IOException, ConnectionException {
         TSalesforceInputProperties inProperties = (TSalesforceInputProperties) properties;
-        getConnection().setQueryOptions(inProperties.batchSize.getIntValue());
-        return getConnection().query(getQueryString(inProperties));
+        getConnection().setQueryOptions(inProperties.batchSize.getValue());
+        if (inProperties.includeDeleted.getValue()) {
+            return getConnection().queryAll(getQueryString(inProperties));
+        } else {
+            return getConnection().query(getQueryString(inProperties));
+        }
     }
 
     @Override

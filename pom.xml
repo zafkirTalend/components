@@ -4,13 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.talend.components</groupId>
-	<version>0.7.0-SNAPSHOT</version>
+	<version>0.11.0-SNAPSHOT</version>
 	<artifactId>components</artifactId>
 	<packaging>pom</packaging>
-
-	<scm>
-		<connection>scm:git:https://github.com/Talend/components.git</connection>
-	</scm>
 
 	<name>Component Aggregator</name>
 	<modules>
@@ -18,11 +14,14 @@
 		<module>components-api</module>
 		<module>components-common</module>
 		<module>components-common-oauth</module>
+		<module>components-archetypes</module>
 		<module>components-salesforce</module>
 		<module>components-webtest</module>
 		<module>components-osgitest</module>
 		<module>components-proptester</module>
-		<module>components-cassandra</module>
+		<module>components-splunk</module>
+		<module>components-jira</module>
+		<module>components-dataprep</module>
 	</modules>
 	<profiles>
 		<profile>
@@ -46,13 +45,6 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
 				<version>2.2</version>
-			</plugin>
-			<plugin>
-				<artifactId>maven-scm-plugin</artifactId>
-				<version>1.9.4</version>
-				<configuration>
-					<tag>${project.artifactId}-${project.version}</tag>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

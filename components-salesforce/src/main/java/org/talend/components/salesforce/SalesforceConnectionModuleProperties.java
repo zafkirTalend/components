@@ -15,8 +15,11 @@ package org.talend.components.salesforce;
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
+import org.talend.components.api.properties.ComponentPropertyFactory;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.PropertyFactory;
 
 /**
  * Properties common to input and output Salesforce components.
@@ -26,6 +29,10 @@ public abstract class SalesforceConnectionModuleProperties extends FixedConnecto
 
     // Collections
     //
+    public static final String NB_LINE_NAME = "NB_LINE";
+
+    public Property<Integer> NB_LINE = PropertyFactory.newInteger(NB_LINE_NAME);
+
     public SalesforceConnectionProperties connection = new SalesforceConnectionProperties("connection"); //$NON-NLS-1$
 
     public SalesforceModuleProperties module;
@@ -39,13 +46,19 @@ public abstract class SalesforceConnectionModuleProperties extends FixedConnecto
     @Override
     public void setupProperties() {
         super.setupProperties();
+        NB_LINE = ComponentPropertyFactory.newReturnProperty(getReturns(), NB_LINE);
         // Allow for subclassing
         module = new SalesforceModuleProperties("module");
         module.connection = connection;
     }
 
+    @Override
+    public Property getReturns() {
+        return connection.getReturns();
+    }
+
     public Schema getSchema() {
-        return (Schema) module.main.schema.getValue();
+        return module.main.schema.getValue();
     }
 
     @Override
@@ -62,6 +75,19 @@ public abstract class SalesforceConnectionModuleProperties extends FixedConnecto
     @Override
     public SalesforceConnectionProperties getConnectionProperties() {
         return connection;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.talend.daikon.properties.Properties#refreshLayout(org.talend.daikon.properties.presentation.Form)
+     */
+    @Override
+    public void refreshLayout(Form form) {
+        super.refreshLayout(form);
+        for (Form childForm : connection.getForms()) {
+            connection.refreshLayout(childForm);
+        }
     }
 
 }

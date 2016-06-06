@@ -27,7 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.avro.Schema;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -78,7 +78,7 @@ import org.talend.daikon.properties.service.PropertiesServiceImpl;
  * Main Component Service implementation that is not related to any framework (neither OSGI, nor Spring) it uses a
  * ComponentRegistry implementation that will be provided by framework specific Service classes
  */
-public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentProperties>implements ComponentService {
+public class ComponentServiceImpl extends PropertiesServiceImpl implements ComponentService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ComponentServiceImpl.class);
 
@@ -168,6 +168,11 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
             }
         }
         return returnList;
+    }
+
+    @Override
+    public boolean setNestedPropertiesValues(ComponentProperties targetProperties, ComponentProperties nestedValues) {
+        return targetProperties.updateNestedProperties(nestedValues);
     }
 
     @Override
@@ -297,7 +302,7 @@ public class ComponentServiceImpl extends PropertiesServiceImpl<ComponentPropert
         // forEach(line -> mvnUris.add(parseMvnUri(line)));
         while (reader.ready()) {
             String line = reader.readLine();
-            if ((StringUtils.countMatches(line, ":") > 3) && !line.endsWith("test")) {
+            if ((org.apache.commons.lang3.StringUtils.countMatches(line, ":") > 3) && !line.endsWith("test")) {
                 mvnUris.add(parseMvnUri(line));
             } // else not an expected dependencies so ignor it.
         }
