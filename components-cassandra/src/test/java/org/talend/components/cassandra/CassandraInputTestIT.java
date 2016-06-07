@@ -7,9 +7,10 @@ import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.cassandra.input.TCassandraInputDefinition;
 import org.talend.components.cassandra.input.TCassandraInputProperties;
 import org.talend.daikon.NamedThing;
-import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.service.PropertiesServiceTest;
+import org.talend.daikon.properties.test.PropertiesTestUtils;
 
 import java.util.List;
 
@@ -35,21 +36,21 @@ public class CassandraInputTestIT extends CassandraTestBase {
         assertThat(props.getForms().size(), is(1));
         Form schemaRefForm = props.getSchemaProperties().getForm(Form.REFERENCE);
 
-        PropertiesServiceTest.checkAndBeforeActivate(getComponentService(), schemaRefForm, CassandraSchemaProperties.KEYSPACE, schemaRefForm.getProperties());
-        Property keyspace = (Property)schemaRefForm.getWidget(CassandraSchemaProperties.KEYSPACE).getContent();
+        PropertiesTestUtils.checkAndBeforeActivate(getComponentService(), schemaRefForm, KEYSPACE, schemaRefForm.getProperties());
+        Property keyspace = (Property)schemaRefForm.getWidget(KEYSPACE).getContent();
         assertThat(keyspace.getPossibleValues().size(), is(6));
         List<String> kss = namedThingToString((List<NamedThing>) keyspace.getPossibleValues());
         assertThat(kss, hasItem(KS_NAME));
         keyspace.setValue(KS_NAME);
 
-        PropertiesServiceTest.checkAndBeforeActivate(getComponentService(), schemaRefForm, CassandraSchemaProperties.COLUMN_FAMILY, schemaRefForm.getProperties());
-        Property columnFamily = (Property) schemaRefForm.getWidget(CassandraSchemaProperties.COLUMN_FAMILY).getContent();
+        PropertiesTestUtils.checkAndBeforeActivate(getComponentService(), schemaRefForm, COLUMN_FAMILY, schemaRefForm.getProperties());
+        Property columnFamily = (Property) schemaRefForm.getWidget(COLUMN_FAMILY).getContent();
         assertThat(columnFamily.getPossibleValues().size(), is(3));
         List<String> cfs = namedThingToString((List<NamedThing>) columnFamily.getPossibleValues());
         assertThat(cfs, hasItem("example_src"));
         columnFamily.setValue("example_src");
 
-        PropertiesServiceTest.checkAndAfter(getComponentService(), schemaRefForm, CassandraSchemaProperties.COLUMN_FAMILY, schemaRefForm.getProperties());
+        PropertiesTestUtils.checkAndAfter(getComponentService(), schemaRefForm, COLUMN_FAMILY, schemaRefForm.getProperties());
         assertNotNull(props.getSchemaProperties().main.schema.getStringValue());
         Schema schema = new Schema.Parser().parse(props.getSchemaProperties().main.schema.getStringValue());
         System.out.println(schema);

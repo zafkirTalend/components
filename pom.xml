@@ -22,6 +22,7 @@
 		<module>components-splunk</module>
 		<module>components-jira</module>
 		<module>components-dataprep</module>
+		<module>components-cassandra</module>
 	</modules>
 	<profiles>
 		<profile>

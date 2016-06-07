@@ -2,15 +2,15 @@ package org.talend.components.cassandra.output;
 
 import org.apache.avro.Schema;
 import org.talend.components.cassandra.CassandraIOBasedProperties;
-import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
+import org.talend.daikon.properties.property.Property;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.talend.daikon.properties.PropertyFactory.*;
 import static org.talend.daikon.properties.presentation.Widget.widget;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
 public class TCassandraOutputProperties extends CassandraIOBasedProperties {
 
@@ -24,95 +24,76 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
         super(name);
     }
 
-    //TODO(bchen) be common?
-    public static final String ACTION_NONE = "NONE";
+    public enum ActionOnKeyspace {
+        None,
+        Drop_Create,
+        Create,
+        Create_If_Not_Exists,
+        Drop_If_Exists_And_Create
+    }
 
-    public static final String ACTION_DROP_CREATE = "DROP_CREATE";
-    public static final String ACTION_CREATE = "CREATE";
-    public static final String ACTION_CREATE_IF_NOT_EXISTS = "CREATE_IF_NOT_EXISTS";
-    public static final String ACTION_DROP_IF_EXISTS_AND_CREATE = "DROP_IF_EXISTS_AND_CREATE";
-    public static final String ACTION_TRUNCATE = "TRUNCATE";
     //TODO(bchen) any improvement for enum? how to set, how to get, how to check
-    public Property actionOnKeyspace = newEnum("actionOnKeyspace", ACTION_NONE, ACTION_DROP_CREATE, ACTION_CREATE, ACTION_CREATE_IF_NOT_EXISTS, ACTION_DROP_IF_EXISTS_AND_CREATE);
+    public Property<ActionOnKeyspace> actionOnKeyspace = newEnum("actionOnKeyspace", ActionOnKeyspace.class);
 
-    public static final String KS_REPLICA_NETWORK = "NetworkTopologyStrategy";
+    public enum ReplicaStrategy {
+        Network,
+        Simple
+    }
+    public Property<ReplicaStrategy> replicaStrategy = newEnum("replicaStrategy", ReplicaStrategy.class);//SHOW_IF actionOnKeyspace != NONE
 
-    public static final String KS_REPLICA_SIMPLE = "SimpleStrategy";
-    public Property replicaStrategy = newEnum("replicaStrategy", KS_REPLICA_NETWORK, KS_REPLICA_SIMPLE);//SHOW_IF actionOnKeyspace != NONE
+    public Property<Integer> simpleReplicaNumber = newInteger("simpleReplicaNumber", 3); //SHOW_IF replica is simple
 
-    public Property simpleReplicaNumber = newInteger("simpleReplicaNumber", 3); //SHOW_IF replica is simple
+    public NetworkReplicaTable networkReplicaTable = new NetworkReplicaTable("networkReplicaTable");
 
-    public Property networkReplicaTable = new Property("networkReplicaTable");
+    public enum ActionOnColumnFamily {
+        None,
+        Drop_Create,
+        Create,
+        Create_If_Not_Exists,
+        Drop_If_Exists_And_Create,
+        Truncate
+    }
 
-    public Property datacenterName = newString("datacenterName");
-    public Property replicaNumber = newInteger("replicaNumber", 3);
-    public Property actionOnColumnFamily = newEnum("actionOnColumnFamily", ACTION_NONE, ACTION_DROP_CREATE, ACTION_CREATE, ACTION_CREATE_IF_NOT_EXISTS, ACTION_DROP_IF_EXISTS_AND_CREATE, ACTION_TRUNCATE);
+    public Property<ActionOnColumnFamily> actionOnColumnFamily = newEnum("actionOnColumnFamily", ActionOnColumnFamily.class);
 
-    public static final String ACTION_INSERT = "INSERT";
+    public enum DataAction {
+        Insert,
+        Update,
+        Delete
+    }
+    public Property<DataAction> dataAction = newEnum("dataAction", DataAction.class);
 
-    public static final String ACTION_UPDATE = "UPDATE";
-    public static final String ACTION_DELETE = "DELETE";
-    public Property dataAction = newEnum("dataAction", ACTION_INSERT, ACTION_UPDATE, ACTION_DELETE);
-    public Property dieOnError = newBoolean("dieOnError", false);
+    public Property<Boolean> dieOnError = newBoolean("dieOnError", false);
 
     //Advanced setting
-    public Property useUnloggedBatch = newBoolean("useUnloggedBatch", false);
+    public Property<Boolean> useUnloggedBatch = newBoolean("useUnloggedBatch", false);
+    public Property<Integer> batchSize = newInteger("batchSize", 10000);
 
-    public Property batchSize = newInteger("batchSize", 10000);
-    public Property insertIfNotExists = newBoolean("insertIfNotExists", false);
+    public Property<Boolean> insertIfNotExists = newBoolean("insertIfNotExists", false);
+    public Property<Boolean> deleteIfExists = newBoolean("deleteIfExists", false);
 
-    public Property deleteIfExists = newBoolean("deleteIfExists", false);
+    public Property<Boolean> usingTTL = newBoolean("usingTTL", false);
+    public Property<String> ttl = newString("ttl");
+    public Property<Boolean> usingTimestamp = newBoolean("usingTimestamp", false);
+    public Property<String> timestamp = newString("timestamp");
 
-    public Property usingTTL = newBoolean("usingTTL", false);
+    public IfConditionTable ifCondition = new IfConditionTable("ifCondition");
 
-    public Property ttl = newEnum("ttl");
-    public Property usingTimestamp = newBoolean("usingTimestamp", false);
+    public AssignmentOperationTable assignmentOperation = new AssignmentOperationTable("assignmentOperation");
 
-    public Property timestamp = newEnum("timestamp");
-    public Property ifCondition = new Property("ifCondition");
+    public DeleteColumnByPositionKeyTable deleteColumnByPositionKey = new DeleteColumnByPositionKeyTable("deleteColumnByPositionKey");
 
-    public Property ifConditionColumnName = newEnum("ifConditionColumnName");
-    public Property assignmentOperation = new Property("assignmentOperation");
+    public RowKeyInListTable rowKeyInList = new RowKeyInListTable("rowKeyInList");
 
-    public Property assignmentOperationColumnName = newEnum("assignmentOperationColumnName");
-    public static final String APPEND = "+v";
-    public static final String PREPEND = "v+";
-    public static final String MINUS = "-";
-    public static final String POSITION_OR_KEY = "p/k";
-    public Property operation = newEnum("operation", APPEND, PREPEND, MINUS, POSITION_OR_KEY);
-    public Property keyColumn = newEnum("keyColumn");
-    public Property deleteColumnByPositionKey = new Property("deleteColumnByPositionKey");
-
-    public Property deleteColumnByPositionKeyColumnName = newEnum("deleteColumnByPositionKeyColumnName");
-    public Property rowKeyInList = new Property("rowKeyInList");
-
-    public Property rowKeyInListColumnName = newEnum("rowKeyInListColumnName");
 
     @Override
     public void setupProperties() {
         super.setupProperties();
-        actionOnKeyspace.setValue(ACTION_NONE);
+        actionOnKeyspace.setValue(ActionOnKeyspace.None);
 
-        networkReplicaTable.setOccurMaxTimes(Property.INFINITE);
-        networkReplicaTable.addChild(datacenterName);
-        networkReplicaTable.addChild(replicaNumber);
+        actionOnColumnFamily.setValue(ActionOnColumnFamily.None);
+        dataAction.setValue(DataAction.Insert);
 
-        actionOnColumnFamily.setValue(ACTION_NONE);
-        dataAction.setValue(ACTION_INSERT);
-
-        ifCondition.setOccurMaxTimes(Property.INFINITE);
-        ifCondition.addChild(ifConditionColumnName);
-
-        assignmentOperation.setOccurMaxTimes(Property.INFINITE);
-        assignmentOperation.addChild(assignmentOperationColumnName);
-        assignmentOperation.addChild(operation);
-        assignmentOperation.addChild(keyColumn);
-
-        deleteColumnByPositionKey.setOccurMaxTimes(Property.INFINITE);
-        deleteColumnByPositionKey.addChild(deleteColumnByPositionKeyColumnName);
-
-        rowKeyInList.setOccurMaxTimes(Property.INFINITE);
-        rowKeyInList.addChild(rowKeyInListColumnName);
     }
 
     private List<String> getColumnNames() {
@@ -134,24 +115,21 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
         timestamp.setPossibleValues(getColumnNames());
     }
 
-    public void beforeIfConditionColumnName() {
-        ifConditionColumnName.setPossibleValues(getColumnNames());
+    public void beforeIfCondition() {
+        ifCondition.columnName.setPossibleValues(getColumnNames());
     }
 
-    public void beforeAssignmentOperationColumnName() {
-        assignmentOperationColumnName.setPossibleValues(getColumnNames());
+    public void beforeAssignmentOperation() {
+        assignmentOperation.columnName.setPossibleValues(getColumnNames());
+        assignmentOperation.keyColumn.setPossibleValues(getColumnNames());
     }
 
-    public void beforeAssignmentOperationKeyColumn() {
-        keyColumn.setPossibleValues(getColumnNames());
+    public void beforeDeleteColumnByPositionKey() {
+        deleteColumnByPositionKey.columnName.setPossibleValues(getColumnNames());
     }
 
-    public void beforeDeleteColumnByPositionKeyColumnName() {
-        deleteColumnByPositionKeyColumnName.setPossibleValues(getColumnNames());
-    }
-
-    public void beforeRowKeyInListColumnName() {
-        rowKeyInListColumnName.setPossibleValues(getColumnNames());
+    public void beforeRowKeyInList() {
+        rowKeyInList.columnName.setPossibleValues(getColumnNames());
     }
 
     @Override
@@ -160,7 +138,7 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
         Form mainForm = getForm(Form.MAIN);
         mainForm.addRow(actionOnKeyspace).addColumn(replicaStrategy);
         mainForm.addRow(simpleReplicaNumber);
-        mainForm.addRow(widget(networkReplicaTable).setWidgetType(Widget.WidgetType.TABLE));
+        mainForm.addRow(widget(networkReplicaTable).setWidgetType(Widget.TABLE_WIDGET_TYPE));
         mainForm.addRow(actionOnColumnFamily);
         mainForm.addRow(dataAction);
         mainForm.addRow(dieOnError);
@@ -171,34 +149,34 @@ public class TCassandraOutputProperties extends CassandraIOBasedProperties {
         advancedForm.addRow(deleteIfExists);
         advancedForm.addRow(usingTTL).addColumn(ttl);
         advancedForm.addRow(usingTimestamp).addColumn(timestamp);
-        advancedForm.addRow(widget(ifCondition).setWidgetType(Widget.WidgetType.TABLE));
-        advancedForm.addRow(widget(assignmentOperation).setWidgetType(Widget.WidgetType.TABLE));
-        advancedForm.addRow(widget(deleteColumnByPositionKey).setWidgetType(Widget.WidgetType.TABLE));
-        advancedForm.addRow(widget(rowKeyInList).setWidgetType(Widget.WidgetType.TABLE));
+        advancedForm.addRow(widget(ifCondition).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        advancedForm.addRow(widget(assignmentOperation).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        advancedForm.addRow(widget(deleteColumnByPositionKey).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        advancedForm.addRow(widget(rowKeyInList).setWidgetType(Widget.TABLE_WIDGET_TYPE));
     }
 
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
-            form.getWidget(actionOnKeyspace.getName()).setVisible(!ACTION_DELETE.equals(dataAction.getValue()));
-            form.getWidget(replicaStrategy.getName()).setVisible(form.getWidget(actionOnKeyspace.getName()).isVisible() && !ACTION_NONE.equals(actionOnKeyspace.getValue()));
-            form.getWidget(simpleReplicaNumber.getName()).setVisible(form.getWidget(replicaStrategy.getName()).isVisible() && KS_REPLICA_SIMPLE.equals(replicaStrategy.getValue()));
-            form.getWidget(networkReplicaTable.getName()).setVisible(form.getWidget(replicaStrategy.getName()).isVisible() && KS_REPLICA_NETWORK.equals(replicaStrategy.getValue()));
-            form.getWidget(actionOnColumnFamily.getName()).setVisible(!ACTION_DELETE.equals(dataAction.getValue()));
+            form.getWidget(actionOnKeyspace.getName()).setHidden(DataAction.Delete.equals(dataAction.getValue()));
+            form.getWidget(replicaStrategy.getName()).setHidden(form.getWidget(actionOnKeyspace.getName()).isHidden() || ActionOnKeyspace.None.equals(actionOnKeyspace.getValue()));
+            form.getWidget(simpleReplicaNumber.getName()).setHidden(form.getWidget(replicaStrategy.getName()).isHidden() || ReplicaStrategy.Network.equals(replicaStrategy.getValue()));
+            form.getWidget(networkReplicaTable.getName()).setHidden(form.getWidget(replicaStrategy.getName()).isHidden() || ReplicaStrategy.Simple.equals(replicaStrategy.getValue()));
+            form.getWidget(actionOnColumnFamily.getName()).setHidden(form.getWidget(actionOnKeyspace.getName()).isHidden());
         } else if (form.getName().equals(Form.ADVANCED)) {
-            form.getWidget(batchSize.getName()).setVisible(useUnloggedBatch.getBooleanValue());
-            form.getWidget(insertIfNotExists.getName()).setVisible(ACTION_INSERT.equals(dataAction.getValue()) && !usingTimestamp.getBooleanValue());
-            form.getWidget(deleteIfExists.getName()).setVisible(ACTION_DELETE.equals(dataAction.getValue()));
-            form.getWidget(usingTTL.getName()).setVisible(ACTION_INSERT.equals(dataAction.getValue()) || ACTION_UPDATE.equals(dataAction.getValue()));
-            form.getWidget(ttl.getName()).setVisible(form.getWidget(usingTTL.getName()).isVisible() && usingTTL.getBooleanValue());
-            form.getWidget(usingTimestamp.getName()).setVisible((ACTION_INSERT.equals(dataAction.getValue()) && !insertIfNotExists.getBooleanValue()) || ACTION_UPDATE.equals(dataAction.getValue()) || ACTION_DELETE.equals(dataAction.getValue()));
-            form.getWidget(timestamp.getName()).setVisible(form.getWidget(usingTimestamp.getName()).isVisible() && usingTimestamp.getBooleanValue());
-            form.getWidget(ifCondition.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()) || (ACTION_DELETE.equals(dataAction.getValue()) && !deleteIfExists.getBooleanValue()));
-            form.getWidget(assignmentOperation.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()));
+            form.getWidget(batchSize.getName()).setHidden(!useUnloggedBatch.getValue());
+            form.getWidget(insertIfNotExists.getName()).setHidden(!DataAction.Insert.equals(dataAction.getValue()) || usingTimestamp.getValue());
+            form.getWidget(deleteIfExists.getName()).setHidden(!DataAction.Delete.equals(dataAction.getValue()));
+            form.getWidget(usingTTL.getName()).setHidden(!DataAction.Insert.equals(dataAction.getValue()) && !DataAction.Update.equals(dataAction.getValue()));
+            form.getWidget(ttl.getName()).setHidden(form.getWidget(usingTTL.getName()).isHidden() || !usingTTL.getValue());
+            form.getWidget(usingTimestamp.getName()).setHidden((DataAction.Insert.equals(dataAction.getValue()) && insertIfNotExists.getValue()));
+            form.getWidget(timestamp.getName()).setHidden(form.getWidget(usingTimestamp.getName()).isHidden() || !usingTimestamp.getValue());
+            form.getWidget(ifCondition.getName()).setHidden(!DataAction.Update.equals(dataAction.getValue()) && (!DataAction.Delete.equals(dataAction.getValue()) && deleteIfExists.getValue()));
+            form.getWidget(assignmentOperation.getName()).setHidden(!DataAction.Update.equals(dataAction.getValue()));
             //FIXME how to hidden keyColumn in assignmentOperation when operation is p/k,waiting for studio support ComponentProperties for table widget
-            form.getWidget(deleteColumnByPositionKey.getName()).setVisible(ACTION_DELETE.equals(dataAction.getValue()));
-            form.getWidget(rowKeyInList.getName()).setVisible(ACTION_UPDATE.equals(dataAction.getValue()) || ACTION_DELETE.equals(dataAction.getValue()));
+            form.getWidget(deleteColumnByPositionKey.getName()).setHidden(!DataAction.Delete.equals(dataAction.getValue()));
+            form.getWidget(rowKeyInList.getName()).setHidden(!DataAction.Update.equals(dataAction.getValue()) && !DataAction.Delete.equals(dataAction.getValue()));
         }
     }
 

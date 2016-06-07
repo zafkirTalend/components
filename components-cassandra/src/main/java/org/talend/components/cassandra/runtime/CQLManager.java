@@ -2,6 +2,7 @@ package org.talend.components.cassandra.runtime;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.talend.components.cassandra.output.AssignmentOperationTable;
 import org.talend.components.cassandra.output.TCassandraOutputProperties;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.talend6.Talend6SchemaConstants;
@@ -17,7 +18,7 @@ class Column {
 
     private String mark = "?";
 
-    private String assignmentOperation = "=";
+    private AssignmentOperationTable.Operation assignmentOperation;
 
     private Column assignmentKey;
 
@@ -55,11 +56,11 @@ class Column {
         this.mark = mark;
     }
 
-    public void setAssignmentOperation(String op) {
+    public void setAssignmentOperation(AssignmentOperationTable.Operation op) {
         this.assignmentOperation = op;
     }
 
-    public String getAssignmentOperation() {
+    public AssignmentOperationTable.Operation getAssignmentOperation() {
         return assignmentOperation;
     }
 
@@ -94,7 +95,7 @@ class CQLManager {
 
     private TCassandraOutputProperties props;
 
-    private String action;
+    private TCassandraOutputProperties.DataAction action;
 
     private String keyspace;
 
@@ -106,7 +107,7 @@ class CQLManager {
 
     public CQLManager(TCassandraOutputProperties props) {
         this.props = props;
-        this.action = this.props.dataAction.getStringValue();
+        this.action = this.props.dataAction.getValue();
         this.keyspace = this.props.getSchemaProperties().keyspace.getStringValue();
         this.tableName = this.props.getSchemaProperties().columnFamily.getStringValue();
         this.tableName = this.keyspace + "." + this.tableName;//FIXME(bchen) double quote around
@@ -146,12 +147,12 @@ class CQLManager {
         keys = new ArrayList<Column>();
         normals = new ArrayList<Column>();
         conditions = new ArrayList<Column>();
-        boolean usingTimestamp = props.usingTimestamp.getBooleanValue();
-        String timestampColName = props.timestamp.getStringValue();
+        boolean usingTimestamp = props.usingTimestamp.getValue();
+        String timestampColName = props.timestamp.getValue();
         for (Column column : all) {
-            if (TCassandraOutputProperties.ACTION_INSERT.equals(action) || TCassandraOutputProperties.ACTION_UPDATE.equals(action)) {
-                boolean usingTTL = props.usingTTL.getBooleanValue();
-                String ttlColName = props.ttl.getStringValue();
+            if (TCassandraOutputProperties.DataAction.Insert == action || TCassandraOutputProperties.DataAction.Update == action) {
+                boolean usingTTL = props.usingTTL.getValue();
+                String ttlColName = props.ttl.getValue();
                 if (usingTTL && ttlColName.equals(column.getName())) {
                     ttl = column;
                     ttl.setMark("TTL ?");
@@ -167,11 +168,11 @@ class CQLManager {
                 keys.add(column);
                 continue;
             }
-            if (TCassandraOutputProperties.ACTION_UPDATE.equals(action) || (TCassandraOutputProperties.ACTION_DELETE.equals(action) && !props.deleteIfExists.getBooleanValue())) {
-                List<Map<String, String>> ifCoditions = (List<Map<String, String>>) props.ifCondition.getValue();
+            if (TCassandraOutputProperties.DataAction.Update.equals(action) || (TCassandraOutputProperties.DataAction.Delete.equals(action) && !props.deleteIfExists.getValue())) {
+                List<String> ifCoditions = (List<String>) props.ifCondition.columnName.getValue();
                 boolean matched = false;
-                for (Map<String, String> ifCodition : ifCoditions) {
-                    if (ifCodition.get(props.ifConditionColumnName.getName()).equals(column.getName())) {
+                for (String ifCodition : ifCoditions) {
+                    if (ifCodition.equals(column.getName())) {
                         conditions.add(column);
                         matched = true;
                         continue;
@@ -183,45 +184,39 @@ class CQLManager {
             }
             normals.add(column);
         }
-        if (TCassandraOutputProperties.ACTION_UPDATE.equals(action)) {
-            List<Map<String, String>> assignOperations = (List<Map<String, String>>) props.assignmentOperation.getValue();
+        if (TCassandraOutputProperties.DataAction.Update.equals(action)) {
             List<Column> keyColumns = new ArrayList<Column>();
-            for (Column column : normals) {
-                for (Map<String, String> operation : assignOperations) {
-                    String updateColumnKeyName = operation.get(props.keyColumn.getName());
-                    String updateColumnOperation = operation.get(props.operation.getName());
-                    if (props.POSITION_OR_KEY.equals(updateColumnOperation) && column.getName().equals(updateColumnKeyName)) {
-                        keyColumns.add(column);
-                    }
+            for (int i = 0; i < normals.size(); i++){
+                props.assignmentOperation.columnName.getValue().get(i);
+                String updateColumnKeyName = props.assignmentOperation.keyColumn.getValue().get(i);
+                AssignmentOperationTable.Operation updateColumnOperation = props.assignmentOperation.operation.getValue().get(i);
+                if (AssignmentOperationTable.Operation.Position_Or_Key.equals(updateColumnOperation) && normals.get(i).getName().equals(updateColumnKeyName)) {
+                    keyColumns.add(normals.get(i));
                 }
             }
             normals.removeAll(keyColumns);
-            for (Column column : normals) {
-                for (Map<String, String> operation : assignOperations) {
-                    String updateColumnName = operation.get(props.assignmentOperationColumnName.getName());
-                    String updateColumnKeyName = operation.get(props.keyColumn.getName());
-                    String updateColumnOperation = operation.get(props.operation.getName());
-                    if (updateColumnName.equals(column.getName())) {
-                        column.setAssignmentOperation(updateColumnOperation);
-                        if (props.POSITION_OR_KEY.equals(updateColumnOperation)) {
-                            for (Column keyColumn : keyColumns) {
-                                if (keyColumn.getName().equals(updateColumnKeyName)) {
-                                    column.setAssignmentKey(keyColumn);
-                                }
+            for (int i = 0; i < normals.size(); i++){
+                String updateColumnName = props.assignmentOperation.columnName.getValue().get(i);
+                String updateColumnKeyName = props.assignmentOperation.keyColumn.getValue().get(i);
+                AssignmentOperationTable.Operation updateColumnOperation = props.assignmentOperation.operation.getValue().get(i);
+                if (updateColumnName.equals(normals.get(i).getName())) {
+                    normals.get(i).setAssignmentOperation(updateColumnOperation);
+                    if (AssignmentOperationTable.Operation.Position_Or_Key.equals(updateColumnOperation)) {
+                        for (Column keyColumn : keyColumns) {
+                            if (keyColumn.getName().equals(updateColumnKeyName)) {
+                                normals.get(i).setAssignmentKey(keyColumn);
                             }
                         }
-                        continue;
                     }
+                    continue;
                 }
             }
         }
-        if (TCassandraOutputProperties.ACTION_DELETE.equals(action)) {
-            List<Map<String, String>> columnsKey = (List<Map<String, String>>) props.deleteColumnByPositionKey.getValue();
+        if (TCassandraOutputProperties.DataAction.Delete.equals(action)) {
+            List<String> columnsKey = props.deleteColumnByPositionKey.columnName.getValue();
             for (Column column : normals) {
-                for (Map<String, String> columnKey : columnsKey) {
-                    if (column.getName().equals(columnKey.get(props.deleteColumnByPositionKeyColumnName.getName()))) {
+                if(columnsKey.contains(column.getName())){
                         column.setAsColumnKey(true);
-                    }
                 }
             }
         }
@@ -229,14 +224,14 @@ class CQLManager {
 
     private List<Column> collectValueColumns() {
         List<Column> columns = new ArrayList<>();
-        if (TCassandraOutputProperties.ACTION_INSERT.equals(action)) {
+        if (TCassandraOutputProperties.DataAction.Insert.equals(action)) {
             columns.addAll(keys);
             columns.addAll(normals);
             if (ttl != null)
                 columns.add(ttl);
             if (timestamp != null)
                 columns.add(timestamp);
-        } else if (TCassandraOutputProperties.ACTION_UPDATE.equals(action)) {
+        } else if (TCassandraOutputProperties.DataAction.Update.equals(action)) {
             if (ttl != null)
                 columns.add(ttl);
             if (timestamp != null)
@@ -249,7 +244,7 @@ class CQLManager {
             }
             columns.addAll(keys);
             columns.addAll(conditions);
-        } else if (TCassandraOutputProperties.ACTION_DELETE.equals(action)) {
+        } else if (TCassandraOutputProperties.DataAction.Delete.equals(action)) {
             for (Column column : normals) {
                 if (column.getAsColumnKey()) {
                     columns.add(column);
@@ -258,7 +253,7 @@ class CQLManager {
             if (timestamp != null)
                 columns.add(timestamp);
             columns.addAll(keys);
-            boolean ifExist = props.deleteIfExists.getBooleanValue();
+            boolean ifExist = props.deleteIfExists.getValue();
             if (!ifExist) {
                 columns.addAll(conditions);
             }
@@ -307,18 +302,18 @@ class CQLManager {
             createKSCQL.append("IF NOT EXISTS ");
         }
         createKSCQL.append(this.keyspace);
-        createKSCQL.append("WITH REPLICATION = {'class' : '" + props.replicaStrategy.getStringValue() + "',");
-        if (TCassandraOutputProperties.KS_REPLICA_SIMPLE.equals(props.replicaStrategy.getStringValue())) {
-            createKSCQL.append("'replication_factor' : " + props.simpleReplicaNumber.getIntValue() + "}");
+        createKSCQL.append("WITH REPLICATION = {'class' : '" + props.replicaStrategy.getValue() + "',");
+        if (TCassandraOutputProperties.ReplicaStrategy.Simple == props.replicaStrategy.getValue()) {
+            createKSCQL.append("'replication_factor' : " + props.simpleReplicaNumber.getValue() + "}");
         } else {
-            List<Map<String, String>> replicas = (List<Map<String, String>>) props.networkReplicaTable.getValue();
-            int count = 1;
-            for (Map<String, String> replica : replicas) {
-                createKSCQL.append("'" + replica.get(props.datacenterName.getName()) + "' : " + replica.get(props.replicaNumber.getIntValue()));
-                if (count < replicas.size()) {
+            List<String> datacenterList = props.networkReplicaTable.datacenterName.getValue();
+            List<Integer> replicaNumberList = props.networkReplicaTable.replicaNumber.getValue();
+            Integer size = Math.min(datacenterList.size(), replicaNumberList.size());
+            for(int i = 0; i < size; i++){
+                createKSCQL.append("'" + datacenterList.get(i) + "' : " + replicaNumberList.get(i));
+                if (i + 1 < size) {
                     createKSCQL.append(",");
                 }
-                count++;
             }
             createKSCQL.append("}");
         }
@@ -328,54 +323,59 @@ class CQLManager {
 
     public List<String> getKSCQLs() {
         List<String> cqls = new ArrayList<>();
-        String actionOnKeyspace = props.actionOnKeyspace.getStringValue();
+        TCassandraOutputProperties.ActionOnKeyspace actionOnKeyspace = props.actionOnKeyspace.getValue();
         //No action needed for delete operation
-        if (TCassandraOutputProperties.ACTION_DELETE.equals(props.dataAction.getStringValue()) || TCassandraOutputProperties.ACTION_NONE.equals(actionOnKeyspace)) {
+        if (TCassandraOutputProperties.DataAction.Delete == props.dataAction.getValue() || TCassandraOutputProperties.ActionOnKeyspace.None == actionOnKeyspace) {
             return cqls;
         }
 
-        if (TCassandraOutputProperties.ACTION_DROP_CREATE.equals(actionOnKeyspace)) {
-            cqls.add(getDropKSCQL(false));
-            cqls.add(getCreateKSCQL(false));
-        } else if (TCassandraOutputProperties.ACTION_CREATE.equals(actionOnKeyspace)) {
-            cqls.add(getCreateKSCQL(false));
-        } else if (TCassandraOutputProperties.ACTION_CREATE_IF_NOT_EXISTS.equals(actionOnKeyspace)) {
-            cqls.add(getCreateKSCQL(true));
-        } else if (TCassandraOutputProperties.ACTION_DROP_IF_EXISTS_AND_CREATE.equals(actionOnKeyspace)) {
-            cqls.add(getDropKSCQL(true));
-            cqls.add(getCreateKSCQL(false));
+        switch (actionOnKeyspace){
+            case Drop_Create:
+                cqls.add(getDropKSCQL(false));
+                cqls.add(getCreateKSCQL(false));
+                break;
+            case Create:
+                cqls.add(getCreateKSCQL(false));
+                break;
+            case Create_If_Not_Exists:
+                cqls.add(getCreateKSCQL(true));
+                break;
+            case Drop_If_Exists_And_Create:
+                cqls.add(getDropKSCQL(true));
+                cqls.add(getCreateKSCQL(false));
+                break;
         }
         return cqls;
     }
 
     public List<String> getTableCQLs() throws IOException {
         List<String> cqls = new ArrayList<>();
-        String actionOnColumnFamily = props.actionOnColumnFamily.getStringValue();
+        TCassandraOutputProperties.ActionOnColumnFamily actionOnColumnFamily = props.actionOnColumnFamily.getValue();
         //No action needed for delete operation
-        if (TCassandraOutputProperties.ACTION_DELETE.equals(props.dataAction.getStringValue()) || TCassandraOutputProperties.ACTION_NONE.equals(actionOnColumnFamily)) {
+        if (TCassandraOutputProperties.DataAction.Delete == props.dataAction.getValue() || TCassandraOutputProperties.ActionOnColumnFamily.None == actionOnColumnFamily) {
             return cqls;
         }
 
-        if (!TCassandraOutputProperties.ACTION_TRUNCATE.equals(actionOnColumnFamily) && containsUnsupportTypes()) {
+        if (TCassandraOutputProperties.ActionOnColumnFamily.Truncate != actionOnColumnFamily && containsUnsupportTypes()) {
             throw new IOException("Don't support create table with set/list/map");
         }
 
         switch (actionOnColumnFamily) {
-            case TCassandraOutputProperties.ACTION_DROP_CREATE:
+            case Drop_Create:
                 cqls.add(getDropTableCQL(false));
                 cqls.add(getCreateTableCQL(false));
                 break;
-            case TCassandraOutputProperties.ACTION_CREATE:
+            case Create:
                 cqls.add(getCreateTableCQL(false));
                 break;
-            case TCassandraOutputProperties.ACTION_DROP_IF_EXISTS_AND_CREATE:
+            case Drop_If_Exists_And_Create:
                 cqls.add(getDropTableCQL(true));
                 cqls.add(getCreateTableCQL(false));
                 break;
-            case TCassandraOutputProperties.ACTION_CREATE_IF_NOT_EXISTS:
+            case Create_If_Not_Exists:
                 cqls.add(getCreateTableCQL(true));
                 break;
-            case TCassandraOutputProperties.ACTION_TRUNCATE:
+            case Truncate:
                 cqls.add(getTruncateTableCQL());
             default:
                 break;
@@ -404,7 +404,7 @@ class CQLManager {
         List<Column> columns = new ArrayList<Column>();
         columns.addAll(keys);
         columns.addAll(normals);
-        if (TCassandraOutputProperties.ACTION_UPDATE.equals(action)) {
+        if (TCassandraOutputProperties.DataAction.Update == action) {
             columns.addAll(conditions);
         }
         int count = 1;
@@ -439,7 +439,7 @@ class CQLManager {
         List<Column> columns = new ArrayList<Column>();
         columns.addAll(keys);
         columns.addAll(normals);
-        if (TCassandraOutputProperties.ACTION_UPDATE.equals(action)) {
+        if (TCassandraOutputProperties.DataAction.Update == action) {
             columns.addAll(conditions);
         }
         for (Column column : columns) {
@@ -501,7 +501,7 @@ class CQLManager {
             count++;
         }
         preInsertCQL.append(")");
-        boolean ifNotExist = props.insertIfNotExists.getBooleanValue();
+        boolean ifNotExist = props.insertIfNotExists.getValue();
         if (ifNotExist) {
             preInsertCQL.append(" IF NOT EXISTS");
         }
@@ -541,22 +541,26 @@ class CQLManager {
 
             String assignment = wrapProtectedChar(column.getDBName()) + "=" +
                     column.getMark();
-
-            if (TCassandraOutputProperties.APPEND.equals(column.getAssignmentOperation())) {
-                assignment = wrapProtectedChar(column.getDBName()) + "=" +
-                        wrapProtectedChar(column.getDBName()) + "+" +
-                        column.getMark();
-            } else if (TCassandraOutputProperties.PREPEND.equals(column.getAssignmentOperation())) {
-                assignment = wrapProtectedChar(column.getDBName()) + "=" + column.getMark()
-                        + "+" +
-                        wrapProtectedChar(column.getDBName());
-            } else if (TCassandraOutputProperties.MINUS.equals(column.getAssignmentOperation())) {
-                assignment = wrapProtectedChar(column.getDBName()) + "=" +
-                        wrapProtectedChar(column.getDBName()) + "-" +
-                        column.getMark();
-            } else if (TCassandraOutputProperties.POSITION_OR_KEY.equals(column.getAssignmentOperation())) {
-                assignment = wrapProtectedChar(column.getDBName()) + "[?]=" +
-                        column.getMark();
+            switch (column.getAssignmentOperation()){
+                case Append:
+                    assignment = wrapProtectedChar(column.getDBName()) + "=" +
+                            wrapProtectedChar(column.getDBName()) + "+" +
+                            column.getMark();
+                    break;
+                case Prepend:
+                    assignment = wrapProtectedChar(column.getDBName()) + "=" + column.getMark()
+                            + "+" +
+                            wrapProtectedChar(column.getDBName());
+                    break;
+                case Minus:
+                    assignment = wrapProtectedChar(column.getDBName()) + "=" +
+                            wrapProtectedChar(column.getDBName()) + "-" +
+                            column.getMark();
+                    break;
+                case Position_Or_Key:
+                    assignment = wrapProtectedChar(column.getDBName()) + "[?]=" +
+                            column.getMark();
+                    break;
             }
 
             preUpdateCQL.append(assignment);
@@ -602,13 +606,8 @@ class CQLManager {
     }
 
     private boolean rowKeyInList(Column column) {
-        List<Map<String, String>> rowKeyInList = (List<Map<String, String>>) props.rowKeyInList.getValue();
-        for (Map<String, String> rowKey : rowKeyInList) {
-            if (column.getName().equals(rowKey.get(props.rowKeyInListColumnName.getName()))) {
-                return true;
-            }
-        }
-        return false;
+        List<String> rowKeyInList = props.rowKeyInList.columnName.getValue();
+        return rowKeyInList.contains(column.getName());
     }
 
     private String generatePreDeleteCQL() {
@@ -643,7 +642,7 @@ class CQLManager {
                 count++;
             }
         }
-        boolean ifExist = props.deleteIfExists.getBooleanValue();
+        boolean ifExist = props.deleteIfExists.getValue();
         if (ifExist) {
             preDeleteCQL.append(" IF EXISTS");
         } else {

@@ -28,13 +28,13 @@ public class CassandraSourceOrSinkTestIT extends CassandraTestBase{
         connProps = new CassandraConnectionProperties("test");
         connProps.host.setValue(EmbeddedCassandraExampleDataResource.HOST);
         connProps.port.setValue(EmbeddedCassandraExampleDataResource.PORT);
-        connProps.version.setValue(CassandraConnectionProperties.V_CASSANDRA_3_0);
+        connProps.version.setValue(CassandraConnectionProperties.CassandraVersion.V_3_0);
         connProps.needAuth.setValue(false);
 
         wrongConnProps = new CassandraConnectionProperties("wrong");
         wrongConnProps.host.setValue("wronghost");
         wrongConnProps.port.setValue("9042");
-        wrongConnProps.version.setValue(CassandraConnectionProperties.V_CASSANDRA_3_0);
+        wrongConnProps.version.setValue(CassandraConnectionProperties.CassandraVersion.V_3_0);
         wrongConnProps.needAuth.setValue(false);
 
     }

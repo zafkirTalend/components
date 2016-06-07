@@ -14,8 +14,10 @@ import org.talend.components.cassandra.input.TCassandraInputDefinition;
 import org.talend.components.cassandra.output.TCassandraOutputDefinition;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.avro.SchemaConstants;
+import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.service.PropertiesServiceTest;
+import org.talend.daikon.properties.test.PropertiesTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,8 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 public class CassandraTestBase extends AbstractComponentTest {
-
+    public static final String KEYSPACE = "keyspace";
+    public static final String COLUMN_FAMILY = "columnFamily";
     public static final String KS_NAME = CassandraTestBase.class.getSimpleName().toLowerCase();
     // start the embedded cassandra server and init with data
     @Rule
@@ -54,7 +57,7 @@ public class CassandraTestBase extends AbstractComponentTest {
     }
 
     //FIXME(bchen) can be common, used for salesforce also
-    protected ComponentProperties checkAndAfter(Form form, String propName, ComponentProperties props) throws Throwable {
+    protected Properties checkAndAfter(Form form, String propName, ComponentProperties props) throws Throwable {
         assertTrue(form.getWidget(propName).isCallAfter());
         return getComponentService().afterProperty(propName, props);
     }
@@ -79,7 +82,7 @@ public class CassandraTestBase extends AbstractComponentTest {
                     .prop(SchemaConstants.INCLUDE_ALL_FIELDS, "true").fields().endRecord());
         }else {
             Form schemaRefForm = props.getSchemaProperties().getForm(Form.REFERENCE);
-            PropertiesServiceTest.checkAndAfter(getComponentService(), schemaRefForm, CassandraSchemaProperties.COLUMN_FAMILY, schemaRefForm.getProperties());
+            PropertiesTestUtils.checkAndAfter(getComponentService(), schemaRefForm, COLUMN_FAMILY, schemaRefForm.getProperties());
         }
     }
 }

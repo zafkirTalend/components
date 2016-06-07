@@ -45,7 +45,7 @@ public class CassandraWriter implements Writer<WriterResult> {
         properties = (TCassandraOutputProperties) cassandraSink.properties;
         CQLManager cqlManager = new CQLManager(properties);
         preparedStatement = session.prepare(cqlManager.generatePreActionCQL());
-        useBatch = properties.useUnloggedBatch.getBooleanValue();
+        useBatch = properties.useUnloggedBatch.getValue();
         if (useBatch) {
             cassandraBatchUtil = new CassandraBatchUtil(session.getCluster(), cqlManager.getKeyspace(), cqlManager.getTableName(), cqlManager.getValueColumns());
             newOne = false;
@@ -88,14 +88,14 @@ public class CassandraWriter implements Writer<WriterResult> {
             }
             batchStatement.add(boundStatement);
             lastKey = currentKey;
-            if (batchStatement.size() >= properties.batchSize.getIntValue()) {
+            if (batchStatement.size() >= properties.batchSize.getValue()) {
                 executeBatch();
             }
         } else {
             try {
                 session.execute(boundStatement);
             } catch (Exception e) {
-                if (properties.dieOnError.getBooleanValue()) {
+                if (properties.dieOnError.getValue()) {
                     throw e;
                 } else {
                     //FIXME(bchen) what can we do here? still print err

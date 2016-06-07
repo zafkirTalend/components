@@ -59,8 +59,8 @@ public class CassandraSourceOrSink implements SourceOrSink {
         CassandraConnectionProperties connProps = properties.getConnectionProperties();
         Cluster.Builder clusterBuilder = Cluster.builder()
                 .addContactPoints(connProps.host.getStringValue().split(","))
-                .withPort(connProps.port.getIntValue());
-        if (connProps.needAuth.getBooleanValue()) {
+                .withPort(Integer.valueOf(connProps.port.getValue()));
+        if (connProps.needAuth.getValue()) {
             clusterBuilder.withCredentials(connProps.userPassword.userId.getStringValue(), connProps.userPassword.password.getStringValue());
         }
         return clusterBuilder.build();

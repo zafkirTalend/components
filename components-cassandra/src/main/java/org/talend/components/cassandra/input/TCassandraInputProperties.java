@@ -1,10 +1,11 @@
 package org.talend.components.cassandra.input;
 
 import org.talend.components.cassandra.CassandraIOBasedProperties;
-import org.talend.daikon.properties.Property;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
 
-import static org.talend.daikon.properties.PropertyFactory.newProperty;
+import static org.talend.daikon.properties.property.PropertyFactory.newString;
+
 
 public class TCassandraInputProperties extends CassandraIOBasedProperties {
     /**
@@ -17,7 +18,7 @@ public class TCassandraInputProperties extends CassandraIOBasedProperties {
         super(name);
     }
 
-    public Property query = newProperty("query");
+    public Property<String> query = newString("query");
 
     @Override
     public void setupLayout(){
