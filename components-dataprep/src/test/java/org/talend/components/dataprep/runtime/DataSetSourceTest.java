@@ -1,5 +1,10 @@
 package org.talend.components.dataprep.runtime;
 
+import java.util.Arrays;
+import java.util.Collections;
+
+import javax.inject.Inject;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -7,16 +12,12 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.talend.components.api.service.ComponentService;
-import org.talend.components.api.test.SpringApp;
+import org.talend.components.api.test.SpringTestApp;
 import org.talend.components.dataprep.tdatasetinput.TDataSetInputDefinition;
 import org.talend.components.dataprep.tdatasetinput.TDataSetInputProperties;
 
-import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.Collections;
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SpringApp.class)
+@SpringApplicationConfiguration(classes = SpringTestApp.class)
 public class DataSetSourceTest {
 
     @Inject
@@ -49,7 +50,7 @@ public class DataSetSourceTest {
 
     @Test
     public void testGetSchema() throws Exception {
-        Assert.assertNull(inputSource.getSchema(null, null));
+        Assert.assertNull(inputSource.getEndpointSchema(null, null));
     }
 
     @Test

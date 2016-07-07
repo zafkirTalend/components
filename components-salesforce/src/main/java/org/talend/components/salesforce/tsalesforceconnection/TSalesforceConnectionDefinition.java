@@ -15,14 +15,14 @@ package org.talend.components.salesforce.tsalesforceconnection;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.EndpointComponentDefinition;
-import org.talend.components.api.component.Trigger;
-import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.runtime.SalesforceSourceOrSink;
+import org.talend.daikon.properties.property.Property;
 
+import aQute.bnd.annotation.component.Component;
 import aQute.bnd.annotation.component.Component;
 
 @Component(name = Constants.COMPONENT_BEAN_PREFIX
@@ -33,14 +33,16 @@ public class TSalesforceConnectionDefinition extends SalesforceDefinition implem
 
     public TSalesforceConnectionDefinition() {
         super(COMPONENT_NAME);
-        // no connector this is a component that other refect to it.
-        setTriggers(new Trigger(TriggerType.ITERATE, 1, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override
     public Class<? extends ComponentProperties> getPropertyClass() {
         return SalesforceConnectionProperties.class;
+    }
+
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[] { RETURN_ERROR_MESSAGE_PROP };
     }
 
     @Override

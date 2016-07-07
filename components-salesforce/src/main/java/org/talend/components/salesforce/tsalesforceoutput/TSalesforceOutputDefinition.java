@@ -15,13 +15,12 @@ package org.talend.components.salesforce.tsalesforceoutput;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.OutputComponentDefinition;
-import org.talend.components.api.component.Trigger;
-import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.runtime.Sink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.runtime.SalesforceSink;
+import org.talend.daikon.properties.property.Property;
 
 import aQute.bnd.annotation.component.Component;
 
@@ -37,8 +36,6 @@ public class TSalesforceOutputDefinition extends SalesforceDefinition implements
 
     public TSalesforceOutputDefinition() {
         super(COMPONENT_NAME);
-
-        setTriggers(new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override
@@ -66,6 +63,12 @@ public class TSalesforceOutputDefinition extends SalesforceDefinition implements
     public Class<? extends ComponentProperties>[] getNestedCompatibleComponentPropertiesClass() {
         return concatPropertiesClasses(super.getNestedCompatibleComponentPropertiesClass(),
                 new Class[] { SalesforceModuleProperties.class });
+    }
+
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[] { RETURN_ERROR_MESSAGE_PROP, RETURN_TOTAL_RECORD_COUNT_PROP, RETURN_SUCCESS_RECORD_COUNT_PROP,
+                RETURN_REJECT_RECORD_COUNT_PROP };
     }
 
     @Override

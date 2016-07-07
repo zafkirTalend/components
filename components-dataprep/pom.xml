@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.talend.components</groupId>
         <artifactId>components-parent</artifactId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.14.0-SNAPSHOT</version>
         <relativePath>../components-parent/pom.xml</relativePath>
     </parent>
 
     <name>Components - Data Preparation</name>
     <groupId>org.talend.components</groupId>
     <artifactId>components-dataprep</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.14.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <repositories>
         <repository>
@@ -24,23 +24,33 @@
 
         <!-- APIs for all Components -->
         <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>annotation</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-api</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.14.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Shared component properties such as Use/Password or Schema -->
         <dependency>
           <groupId>org.talend.components</groupId>
           <artifactId>components-common</artifactId>
-          <version>0.12.0-SNAPSHOT</version>
+          <version>0.14.0-SNAPSHOT</version>
         </dependency>
         
         <!-- Jar containing Test utils methods -->
         <dependency>
             <groupId>org.talend.components</groupId>
-            <artifactId>components-api</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <artifactId>components-api-service</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-api-service</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -82,6 +92,21 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-digester</groupId>
+            <artifactId>commons-digester</artifactId>
+            <version>1.8.1</version>
         </dependency>
     </dependencies>
     <build>

@@ -1,5 +1,12 @@
 package org.talend.components.dataprep.runtime;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
@@ -8,25 +15,28 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.talend.components.api.component.runtime.WriterResult;
+import org.talend.components.api.component.ComponentDefinition;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.service.ComponentService;
-import org.talend.components.api.test.SpringApp;
+import org.talend.components.api.test.SpringTestApp;
+import org.talend.components.dataprep.connection.DataPrepServerMock;
 import org.talend.components.dataprep.tdatasetoutput.TDataSetOutputDefinition;
 import org.talend.components.dataprep.tdatasetoutput.TDataSetOutputProperties;
 import org.talend.daikon.avro.AvroRegistry;
-import org.talend.daikon.avro.util.AvroUtils;
-
-import javax.inject.Inject;
-import java.io.IOException;
+import org.talend.daikon.avro.AvroUtils;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SpringApp.class)
+@SpringApplicationConfiguration(classes = SpringTestApp.class)
 @WebIntegrationTest("server.port:0")
 public class DataSetWriterTest {
+
+    @Autowired
+    private DataPrepServerMock mock;
 
     @Inject
     private ComponentService componentService;
@@ -45,7 +55,7 @@ public class DataSetWriterTest {
         TDataSetOutputDefinition definition = (TDataSetOutputDefinition) componentService
                 .getComponentDefinition("tDatasetOutput");
         properties = (TDataSetOutputProperties) definition.createProperties();
-        properties.url.setValue("http://localhost:"+serverPort);
+        properties.url.setValue("http://localhost:" + serverPort);
         properties.login.setValue("vincent@dataprep.com");
         properties.pass.setValue("vincent");
         properties.limit.setValue(10);
@@ -53,38 +63,93 @@ public class DataSetWriterTest {
     }
 
     @Test
-    public void testWriter() throws IOException {
-        properties.dataSetName.setValue("db119c7d-33fd-46f5-9bdc-1e8cf54d4d1e");
+    public void testWriterEscaping() throws IOException {
+        properties.dataSetNameForCreateMode.setValue("mydataset");
         properties.mode.setValue(DataPrepOutputModes.Create);
 
         sink.initialize(null, properties);
-        writer = (DataSetWriter) sink.createWriteOperation().createWriter(null);
+        DataSetWriteOperation writeOperation = (DataSetWriteOperation) sink.createWriteOperation();
+        writer = (DataSetWriter) writeOperation.createWriter(null);
+
+        AvroRegistry avroReg = new AvroRegistry();
+        SchemaBuilder.FieldAssembler<Schema> schemaRecord = SchemaBuilder.record("Main").fields();
+        addField(schemaRecord, "FieldString0", String.class, avroReg);
+        addField(schemaRecord, "FieldString1", String.class, avroReg);
+        Schema schema = schemaRecord.endRecord();
+
+        IndexedRecord record = new GenericData.Record(schema);
+        record.put(schema.getField("FieldString0").pos(), "String\nString");
+
+        writer.open("test");
+        writer.write(record);
+        writer.close();
+
+        final String content = mock.getLastReceivedLiveDataSetContent();
+        Assert.assertEquals("FieldString0;FieldString1\n" +
+                "\"String\n" +
+                "String\";\n", content);
+    }
+
+    @Test
+    public void testWriter() throws IOException {
+        properties.limit.setValue(100);
+        Map<String, Object> resultMap = createAction();
+        Assert.assertEquals(15, resultMap.get(ComponentDefinition.RETURN_TOTAL_RECORD_COUNT));
+        Assert.assertEquals(15, resultMap.get(ComponentDefinition.RETURN_SUCCESS_RECORD_COUNT));
+    }
+
+    @Test
+    public void testWriterWithLimit() throws IOException {
+        properties.limit.setValue(10);
+        Map<String, Object> resultMap = createAction();
+        Assert.assertEquals(10, resultMap.get(ComponentDefinition.RETURN_TOTAL_RECORD_COUNT));
+        Assert.assertEquals(10, resultMap.get(ComponentDefinition.RETURN_SUCCESS_RECORD_COUNT));
+    }
+
+    private Map<String, Object> createAction() throws IOException {
+        properties.dataSetNameForCreateMode.setValue("mydataset");
+        properties.mode.setValue(DataPrepOutputModes.Create);
+
+        sink.initialize(null, properties);
+        DataSetWriteOperation writeOperation = (DataSetWriteOperation) sink.createWriteOperation();
+        writer = (DataSetWriter) writeOperation.createWriter(null);
 
         IndexedRecord record = createIndexedRecord();
         writer.open("test");
         for (int i = 0; i < 15; i++) {
             writer.write(record);
         }
-        WriterResult result = writer.close();
-        Assert.assertEquals(10, result.getDataCount());
+        Result result = writer.close();
+        List<Result> results = new ArrayList();
+        results.add(result);
+        Map<String, Object> resultMap = writeOperation.finalize(results, null);
+        return resultMap;
     }
 
     @Test
     public void testWriteLiveDataSet() throws IOException {
+        properties.limit.setValue(100);
+
         properties.login.setValue("");
         properties.pass.setValue("");
         properties.mode.setValue(DataPrepOutputModes.LiveDataset);
 
         sink.initialize(null, properties);
-        writer = (DataSetWriter) sink.createWriteOperation().createWriter(null);
+        DataSetWriteOperation writeOperation = (DataSetWriteOperation) sink.createWriteOperation();
+        writer = (DataSetWriter) writeOperation.createWriter(null);
 
         IndexedRecord record = createIndexedRecord();
         writer.open("testLiveDataSet");
         for (int i = 0; i < 15; i++) {
             writer.write(record);
         }
-        WriterResult result = writer.close();
-        Assert.assertEquals(10, result.getDataCount());
+
+        Result result = writer.close();
+        List<Result> results = new ArrayList();
+        results.add(result);
+        Map<String, Object> resultMap = writeOperation.finalize(results, null);
+        Assert.assertEquals(15, resultMap.get(ComponentDefinition.RETURN_TOTAL_RECORD_COUNT));
+        Assert.assertEquals(15, resultMap.get(ComponentDefinition.RETURN_SUCCESS_RECORD_COUNT));
     }
 
     private IndexedRecord createIndexedRecord() {

@@ -12,11 +12,11 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.talend.daikon.properties.presentation.Widget.*;
+import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.*;
 
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.properties.ComponentPropertiesImpl;
-import org.talend.components.api.properties.ComponentPropertyFactory;
 import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.components.api.properties.ComponentReferencePropertiesEnclosing;
 import org.talend.components.common.ProxyProperties;
@@ -49,8 +49,7 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
 
     public enum LoginType {
         Basic,
-        OAuth;
-
+        OAuth
     }
 
     public Property<LoginType> loginType = newEnum("loginType", LoginType.class).setRequired();
@@ -89,8 +88,6 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
 
     public ComponentReferenceProperties referencedComponent = new ComponentReferenceProperties("referencedComponent", this);
 
-    public static final String ERROR_MESSAGE_NAME = "ERROR_MESSAGE";
-
     public SalesforceConnectionProperties(String name) {
         super(name);
     }
@@ -103,9 +100,6 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
         endpoint.setValue(URL);
         timeout.setValue(60000);
         httpChunked.setValue(true);
-
-        ComponentPropertyFactory.newReturnProperty(getReturns(), newString(ERROR_MESSAGE_NAME));
-
     }
 
     @Override
@@ -164,7 +158,7 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
     public ValidationResult validateTestConnection() throws Exception {
         ValidationResult vr = SalesforceSourceOrSink.validateConnection(this);
         if (vr.getStatus() == ValidationResult.Result.OK) {
-            vr.setMessage("Connection successfull");
+            vr.setMessage("Connection successful");
             getForm(FORM_WIZARD).setAllowForward(true);
         } else {
             getForm(FORM_WIZARD).setAllowForward(false);
@@ -204,7 +198,7 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
                     break;
 
                 default:
-                    throw new RuntimeException("Enum value should be handled :" + loginType.getValue());
+                    throw new ComponentException(new Throwable("Enum value should be handled :" + loginType.getValue()));
                 }
             }
         }

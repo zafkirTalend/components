@@ -14,14 +14,13 @@ package org.talend.components.salesforce.tsalesforceoutputbulkexec;
 
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.Trigger;
-import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.VirtualComponentDefinition;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecDefinition;
 import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkDefinition;
+import org.talend.daikon.properties.property.Property;
 
 import aQute.bnd.annotation.component.Component;
 
@@ -33,10 +32,8 @@ public class TSalesforceOutputBulkExecDefinition extends SalesforceDefinition im
 
     public TSalesforceOutputBulkExecDefinition() {
         super(COMPONENT_NAME);
-        setTriggers(new Trigger(TriggerType.ITERATE, 0, 0), new Trigger(TriggerType.SUBJOB_OK, 1, 0),
-                new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
     }
-    
+
     @Override
     public boolean isSchemaAutoPropagate() {
         return false;
@@ -62,6 +59,11 @@ public class TSalesforceOutputBulkExecDefinition extends SalesforceDefinition im
     public Class<? extends ComponentProperties>[] getNestedCompatibleComponentPropertiesClass() {
         return concatPropertiesClasses(super.getNestedCompatibleComponentPropertiesClass(),
                 new Class[] { SalesforceModuleProperties.class });
+    }
+
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[] { RETURN_ERROR_MESSAGE_PROP };
     }
 
     @Override

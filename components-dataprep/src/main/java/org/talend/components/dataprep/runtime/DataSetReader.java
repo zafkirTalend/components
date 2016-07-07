@@ -12,22 +12,22 @@
 // ============================================================================
 package org.talend.components.dataprep.runtime;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
-import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.dataprep.connection.Column;
 import org.talend.components.dataprep.connection.DataPrepConnectionHandler;
 import org.talend.components.dataprep.connection.DataPrepField;
 import org.talend.components.dataprep.connection.DataPrepStreamMapper;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
  * Simple implementation of a reader.
@@ -44,11 +44,20 @@ public class DataSetReader extends AbstractBoundedReader<IndexedRecord> {
 
     private DataPrepStreamMapper dataPrepStreamMapper;
 
-    public DataSetReader(RuntimeContainer container, BoundedSource source, DataPrepConnectionHandler connectionHandler,
-            Schema schema) {
-        super(container, source);
-        this.connectionHandler = connectionHandler;
-        this.schema = schema;
+    private DataPrepAdaptorFactory adaptorFactory;
+
+    private Result result;
+
+    public DataSetReader(BoundedSource source) {
+        super(source);
+        RuntimeProperties runtimeProperties = ((DataSetSource) getCurrentSource()).getRuntimeProperties();
+        this.connectionHandler = new DataPrepConnectionHandler( //
+                runtimeProperties.getUrl(), //
+                runtimeProperties.getLogin(), //
+                runtimeProperties.getPass(), //
+                runtimeProperties.getDataSetId(), runtimeProperties.getDataSetName());
+        this.schema = ((DataSetSource) getCurrentSource()).getSchema();
+        result = new Result();
     }
 
     @Override
@@ -62,13 +71,14 @@ public class DataSetReader extends AbstractBoundedReader<IndexedRecord> {
 
     @Override
     public boolean advance() throws IOException {
+        result.totalCount++;
         return dataPrepStreamMapper.hasNextRecord();
     }
 
     @Override
     public IndexedRecord getCurrent() {
         Map<String, String> recordMap = dataPrepStreamMapper.nextRecord();
-        LOGGER.debug("Record from data set: {}", recordMap);
+        LOGGER.trace("Record from data set: {}", recordMap);
         DataPrepField[] record = new DataPrepField[sourceSchema.size()];
         int i = 0;
         for (Column column : sourceSchema) {
@@ -85,9 +95,16 @@ public class DataSetReader extends AbstractBoundedReader<IndexedRecord> {
         connectionHandler.logout();
     }
 
-    private IndexedRecordAdapterFactory<?, IndexedRecord> getFactory() {
-        DataPrepAdaptorFactory adaptorFactory = new DataPrepAdaptorFactory();
-        adaptorFactory.setSchema(schema);
+    @Override
+    public Map<String, Object> getReturnValues() {
+        return result.toMap();
+    }
+
+    private IndexedRecordConverter<?, IndexedRecord> getFactory() {
+        if (adaptorFactory == null) {
+            adaptorFactory = new DataPrepAdaptorFactory();
+            adaptorFactory.setSchema(schema);
+        }
         return adaptorFactory;
     }
 }

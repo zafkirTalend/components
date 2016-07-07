@@ -12,8 +12,10 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,12 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.Writer;
-import org.talend.components.api.component.runtime.WriterResult;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.container.DefaultComponentRuntimeContainerImpl;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.service.AbstractComponentTest;
 import org.talend.components.api.service.ComponentService;
+import org.talend.components.api.test.AbstractComponentTest;
 import org.talend.components.api.test.SimpleComponentRegistry;
 import org.talend.components.api.test.SimpleComponentService;
 import org.talend.components.salesforce.SalesforceOutputProperties.OutputAction;
@@ -57,8 +59,8 @@ import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputDefin
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
 import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkDefinition;
 import org.talend.components.salesforce.tsalesforceoutputbulkexec.TSalesforceOutputBulkExecDefinition;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
-import org.talend.daikon.avro.util.AvroUtils;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
@@ -398,8 +400,8 @@ public class SalesforceTestBase extends AbstractComponentTest {
         SalesforceSink salesforceSink = new SalesforceSink();
         salesforceSink.initialize(adaptor, props);
         salesforceSink.validate(adaptor);
-        SalesforceWriteOperation writeOperation = (SalesforceWriteOperation) salesforceSink.createWriteOperation();
-        Writer<WriterResult> saleforceWriter = writeOperation.createWriter(adaptor);
+        SalesforceWriteOperation writeOperation = salesforceSink.createWriteOperation();
+        Writer<Result> saleforceWriter = writeOperation.createWriter(adaptor);
         writeRows(saleforceWriter, outputRows);
     }
 
@@ -443,7 +445,7 @@ public class SalesforceTestBase extends AbstractComponentTest {
 
     }
 
-    public static void deleteAllAccountTestRows() throws ConnectionException, AsyncApiException, Exception {
+    public static void deleteAllAccountTestRows() throws Exception {
         BoundedReader salesforceInputReader = new SalesforceTestBase()
                 .createSalesforceInputReaderFromModule(EXISTING_MODULE_NAME);
         // getting all rows

@@ -12,7 +12,7 @@
 // ============================================================================
 package org.talend.components.jira;
 
-import static org.talend.components.jira.Resource.*;
+import static org.talend.components.jira.Resource.ISSUE;
 
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
@@ -27,7 +27,7 @@ import org.talend.daikon.properties.property.PropertyFactory;
  * Common Jira components {@link Properties}
  */
 public abstract class JiraProperties extends FixedConnectorsComponentProperties {
-
+    
     /**
      * Property path connector
      */
@@ -83,6 +83,7 @@ public abstract class JiraProperties extends FixedConnectorsComponentProperties 
      */
     public void afterResource() {
         refreshLayout(getForm(Form.MAIN));
+        refreshLayout(getForm(Form.ADVANCED));
     }
 
 }

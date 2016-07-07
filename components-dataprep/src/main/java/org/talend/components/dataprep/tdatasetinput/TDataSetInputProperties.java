@@ -12,13 +12,19 @@
 // ============================================================================
 package org.talend.components.dataprep.tdatasetinput;
 
-import org.apache.avro.Schema;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.talend.daikon.properties.property.Property.Flags.DESIGN_TIME_ONLY;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.common.FixedConnectorsComponentProperties;
-import org.talend.components.common.SchemaProperties;
+import org.talend.components.dataprep.DataPrepProperties;
 import org.talend.components.dataprep.connection.Column;
 import org.talend.components.dataprep.connection.DataPrepConnectionHandler;
 import org.talend.components.dataprep.connection.DataPrepField;
@@ -32,11 +38,6 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 /**
  * The ComponentProperties subclass provided by a component stores the configuration of a component and is used for:
@@ -55,23 +56,16 @@ import java.util.Set;
  * <li>{code schema}, an embedded property referring to a Schema.</li>
  * </ol>
  */
-public class TDataSetInputProperties extends FixedConnectorsComponentProperties {
+public class TDataSetInputProperties extends DataPrepProperties {
 
     private static final Logger LOG = LoggerFactory.getLogger(TDataSetInputProperties.class);
 
-    public SchemaProperties schema = new SchemaProperties("schema");
+    public Property<String> dataSetId = PropertyFactory.newString("dataSetId").setRequired();
 
-    public PropertyPathConnector mainConnector = new PropertyPathConnector(Connector.MAIN_NAME, "schema");
+    public final Property<String> dataSetName = PropertyFactory.newString("dataSetName").setRequired()
+            .setFlags(EnumSet.of(DESIGN_TIME_ONLY));
 
-    public Property<String> url = PropertyFactory.newString("url");
-
-    public Property<String> login = PropertyFactory.newString("login");
-
-    public Property<String> pass = PropertyFactory.newString("pass");
-
-    public Property<String> dataSetName = PropertyFactory.newString("dataSetName");
-
-    public PresentationItem fetchSchema = new PresentationItem("fetchSchema", "FetchSchema");
+    public final PresentationItem fetchSchema = new PresentationItem("fetchSchema", "FetchSchema");
 
     public TDataSetInputProperties(String name) {
         super(name);
@@ -87,13 +81,18 @@ public class TDataSetInputProperties extends FixedConnectorsComponentProperties 
 
     @Override
     public void setupLayout() {
-        Form form = new Form(this, Form.MAIN);
-        form.addRow(schema.getForm(Form.REFERENCE));
-        form.addRow(url);
-        form.addRow(login);
-        form.addRow(Widget.widget(pass).setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
-        form.addRow(dataSetName);
+        super.setupLayout();
+        Form form = getForm(Form.MAIN);
+        form.addRow(Widget.widget(this.dataSetName).setWidgetType("widget.type.dataset.selection"));
         form.addRow(Widget.widget(fetchSchema).setWidgetType(Widget.BUTTON_WIDGET_TYPE));
+
+        Form advancedForm = new Form(this, Form.ADVANCED);
+        advancedForm.addRow(dataSetId);
+    }
+
+    @Override
+    public void setupProperties() {
+        super.setupProperties();
     }
 
     public ValidationResult afterFetchSchema() {
@@ -102,7 +101,7 @@ public class TDataSetInputProperties extends FixedConnectorsComponentProperties 
                     .setMessage(getI18nMessage("error.allFieldsIsRequired"));
         } else {
             DataPrepConnectionHandler connectionHandler = new DataPrepConnectionHandler(url.getStringValue(),
-                    login.getStringValue(), pass.getStringValue(), dataSetName.getStringValue());
+                    login.getStringValue(), pass.getStringValue(), dataSetId.getStringValue(), dataSetName.getStringValue());
             List<Column> columnList = null;
             boolean wasProblem = false;
             ValidationResult validationResult = ValidationResult.OK;
@@ -143,12 +142,8 @@ public class TDataSetInputProperties extends FixedConnectorsComponentProperties 
     }
 
     private boolean isRequiredFieldRight() {
-        return !isNotNullAndNotEmpty(url.getStringValue()) && !isNotNullAndNotEmpty(login.getStringValue())
-                && !isNotNullAndNotEmpty(pass.getStringValue()) && !isNotNullAndNotEmpty(dataSetName.getStringValue());
-    }
-
-    private boolean isNotNullAndNotEmpty(String propertyStringValue) {
-        return propertyStringValue == null || propertyStringValue.isEmpty();
+        return !isEmpty(url.getStringValue()) && !isEmpty(login.getStringValue()) && !isEmpty(pass.getStringValue())
+                && !isEmpty(dataSetName.getStringValue()) && !isEmpty(dataSetId.getStringValue());
     }
 
     public RuntimeProperties getRuntimeProperties() {
@@ -157,11 +152,8 @@ public class TDataSetInputProperties extends FixedConnectorsComponentProperties 
         runtimeProperties.setLogin(login.getStringValue());
         runtimeProperties.setPass(pass.getStringValue());
         runtimeProperties.setDataSetName(dataSetName.getStringValue());
+        runtimeProperties.setDataSetId(dataSetId.getStringValue());
         runtimeProperties.setSchema(schema.schema.getStringValue());
         return runtimeProperties;
-    }
-
-    public Schema getSchema() {
-        return schema.schema.getValue();
     }
 }

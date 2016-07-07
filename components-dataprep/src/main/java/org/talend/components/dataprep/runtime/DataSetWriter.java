@@ -12,131 +12,146 @@
 // ============================================================================
 package org.talend.components.dataprep.runtime;
 
-import org.apache.avro.Schema;
-import org.apache.avro.generic.IndexedRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.talend.components.api.component.runtime.WriteOperation;
-import org.talend.components.api.component.runtime.Writer;
-import org.talend.components.api.component.runtime.WriterResult;
-import org.talend.components.dataprep.connection.DataPrepConnectionHandler;
-import org.talend.daikon.avro.AvroRegistry;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
-
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
-public class DataSetWriter implements Writer<WriterResult> {
+import org.apache.avro.Schema;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.talend.components.api.component.runtime.Result;
+import org.talend.components.api.component.runtime.WriteOperation;
+import org.talend.components.api.component.runtime.Writer;
+import org.talend.components.dataprep.connection.DataPrepConnectionHandler;
+import org.talend.daikon.avro.AvroRegistry;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
+import org.talend.daikon.exception.ExceptionContext;
+import org.talend.daikon.exception.TalendRuntimeException;
+import org.talend.daikon.exception.error.CommonErrorCodes;
+
+import com.csvreader.CsvWriter;
+
+public class DataSetWriter implements Writer<Result> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSetWriter.class);
 
-    private IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> factory;
+    private IndexedRecordConverter<Object, ? extends IndexedRecord> factory;
 
     private int counter = 0;
 
-    private String uId;
-
     private DataPrepConnectionHandler connectionHandler;
-
-    private OutputStream outputStream;
 
     private boolean firstRow = true;
 
-    private WriteOperation<WriterResult> writeOperation;
+    private WriteOperation<Result> writeOperation;
 
     private int limit;
 
     private DataPrepOutputModes mode;
 
-    DataSetWriter(WriteOperation<WriterResult> writeOperation) {
+    private Result result;
+
+    private CsvWriter writer;
+
+    DataSetWriter(WriteOperation<Result> writeOperation) {
         this.writeOperation = writeOperation;
     }
 
     @Override
     public void open(String uId) throws IOException {
-        this.uId = uId;
+        this.result = new Result(uId);
         DataSetSink sink = (DataSetSink) getWriteOperation().getSink();
         RuntimeProperties runtimeProperties = sink.getRuntimeProperties();
         connectionHandler = new DataPrepConnectionHandler( //
                 runtimeProperties.getUrl(), //
                 runtimeProperties.getLogin(), //
                 runtimeProperties.getPass(), //
-                runtimeProperties.getDataSetName());
-        limit = Integer.valueOf(runtimeProperties.getLimit());
+                runtimeProperties.getDataSetId(), runtimeProperties.getDataSetName());
+        limit = runtimeProperties.getLimit() != null ? Integer.valueOf(runtimeProperties.getLimit()) : Integer.MAX_VALUE;
         mode = runtimeProperties.getMode();
 
-        if (isLiveDataSet()) {
-            outputStream = connectionHandler.createInLiveDataSetMode();
-        } else {
+        final OutputStream outputStream;
+        switch (mode) {
+        case Create:
             connectionHandler.connect();
-            if (mode.equals(DataPrepOutputModes.Create)) {
-                outputStream = connectionHandler.create();
-            }
-            if (mode.equals(DataPrepOutputModes.Update)) {
-                outputStream = connectionHandler.update();
-            }
-
+            outputStream = connectionHandler.write(DataPrepOutputModes.Create);
+            break;
+        case Update:
+            connectionHandler.connect();
+            outputStream = connectionHandler.write(DataPrepOutputModes.Update);
+            break;
+        case LiveDataset:
+            outputStream = connectionHandler.write(DataPrepOutputModes.LiveDataset);
+            break;
+        default:
+            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
+                    ExceptionContext.build().put("message", "Mode '" + mode + "' is not supported."));
         }
+        // Use a CSV writer iso. output stream
+        writer = new CsvWriter(new OutputStreamWriter(outputStream), ';');
     }
 
     @Override
     public void write(Object datum) throws IOException {
-        if (datum == null || counter >= limit) {
+        counter++;
+        if (datum == null || counter > limit) {
             LOGGER.debug("Datum: {}", datum);
             return;
         } // else handle the data.
 
         LOGGER.debug("Datum: {}", datum);
         IndexedRecord input = getFactory(datum).convertToAvro(datum);
-        StringBuilder row = new StringBuilder();
         if (firstRow) {
             for (Schema.Field f : input.getSchema().getFields()) {
-                if (f.pos() != 0) {
-                    row.append(",");
-                }
-                row.append(String.valueOf(f.name()));
+                writer.write(String.valueOf(String.valueOf(f.name())));
             }
-            row.append("\n");
-            LOGGER.debug("Column names: {}", row);
+            writer.endRecord();
             firstRow = false;
         }
         for (Schema.Field f : input.getSchema().getFields()) {
-            if (input.get(f.pos()) != null) {
-                if (f.pos() != 0) {
-                    row.append(",");
-                }
-                row.append(String.valueOf(input.get(f.pos())));
+            final Object value = input.get(f.pos());
+            if (value == null) {
+                writer.write(StringUtils.EMPTY);
+            } else {
+                writer.write(String.valueOf(value));
             }
         }
-        row.append("\n");
-        LOGGER.debug("Row data: {}", row);
-        outputStream.write(row.toString().getBytes());
-        outputStream.flush();
-        counter++;
+        writer.endRecord();
+        result.totalCount++;
     }
 
     @Override
-    public WriterResult close() throws IOException {
-        if (!isLiveDataSet()) {
-            connectionHandler.logout();
+    public Result close() throws IOException {
+        if (writer != null) {
+            try {
+                writer.flush();
+                writer.close();
+            } finally {
+                writer = null;
+            }
         }
-        return new WriterResult(uId, counter);
+
+        if (connectionHandler != null) {
+            connectionHandler.logout();
+            connectionHandler = null;
+        }
+
+        result.successCount = result.totalCount;
+        return result;
     }
 
     @Override
-    public WriteOperation<WriterResult> getWriteOperation() {
+    public WriteOperation<Result> getWriteOperation() {
         return writeOperation;
     }
 
-    private IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> getFactory(Object datum) {
+    private IndexedRecordConverter<Object, ? extends IndexedRecord> getFactory(Object datum) {
         if (null == factory) {
-            factory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) new AvroRegistry()
-                    .createAdapterFactory(datum.getClass());
+            factory = (IndexedRecordConverter<Object, ? extends IndexedRecord>) new AvroRegistry()
+                    .createIndexedRecordConverter(datum.getClass());
         }
         return factory;
-    }
-
-    private boolean isLiveDataSet() {
-        return DataPrepOutputModes.LiveDataset.equals(mode);
     }
 }

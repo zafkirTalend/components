@@ -13,19 +13,16 @@
 package org.talend.components.salesforce.runtime;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
-import org.talend.daikon.avro.util.AvroUtils;
+import org.talend.daikon.avro.AvroUtils;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
@@ -64,7 +61,15 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
                     List<Schema.Field> copyFieldList = new ArrayList<>();
                     for (Schema.Field se : querySchema.getFields()) {
                         if (columnsName.contains(se.name())) {
-                            copyFieldList.add(new Schema.Field(se.name(), se.schema(), se.doc(), se.defaultVal()));
+                            Schema.Field field = new Schema.Field(se.name(), se.schema(), se.doc(), se.defaultVal());
+                            Map<String, Object> fieldProps = se.getObjectProps();
+                            for (String propName : fieldProps.keySet()) {
+                                Object propValue = fieldProps.get(propName);
+                                if (propValue != null) {
+                                    field.addProp(propName, propValue);
+                                }
+                            }
+                            copyFieldList.add(field);
                         }
                     }
                     Map<String, Object> objectProps = querySchema.getObjectProps();
@@ -144,7 +149,7 @@ public class SalesforceInputReader extends SalesforceReader<IndexedRecord> {
         try {
             return ((SObjectAdapterFactory) getFactory()).convertToAvro(getCurrentSObject());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ComponentException(e);
         }
     }
 }

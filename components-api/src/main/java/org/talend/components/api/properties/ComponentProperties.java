@@ -17,7 +17,6 @@ import java.util.Set;
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
 import org.talend.daikon.properties.Properties;
-import org.talend.daikon.properties.property.Property;
 
 /**
  * for all details see {@link Properties}. This class adds a specific {@link ComponentProperties#returns} property which
@@ -33,7 +32,7 @@ public interface ComponentProperties extends Properties {
      * @param isOutgoingConnection wheter the connection is an outgoint connection or an incoming one.
      * @return the schema related to the connection or null if none.
      */
-    public Schema getSchema(Connector connector, boolean isOutgoingConnection);
+    Schema getSchema(Connector connector, boolean isOutgoingConnection);
 
     /**
      * return the set of all possible connectors for this component properties.
@@ -43,7 +42,7 @@ public interface ComponentProperties extends Properties {
      * @param isOutgoingConnection true for getting all outgoing connectors for the Properties.
      * @return set of connection eventually proposed by this Properties.
      */
-    public Set<? extends Connector> getPossibleConnectors(boolean isOutgoingConnection);
+    Set<? extends Connector> getPossibleConnectors(boolean isOutgoingConnection);
 
     /**
      * return the set of available connector that may be setup with a schema according to the current state of this instance.
@@ -55,8 +54,8 @@ public interface ComponentProperties extends Properties {
      * @param isOutgoingConnection wether we query the possible output or input connections.
      * @return set of connection left to be connected, never null.
      */
-    public Set<? extends Connector> getAvailableConnectors(Set<? extends Connector> existingConnectors,
-            boolean isOutgoingConnection);
+    Set<? extends Connector> getAvailableConnectors(Set<? extends Connector> existingConnectors,
+                                                    boolean isOutgoingConnection);
 
     /**
      * set the schema related to the connector with the schema at the other end of the connection.
@@ -66,7 +65,7 @@ public interface ComponentProperties extends Properties {
      * @param isOutgoingConnection true if connector is an outgoing connectors.
      * 
      */
-    public void setConnectedSchema(Connector connector, Schema schema, boolean isOutgoingConnection);
+    void setConnectedSchema(Connector connector, Schema schema, boolean isOutgoingConnection);
 
     /**
      * this will look for all authorized nested properties that shall be compatible with the nestedValues and copy all
@@ -78,14 +77,7 @@ public interface ComponentProperties extends Properties {
      * @param nestedValues values to be used update this current ComponentProperties nested Properties.
      * @return true if the copy was done and false if the targetProperties does not accept the nestedValues type.
      */
-    public boolean updateNestedProperties(final ComponentProperties nestedValues);
+    boolean updateNestedProperties(final Properties nestedValues);
 
-    /**
-     * return the Returns property that shall be created using the name "returns", you can use
-     * {@link ComponentPropertyFactory#newReturnsProperty()} to create a new one. All Property children represent a
-     * Property that is one the possible returns.
-     * This API may change in the future because it is used for describing the COmponent possible returns and therfore may be
-     * moved to Component Definition.
-     */
-    public Property<String> getReturns();
+
 }

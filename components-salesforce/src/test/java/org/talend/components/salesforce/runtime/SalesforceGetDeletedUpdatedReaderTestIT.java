@@ -12,7 +12,8 @@
 // ============================================================================
 package org.talend.components.salesforce.runtime;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import org.talend.components.salesforce.SalesforceOutputProperties;
 import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.components.salesforce.tsalesforcegetdeleted.TSalesforceGetDeletedProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
-import org.talend.daikon.avro.util.AvroTypes;
+import org.talend.daikon.avro.AvroUtils;
 
 import com.sforce.soap.partner.GetUpdatedResult;
 import com.sforce.ws.ConnectionException;
@@ -87,6 +88,8 @@ public class SalesforceGetDeletedUpdatedReaderTestIT extends SalesforceTestBase 
             props.module.moduleName.setValue(EXISTING_MODULE_NAME);
             props.module.main.schema.setValue(getMakeRowSchema(false));
         }
+        props.startDate.setValue(Calendar.getInstance().getTime());
+        props.endDate.setValue(Calendar.getInstance().getTime());
 
         ComponentTestUtils.checkSerialize(props, errorCollector);
 
@@ -137,8 +140,8 @@ public class SalesforceGetDeletedUpdatedReaderTestIT extends SalesforceTestBase 
         // }
         endDate.setTimeInMillis(endDate.getTimeInMillis() + 180000);
         System.out.println(endDate.getTimeInMillis() - startDate.getTimeInMillis());
-        sgduProperties.startDate.setValue(startDate);
-        sgduProperties.endDate.setValue(endDate);
+        sgduProperties.startDate.setValue(startDate.getTime());
+        sgduProperties.endDate.setValue(endDate.getTime());
 
         // Test get deleted records
         TSalesforceGetDeletedProperties sgdProperties = new TSalesforceGetDeletedProperties("foo");
@@ -159,15 +162,15 @@ public class SalesforceGetDeletedUpdatedReaderTestIT extends SalesforceTestBase 
     @Override
     public Schema getMakeRowSchema(boolean isDynamic) {
         SchemaBuilder.FieldAssembler<Schema> fa = SchemaBuilder.builder().record("MakeRowRecord").fields() //
-                .name("Id").type(AvroTypes._string()).noDefault() //
-                .name("Name").type(AvroTypes._string()).noDefault() //
-                .name("ShippingStreet").type(AvroTypes._string()).noDefault() //
-                .name("ShippingPostalCode").type(AvroTypes._int()).noDefault() //
-                .name("BillingStreet").type(AvroTypes._string()).noDefault() //
-                .name("BillingState").type(AvroTypes._string()).noDefault() //
-                .name("BillingPostalCode").type(AvroTypes._string()).noDefault();
+                .name("Id").type(AvroUtils._string()).noDefault() //
+                .name("Name").type(AvroUtils._string()).noDefault() //
+                .name("ShippingStreet").type(AvroUtils._string()).noDefault() //
+                .name("ShippingPostalCode").type(AvroUtils._int()).noDefault() //
+                .name("BillingStreet").type(AvroUtils._string()).noDefault() //
+                .name("BillingState").type(AvroUtils._string()).noDefault() //
+                .name("BillingPostalCode").type(AvroUtils._string()).noDefault();
         if (isDynamic) {
-            fa = fa.name("ShippingState").type(AvroTypes._string()).noDefault();
+            fa = fa.name("ShippingState").type(AvroUtils._string()).noDefault();
         }
 
         return fa.endRecord();
@@ -178,6 +181,7 @@ public class SalesforceGetDeletedUpdatedReaderTestIT extends SalesforceTestBase 
         TSalesforceOutputProperties outputProps = new TSalesforceOutputProperties("output"); //$NON-NLS-1$
         outputProps.copyValuesFrom(props);
         outputProps.outputAction.setValue(action);
+        outputProps.ignoreNull.setValue(true);
         doWriteRows(outputProps, outputRows);
         List<IndexedRecord> inputRows = readRows(props);
         return checkRows(random, inputRows, outputRows.size());

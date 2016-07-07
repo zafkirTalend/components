@@ -13,16 +13,18 @@
 package org.talend.components.salesforce.runtime;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.SalesforceConnectionModuleProperties;
 import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecProperties;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
-import org.talend.daikon.avro.util.AvroUtils;
+import org.talend.daikon.avro.AvroUtils;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 import com.sforce.soap.partner.PartnerConnection;
 
@@ -30,7 +32,7 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
 
     private transient PartnerConnection connection;
 
-    private transient IndexedRecordAdapterFactory<?, IndexedRecord> factory;
+    private transient IndexedRecordConverter<?, IndexedRecord> factory;
 
     protected transient Schema querySchema;
 
@@ -38,8 +40,11 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
 
     protected int dataCount;
 
+    protected RuntimeContainer container;
+
     public SalesforceReader(RuntimeContainer container, SalesforceSource source) {
-        super(container, source);
+        super(source);
+        this.container = container;
     }
 
     protected PartnerConnection getConnection() throws IOException {
@@ -49,7 +54,7 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
         return connection;
     }
 
-    protected IndexedRecordAdapterFactory<?, IndexedRecord> getFactory() throws IOException {
+    protected IndexedRecordConverter<?, IndexedRecord> getFactory() throws IOException {
         if (null == factory) {
             boolean useBulkFactory = false;
             if (properties instanceof TSalesforceBulkExecProperties) {
@@ -78,7 +83,7 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
                 if (properties instanceof SalesforceConnectionModuleProperties) {
                     moduleName = properties.module.moduleName.getStringValue();
                 }
-                querySchema = ((SalesforceSourceOrSink) getCurrentSource()).getSchema(container, moduleName);
+                querySchema = getCurrentSource().getEndpointSchema(container, moduleName);
             }
         }
         return querySchema;
@@ -114,8 +119,13 @@ public abstract class SalesforceReader<T> extends AbstractBoundedReader<T> {
 
     @Override
     public void close() throws IOException {
-        if (container != null) {
-            container.setComponentData(container.getCurrentComponentId(), SalesforceConnectionModuleProperties.NB_LINE_NAME, dataCount);
-        }
     }
+
+    @Override
+    public Map<String, Object> getReturnValues() {
+        Result result = new Result();
+        result.totalCount = dataCount;
+        return result.toMap();
+    }
+
 }

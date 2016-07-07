@@ -12,9 +12,9 @@
 // ============================================================================
 package org.talend.components.api.properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.daikon.properties.property.Property;
@@ -35,7 +35,7 @@ public class ComponentPropertiesTest {
         }
     }
 
-    private final class NestedProperty extends ComponentPropertiesImpl{
+    private final class NestedProperty extends ComponentPropertiesImpl {
 
         public Property three = PropertyFactory.newString("three");
 
@@ -50,7 +50,7 @@ public class ComponentPropertiesTest {
         }
     }
 
-    private final class ComponentPropertiesTestClass extends ComponentPropertiesImpl{
+    private final class ComponentPropertiesTestClass extends ComponentPropertiesImpl {
 
         public Property one = PropertyFactory.newString("one");
 
@@ -64,30 +64,12 @@ public class ComponentPropertiesTest {
             super(name);
         }
     }
-
+    
     ComponentPropertiesTestClass foo;
 
     @Before
     public void init() {
         foo = (ComponentPropertiesTestClass) new ComponentPropertiesTestClass("foo").init();
-
-    }
-
-    @Test
-    public void testSetReturnsProperty() {
-        Property<String> element = ComponentPropertyFactory.newReturnsProperty();
-        assertEquals("returns", element.getName());
-        assertEquals(TypeUtils.toString(String.class), element.getType());
-    }
-
-    @Test
-    public void testNewReturnProperty() throws IllegalAccessException {
-        Property<String> element = ComponentPropertyFactory.newReturnsProperty();
-        Property<Boolean> returnProperty = ComponentPropertyFactory.newReturnProperty(element,
-                PropertyFactory.newBoolean("childName"));
-        assertEquals("childName", returnProperty.getName());
-        assertEquals(TypeUtils.toString(Boolean.class), returnProperty.getType());
-        assertEquals(returnProperty, element.getChild("childName"));
     }
 
     @Test

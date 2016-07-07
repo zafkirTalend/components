@@ -7,16 +7,17 @@ import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
-import org.talend.daikon.avro.AvroConverter;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.AvroConverter;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
+import org.talend.daikon.avro.converter.IndexedRecordConverter.UnmodifiableAdapterException;
 
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.bind.XmlObject;
 
 /**
- * Creates an {@link IndexedRecordAdapterFactory} that knows how to interpret Salesforce {@link SObject} objects.
+ * Creates an {@link IndexedRecordConverter} that knows how to interpret Salesforce {@link SObject} objects.
  */
-public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObject, IndexedRecord> {
+public class SObjectAdapterFactory implements IndexedRecordConverter<SObject, IndexedRecord> {
 
     private Schema schema;
 
@@ -57,10 +58,19 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
 
         private Map<String, Object> valueMap;
 
+        private String rootType;
+
         public SObjectIndexedRecord(SObject value) {
+            rootType = value.getType();
             Iterator<XmlObject> fields = value.getChildren();
             while (fields.hasNext()) {
-                processXmlObject(fields.next(), null);
+                XmlObject field = fields.next();
+                if (valueMap != null && (valueMap.containsKey(field.getName().getLocalPart()) || valueMap.containsKey(rootType
+                        + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER) + field.getName().getLocalPart()))) {
+                    continue;
+                } else {
+                    processXmlObject(field, rootType);
+                }
             }
         }
 
@@ -87,7 +97,11 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
                     fieldConverter[j] = SalesforceAvroRegistry.get().getConverterFromString(f);
                 }
             }
-            return fieldConverter[i].convertToAvro(valueMap.get(names[i]));
+            Object value = valueMap.get(names[i]);
+            if (value == null) {
+                value = valueMap.get(rootType + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER) + names[i]);
+            }
+            return fieldConverter[i].convertToAvro(value);
         }
 
         protected void processXmlObject(XmlObject xo, String prefixName) {
@@ -102,7 +116,7 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
                 while (xos.hasNext()) {
                     XmlObject objectValue = xos.next();
                     if (objectValue != null) {
-                        XmlObject xmlObject = (XmlObject) objectValue;
+                        XmlObject xmlObject = objectValue;
 
                         if ("type".equals(xmlObject.getName().getLocalPart()) && typeCount == 0) {
                             typeCount++;
@@ -113,7 +127,8 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
                             continue;
                         }
                         if (prefixName != null) {
-                            processXmlObject(xmlObject, prefixName + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER) + xo.getName().getLocalPart());
+                            processXmlObject(xmlObject, prefixName + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER)
+                                    + xo.getName().getLocalPart());
                         } else {
                             processXmlObject(xmlObject, xo.getName().getLocalPart());
                         }
@@ -126,7 +141,8 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
                 }
                 String columnName = null;
                 if (prefixName != null && prefixName.length() > 0) {
-                    columnName = prefixName + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER) + xo.getName().getLocalPart();
+                    columnName = prefixName + schema.getProp(SalesforceSchemaConstants.COLUMNNAME_DELIMTER)
+                            + xo.getName().getLocalPart();
                 } else {
                     columnName = xo.getName().getLocalPart();
                 }
@@ -134,7 +150,8 @@ public class SObjectAdapterFactory implements IndexedRecordAdapterFactory<SObjec
                     valueMap.put(columnName, value);
                 } else {
                     if (!columnName.equals(xo.getName().getLocalPart())) {
-                        valueMap.put(columnName, valueMap.get(columnName) + schema.getProp(SalesforceSchemaConstants.VALUE_DELIMITER) + value);
+                        valueMap.put(columnName,
+                                valueMap.get(columnName) + schema.getProp(SalesforceSchemaConstants.VALUE_DELIMITER) + value);
                     }
                 }
             }

@@ -17,8 +17,8 @@ import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.component.runtime.WriteOperation;
-import org.talend.components.api.component.runtime.WriterResult;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.BulkFileProperties;
 import org.talend.components.common.runtime.BulkFileWriter;
@@ -29,7 +29,7 @@ import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputB
  */
 final class SalesforceBulkFileWriter extends BulkFileWriter {
 
-    public SalesforceBulkFileWriter(WriteOperation<WriterResult> writeOperation, BulkFileProperties bulkProperties,
+    public SalesforceBulkFileWriter(WriteOperation<Result> writeOperation, BulkFileProperties bulkProperties,
             RuntimeContainer adaptor) {
         super(writeOperation, bulkProperties, adaptor);
     }
@@ -57,14 +57,22 @@ final class SalesforceBulkFileWriter extends BulkFileWriter {
                         List<Boolean> polymorphics = salesforceBulkProperties.upsertRelationTable.polymorphic.getValue();
                         List<String> lookupFieldModuleNames = salesforceBulkProperties.upsertRelationTable.lookupFieldModuleName
                                 .getValue();
-                        List<String> lookupFieldNames = salesforceBulkProperties.upsertRelationTable.lookupFieldName.getValue();
+                        List<String> lookupRelationshipFieldNames = salesforceBulkProperties.upsertRelationTable.lookupRelationshipFieldName
+                                .getValue();
                         List<String> externalIdFromLookupFields = salesforceBulkProperties.upsertRelationTable.lookupFieldExternalIdName
                                 .getValue();
-
-                        if (polymorphics.get(index)) {
+                        
+                        Object polymorphic = polymorphics.get(index);
+                        boolean poly = false;
+                        if(polymorphic!=null && polymorphic instanceof Boolean) {
+                            poly = (Boolean)polymorphic;
+                        }
+                        
+                        if (poly) {
                             sbuilder.append(lookupFieldModuleNames.get(index)).append(":");
                         }
-                        sbuilder.append(lookupFieldNames.get(index)).append(".").append(externalIdFromLookupFields.get(index));
+                        sbuilder.append(lookupRelationshipFieldNames.get(index)).append(".")
+                                .append(externalIdFromLookupFields.get(index));
                         header = sbuilder.toString();
                         sbuilder.setLength(0);
                     }

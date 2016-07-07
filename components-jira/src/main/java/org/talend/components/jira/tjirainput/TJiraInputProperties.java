@@ -12,7 +12,7 @@
 // ============================================================================
 package org.talend.components.jira.tjirainput;
 
-import static org.talend.daikon.avro.SchemaConstants.*;
+import static org.talend.daikon.avro.SchemaConstants.TALEND_IS_LOCKED;
 
 import java.util.Collections;
 import java.util.Set;
@@ -20,7 +20,6 @@ import java.util.Set;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field.Order;
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.api.properties.ComponentPropertyFactory;
 import org.talend.components.jira.JiraProperties;
 import org.talend.components.jira.Resource;
 import org.talend.daikon.avro.AvroRegistry;
@@ -68,8 +67,6 @@ public class TJiraInputProperties extends JiraProperties {
         jql.setValue("summary ~ \\\"some word\\\" AND project=PROJECT_ID");
         projectId.setValue("");
         batchSize.setValue(50);
-
-        ComponentPropertyFactory.newReturnProperty(getReturns(), PropertyFactory.newInteger("numberOfRecords"));
     }
 
     /**
@@ -94,10 +91,10 @@ public class TJiraInputProperties extends JiraProperties {
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
 
+        Resource resourceValue = resource.getValue();
         if (form.getName().equals(Form.MAIN)) {
 
             // refresh after resource changed
-            Resource resourceValue = resource.getValue();
             switch (resourceValue) {
             case PROJECT: {
                 form.getWidget(jql.getName()).setHidden(true);
@@ -107,6 +104,21 @@ public class TJiraInputProperties extends JiraProperties {
             case ISSUE: {
                 form.getWidget(jql.getName()).setHidden(false);
                 form.getWidget(projectId.getName()).setHidden(true);
+                break;
+            }
+            }
+        }
+        
+        if (form.getName().equals(Form.ADVANCED)) {
+
+            // refresh after resource changed
+            switch (resourceValue) {
+            case PROJECT: {
+                form.getWidget(batchSize.getName()).setHidden(true);
+                break;
+            }
+            case ISSUE: {
+                form.getWidget(batchSize.getName()).setHidden(false);
                 break;
             }
             }

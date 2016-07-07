@@ -15,13 +15,12 @@ package org.talend.components.salesforce.tsalesforcebulkexec;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.InputComponentDefinition;
-import org.talend.components.api.component.Trigger;
-import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.runtime.Source;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.runtime.SalesforceSource;
+import org.talend.daikon.properties.property.Property;
 
 import aQute.bnd.annotation.component.Component;
 
@@ -33,20 +32,18 @@ public class TSalesforceBulkExecDefinition extends SalesforceDefinition implemen
 
     public TSalesforceBulkExecDefinition() {
         super(COMPONENT_NAME);
-        // no input connector this is an starting component
-        setTriggers(new Trigger(TriggerType.SUBJOB_OK, 1, 0), new Trigger(TriggerType.SUBJOB_ERROR, 1, 0));
     }
 
     @Override
     public boolean isSchemaAutoPropagate() {
         return false;
     }
-    
+
     @Override
     public boolean isConditionalInputs() {
         return true;
     }
-    
+
     @Override
     public Class<? extends ComponentProperties> getPropertyClass() {
         return TSalesforceBulkExecProperties.class;
@@ -57,6 +54,12 @@ public class TSalesforceBulkExecDefinition extends SalesforceDefinition implemen
     public Class<? extends ComponentProperties>[] getNestedCompatibleComponentPropertiesClass() {
         return concatPropertiesClasses(super.getNestedCompatibleComponentPropertiesClass(),
                 new Class[] { SalesforceModuleProperties.class });
+    }
+
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[] { RETURN_ERROR_MESSAGE_PROP, RETURN_TOTAL_RECORD_COUNT_PROP, RETURN_SUCCESS_RECORD_COUNT_PROP,
+                RETURN_REJECT_RECORD_COUNT_PROP };
     }
 
     @Override

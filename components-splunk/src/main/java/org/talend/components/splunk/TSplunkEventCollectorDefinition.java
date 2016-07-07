@@ -12,15 +12,16 @@
 // ============================================================================
 package org.talend.components.splunk;
 
+import static org.talend.daikon.properties.property.PropertyFactory.*;
+
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.AbstractComponentDefinition;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.OutputComponentDefinition;
-import org.talend.components.api.component.Trigger;
-import org.talend.components.api.component.Trigger.TriggerType;
 import org.talend.components.api.component.runtime.Sink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.splunk.runtime.TSplunkEventCollectorSink;
+import org.talend.daikon.properties.property.Property;
 
 import aQute.bnd.annotation.component.Component;
 
@@ -32,11 +33,15 @@ import aQute.bnd.annotation.component.Component;
         + TSplunkEventCollectorDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
 public class TSplunkEventCollectorDefinition extends AbstractComponentDefinition implements OutputComponentDefinition {
 
+    public static String RETURN_RESPONSE_CODE = "responseCode";
+
+    public static Property<Integer> RETURN_RESPONSE_CODE_PROP = newInteger(RETURN_RESPONSE_CODE);
+
     public static final String COMPONENT_NAME = "tSplunkEventCollector"; //$NON-NLS-1$
 
     public TSplunkEventCollectorDefinition() {
         super(COMPONENT_NAME);
-        setTriggers(new Trigger(TriggerType.SUBJOB_OK, 1, 1), new Trigger(TriggerType.SUBJOB_ERROR, 1, 1));
+        setupI18N(new Property<?>[] { RETURN_RESPONSE_CODE_PROP });
     }
 
     @Override
@@ -44,6 +49,12 @@ public class TSplunkEventCollectorDefinition extends AbstractComponentDefinition
         return new String[] { "Business Intelligence/Splunk" }; //$NON-NLS-1$
     }
 
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[] { RETURN_RESPONSE_CODE_PROP, RETURN_ERROR_MESSAGE_PROP, RETURN_TOTAL_RECORD_COUNT_PROP };
+    }
+
+    @Override
     public String getMavenGroupId() {
         return "org.talend.components";
     }

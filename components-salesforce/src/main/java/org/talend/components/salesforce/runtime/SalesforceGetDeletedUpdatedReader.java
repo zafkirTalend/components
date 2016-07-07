@@ -14,10 +14,12 @@ package org.talend.components.salesforce.runtime;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.salesforce.SalesforceGetDeletedUpdatedProperties;
 
 import com.sforce.soap.partner.QueryResult;
@@ -42,11 +44,17 @@ public abstract class SalesforceGetDeletedUpdatedReader<ResultT> extends Salesfo
 
     private transient int inputRecordsIndex;
 
+    protected Calendar startDate;
+
+    protected Calendar endDate;
+
     public SalesforceGetDeletedUpdatedReader(RuntimeContainer container, SalesforceSource source,
-                                             SalesforceGetDeletedUpdatedProperties props) {
+            SalesforceGetDeletedUpdatedProperties props) {
         super(container, source);
         this.properties = props;
         module = props.module.moduleName.getStringValue();
+        startDate = SalesforceRuntime.convertDateToCalendar(props.startDate.getValue());
+        endDate = SalesforceRuntime.convertDateToCalendar(props.endDate.getValue());
     }
 
     @Override
@@ -135,7 +143,7 @@ public abstract class SalesforceGetDeletedUpdatedReader<ResultT> extends Salesfo
         try {
             return ((SObjectAdapterFactory) getFactory()).convertToAvro(inputRecords[inputRecordsIndex]);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ComponentException(e);
         }
     }
 

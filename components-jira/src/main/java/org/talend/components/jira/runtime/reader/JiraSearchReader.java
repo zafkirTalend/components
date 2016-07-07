@@ -19,7 +19,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.jira.datum.Entity;
 import org.talend.components.jira.datum.Search;
 import org.talend.components.jira.runtime.JiraSource;
@@ -28,23 +27,23 @@ import org.talend.components.jira.runtime.JiraSource;
  * {@link JiraReader} for rest/api/2/search Jira REST API resource
  */
 public class JiraSearchReader extends JiraReader {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(JiraSearchReader.class);
-    
+
     private static final String REST_RESOURCE = "rest/api/2/search";
-    
+
     /**
      * Jira pagination parameter, which defines total number of entities
      */
     private int total = 0;
-    
+
     /**
      * Jira pagination http parameter, which defines from which entity to start
      */
     private int startAt = 0;
-    
+
     /**
-     * Jira pagination http parameter, which defines page size 
+     * Jira pagination http parameter, which defines page size
      * (number of entities per request)
      */
     private int maxResults = 50;
@@ -52,15 +51,15 @@ public class JiraSearchReader extends JiraReader {
     /**
      * {@inheritDoc}
      */
-    public JiraSearchReader(JiraSource source, RuntimeContainer container) {
-        super(source, REST_RESOURCE, container);
-        //TODO check if user specify blank batch size
+    public JiraSearchReader(JiraSource source) {
+        super(source, REST_RESOURCE);
+        // TODO check if user specify blank batch size
         maxResults = source.getBatchSize();
     }
-    
+
     /**
      * Prepares and returns map with http parameters.
-     * It includes startAt parameter, which is required for pagination 
+     * It includes startAt parameter, which is required for pagination
      */
     @Override
     protected Map<String, Object> prepareParameters() {
@@ -69,7 +68,7 @@ public class JiraSearchReader extends JiraReader {
         parameters.put("startAt", startAt);
         return parameters;
     }
-    
+
     /**
      * Process response. Updates total and startAt value.
      * Retrieves entities from response
@@ -84,7 +83,7 @@ public class JiraSearchReader extends JiraReader {
         List<Entity> entities = search.getEntities();
         return entities;
     }
-    
+
     /**
      * {@inheritDoc}
      */

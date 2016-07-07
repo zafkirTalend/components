@@ -19,27 +19,26 @@ import java.util.Map;
 import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.api.component.runtime.Writer;
-import org.talend.components.api.component.runtime.WriterResult;
 import org.talend.components.api.exception.DataRejectException;
 import org.talend.components.jira.connection.Rest;
 import org.talend.components.jira.runtime.JiraWriteOperation;
-import org.talend.components.jira.runtime.result.DataCountResult;
 import org.talend.daikon.avro.AvroRegistry;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
  * Jira server {@link Writer}
  */
-public class JiraWriter implements Writer<DataCountResult> {
+public class JiraWriter implements Writer<Result> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JiraWriter.class);
-    
+
     /**
      * IndexedRecord converter
      */
-    private IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> factory;
+    private IndexedRecordConverter<Object, ? extends IndexedRecord> factory;
 
     /**
      * Http connection
@@ -52,34 +51,19 @@ public class JiraWriter implements Writer<DataCountResult> {
     private final JiraWriteOperation writeOperation;
 
     /**
-     * Unique ID of this {@link Writer} to distinguish it from other Writers
-     */
-    private String uId;
-
-    /**
      * Defines whether {@link Writer} was already opened
      */
     protected boolean opened;
-    
-    /**
-     * Number of data passed to {@link Writer#write(Object)}
-     */
-    protected int dataCount = 0;
-    
-    /**
-     * Number of data written
-     */
-    protected int successCount = 0;
-    
-    /**
-     * Number of data rejected
-     */
-    protected int rejectCount = 0;
-    
+
     /**
      * Jira REST resource
      */
     protected final String resource;
+
+    /**
+     * Return results
+     */
+    protected Result result;
 
     /**
      * Constructor sets {@link WriteOperation}
@@ -102,7 +86,7 @@ public class JiraWriter implements Writer<DataCountResult> {
             LOG.debug("Writer is already opened");
             return;
         }
-        this.uId = uId;
+        result = new Result(uId);
 
         String hostPort = writeOperation.getSink().getHostPort();
         String userId = writeOperation.getSink().getUserId();
@@ -124,10 +108,10 @@ public class JiraWriter implements Writer<DataCountResult> {
     /**
      * Closes connection and resets instance to initial state Successors should also reset data counter
      * 
-     * @return {@link WriterResult} with {@link Writer} ID and number of data written
+     * @return {@link Result} with {@link Writer} ID and number of data written
      */
     @Override
-    public DataCountResult close() {
+    public Result close() {
         if (!opened) {
             LOG.debug("Writer closed without opening");
         }
@@ -135,11 +119,6 @@ public class JiraWriter implements Writer<DataCountResult> {
         // Rest connection doesn't require closing
         rest = null;
         opened = false;
-
-        DataCountResult result = new DataCountResult(uId, dataCount, successCount, rejectCount);
-        dataCount = 0;
-        successCount = 0;
-        rejectCount = 0;
         return result;
     }
 
@@ -159,22 +138,21 @@ public class JiraWriter implements Writer<DataCountResult> {
     protected Rest getConnection() {
         return rest;
     }
-    
+
     /**
      * Returns IndexedRecord converter
      * 
      * @param datum data object
      * @return IndexedRecord converter
      */
-    protected IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> getFactory(Object datum) {
+    protected IndexedRecordConverter<Object, ? extends IndexedRecord> getFactory(Object datum) {
         if (null == factory) {
-            factory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) new AvroRegistry()
-                    .createAdapterFactory(datum.getClass());
+            factory = (IndexedRecordConverter<Object, ? extends IndexedRecord>) new AvroRegistry()
+                    .createIndexedRecordConverter(datum.getClass());
         }
         return factory;
     }
-    
-    
+
     /**
      * Throws {@link DataRejectException} with specified error message
      * 
@@ -183,7 +161,7 @@ public class JiraWriter implements Writer<DataCountResult> {
      * @throws DataRejectException with specified error and current {@link IndexedRecord}
      */
     protected void handleReject(String error, IndexedRecord record) {
-        rejectCount++;
+        result.rejectCount++;
         Map<String, Object> info = new HashMap<String, Object>();
         info.put("error", error);
         info.put("talend_record", record);

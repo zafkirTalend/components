@@ -14,9 +14,11 @@ package org.talend.components.salesforce.runtime;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.tsalesforcegetservertimestamp.TSalesforceGetServerTimestampProperties;
 
@@ -29,9 +31,12 @@ public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Long>
 
     protected int dataCount;
 
+    protected RuntimeContainer container;
+
     public SalesforceServerTimeStampReader(RuntimeContainer container, SalesforceSource source,
                                            TSalesforceGetServerTimestampProperties props) {
-        super(container, source);
+        super(source);
+        this.container = container;
     }
 
     @Override
@@ -64,10 +69,10 @@ public class SalesforceServerTimeStampReader extends AbstractBoundedReader<Long>
     }
 
     @Override
-    public void close() throws IOException {
-        if (container != null) {
-            container.setComponentData(container.getCurrentComponentId(), TSalesforceGetServerTimestampProperties.NB_LINE_NAME, dataCount);
-        }
+    public Map<String, Object> getReturnValues() {
+        Result result = new Result();
+        result.totalCount = dataCount;
+        return result.toMap();
     }
 
 }

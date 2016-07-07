@@ -12,8 +12,12 @@
 // ============================================================================
 package org.talend.components.api.component;
 
-import org.talend.components.api.TopLevelDefinition;
+import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.PropertyFactory;
 
 /**
  * Defines a component.
@@ -22,40 +26,62 @@ import org.talend.components.api.properties.ComponentProperties;
  * {@link org.talend.components.api.service.ComponentService} to allow components to be discovered.
  */
 
-public interface ComponentDefinition extends TopLevelDefinition {
+public interface ComponentDefinition extends NamedThing {
 
     /**
      * Returns an array of paths that represent the categories of the component.
      */
-    public String[] getFamilies();
+    String[] getFamilies();
 
     /**
      * Create and initialize a suitable {@link ComponentProperties} which configures an instance of this component.
      */
-    public ComponentProperties createProperties();
+    ComponentProperties createProperties();
 
     /**
      * FIXME - is this really necessary? create the ComponentProperties and initialize it's properties only and not the
      * UI Layout not usefull for runtime
      */
-    public ComponentProperties createRuntimeProperties();
+    ComponentProperties createRuntimeProperties();
 
     /**
-     * Returns the types of {@link Trigger} objects supported by this component.
-     *
-     * A trigger is a link between two components that schedule the different subjobs.
+     * Common return properties names
      */
-    public Trigger[] getTriggers();
+    static final String RETURN_ERROR_MESSAGE = "errorMessage";
+
+    static final String RETURN_TOTAL_RECORD_COUNT = "totalRecordCount";
+
+    static final String RETURN_SUCCESS_RECORD_COUNT = "successRecordCount";
+
+    static final String RETURN_REJECT_RECORD_COUNT = "rejectRecordCount";
+
+    static final Property<String> RETURN_ERROR_MESSAGE_PROP = PropertyFactory.newString(RETURN_ERROR_MESSAGE);
+
+    static final Property<Integer> RETURN_TOTAL_RECORD_COUNT_PROP = PropertyFactory.newInteger(RETURN_TOTAL_RECORD_COUNT);
+
+    static final Property<Integer> RETURN_SUCCESS_RECORD_COUNT_PROP = PropertyFactory.newInteger(RETURN_SUCCESS_RECORD_COUNT);
+
+    static final Property<Integer> RETURN_REJECT_RECORD_COUNT_PROP = PropertyFactory.newInteger(RETURN_REJECT_RECORD_COUNT);
+
+    /**
+     * Returns a list of the properties that the component returns at runtime.
+     *
+     * The returns properties are properties that are populated at runtime and provided after execution completes. For connector
+     * components, the values are obtained using {@link WriteOperation#finalize()} and {@link Reader#getReturnValues()}.
+     *
+     * @return a list of {@link Property} objects, one for each return property.
+     */
+    Property[] getReturnProperties();
 
     /**
      * Returns true if this {@code ComponentDefinition} will work with the specified list of {@link ComponentProperties}
      */
-    public boolean supportsProperties(ComponentProperties... properties);
+    boolean supportsProperties(ComponentProperties... properties);
 
     /**
      * A path relative to the current Component definition, ideally is should just be the name of the png image if
      * placed in the same resource folder as the implementing class. The
-     * {@link org.talend.components.api.service.ComponentService} will compute the icon with the following code:
+     * {@code org.talend.components.api.service.ComponentService} will compute the icon with the following code:
      * 
      * <pre>
      * {@code
@@ -67,35 +93,35 @@ public interface ComponentDefinition extends TopLevelDefinition {
      * @param imageType the type of image requested
      * @return the path to the png resource or null if an image is not required.
      */
-    public String getPngImagePath(ComponentImageType imageType);
+    String getPngImagePath(ComponentImageType imageType);
 
     //
     // FIXME - DI flags - do we need all of these?
     //
 
-    public boolean isSchemaAutoPropagate();
+    boolean isSchemaAutoPropagate();
 
-    public boolean isDataAutoPropagate();
+    boolean isDataAutoPropagate();
 
-    public boolean isConditionalInputs();
+    boolean isConditionalInputs();
 
-    public boolean isStartable();
+    boolean isStartable();
 
     // FIXME - An ENUM perhaps?
-    public String getPartitioning();
+    String getPartitioning();
 
     /**
      * Used for computing the dependencies by finding the pom.xml and dependencies.properties in the META-INF/ folder
      * 
      * @return the maven Group Id of the component family
      */
-    public String getMavenGroupId();
+    String getMavenGroupId();
 
     /**
      * Used for computing the dependencies by finding the pom.xml and dependencies.properties in the META-INF/ folder
      * 
      * @return the maven Artifact Id of the component family
      */
-    public String getMavenArtifactId();
+    String getMavenArtifactId();
 
 }

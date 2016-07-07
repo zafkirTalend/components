@@ -1,17 +1,20 @@
 package org.talend.components.salesforce.runtime;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.talend.daikon.avro.SchemaConstants.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.talend.daikon.avro.SchemaConstants.TALEND_COLUMN_DEFAULT;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 import org.apache.avro.Schema;
 import org.junit.Test;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
-import org.talend.daikon.avro.util.AvroTypes;
-import org.talend.daikon.avro.util.AvroUtils;
 
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
@@ -58,16 +61,23 @@ public class SalesforceAvroRegistryTest {
             numberWithScaleAndPrecisionField.setPrecision(10);
             numberWithScaleAndPrecisionField.setScale(2);
 
+            Field doubleWithNullable = new Field();
+            doubleWithNullable.setName("double_with_nullable");
+            doubleWithNullable.setType(FieldType._double);
+            doubleWithNullable.setPrecision(18);
+            doubleWithNullable.setScale(15);
+            doubleWithNullable.setNillable(true);
+
             DescribeSObjectResult dsor = new DescribeSObjectResult();
             dsor.setName("MySObjectRecord");
             dsor.setFields(new Field[] { booleanField, defaultField, dateField, stringWithLengthField,
-                    numberWithScaleAndPrecisionField });
+                    numberWithScaleAndPrecisionField, doubleWithNullable });
             s = sRegistry.inferSchema(dsor);
         }
 
         assertThat(s.getType(), is(Schema.Type.RECORD));
         assertThat(s.getName(), is("MySObjectRecord"));
-        assertThat(s.getFields(), hasSize(5));
+        assertThat(s.getFields(), hasSize(6));
         assertThat(s.getObjectProps().keySet(), empty());
 
         // Check out the field.
@@ -84,23 +94,33 @@ public class SalesforceAvroRegistryTest {
 
         f = s.getField("date");
         assertThat(f.name(), is("date"));
-        assertTrue(AvroTypes.isSameType(f.schema(), AvroTypes._date()));
+        assertTrue(AvroUtils.isSameType(f.schema(), AvroUtils._date()));
         assertThat(f.getObjectProps().keySet(), containsInAnyOrder(SchemaConstants.TALEND_COLUMN_PATTERN));
         assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_PATTERN), is("yyyy-MM-dd"));
 
         f = s.getField("string_with_length");
         assertThat(f.name(), is("string_with_length"));
-        assertTrue(AvroTypes.isSameType(f.schema(), AvroTypes._string()));
+        assertTrue(AvroUtils.isSameType(f.schema(), AvroUtils._string()));
         assertThat(f.getObjectProps().keySet(), containsInAnyOrder(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
         assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH), is("20"));
 
         f = s.getField("number_with_scale_and_precision");
         assertThat(f.name(), is("number_with_scale_and_precision"));
-        assertTrue(AvroTypes.isSameType(f.schema(), AvroTypes._double()));
+        assertTrue(AvroUtils.isSameType(f.schema(), AvroUtils._double()));
         assertThat(f.getObjectProps().keySet(),
-                containsInAnyOrder(SchemaConstants.TALEND_COLUMN_SCALE, SchemaConstants.TALEND_COLUMN_PRECISION));
-        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_PRECISION), is("10"));
-        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_SCALE), is("2"));
+                containsInAnyOrder(SchemaConstants.TALEND_COLUMN_DB_LENGTH, SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH), is("10"));
+        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_PRECISION), is("2"));
+
+        f = s.getField("double_with_nullable");
+        assertThat(f.name(), is("double_with_nullable"));
+        assertThat(f.schema().getType(), is(Schema.Type.UNION));
+        assertThat(f.schema().getTypes(), containsInAnyOrder(AvroUtils._double(), Schema.create(Schema.Type.NULL)));
+        assertThat(f.getObjectProps().keySet(),
+                containsInAnyOrder(SchemaConstants.TALEND_COLUMN_DB_LENGTH, SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH), is("18"));
+        assertThat(f.getProp(SchemaConstants.TALEND_COLUMN_PRECISION), is("15"));
+
     }
 
     /**

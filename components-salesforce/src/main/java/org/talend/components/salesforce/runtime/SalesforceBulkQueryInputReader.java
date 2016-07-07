@@ -19,6 +19,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.salesforce.runtime.SalesforceBulkRuntime.BulkResult;
 import org.talend.components.salesforce.runtime.SalesforceBulkRuntime.BulkResultSet;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
@@ -92,7 +93,7 @@ public class SalesforceBulkQueryInputReader extends SalesforceReader<IndexedReco
 
     // FIXME some duplicate code
     protected void executeSalesforceBulkQuery() throws IOException, ConnectionException {
-        String queryText = getQueryString((TSalesforceInputProperties)properties);
+        String queryText = getQueryString(properties);
         bulkRuntime =new SalesforceBulkRuntime((SalesforceSource) getCurrentSource(),container);
         try {
             bulkRuntime.doBulkQuery(properties.module.moduleName.getStringValue(), queryText, 30);
@@ -106,7 +107,7 @@ public class SalesforceBulkQueryInputReader extends SalesforceReader<IndexedReco
         try {
             return ((BulkResultAdapterFactory)getFactory()).convertToAvro(getCurrentRecord());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ComponentException(e);
         }
     }
 }

@@ -13,17 +13,17 @@
 package org.talend.components.jira.avro;
 
 import org.apache.avro.Schema;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
  * Jira {@link IndexedRecordAdapterFactory}
  */
-public class IssueAdapterFactory implements IndexedRecordAdapterFactory<String, IssueIndexedRecord>{
-    
+public class IssueAdapterFactory implements IndexedRecordConverter<String, IssueIndexedRecord> {
+
     /**
      * Data schema. Only static schema with 1 String column is allowed
      */
-    Schema schema;   
+    Schema schema;
 
     /**
      * {@inheritDoc}

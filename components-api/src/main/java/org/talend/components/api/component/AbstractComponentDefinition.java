@@ -12,10 +12,6 @@
 // ============================================================================
 package org.talend.components.api.component;
 
-import org.talend.components.api.AbstractTopLevelDefinition;
-import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.exception.TalendRuntimeException;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -23,8 +19,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.talend.components.api.AbstractTopLevelDefinition;
+import org.talend.components.api.properties.ComponentProperties;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.exception.TalendRuntimeException;
+import org.talend.daikon.properties.property.Property;
+
 public abstract class AbstractComponentDefinition extends AbstractTopLevelDefinition implements ComponentDefinition {
-    
+
     /**
      * Component name.
      * It is used to define component name, which will be displayed in Studio Palette
@@ -32,8 +34,6 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
      */
     private String componentName;
 
-    private Trigger[] triggers;
-    
     /**
      * Constructor sets component name
      * 
@@ -41,10 +41,8 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
      */
     public AbstractComponentDefinition(String componentName) {
         this.componentName = componentName;
-    }
-
-    public void setTriggers(Trigger... conns) {
-        this.triggers = conns;
+        setupI18N(new Property<?>[] { RETURN_ERROR_MESSAGE_PROP, RETURN_REJECT_RECORD_COUNT_PROP,
+                RETURN_SUCCESS_RECORD_COUNT_PROP, RETURN_TOTAL_RECORD_COUNT_PROP });
     }
 
     /**
@@ -56,7 +54,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
     public String getName() {
         return componentName;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -68,16 +66,11 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
         }
         return null;
     }
-    
+
     @Override
     public String[] getFamilies() {
         // Subclass me
         return new String[] {};
-    }
-
-    @Override
-    public Trigger[] getTriggers() {
-        return triggers;
     }
 
     @Override
@@ -100,7 +93,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
                 return null;// TODO throw an exception
             } // else keep going
             Constructor<?> c = propertyClass.getConstructor(String.class);
-            compProp = (ComponentProperties) c.newInstance(new Object[] { "root" });
+            compProp = (ComponentProperties) c.newInstance("root");
         } catch (Exception e) {
             TalendRuntimeException.unexpectedException(e);
         }
@@ -146,10 +139,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
 
     @Override
     public boolean isStartable() {
-        if (this instanceof InputComponentDefinition) {
-            return true;
-        }
-        return false;
+        return this instanceof InputComponentDefinition;
     }
 
     public static final String AUTO = "Auto";
@@ -169,7 +159,7 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
 
     /**
      * @return the associated ComponentProperties class associated with the Component. This shall be used to initialised
-     * the runtime classes.
+     *         the runtime classes.
      */
     // TODO we should rename this
     abstract public Class<? extends ComponentProperties> getPropertyClass();
@@ -178,9 +168,9 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
      * return the list of ComponentProperties that may be assigned to nested properties of the main ComponentProperties
      * class(see {@link AbstractComponentDefinition#getPropertyClass()} associated with this definiton.<br/>
      * This method uses static class definition to avoid ComponentProperties instanciation.
-     *
+     * 
      * @return return the list of ComponentProperties that may be assigned to a nested property of this component
-     * associated ComponentProperties.
+     *         associated ComponentProperties.
      */
     public Class<? extends ComponentProperties>[] getNestedCompatibleComponentPropertiesClass() {
         return (Class<? extends ComponentProperties>[]) Array.newInstance(Class.class, 0);
@@ -191,5 +181,15 @@ public abstract class AbstractComponentDefinition extends AbstractTopLevelDefini
         Class<? extends ComponentProperties>[] result = Arrays.copyOf(first, first.length + second.length);
         System.arraycopy(second, 0, result, first.length, second.length);
         return result;
+    }
+
+    /**
+     * this will configure all i18n message formatter of the namedThings to the one associated with this instance.
+     */
+    public <T extends NamedThing> T[] setupI18N(T[] namedThings) {
+        for (NamedThing nt : namedThings) {
+            nt.setI18nMessageFormatter(getI18nMessageFormatter());
+        }
+        return namedThings;
     }
 }

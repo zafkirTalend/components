@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.properties.ComponentReferenceProperties.ReferenceType;
 import org.talend.components.api.service.testcomponent.TestComponentProperties;
-import org.talend.components.api.test.ComponentTestUtils;
 
 public class ComponentReferencePropertiesTest {
 
@@ -50,11 +49,6 @@ public class ComponentReferencePropertiesTest {
         TestComponentProperties props = (TestComponentProperties) new TestComponentProperties("props").init();
         System.out.println(props);
         assertEquals(3, props.referencedComponent.getForms().size());
-    }
-
-    @Test
-    public void testI18n() {
-        ComponentTestUtils.checkAllI18N(new ComponentReferenceProperties(null, null).init(), errorCollector);
     }
 
 }
