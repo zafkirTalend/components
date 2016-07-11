@@ -47,6 +47,8 @@ public class DataSetWriter implements Writer<Result> {
 
     private WriteOperation<Result> writeOperation;
 
+    private boolean useLimit;
+
     private int limit;
 
     private DataPrepOutputModes mode;
@@ -69,7 +71,13 @@ public class DataSetWriter implements Writer<Result> {
                 runtimeProperties.getLogin(), //
                 runtimeProperties.getPass(), //
                 runtimeProperties.getDataSetId(), runtimeProperties.getDataSetName());
-        limit = runtimeProperties.getLimit() != null ? Integer.valueOf(runtimeProperties.getLimit()) : Integer.MAX_VALUE;
+
+        String limitValue = runtimeProperties.getLimit();
+        useLimit = limitValue != null;
+        if (useLimit) {
+            limit = Integer.parseInt(limitValue);
+        }
+
         mode = runtimeProperties.getMode();
 
         final OutputStream outputStream;
@@ -100,7 +108,7 @@ public class DataSetWriter implements Writer<Result> {
     @Override
     public void write(Object datum) throws IOException {
         counter++;
-        if (datum == null || counter > limit) {
+        if (datum == null || (useLimit && (counter > limit))) {
             LOGGER.debug("Datum: {}", datum);
             return;
         } // else handle the data.
@@ -151,6 +159,7 @@ public class DataSetWriter implements Writer<Result> {
         return writeOperation;
     }
 
+    @SuppressWarnings("unchecked")
     private IndexedRecordConverter<Object, ? extends IndexedRecord> getFactory(Object datum) {
         if (null == factory) {
             factory = (IndexedRecordConverter<Object, ? extends IndexedRecord>) new AvroRegistry()
