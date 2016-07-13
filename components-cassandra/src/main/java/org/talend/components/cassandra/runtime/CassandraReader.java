@@ -1,5 +1,6 @@
 package org.talend.components.cassandra.runtime;
 
+import org.apache.beam.sdk.io.cassandra.CassandraRow;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class CassandraReader extends AbstractBoundedReader<Row> {
+public class CassandraReader extends AbstractBoundedReader<CassandraRow> {
 
     private TCassandraInputProperties properties;
 
@@ -47,8 +48,8 @@ public class CassandraReader extends AbstractBoundedReader<Row> {
     }
 
     @Override
-    public Row getCurrent() throws NoSuchElementException {
-        return current;
+    public CassandraRow getCurrent() throws NoSuchElementException {
+        return CassandraRow.fromJavaDriverRow(current);
     }
 
     @Override

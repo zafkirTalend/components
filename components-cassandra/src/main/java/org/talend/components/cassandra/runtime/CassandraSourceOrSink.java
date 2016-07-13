@@ -9,15 +9,19 @@ import org.talend.components.api.properties.ConnectionPropertiesProvider;
 import org.talend.components.cassandra.CassandraConnectionProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CassandraSourceOrSink implements SourceOrSink {
 
-    protected ConnectionPropertiesProvider<CassandraConnectionProperties> properties;
+    protected transient ConnectionPropertiesProvider<CassandraConnectionProperties> properties;
 
     protected static final String SESSION_GLOBALMAP_KEY = "Session"; //FIXME only for Studio?
     protected static final String CLUSTER_GLOBALMAP_KEY = "Cluster"; //FIXME only for Studio?
@@ -103,8 +107,13 @@ public class CassandraSourceOrSink implements SourceOrSink {
     }
 
     public Schema getSchema(RuntimeContainer container, String keyspaceName, String tableName) throws IOException {
-        TableMetadata table = getCluster(container).getMetadata().getKeyspace(keyspaceName).getTable(tableName);
-        return CassandraAvroRegistry.get().inferSchema(table);
+        return CassandraAvroRegistry.get().inferSchema(getCassandraMetadata(container,
+                keyspaceName, tableName));
+    }
+
+    public TableMetadata getCassandraMetadata(RuntimeContainer container, String keyspaceName,
+                                              String tableName) throws IOException{
+        return getCluster(container).getMetadata().getKeyspace(keyspaceName).getTable(tableName);
     }
 
     @Override

@@ -1,10 +1,13 @@
 package org.talend.components.cassandra.runtime;
 
+import org.apache.beam.sdk.io.cassandra.CassandraColumnDefinition;
+import org.apache.beam.sdk.io.cassandra.CassandraRow;
 import com.datastax.driver.core.*;
 import com.google.common.collect.ImmutableMap;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.talend.components.cassandra.avro.ConvertLocalDate;
+import org.talend.components.cassandra.beam.CassandraIORowAdapterFactory;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
@@ -40,6 +43,8 @@ public class CassandraAvroRegistry extends AvroRegistry {
 
     private static final Map<DataType.Name, Class<?>> mCassandraAllTypes;
 
+    private static final Map<CassandraColumnDefinition.Type, Class<?>> mCassandraIOTypes;
+
     private static final CassandraContainerRegistry sContainerReadWrite = new CassandraContainerRegistry();
 
     static {
@@ -73,6 +78,11 @@ public class CassandraAvroRegistry extends AvroRegistry {
                 .put(DataType.Name.MAP, Map.class) //
                 .put(DataType.Name.UDT, UDTValue.class) //
                 .put(DataType.Name.TUPLE, TupleValue.class) //
+                .build();
+        mCassandraIOTypes = new ImmutableMap.Builder<CassandraColumnDefinition.Type,
+                Class<?>>() //
+                .put(CassandraColumnDefinition.Type.INT, Integer.class) //
+                .put(CassandraColumnDefinition.Type.TEXT, String.class) //
                 .build();
     }
 
@@ -128,6 +138,74 @@ public class CassandraAvroRegistry extends AvroRegistry {
                 return inferSchemaDataType(dataType);
             }
         });
+
+        registerIndexedRecordConverter(CassandraRow.class, CassandraIORowAdapterFactory.class);
+
+        registerSchemaInferrer(CassandraRow.class, new SerializableFunction<CassandraRow, Schema>
+                () {
+            @Override
+            public Schema apply(CassandraRow row) {
+                return inferSchemaCassandraIORow(row);
+            }
+        });
+
+        registerSchemaInferrer(CassandraColumnDefinition.Type.class, new
+                SerializableFunction<CassandraColumnDefinition.Type, Schema>() {
+                    @Override
+                    public Schema apply(CassandraColumnDefinition.Type dataType) {
+                        return inferSchemaType(dataType);
+                    }
+                });
+    }
+
+    private Schema inferSchemaCassandraIORow(CassandraRow row) {
+        List<CassandraColumnDefinition> definitions = row.getDefinitions();
+        if (definitions.size() == 0) {
+            return Schema.create(Schema.Type.NULL);
+        }
+
+        SchemaBuilder.FieldAssembler<Schema> fa = SchemaBuilder.record("row").namespace("cassandra")
+                .fields();
+        for (CassandraColumnDefinition definition : definitions) {
+            fa = fa.name(definition.getColName()).type(inferSchema(definition.getColType()))
+                    .noDefault();
+        }
+        return fa.endRecord();
+    }
+
+    private Schema inferSchemaType(CassandraColumnDefinition.Type type) {
+        Class<?> nativeClass = mCassandraIOTypes.get(type);
+        if (nativeClass != null) {
+            AvroConverter<?, ?> ac = getConverter(nativeClass);
+            if (ac == null) {
+                // This should never occur if all of the native DataTypes are handled.
+                throw new RuntimeException("The type " + type + " is not handled.");
+            }
+            Schema s = new Schema.Parser().parse(ac.getSchema().toString());
+            return AvroUtils.wrapAsNullable(s);
+        }
+        // This should never occur.
+        throw new RuntimeException("The type " + type + " is not handled.");
+    }
+
+    public <T> AvroConverter<? super T, ?> getConverter(CassandraColumnDefinition.Type type, Schema
+            schema, Class<T> datumClass) {
+        if (type != null) {
+            if (mCassandraIOTypes.containsKey(type)) {
+                AvroConverter<? super T, ?> converter = (AvroConverter<? super T, ?>) getConverter
+                        (mCassandraIOTypes.get(type));
+                if (converter != null) {
+                    return converter;
+                }
+            }
+        }
+        // If a converter wasn't found, try and get using the class of the datum.
+        AvroConverter<? super T, ?> converter = getConverter(datumClass);
+        if (converter != null)
+            return converter;
+
+        // This should never occur.
+        throw new RuntimeException("Cannot convert " + type + ".");
     }
 
     public static CassandraAvroRegistry get() {
