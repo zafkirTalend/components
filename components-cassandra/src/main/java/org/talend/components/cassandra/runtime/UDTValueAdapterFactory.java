@@ -3,11 +3,11 @@ package org.talend.components.cassandra.runtime;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
-import org.talend.daikon.avro.util.AvroUtils;
+import org.talend.daikon.avro.AvroUtils;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
- * Creates an {@link IndexedRecordAdapterFactory} that knows how to interpret Cassandra {@link UDTValue} objects.
+ * Creates an {@link IndexedRecordConverter} that knows how to interpret Cassandra {@link UDTValue} objects.
  */
 public class UDTValueAdapterFactory extends CassandraBaseAdapterFactory<UDTValue, UDTValue, UserType> {
 

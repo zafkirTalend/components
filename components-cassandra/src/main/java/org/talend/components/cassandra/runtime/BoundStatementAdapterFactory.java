@@ -2,10 +2,10 @@ package org.talend.components.cassandra.runtime;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.DataType;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
- * Creates an {@link IndexedRecordAdapterFactory} that knows how to interpret Cassandra {@link BoundStatement} objects.
+ * Creates an {@link IndexedRecordConverter} that knows how to interpret Cassandra {@link BoundStatement} objects.
  */
 public class BoundStatementAdapterFactory extends CassandraBaseAdapterFactory<BoundStatement, BoundStatement, BoundStatement> {
 
@@ -25,7 +25,7 @@ public class BoundStatementAdapterFactory extends CassandraBaseAdapterFactory<Bo
     }
 
     /**
-     * This always returns the instance passed in {@link #setContainerType(BoundStatement)}.
+     * This always returns the instance passed in {@link #setContainerTypeFromInstance(BoundStatement)}.
      */
     @Override
     protected BoundStatement createOrGetInstance() {

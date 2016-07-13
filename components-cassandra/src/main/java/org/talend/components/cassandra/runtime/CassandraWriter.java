@@ -2,22 +2,25 @@ package org.talend.components.cassandra.runtime;
 
 import com.datastax.driver.core.*;
 import org.apache.avro.generic.IndexedRecord;
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.component.runtime.WriteOperation;
-import org.talend.components.api.component.runtime.Writer;
-import org.talend.components.api.component.runtime.WriterResult;
+import org.talend.components.api.component.runtime.WriterWithFeedback;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.cassandra.output.TCassandraOutputProperties;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class CassandraWriter implements Writer<WriterResult> {
+public class CassandraWriter implements WriterWithFeedback<Result, IndexedRecord, IndexedRecord> {
     private CassandraWriteOperation cassandraWriteOperation;
     private RuntimeContainer container;
 
     private CassandraSink cassandraSink;
-    private IndexedRecordAdapterFactory<Object, ? extends IndexedRecord> adapterFactory;
+    private transient IndexedRecordConverter<Object, ? extends IndexedRecord> adapterFactory;
     private BoundStatementAdapterFactory boundStatementAdapterFactory = new BoundStatementAdapterFactory();
 
     private TCassandraOutputProperties properties;
@@ -33,6 +36,14 @@ public class CassandraWriter implements Writer<WriterResult> {
     private ByteBuffer lastKey;
     private boolean newOne;
 
+    private final List<IndexedRecord> successfulWrites = new ArrayList<>();
+
+    private final List<IndexedRecord> rejectedWrites = new ArrayList<>();
+
+    private String uId;
+
+    private int dataCount;
+
     public CassandraWriter(CassandraWriteOperation cassandraWriteOperation, RuntimeContainer container) {
         this.cassandraWriteOperation = cassandraWriteOperation;
         this.container = container;
@@ -41,6 +52,7 @@ public class CassandraWriter implements Writer<WriterResult> {
 
     @Override
     public void open(String uId) throws IOException {
+        this.uId = uId;
         session = ((CassandraSink) getWriteOperation().getSink()).connect(container);
         properties = (TCassandraOutputProperties) cassandraSink.properties;
         CQLManager cqlManager = new CQLManager(properties);
@@ -62,6 +74,8 @@ public class CassandraWriter implements Writer<WriterResult> {
 
     @Override
     public void write(Object object) throws IOException {
+        dataCount++;
+
         if(object == null){
             return;
         }
@@ -75,7 +89,7 @@ public class CassandraWriter implements Writer<WriterResult> {
         }
 
         if (adapterFactory == null) {
-            adapterFactory = (IndexedRecordAdapterFactory<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get().createAdapterFactory(object.getClass());
+            adapterFactory = (IndexedRecordConverter<Object, ? extends IndexedRecord>) CassandraAvroRegistry.get().createIndexedRecordConverter(object.getClass());
         }
 
         boundStatement = boundStatementAdapterFactory.convertToDatum(adapterFactory.convertToAvro(object));
@@ -111,14 +125,24 @@ public class CassandraWriter implements Writer<WriterResult> {
     }
 
     @Override
-    public WriterResult close() throws IOException {
+    public Result close() throws IOException {
         session.close();
         session.getCluster().close();
-        return null;
+        return new Result(uId, dataCount, dataCount, 0);
     }
 
     @Override
-    public WriteOperation<WriterResult> getWriteOperation() {
+    public WriteOperation<Result> getWriteOperation() {
         return cassandraWriteOperation;
+    }
+
+    @Override
+    public Iterable<IndexedRecord> getSuccessfulWrites() {
+        return Collections.unmodifiableList(successfulWrites);
+    }
+
+    @Override
+    public Iterable<IndexedRecord> getRejectedWrites() {
+        return Collections.unmodifiableList(rejectedWrites);
     }
 }

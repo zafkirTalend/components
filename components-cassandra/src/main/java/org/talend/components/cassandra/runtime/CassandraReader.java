@@ -8,6 +8,7 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.cassandra.input.TCassandraInputProperties;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class CassandraReader extends AbstractBoundedReader<Row> {
@@ -18,9 +19,12 @@ public class CassandraReader extends AbstractBoundedReader<Row> {
 
     private transient Row current;
 
+    protected RuntimeContainer container;
+
     protected CassandraReader(RuntimeContainer container, CassandraSource source, TCassandraInputProperties properties) {
-        super(container, source);
+        super(source);
         this.properties = properties;
+        this.container = container;
     }
 
     @Override
@@ -45,5 +49,10 @@ public class CassandraReader extends AbstractBoundedReader<Row> {
     @Override
     public Row getCurrent() throws NoSuchElementException {
         return current;
+    }
+
+    @Override
+    public Map<String, Object> getReturnValues() {
+        return null;
     }
 }

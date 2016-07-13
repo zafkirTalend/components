@@ -1,12 +1,13 @@
 package org.talend.components.cassandra.runtime;
 
+import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.component.runtime.Sink;
 import org.talend.components.api.component.runtime.WriteOperation;
-import org.talend.components.api.component.runtime.Writer;
-import org.talend.components.api.component.runtime.WriterResult;
 import org.talend.components.api.container.RuntimeContainer;
 
-public class CassandraWriteOperation implements WriteOperation<WriterResult> {
+import java.util.Map;
+
+public class CassandraWriteOperation implements WriteOperation<Result> {
     private CassandraSink cassandraSink;
     public CassandraWriteOperation(CassandraSink cassandraSink) {
         this.cassandraSink = cassandraSink;
@@ -18,7 +19,7 @@ public class CassandraWriteOperation implements WriteOperation<WriterResult> {
     }
 
     @Override
-    public Writer<WriterResult> createWriter(RuntimeContainer container) {
+    public CassandraWriter createWriter(RuntimeContainer container) {
         return new CassandraWriter(this, container);
     }
 
@@ -28,7 +29,7 @@ public class CassandraWriteOperation implements WriteOperation<WriterResult> {
     }
 
     @Override
-    public void finalize(Iterable<WriterResult> writerResults, RuntimeContainer container) {
-
+    public Map<String, Object> finalize(Iterable<Result> writerResults, RuntimeContainer adaptor) {
+        return Result.accumulateAndReturnMap(writerResults);
     }
 }

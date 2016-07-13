@@ -5,15 +5,15 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.talend.components.cassandra.avro.ConvertLocalDate;
-import org.talend.daikon.avro.AvroConverter;
 import org.talend.daikon.avro.AvroRegistry;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.avro.container.ContainerReaderByIndex;
 import org.talend.daikon.avro.container.ContainerRegistry;
 import org.talend.daikon.avro.container.ContainerWriterByIndex;
-import org.talend.daikon.avro.util.AvroUtils;
-import org.talend.daikon.avro.util.ConvertAvroList;
-import org.talend.daikon.avro.util.ConvertAvroMap;
+import org.talend.daikon.avro.converter.AvroConverter;
+import org.talend.daikon.avro.converter.ConvertAvroList;
+import org.talend.daikon.avro.converter.ConvertAvroMap;
 import org.talend.daikon.java8.SerializableFunction;
 
 import java.math.BigDecimal;
@@ -81,9 +81,9 @@ public class CassandraAvroRegistry extends AvroRegistry {
         registerConverter(LocalDate.class, new ConvertLocalDate());
 
         // Ensure that other components know how to process Cassandra objects by sharing these facades.
-        registerAdapterFactory(Row.class, RowAdapterFactory.class);
-        registerAdapterFactory(UDTValue.class, UDTValueAdapterFactory.class);
-        registerAdapterFactory(TupleValue.class, TupleValueAdapterFactory.class);
+        registerIndexedRecordConverter(Row.class, RowAdapterFactory.class);
+        registerIndexedRecordConverter(UDTValue.class, UDTValueAdapterFactory.class);
+        registerIndexedRecordConverter(TupleValue.class, TupleValueAdapterFactory.class);
 
         // Ensure that we know how to get Schemas for these Cassandra objects.
         registerSchemaInferrer(BoundStatement.class, new SerializableFunction<BoundStatement, Schema>() {
@@ -299,9 +299,9 @@ public class CassandraAvroRegistry extends AvroRegistry {
                     return (AvroConverter<? super T, ?>) new ConvertAvroMap(datumClass, schema,
                             getConverter(valueType, valueSchema, valueClass));
                 case TUPLE:
-                    return (AvroConverter<? super T, ?>) createAdapterFactory(TupleValue.class);
+                    return (AvroConverter<? super T, ?>) createIndexedRecordConverter(TupleValue.class);
                 case UDT:
-                    return (AvroConverter<? super T, ?>) createAdapterFactory(UDTValue.class);
+                    return (AvroConverter<? super T, ?>) createIndexedRecordConverter(UDTValue.class);
                 default:
                     break;
             }

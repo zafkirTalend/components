@@ -112,8 +112,7 @@ public class CassandraSourceOrSink implements SourceOrSink {
         return null;
     }
 
-    @Override
-    public Schema getSchema(RuntimeContainer container, String schemaName) throws IOException {
+    public Schema getEndpointSchema(RuntimeContainer container, String schemaName) throws IOException {
         return null;
     }
 }

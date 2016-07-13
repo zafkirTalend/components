@@ -1,6 +1,7 @@
 package org.talend.components.cassandra;
 
 import org.talend.components.api.component.AbstractComponentDefinition;
+import org.talend.daikon.properties.property.Property;
 
 public abstract class CassandraDefinition extends AbstractComponentDefinition {
 
@@ -24,4 +25,8 @@ public abstract class CassandraDefinition extends AbstractComponentDefinition {
         return "components-cassandra";
     }
 
+    @Override
+    public Property[] getReturnProperties() {
+        return new Property[0];
+    }
 }

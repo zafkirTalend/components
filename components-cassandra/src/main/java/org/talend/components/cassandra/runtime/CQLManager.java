@@ -5,7 +5,7 @@ import org.apache.avro.Schema.Field;
 import org.talend.components.cassandra.output.AssignmentOperationTable;
 import org.talend.components.cassandra.output.TCassandraOutputProperties;
 import org.talend.daikon.avro.SchemaConstants;
-import org.talend.daikon.talend6.Talend6SchemaConstants;
+import org.talend.daikon.di.DiSchemaConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ class Column {
 
     public boolean isKey() {
         //FIXME(bchen) getSchema.getProp or field.getProp?
-        String isKey = getSchema().getProp(Talend6SchemaConstants.TALEND6_COLUMN_IS_KEY);//FIXME(bchen) move to use SchemaConstants
+        String isKey = getSchema().getProp(DiSchemaConstants.TALEND6_COLUMN_IS_KEY);//FIXME(bchen) move to use SchemaConstants
         return isKey != null && "true".equalsIgnoreCase(isKey);
     }
 
@@ -463,14 +463,16 @@ class CQLManager {
     }
 
     public String generatePreActionCQL() {
-        if ("INSERT".equals(action)) {
-            return generatePreInsertCQL();
-        } else if ("UPDATE".equals(action)) {
-            return generatePreUpdateCQL();
-        } else if ("DELETE".equals(action)) {
-            return generatePreDeleteCQL();
+        switch (action){
+            case Insert:
+                return generatePreInsertCQL();
+            case Update:
+                return generatePreUpdateCQL();
+            case Delete:
+                return generatePreDeleteCQL();
+            default:
+                return "";
         }
-        return "";
     }
 
     /*

@@ -3,12 +3,10 @@ package org.talend.components.cassandra.runtime;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
 import org.apache.avro.Schema;
-import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.cassandra.CassandraTestBase;
-import org.talend.components.cassandra.EmbeddedCassandraExampleDataResource;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
-import org.talend.daikon.avro.util.AvroUtils;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;

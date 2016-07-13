@@ -3,10 +3,10 @@ package org.talend.components.cassandra.runtime;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.TupleValue;
-import org.talend.daikon.avro.IndexedRecordAdapterFactory;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 /**
- * Creates an {@link IndexedRecordAdapterFactory} that knows how to interpret Cassandra {@link Row} objects.
+ * Creates an {@link IndexedRecordConverter} that knows how to interpret Cassandra {@link Row} objects.
  */
 public class RowAdapterFactory extends CassandraBaseAdapterFactory<Row, TupleValue, Row> {
 

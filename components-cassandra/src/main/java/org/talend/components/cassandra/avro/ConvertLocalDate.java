@@ -3,8 +3,8 @@ package org.talend.components.cassandra.avro;
 import com.datastax.driver.core.LocalDate;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.talend.daikon.avro.AvroConverter;
 import org.talend.daikon.avro.SchemaConstants;
+import org.talend.daikon.avro.converter.AvroConverter;
 
 public class ConvertLocalDate implements AvroConverter<LocalDate, Long> {
     @Override

@@ -5,14 +5,14 @@
     <parent>
         <artifactId>components-parent</artifactId>
         <groupId>org.talend.components</groupId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.14.0-SNAPSHOT</version>
         <relativePath>../components-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <name>Components - Cassandra</name>
     <artifactId>components-cassandra</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.14.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -44,46 +44,66 @@
             <version>1.1.1</version>
         </dependency>
 
-        <!--<dependency>-->
-        <!--<groupId>org.talend.daikon</groupId>-->
-        <!--<artifactId>daikon-spring</artifactId>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.talend.daikon</groupId>
+            <artifactId>daikon-spring</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-api</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.14.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-api</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.14.0-SNAPSHOT</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-api-service</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-api-service</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-common</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.14.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
+            <groupId>org.talend.components</groupId>
+            <artifactId>components-common</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>annotation</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
         <!--<dependency>-->
-        <!--<groupId>org.springframework</groupId>-->
-        <!--<artifactId>spring-test</artifactId>-->
-        <!--<scope>test</scope>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-test</artifactId>-->
+            <!--<scope>test</scope>-->
         <!--</dependency>-->
         <!--<dependency>-->
-        <!--<groupId>org.springframework.boot</groupId>-->
-        <!--<artifactId>spring-boot-starter-web</artifactId>-->
-        <!--<scope>test</scope>-->
+            <!--<groupId>org.springframework.boot</groupId>-->
+            <!--<artifactId>spring-boot-starter-web</artifactId>-->
+            <!--<scope>test</scope>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.hamcrest</groupId>

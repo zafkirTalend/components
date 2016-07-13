@@ -1,6 +1,7 @@
 package org.talend.components.cassandra.runtime;
 
 import com.datastax.driver.core.Session;
+import org.apache.avro.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.Sink;
