@@ -26,6 +26,7 @@ public class CassandraReader extends AbstractBoundedReader<CassandraRow> {
         super(source);
         this.properties = properties;
         this.container = container;
+        CassandraAvroRegistry.get(); //have call it once to registry, which will used by next
     }
 
     @Override

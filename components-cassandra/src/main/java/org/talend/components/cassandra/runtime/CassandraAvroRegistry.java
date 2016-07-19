@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.talend.components.cassandra.avro.ConvertLocalDate;
-import org.talend.components.cassandra.beam.CassandraIORowAdapterFactory;
+import org.talend.components.cassandra.beam.CassandraIORowConverter;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
@@ -139,7 +139,7 @@ public class CassandraAvroRegistry extends AvroRegistry {
             }
         });
 
-        registerIndexedRecordConverter(CassandraRow.class, CassandraIORowAdapterFactory.class);
+        registerIndexedRecordConverter(CassandraRow.class, CassandraIORowConverter.class);
 
         registerSchemaInferrer(CassandraRow.class, new SerializableFunction<CassandraRow, Schema>
                 () {

@@ -11,32 +11,35 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificData;
-import org.talend.bigdata.Converter;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.cassandra.input.TCassandraInputProperties;
+import org.talend.components.cassandra.output.TCassandraOutputProperties;
 import org.talend.components.cassandra.runtime.CassandraAvroRegistry;
 import org.talend.components.cassandra.runtime.CassandraSourceOrSink;
 import org.talend.daikon.avro.converter.AvroConverter;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
+import org.talend.daikon.properties.Properties;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CassandraIORowAdapterFactory implements Converter<CassandraRow,
-        IndexedRecord> {
+public class CassandraIORowConverter implements IndexedRecordConverter<CassandraRow, IndexedRecord>,
+        Serializable {
 
+    private transient AvroConverter[] converters;
+    private transient Map<String, CassandraColumnDefinition.Type> types;
     private Schema mSchema;
-
-    private ComponentProperties props;
+    private TCassandraOutputProperties props;
 
     @Override
     public Schema getSchema() {
-        return null;
+        return mSchema;
     }
 
-    @Override
     public void setSchema(Schema schema) {
         this.mSchema = schema;
     }
@@ -49,13 +52,19 @@ public class CassandraIORowAdapterFactory implements Converter<CassandraRow,
     @Override
     public CassandraRow convertToDatum(IndexedRecord value) {
         CassandraRow row = new CassandraRow();
-        Map<String, CassandraColumnDefinition.Type> types = getTypes();
+        if (types == null) {
+            types = getTypes();
+            converters = new AvroConverter[types.size()];
+        }
         for (Schema.Field f : unwrapIfNullable(getSchema()).getFields()) {
             int fieldIndex = f.pos();
             Object fieldValue = value.get(fieldIndex);
-            AvroConverter converter = CassandraAvroRegistry.get().getConverter(types.get
-                    (f.name()), f.schema(), fieldValue.getClass());
-            row.add(f.name(), types.get(f.name()), converter.convertToDatum(fieldValue));
+            if (converters[fieldIndex] == null) {
+                converters[fieldIndex] = CassandraAvroRegistry.get().getConverter(types.get
+                        (f.name()), f.schema(), fieldValue.getClass());
+            }
+            row.add(f.name(), types.get(f.name()), converters[fieldIndex].convertToDatum
+                    (fieldValue));
         }
         return row;
     }
@@ -70,13 +79,11 @@ public class CassandraIORowAdapterFactory implements Converter<CassandraRow,
         return record;
     }
 
-    @Override
     public ComponentProperties getProps() {
         return props;
     }
 
-    @Override
-    public void setProps(ComponentProperties componentProperties) {
+    public void setProps(TCassandraOutputProperties componentProperties) {
         this.props = componentProperties;
     }
 
@@ -86,15 +93,17 @@ public class CassandraIORowAdapterFactory implements Converter<CassandraRow,
         TableMetadata cassandraMetadata = null;
         try {
             cassandraMetadata = sos.getCassandraMetadata(null, (
-                    (TCassandraInputProperties) props)
+                    (TCassandraOutputProperties) props)
                     .getSchemaProperties().keyspace
-                    .getValue(), ((TCassandraInputProperties) props).getSchemaProperties()
+                    .getValue(), ((TCassandraOutputProperties) props).getSchemaProperties()
                     .columnFamily
                     .getValue());
         } catch (IOException e) {
             //TODO how to throw exception here
         }
         Map<String, CassandraColumnDefinition.Type> types = new HashMap<>();
+        Schema schema = CassandraAvroRegistry.get().inferSchema(cassandraMetadata);
+        setSchema(schema);
         List<ColumnMetadata> columns = cassandraMetadata.getColumns();
         for (ColumnMetadata column : columns) {
             types.put(column.getName(), CassandraRow.getType(column.getType()));
@@ -103,6 +112,18 @@ public class CassandraIORowAdapterFactory implements Converter<CassandraRow,
         return types;
 
 
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        if(props == null){
+            props = new TCassandraOutputProperties("");
+        }
+        out.writeUTF(((TCassandraOutputProperties) props).toSerialized());
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException {
+        props = (TCassandraOutputProperties) Properties.Helper.fromSerializedPersistent(in.readUTF(),
+                TCassandraOutputProperties.class).object;
     }
 
     /**
