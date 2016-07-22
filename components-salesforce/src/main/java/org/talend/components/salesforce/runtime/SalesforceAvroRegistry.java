@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.commons.lang3.StringUtils;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.AvroUtils;
@@ -252,7 +253,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Boolean convertToAvro(String value) {
-            return value == null ? null : Boolean.parseBoolean(value);
+            return StringUtils.isEmpty(value) ? null : Boolean.parseBoolean(value);
         }
     }
 
@@ -276,7 +277,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public BigDecimal convertToAvro(String value) {
-            return value == null ? null : new BigDecimal(value);
+            return StringUtils.isEmpty(value) ? null : new BigDecimal(value);
         }
     }
 
@@ -288,7 +289,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Double convertToAvro(String value) {
-            return value == null ? null : Double.parseDouble(value);
+            return StringUtils.isEmpty(value) ? null : Double.parseDouble(value);
         }
     }
 
@@ -306,7 +307,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
         @Override
         public Long convertToAvro(String value) {
             try {
-                return value == null ? null : format.parse(value).getTime();
+                return StringUtils.isEmpty(value) ? null : format.parse(value).getTime();
             } catch (ParseException e) {
                 throw new ComponentException(e);
             }
@@ -327,7 +328,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Integer convertToAvro(String value) {
-            return value == null ? null : Integer.parseInt(value);
+            return StringUtils.isEmpty(value) ? null : Integer.parseInt(value);
         }
     }
 
