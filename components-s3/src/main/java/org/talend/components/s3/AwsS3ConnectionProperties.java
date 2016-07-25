@@ -38,6 +38,11 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
 
     public EnumProperty<Region> region = newEnum("region", Region.class);
 
+    public Property<Boolean> encrypt = newBoolean("encrypt", false);
+
+    public AwsS3ConnectionEncryptionProperties encryptionProperties = new AwsS3ConnectionEncryptionProperties(
+            "encryptionProperties");
+
     public AwsS3ConnectionProperties(String name) {
         super(name);
     }
@@ -45,7 +50,7 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
     @Override
     public void setupProperties() {
         super.setupProperties();
-        // Code for property initialization goes here
+        region.setValue(Region.DEFAULT);
     }
 
     @Override
@@ -55,6 +60,8 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
         mainForm.addRow(accessSecretKeyProperties.getForm(Form.MAIN));
         mainForm.addRow(inheritFromAwsRole);
         mainForm.addRow(region);
+        mainForm.addRow(encrypt);
+        mainForm.addRow(encryptionProperties.getForm(Form.MAIN));
     }
 
     @Override
@@ -64,7 +71,11 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
     }
 
     public void afterInheritFromAwsRole() {
-        refreshLayout();
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void afterEncrypt() {
+        refreshLayout(getForm(Form.MAIN));
     }
 
     public void refreshLayout() {
@@ -80,6 +91,12 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
                 keyPropertiesWidget.setHidden(true);
             } else {
                 keyPropertiesWidget.setHidden(false);
+            }
+            if (encrypt.getValue()) {
+                getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(false);
+                encryptionProperties.refreshLayout();
+            } else {
+                getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(true);
             }
         }
     }
