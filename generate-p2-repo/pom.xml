@@ -8,12 +8,16 @@
     <version>0.3.0</version>
     <packaging>pom</packaging>
 
+	<properties>
+		<salesforceversion>0.13.2</salesforceversion>
+	</properties>
+
     <dependencies>
 <!-- the following shall get all the dep tree -->
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-salesforce</artifactId>
-            <version>0.13.1</version>
+            <version>${salesforceversion}</version>
             <classifier>bundle</classifier>
         </dependency>
 <!-- bundles -->        
@@ -70,7 +74,7 @@
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-salesforce</artifactId>
-            <version>0.13.1</version>
+            <version>${salesforceversion}</version>
             <classifier>tests</classifier>
         </dependency>
         <!-- to avoid updatin the complete eclipse target platform we add these single dependencies -->
