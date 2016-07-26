@@ -1,5 +1,6 @@
 package org.talend.components.s3;
 
+import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 
@@ -43,6 +44,10 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
     public AwsS3ConnectionEncryptionProperties encryptionProperties = new AwsS3ConnectionEncryptionProperties(
             "encryptionProperties");
 
+    public Property<Boolean> configClient = newBoolean("configClient", false);
+
+    public AwsS3ClientConfigTable configClientTable = new AwsS3ClientConfigTable("configClientTable");
+
     public AwsS3ConnectionProperties(String name) {
         super(name);
     }
@@ -62,6 +67,10 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
         mainForm.addRow(region);
         mainForm.addRow(encrypt);
         mainForm.addRow(encryptionProperties.getForm(Form.MAIN));
+        Form advancedForm = Form.create(this, Form.ADVANCED);
+        advancedForm.addRow(configClient);
+        advancedForm.addRow(widget(configClientTable).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        refreshLayout();
     }
 
     @Override
@@ -78,8 +87,13 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
         refreshLayout(getForm(Form.MAIN));
     }
 
+    public void afterConfigClient() {
+        refreshLayout(getForm(Form.ADVANCED));
+    }
+
     public void refreshLayout() {
         refreshLayout(getForm(Form.MAIN));
+        refreshLayout(getForm(Form.ADVANCED));
     }
 
     @Override
@@ -98,6 +112,8 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
             } else {
                 getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(true);
             }
+        } else if (form.getName().equals(Form.ADVANCED)) {
+            form.getWidget(configClientTable.getName()).setHidden(!configClient.getValue());
         }
     }
 

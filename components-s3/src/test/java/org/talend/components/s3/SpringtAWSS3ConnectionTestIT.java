@@ -110,6 +110,25 @@ public class SpringtAWSS3ConnectionTestIT extends AbstractComponentTest {
     }
 
     @Test
+    public void testAfterConfigClient() throws Throwable {
+        ComponentProperties props;
+
+        props = new TAwsS3ConnectionDefinition().createProperties();
+        ComponentTestUtils.checkSerialize(props, errorCollector);
+        Property<Boolean> configClient = (Property<Boolean>) props.getProperty("configClient");
+        assertEquals(false, configClient.getValue());
+        Form advForm = props.getForm(Form.ADVANCED);
+        assertTrue(advForm.getWidget("configClientTable").isHidden());
+
+        configClient.setValue(true);
+        props = (ComponentProperties) checkAndAfter(advForm, "configClient", props);
+        advForm = props.getForm(Form.ADVANCED);
+        assertTrue(advForm.isRefreshUI());
+
+        assertFalse(advForm.getWidget("configClientTable").isHidden());
+    }
+
+    @Test
     // this is an integration test to check that the dependencies file is properly generated.
     public void testDependencies() {
         ComponentTestUtils.testAllDesignDependenciesPresent(componentService, errorCollector);
