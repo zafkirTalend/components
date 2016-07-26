@@ -14,8 +14,8 @@
     <artifactId>components-splunk</artifactId>
     <version>0.13.1</version>
     <properties>
-        <splunk.webui.port>8000</splunk.webui.port>
-        <splunk.ec.port>9000</splunk.ec.port>
+        <splunk.webui.port>9000</splunk.webui.port>
+        <splunk.ec.port>9001</splunk.ec.port>
     </properties>
     <packaging>bundle</packaging>
     <repositories>
@@ -185,8 +185,8 @@
 											<SPLUNK_START_ARGS>--accept-license</SPLUNK_START_ARGS>
 										</env>
 										<ports>
-											<port>${splunk.webui.port}:8000</port>
-											<port>${splunk.ec.port}:9000</port>
+											<port>${splunk.webui.port}:9000</port>
+											<port>${splunk.ec.port}:9001</port>
 										</ports>
 										<wait>
                                                                                    <http>
