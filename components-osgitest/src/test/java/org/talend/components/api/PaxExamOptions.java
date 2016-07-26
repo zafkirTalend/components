@@ -12,7 +12,13 @@
 // ============================================================================
 package org.talend.components.api;
 
-import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.CoreOptions.bundle;
+import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
@@ -30,6 +36,8 @@ public class PaxExamOptions {
 
     private static final String COMPONENTS_VERSION = "0.13.1";
 
+    private static final String SALESFORCE_COMPONENTS_VERSION = "0.13.2";
+
     private static final String APACHE_KARAF_AID = "apache-karaf";
 
     private static final String ORG_APACHE_KARAF_GID = "org.apache.karaf";
@@ -39,7 +47,7 @@ public class PaxExamOptions {
     public static Option[] getOptions() {
         return options(mavenBundle("org.apache.felix", "org.apache.felix.scr"), //
 
-        mavenBundle("org.slf4j", "slf4j-api"), //
+                mavenBundle("org.slf4j", "slf4j-api"), //
                 mavenBundle("org.slf4j", "log4j-over-slf4j").noStart(), mavenBundle("commons-lang", "commons-lang", "2.4"), //
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-annotations"), //
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-core"), //
@@ -72,9 +80,9 @@ public class PaxExamOptions {
                 mavenBundle().groupId("org.talend.components").artifactId("components-common-oauth").classifier("bundle")
                         .version(COMPONENTS_VERSION),
                 mavenBundle().groupId("org.talend.components").artifactId("components-salesforce").classifier("bundle")
-                        .version(COMPONENTS_VERSION),
+                        .version(SALESFORCE_COMPONENTS_VERSION),
                 mavenBundle().groupId("org.talend.components").artifactId("components-salesforce").classifier("tests")
-                        .version(COMPONENTS_VERSION).noStart(),
+                        .version(SALESFORCE_COMPONENTS_VERSION).noStart(),
                 mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.hamcrest", "1.3_1"), //
                 // this is copied from junitBundles() to remove the default pax-exam hamcrest bundle that does
                 // not contains all the nice hamcrest Matchers
