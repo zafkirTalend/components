@@ -10,10 +10,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-	<properties>
-		<salesforceversion>0.13.2</salesforceversion>
-	</properties>
-
     <name>Component Command Line Property Tester</name>
     <artifactId>components-api-proptester</artifactId>
     <version>0.13.1</version>
@@ -49,7 +45,7 @@
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>components-salesforce</artifactId>
-            <version>${salesforceversion}</version>
+            <version>0.13.1</version>
         </dependency>
         <dependency>
             <groupId>jline</groupId>

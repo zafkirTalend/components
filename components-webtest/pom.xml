@@ -19,7 +19,6 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<swagger-ui.version>2.1.0</swagger-ui.version>
-		<salesforceversion>0.13.2</salesforceversion>
 	</properties>
 
 	<repositories>
@@ -64,7 +63,7 @@
 		<dependency>
 			<groupId>org.talend.components</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${salesforceversion}</version>
+			<version>0.13.1</version>
 		</dependency>
 
 		<dependency>
