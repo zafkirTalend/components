@@ -15,7 +15,7 @@
     <version>0.13.1</version>
     <properties>
         <splunk.webui.port>8000</splunk.webui.port>
-        <splunk.ec.port>8088</splunk.ec.port>
+        <splunk.ec.port>9000</splunk.ec.port>
     </properties>
     <packaging>bundle</packaging>
     <repositories>
@@ -186,7 +186,7 @@
 										</env>
 										<ports>
 											<port>${splunk.webui.port}:8000</port>
-											<port>${splunk.ec.port}:8088</port>
+											<port>${splunk.ec.port}:9000</port>
 										</ports>
 										<wait>
                                                                                    <http>
