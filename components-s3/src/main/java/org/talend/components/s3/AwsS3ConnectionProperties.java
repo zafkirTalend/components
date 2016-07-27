@@ -117,4 +117,9 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
         }
     }
 
+    public boolean isRegionSet() {
+        Region region = this.region.getValue();
+        return region != null && region != Region.DEFAULT;
+    }
+
 }

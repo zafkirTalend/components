@@ -9,6 +9,9 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResult.Result;
+
+import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
  * The tAWSS3ConnectionSource provides the mechanism to supply data to other components at run-time.
@@ -33,23 +36,35 @@ public class AwsS3SourceOrSink implements SourceOrSink {
 
     public void initialize(RuntimeContainer container, ComponentProperties properties) {
         this.properties = (AwsS3ConnectionProperties) properties;
-        // FIXME - this should be moved to the properties setup
     }
 
     public ValidationResult validate(RuntimeContainer adaptor) {
-        return ValidationResult.OK;
+        ValidationResult validationResult = new ValidationResult();
+        try {
+            connect(properties);
+        } catch (IOException e) {
+            validationResult.setStatus(Result.ERROR);
+            validationResult.setMessage(e.getMessage());
+        }
+        return validationResult;
     }
 
     @Override
     public List<NamedThing> getSchemaNames(RuntimeContainer container) throws IOException {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Schema getEndpointSchema(RuntimeContainer container, String schemaName) throws IOException {
-        // TODO Auto-generated method stub
         return null;
+    }
+
+    protected AmazonS3Client connect(AwsS3ConnectionProperties connectionProperties) throws IOException {
+        return createClient(connectionProperties);
+    }
+
+    private AmazonS3Client createClient(AwsS3ConnectionProperties connectionProperties) throws IOException {
+        return AmazonS3ClientProducerFactory.createClientProducer(connectionProperties).createClient(connectionProperties);
     }
 
 }

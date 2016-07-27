@@ -30,6 +30,24 @@
             <groupId>biz.aQute.bnd</groupId>
             <artifactId>annotation</artifactId>
         </dependency>
+        
+        <dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.11.20</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-kms</artifactId>
+			<version>1.11.20</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
+			<version>1.11.20</version>
+		</dependency>
 
         <!-- Shared component properties such as Use/Password or Schema -->
         <dependency>
@@ -120,7 +138,7 @@
                             <instructions>
                                 <Bundle-SymbolicName>org.talend.components.s3</Bundle-SymbolicName>
                                 <Service-Component>*</Service-Component>
-                                <Import-Package>*,aQute.bnd.annotation.component</Import-Package>
+                                <Import-Package>!com.amazonaws*,*,aQute.bnd.annotation.component</Import-Package>
                                 <Embed-Dependency>*;scope=compile|runtime;inline=false;artifactId=!components*</Embed-Dependency>
                                 <Include-Resource>{maven-resources},META-INF/maven/org.talend.components/components-s3/dependencies.txt=target/classes/META-INF/maven/dependencies.txt</Include-Resource>
                                 <Bundle-ActivationPolicy>lazy</Bundle-ActivationPolicy>
