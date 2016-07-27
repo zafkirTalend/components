@@ -7,6 +7,7 @@ import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.components.api.properties.ComponentReferencePropertiesEnclosing;
+import org.talend.components.s3.tawss3connection.TAwsS3ConnectionDefinition;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.EnumProperty;
@@ -29,7 +30,8 @@ import org.talend.daikon.properties.property.Property;
  * <li>{code schema}, an embedded property referring to a Schema.</li>
  * </ol>
  */
-public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implements ComponentReferencePropertiesEnclosing {
+public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
+        implements ComponentReferencePropertiesEnclosing, AwsS3ConnectionPropertiesProvider {
 
     public ComponentReferenceProperties referencedComponent = new ComponentReferenceProperties("referencedComponent", this);
 
@@ -67,9 +69,17 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
         mainForm.addRow(region);
         mainForm.addRow(encrypt);
         mainForm.addRow(encryptionProperties.getForm(Form.MAIN));
+
         Form advancedForm = Form.create(this, Form.ADVANCED);
         advancedForm.addRow(configClient);
         advancedForm.addRow(widget(configClientTable).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+
+        Form refForm = Form.create(this, Form.REFERENCE);
+        Widget compListWidget = widget(referencedComponent).setWidgetType(Widget.COMPONENT_REFERENCE_WIDGET_TYPE);
+        referencedComponent.componentType.setValue(TAwsS3ConnectionDefinition.COMPONENT_NAME);
+        refForm.addRow(compListWidget);
+        refForm.addRow(mainForm);
+
         refreshLayout();
     }
 
@@ -120,6 +130,11 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl implement
     public boolean isRegionSet() {
         Region region = this.region.getValue();
         return region != null && region != Region.DEFAULT;
+    }
+
+    @Override
+    public AwsS3ConnectionProperties getConnectionProperties() {
+        return this;
     }
 
 }

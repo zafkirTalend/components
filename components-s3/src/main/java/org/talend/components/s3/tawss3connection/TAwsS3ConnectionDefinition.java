@@ -8,7 +8,7 @@ import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.s3.AwsS3ConnectionProperties;
 import org.talend.components.s3.AwsS3Definition;
-import org.talend.components.s3.AwsS3SourceOrSink;
+import org.talend.components.s3.runtime.AwsS3SourceOrSink;
 
 import aQute.bnd.annotation.component.Component;
 

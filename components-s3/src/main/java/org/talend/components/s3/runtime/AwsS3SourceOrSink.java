@@ -1,4 +1,4 @@
-package org.talend.components.s3;
+package org.talend.components.s3.runtime;
 
 import java.io.IOException;
 import java.util.List;
@@ -7,6 +7,9 @@ import org.apache.avro.Schema;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.s3.AmazonS3ClientProducerFactory;
+import org.talend.components.s3.AwsS3ConnectionProperties;
+import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
@@ -32,16 +35,16 @@ public class AwsS3SourceOrSink implements SourceOrSink {
     private static final long serialVersionUID = 1L;
 
     /** Configuration extracted from the input properties. */
-    private AwsS3ConnectionProperties properties;
+    private AwsS3ConnectionPropertiesProvider properties;
 
     public void initialize(RuntimeContainer container, ComponentProperties properties) {
-        this.properties = (AwsS3ConnectionProperties) properties;
+        this.properties = (AwsS3ConnectionPropertiesProvider) properties;
     }
 
     public ValidationResult validate(RuntimeContainer adaptor) {
         ValidationResult validationResult = new ValidationResult();
         try {
-            connect(properties);
+            connect(properties.getConnectionProperties());
         } catch (IOException e) {
             validationResult.setStatus(Result.ERROR);
             validationResult.setMessage(e.getMessage());
