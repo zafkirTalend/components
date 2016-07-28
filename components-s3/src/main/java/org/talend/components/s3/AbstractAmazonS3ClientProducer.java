@@ -50,7 +50,11 @@ public abstract class AbstractAmazonS3ClientProducer {
 
     public AmazonS3Client createClient(AwsS3ConnectionProperties connectionProperties) throws IOException {
         AWSCredentialsProvider credProvider = createCredentialsProvider(connectionProperties);
-        Map<AwsS3ClientConfigFields, Object> clientConfigData = connectionProperties.configClientTable.getConfig();
+        boolean isClientConfig = connectionProperties.configClient.getValue();
+        Map<AwsS3ClientConfigFields, Object> clientConfigData = null;
+        if (isClientConfig) {
+            clientConfigData = connectionProperties.configClientTable.getConfig();
+        }
         AmazonS3Client client = null;
         if (clientConfigData != null && !clientConfigData.isEmpty()) {
             ClientConfiguration clientConfig = ClientConfigurationBuilder.createClientConfiguration(clientConfigData);

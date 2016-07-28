@@ -14,6 +14,7 @@ package org.talend.components.s3;
 
 import static org.talend.daikon.properties.property.PropertyFactory.newProperty;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,18 +56,26 @@ public class AwsS3ClientConfigTable extends ComponentPropertiesImpl {
         mainForm.addColumn(configValue);
     }
 
-    public Map<AwsS3ClientConfigFields, Object> getConfig() {
+    public Map<AwsS3ClientConfigFields, Object> getConfig() throws IOException {
         Map<AwsS3ClientConfigFields, Object> values = new HashMap<>();
         List<AwsS3ClientConfigFields> configFields = configField.getValue();
         List<Object> configValues = configValue.getValue();
         for (int i = 0; i < configFields.size(); i++) {
-            AwsS3ClientConfigFields field = configFields.get(i);
+            Object fieldObj = configFields.get(i);
+            AwsS3ClientConfigFields configField = null;
+            if (fieldObj instanceof AwsS3ClientConfigFields) {
+                configField = (AwsS3ClientConfigFields) fieldObj;
+            } else if (fieldObj instanceof String) {
+                configField = AwsS3ClientConfigFields.valueOf((String) fieldObj);
+            } else {
+                throw new IOException("Unexpected configuration field type.");
+            }
             Object value = null;
             if (i < configValues.size()) {
                 value = configValues.get(i);
             }
             if (value != null) {
-                values.put(field, value);
+                values.put(configField, value);
             }
         }
         return values;

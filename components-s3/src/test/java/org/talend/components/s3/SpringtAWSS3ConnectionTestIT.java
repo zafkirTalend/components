@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.junit.Test;
@@ -126,6 +129,37 @@ public class SpringtAWSS3ConnectionTestIT extends AbstractComponentTest {
         assertTrue(advForm.isRefreshUI());
 
         assertFalse(advForm.getWidget("configClientTable").isHidden());
+    }
+
+    @Test
+    public void testClientConfigTable() {
+        ComponentProperties props;
+
+        props = new TAwsS3ConnectionDefinition().createProperties();
+        ComponentTestUtils.checkSerialize(props, errorCollector);
+        AwsS3ClientConfigTable configClient = (AwsS3ClientConfigTable) props.getProperty("configClientTable");
+        List<AwsS3ClientConfigFields> fields = configClient.configField.getValue();
+        assertTrue("fields should be still null", fields == null);
+
+        List<AwsS3ClientConfigFields> newFields = new ArrayList<>();
+        newFields.add(AwsS3ClientConfigFields.CONNECTIONTIMEOUT);
+        newFields.add(AwsS3ClientConfigFields.MAXCONNECTIONS);
+
+        configClient.configField.setValue(newFields);
+
+        List<Object> newValues = new ArrayList<>();
+        newValues.add(100);
+        newValues.add(10);
+
+        configClient.configValue.setValue(newValues);
+
+        assertTrue(configClient.configField.getValue().size() == newFields.size());
+        assertTrue(configClient.configField.getValue().get(0) == AwsS3ClientConfigFields.CONNECTIONTIMEOUT);
+        assertTrue(configClient.configField.getValue().get(1) == AwsS3ClientConfigFields.MAXCONNECTIONS);
+
+        assertTrue(configClient.configValue.getValue().size() == newValues.size());
+        assertTrue((Integer) configClient.configValue.getValue().get(0) == 100);
+        assertTrue((Integer) configClient.configValue.getValue().get(1) == 10);
     }
 
     @Test

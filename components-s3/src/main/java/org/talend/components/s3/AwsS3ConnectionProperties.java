@@ -85,8 +85,7 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
 
     @Override
     public void afterReferencedComponent() {
-        // TODO Auto-generated method stub
-
+        refreshLayout();
     }
 
     public void afterInheritFromAwsRole() {
@@ -104,26 +103,40 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
     public void refreshLayout() {
         refreshLayout(getForm(Form.MAIN));
         refreshLayout(getForm(Form.ADVANCED));
+        refreshLayout(getForm(Form.REFERENCE));
     }
 
     @Override
     public void refreshLayout(Form form) {
+        String refComponentIdValue = getReferencedComponentId();
+        boolean useOtherConnection = refComponentIdValue != null
+                && refComponentIdValue.startsWith(TAwsS3ConnectionDefinition.COMPONENT_NAME);
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
-            Widget keyPropertiesWidget = getForm(Form.MAIN).getWidget(accessSecretKeyProperties.getName());
-            if (inheritFromAwsRole.getValue()) {
-                keyPropertiesWidget.setHidden(true);
+            if (useOtherConnection) {
+                form.setHidden(true);
             } else {
-                keyPropertiesWidget.setHidden(false);
-            }
-            if (encrypt.getValue()) {
-                getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(false);
-                encryptionProperties.refreshLayout();
-            } else {
-                getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(true);
+                form.setHidden(false);
+                Widget keyPropertiesWidget = getForm(Form.MAIN).getWidget(accessSecretKeyProperties.getName());
+                if (inheritFromAwsRole.getValue()) {
+                    keyPropertiesWidget.setHidden(true);
+                } else {
+                    keyPropertiesWidget.setHidden(false);
+                }
+                if (encrypt.getValue()) {
+                    getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(false);
+                    encryptionProperties.refreshLayout();
+                } else {
+                    getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(true);
+                }
             }
         } else if (form.getName().equals(Form.ADVANCED)) {
-            form.getWidget(configClientTable.getName()).setHidden(!configClient.getValue());
+            if (useOtherConnection) {
+                form.setHidden(true);
+            } else {
+                form.setHidden(false);
+                form.getWidget(configClientTable.getName()).setHidden(!configClient.getValue());
+            }
         }
     }
 
@@ -135,6 +148,18 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
     @Override
     public AwsS3ConnectionProperties getConnectionProperties() {
         return this;
+    }
+
+    public String getReferencedComponentId() {
+        return referencedComponent.componentInstanceId.getStringValue();
+    }
+
+    public AwsS3ConnectionProperties getReferencedConnectionProperties() {
+        AwsS3ConnectionProperties refProps = (AwsS3ConnectionProperties) referencedComponent.componentProperties;
+        if (refProps != null) {
+            return refProps;
+        }
+        return null;
     }
 
 }

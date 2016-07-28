@@ -31,20 +31,20 @@ import com.amazonaws.services.s3.AmazonS3Client;
  */
 public class AwsS3SourceOrSink implements SourceOrSink {
 
-    /** Default serial version UID. */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5982819304499842835L;
 
-    /** Configuration extracted from the input properties. */
-    private AwsS3ConnectionPropertiesProvider properties;
+    protected AwsS3ConnectionPropertiesProvider properties;
+
+    protected static final String KEY_CONNECTION = "Connection";
 
     public void initialize(RuntimeContainer container, ComponentProperties properties) {
         this.properties = (AwsS3ConnectionPropertiesProvider) properties;
     }
 
-    public ValidationResult validate(RuntimeContainer adaptor) {
+    public ValidationResult validate(RuntimeContainer container) {
         ValidationResult validationResult = new ValidationResult();
         try {
-            connect(properties.getConnectionProperties());
+            connect(container);
         } catch (IOException e) {
             validationResult.setStatus(Result.ERROR);
             validationResult.setMessage(e.getMessage());
@@ -62,8 +62,34 @@ public class AwsS3SourceOrSink implements SourceOrSink {
         return null;
     }
 
-    protected AmazonS3Client connect(AwsS3ConnectionProperties connectionProperties) throws IOException {
-        return createClient(connectionProperties);
+    protected AmazonS3Client connect(RuntimeContainer container) throws IOException {
+        AwsS3ConnectionProperties connProps = properties.getConnectionProperties();
+        String refComponentId = connProps.getReferencedComponentId();
+        AmazonS3Client sharedConn = null;
+        // Using another component's connection
+        if (refComponentId != null) {
+            // In a runtime container
+            if (container != null) {
+                sharedConn = (AmazonS3Client) container.getComponentData(refComponentId, KEY_CONNECTION);
+                if (sharedConn != null) {
+                    return sharedConn;
+                }
+                throw new IOException("Referenced component: " + refComponentId + " not connected");
+            }
+            // Design time
+            connProps = connProps.getReferencedConnectionProperties();
+        }
+        if (container != null) {
+            sharedConn = (AmazonS3Client) container.getComponentData(container.getCurrentComponentId(), KEY_CONNECTION);
+            if (sharedConn != null) {
+                return sharedConn;
+            }
+        }
+        sharedConn = createClient(properties.getConnectionProperties());
+        if (container != null) {
+            container.setComponentData(container.getCurrentComponentId(), KEY_CONNECTION, sharedConn);
+        }
+        return sharedConn;
     }
 
     private AmazonS3Client createClient(AwsS3ConnectionProperties connectionProperties) throws IOException {
