@@ -21,27 +21,27 @@ import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.s3.tawss3get.TAwsS3GetProperties;
+import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
  * created by dmytro.chmyga on Jul 28, 2016
  */
-public abstract class AwsS3Reader extends AbstractBoundedReader<IndexedRecord> {
+public abstract class AwsS3Reader<T extends AwsS3ConnectionPropertiesProvider> extends AbstractBoundedReader<IndexedRecord> {
 
     protected RuntimeContainer container;
 
     protected AmazonS3Client connection;
 
-    protected TAwsS3GetProperties properties;
+    protected T properties;
 
     /**
      * DOC dmytro.chmyga AwsS3Reader constructor comment.
      * 
      * @param source
      */
-    protected AwsS3Reader(BoundedSource source, RuntimeContainer container, TAwsS3GetProperties properties) {
+    protected AwsS3Reader(BoundedSource source, RuntimeContainer container, T properties) {
         super(source);
         this.container = container;
         this.properties = properties;
@@ -49,7 +49,7 @@ public abstract class AwsS3Reader extends AbstractBoundedReader<IndexedRecord> {
 
     protected AmazonS3Client getConnection() throws IOException {
         if (connection == null) {
-            connection = ((TAwsS3GetSource) getCurrentSource()).connect(container);
+            connection = ((AwsS3SourceOrSink) getCurrentSource()).connect(container);
         }
         return connection;
     }
@@ -66,8 +66,9 @@ public abstract class AwsS3Reader extends AbstractBoundedReader<IndexedRecord> {
 
     @Override
     public void close() throws IOException {
-        if (properties.connectionProperties.getReferencedComponentId() != null
-                && !properties.connectionProperties.getReferencedComponentId().isEmpty() && connection != null) {
+        boolean useReferencedConnection = properties.getConnectionProperties().getReferencedComponentId() != null
+                && !properties.getConnectionProperties().getReferencedComponentId().isEmpty();
+        if (!useReferencedConnection && connection != null) {
             connection.shutdown();
         }
     }

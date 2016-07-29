@@ -18,23 +18,33 @@ import java.io.IOException;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.AwsS3FileBucketKeyProperties;
-import org.talend.components.s3.tawss3get.TAwsS3GetProperties;
+import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
 
-import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
-public class AwsS3GetReader extends AwsS3Reader<TAwsS3GetProperties> {
+/**
+ * created by dmytro.chmyga on Jul 28, 2016
+ */
+public class AwsS3PutReader extends AwsS3Reader<TAwsS3PutProperties> {
 
-    private AwsS3FileBucketKeyProperties fileProperties;
-
-    protected AwsS3GetReader(BoundedSource source, RuntimeContainer container, TAwsS3GetProperties properties) {
+    protected AwsS3PutReader(BoundedSource source, RuntimeContainer container, TAwsS3PutProperties properties) {
         super(source, container, properties);
     }
 
     @Override
     public boolean start() throws IOException {
-        fileProperties = properties.fileBucketKeyProperties;
-        GetObjectRequest request = new GetObjectRequest(fileProperties.bucket.getValue(), fileProperties.key.getValue());
-        getConnection().getObject(request, new File(fileProperties.filePath.getValue()));
+        AwsS3FileBucketKeyProperties props = properties.fileBucketKeyProperties;
+        PutObjectRequest putRequest = new PutObjectRequest(props.bucket.getValue(), props.key.getValue(),
+                new File(props.filePath.getValue()));
+
+        if (properties.enableServerSideEncryption.getValue()) {
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+            putRequest.setMetadata(objectMetadata);
+        }
+
+        getConnection().putObject(putRequest);
         return false;
     }
 
