@@ -62,7 +62,7 @@ public class AwsS3SourceOrSink implements SourceOrSink {
         return null;
     }
 
-    protected AmazonS3Client connect(RuntimeContainer container) throws IOException {
+    public AmazonS3Client connect(RuntimeContainer container) throws IOException {
         AwsS3ConnectionProperties connProps = properties.getConnectionProperties();
         String refComponentId = connProps.getReferencedComponentId();
         AmazonS3Client sharedConn = null;

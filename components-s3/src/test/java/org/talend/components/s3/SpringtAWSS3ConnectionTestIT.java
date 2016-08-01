@@ -3,7 +3,14 @@ package org.talend.components.s3;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,10 +25,17 @@ import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.test.AbstractComponentTest;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.api.test.SpringTestApp;
+import org.talend.components.s3.AbstractAmazonS3ClientProducer.AsymmetricKeyEncryptionAmazonS3ClientProvider;
+import org.talend.components.s3.AbstractAmazonS3ClientProducer.KmsCmkEncryptionAmazonS3ClientProducer;
+import org.talend.components.s3.AbstractAmazonS3ClientProducer.NonEncryptedAmazonS3ClientProducer;
+import org.talend.components.s3.AbstractAmazonS3ClientProducer.SymmetricKeyEncryptionAmazonS3ClientProvider;
 import org.talend.components.s3.tawss3connection.TAwsS3ConnectionDefinition;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
+
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3EncryptionClient;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SpringTestApp.class)
@@ -160,6 +174,159 @@ public class SpringtAWSS3ConnectionTestIT extends AbstractComponentTest {
         assertTrue(configClient.configValue.getValue().size() == newValues.size());
         assertTrue((Integer) configClient.configValue.getValue().get(0) == 100);
         assertTrue((Integer) configClient.configValue.getValue().get(1) == 10);
+    }
+
+    @Test
+    public void testClientCreation() throws IOException, NoSuchAlgorithmException {
+        TAwsS3ConnectionDefinition def = new TAwsS3ConnectionDefinition();
+        AwsS3ConnectionProperties props = (AwsS3ConnectionProperties) def.createProperties();
+
+        props.accessSecretKeyProperties.accessKey.setValue(null);
+        props.accessSecretKeyProperties.secretKey.setValue(null);
+        props.inheritFromAwsRole.setValue(true);
+        props.encrypt.setValue(false);
+        AbstractAmazonS3ClientProducer clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of NonEncryptedAmazonS3ClientProducer class",
+                clientProducer instanceof NonEncryptedAmazonS3ClientProducer);
+        AmazonS3Client s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be a simple amazon client", s3Client.getClass().equals(AmazonS3Client.class));
+        s3Client.shutdown();
+
+        props.accessSecretKeyProperties.accessKey.setValue("aaaa");
+        props.accessSecretKeyProperties.secretKey.setValue("aaaa");
+        props.inheritFromAwsRole.setValue(false);
+        props.encrypt.setValue(false);
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of NonEncryptedAmazonS3ClientProducer class",
+                clientProducer instanceof NonEncryptedAmazonS3ClientProducer);
+        s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be a simple amazon client", s3Client.getClass().equals(AmazonS3Client.class));
+        s3Client.shutdown();
+
+        KeyPair pair = generateKeyPair();
+        File privateKey = File.createTempFile("privateKey", null);
+        privateKey.deleteOnExit();
+        writeEncodedKeyToFile(pair.getPrivate().getEncoded(), privateKey);
+        File publicKey = File.createTempFile("publicKey", null);
+        writeEncodedKeyToFile(pair.getPublic().getEncoded(), publicKey);
+        publicKey.deleteOnExit();
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.ASYMMETRIC_MASTER_KEY);
+        props.encryptionProperties.asymmetricKeyProperties.privateKeyFilePath.setValue(privateKey.getAbsolutePath());
+        props.encryptionProperties.asymmetricKeyProperties.publicKeyFilePath.setValue(publicKey.getAbsolutePath());
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of AsymmetricKeyEncryptionAmazonS3ClientProvider class",
+                clientProducer instanceof AsymmetricKeyEncryptionAmazonS3ClientProvider);
+        s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be an encrypted amazon client", s3Client.getClass().equals(AmazonS3EncryptionClient.class));
+        s3Client.shutdown();
+
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.SYMMETRIC_MASTER_KEY);
+        props.encryptionProperties.symmetricKeyProperties.key.setValue("aaaaaaa");
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of SymmetricKeyEncryptionAmazonS3ClientProvider class",
+                clientProducer instanceof SymmetricKeyEncryptionAmazonS3ClientProvider);
+        s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be an encrypted amazon client", s3Client.getClass().equals(AmazonS3EncryptionClient.class));
+        s3Client.shutdown();
+
+        File symmetricAesFile = File.createTempFile("symmetricKey", null);
+        symmetricAesFile.deleteOnExit();
+        byte[] myVeryWeakKey = new byte[8];
+        myVeryWeakKey[6] = 10;
+        myVeryWeakKey[7] = 10;
+        writeEncodedKeyToFile(myVeryWeakKey, symmetricAesFile);
+        props.encryptionProperties.symmetricKeyProperties.encoding.setValue(Encoding.X509);
+        props.encryptionProperties.symmetricKeyProperties.keyFilePath.setValue(symmetricAesFile.getAbsolutePath());
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of SymmetricKeyEncryptionAmazonS3ClientProvider class",
+                clientProducer instanceof SymmetricKeyEncryptionAmazonS3ClientProvider);
+        s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be an encrypted amazon client", s3Client.getClass().equals(AmazonS3EncryptionClient.class));
+        s3Client.shutdown();
+
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.KMS_MANAGED_CUSTOMER_MASTER_KEY);
+        props.encryptionProperties.kmsCmkProperties.key.setValue("aaaaaaa");
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        assertTrue("ClientProducer should be an instance of KmsCmkEncryptionAmazonS3ClientProducer class",
+                clientProducer instanceof KmsCmkEncryptionAmazonS3ClientProducer);
+        s3Client = clientProducer.createClient(props);
+        assertTrue("Client should be an encrypted amazon client", s3Client.getClass().equals(AmazonS3EncryptionClient.class));
+        s3Client.shutdown();
+    }
+
+    @Test
+    public void testFailingClientCreation() throws IOException, NoSuchAlgorithmException {
+        TAwsS3ConnectionDefinition def = new TAwsS3ConnectionDefinition();
+        AwsS3ConnectionProperties props = (AwsS3ConnectionProperties) def.createProperties();
+
+        props.accessSecretKeyProperties.accessKey.setValue(null);
+        props.accessSecretKeyProperties.secretKey.setValue(null);
+        props.inheritFromAwsRole.setValue(false);
+        props.encrypt.setValue(false);
+        AmazonS3Client s3Client = null;
+        AbstractAmazonS3ClientProducer clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        try {
+            s3Client = clientProducer.createClient(props);
+            fail("non-encrypted client shouldn't be created if credentials are not inherited from aws role and Access key and secret key are null");
+        } catch (Exception e) {
+        }
+
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.ASYMMETRIC_MASTER_KEY);
+        props.encryptionProperties.asymmetricKeyProperties.privateKeyFilePath.setValue(null);
+        props.encryptionProperties.asymmetricKeyProperties.publicKeyFilePath.setValue(null);
+        try {
+            clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+            s3Client = clientProducer.createClient(props);
+            fail("encrypted client shouldn't be created with Asymmetric key if Private and public keys are null");
+        } catch (Exception e) {
+        }
+
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.SYMMETRIC_MASTER_KEY);
+        props.encryptionProperties.symmetricKeyProperties.encoding.setValue(Encoding.BASE_64);
+        props.encryptionProperties.symmetricKeyProperties.key.setValue(null);
+        try {
+            clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+            s3Client = clientProducer.createClient(props);
+            fail("encrypted client shouldn't be created with symmetric key and Base64 encoding if Key is null");
+        } catch (Exception e) {
+        }
+
+        props.encryptionProperties.symmetricKeyProperties.encoding.setValue(Encoding.X509);
+        props.encryptionProperties.symmetricKeyProperties.keyFilePath.setValue(null);
+        clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+        try {
+            clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+            s3Client = clientProducer.createClient(props);
+            fail("encrypted client shouldn't be created with symmetric key and X509 encoding if Key file path is null");
+        } catch (Exception e) {
+        }
+
+        props.encrypt.setValue(true);
+        props.encryptionProperties.encryptionKeyType.setValue(EncryptionKeyType.KMS_MANAGED_CUSTOMER_MASTER_KEY);
+        props.encryptionProperties.kmsCmkProperties.key.setValue(null);
+        try {
+            clientProducer = AmazonS3ClientProducerFactory.createClientProducer(props);
+            s3Client = clientProducer.createClient(props);
+            fail("encrypted client shouldn't be created with KMS if Key null");
+        } catch (Exception e) {
+        }
+    }
+
+    private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+        return keyGen.genKeyPair();
+    }
+
+    private void writeEncodedKeyToFile(byte[] key, File f) throws IOException {
+        FileOutputStream fos = new FileOutputStream(f);
+        fos.write(key);
+        fos.close();
     }
 
     @Test

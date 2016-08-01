@@ -198,7 +198,7 @@ public abstract class AbstractAmazonS3ClientProducer {
             File filePrivateKey = new File(encryptionProps.privateKeyFilePath.getValue());
             byte[] encodedPrivateKey = null;
             try {
-                fis = new java.io.FileInputStream(filePrivateKey);
+                fis = new FileInputStream(filePrivateKey);
                 encodedPrivateKey = new byte[(int) filePrivateKey.length()];
                 fis.read(encodedPrivateKey);
             } finally {
@@ -210,12 +210,12 @@ public abstract class AbstractAmazonS3ClientProducer {
             KeyFactory keyFactory;
             KeyPair asymmetricKey = null;
             try {
-                keyFactory = KeyFactory.getInstance(encryptionProps.algorithm.toString());
+                keyFactory = KeyFactory.getInstance(encryptionProps.algorithm.getValue().toString());
 
-                X509EncodedKeySpec publicKeySpec = new java.security.spec.X509EncodedKeySpec(encodedPublicKey);
+                X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
                 PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
-                PKCS8EncodedKeySpec privateKeySpec = new java.security.spec.PKCS8EncodedKeySpec(encodedPrivateKey);
+                PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
                 PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
 
                 asymmetricKey = new KeyPair(publicKey, privateKey);

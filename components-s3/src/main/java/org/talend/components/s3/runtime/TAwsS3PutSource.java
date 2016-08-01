@@ -14,7 +14,6 @@ package org.talend.components.s3.runtime;
 
 import java.util.List;
 
-import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
@@ -41,7 +40,7 @@ public class TAwsS3PutSource extends AwsS3SourceOrSink implements BoundedSource 
     }
 
     @Override
-    public BoundedReader createReader(RuntimeContainer adaptor) {
+    public AwsS3PutReader createReader(RuntimeContainer adaptor) {
         return new AwsS3PutReader(this, adaptor, (TAwsS3PutProperties) properties);
     }
 
