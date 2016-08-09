@@ -36,6 +36,8 @@ public class TAwsS3PutProperties extends FixedConnectorsComponentProperties impl
 
     public Property<Boolean> enableServerSideEncryption = PropertyFactory.newBoolean("enableServerSideEncryption", false);
 
+    public Property<Integer> uploadPartSize = PropertyFactory.newInteger("uploadPartSize", 5);
+
     public SchemaProperties reject = new SchemaProperties("reject");
 
     protected transient PropertyPathConnector REJECT_CONNECTOR = new PropertyPathConnector(Connector.REJECT_NAME, "reject");
@@ -53,6 +55,7 @@ public class TAwsS3PutProperties extends FixedConnectorsComponentProperties impl
 
         Form advancedForm = new Form(this, Form.ADVANCED);
         advancedForm.addRow(connectionProperties.getForm(Form.ADVANCED));
+        advancedForm.addRow(uploadPartSize);
     }
 
     @Override

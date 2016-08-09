@@ -70,6 +70,7 @@ public abstract class AwsS3Reader<T extends AwsS3ConnectionPropertiesProvider> e
                 && !properties.getConnectionProperties().getReferencedComponentId().isEmpty();
         if (!useReferencedConnection && connection != null) {
             connection.shutdown();
+            connection = null;
         }
     }
 

@@ -69,9 +69,16 @@ public class TAwsS3PutTestIT {
         TAwsS3PutSource putSource = new TAwsS3PutSource();
         putSource.initialize(null, props);
 
-        AwsS3PutReader reader = putSource.createReader(null);
-        reader.start();
-        reader.close();
+        AwsS3Reader<TAwsS3PutProperties> reader = putSource.createReader(null);
+        try {
+            boolean available = reader.start();
+            while (available) {
+                available = reader.advance();
+            }
+            reader.close();
+        } finally {
+            reader.close();
+        }
 
         f.delete();
 
