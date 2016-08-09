@@ -11,6 +11,7 @@
 
 	<properties>
 		<paxexamversion>4.6.0</paxexamversion>
+		<salesforceversion>0.13.2</salesforceversion>
 	</properties>
 
 	<name>Component API OSGI tests</name>
@@ -71,21 +72,21 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>${salesforceversion}</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>${salesforceversion}</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>components-salesforce</artifactId>
-			<version>${project.version}</version>
+			<version>${salesforceversion}</version>
 			<classifier>bundle</classifier>
 			<scope>test</scope>
 		</dependency>
