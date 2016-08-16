@@ -33,6 +33,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -55,9 +56,18 @@ public abstract class AbstractAmazonS3ClientProducer {
         if (isClientConfig) {
             clientConfigData = connectionProperties.configClientTable.getConfig();
         }
-        AmazonS3Client client = null;
+
+        ClientConfiguration clientConfig = null;
         if (clientConfigData != null && !clientConfigData.isEmpty()) {
-            ClientConfiguration clientConfig = ClientConfigurationBuilder.createClientConfiguration(clientConfigData);
+            clientConfig = ClientConfigurationBuilder.createClientConfiguration(clientConfigData);
+        }
+
+        if (connectionProperties.assumeRole.getValue()) {
+            credProvider = assumeRoleCredentials(credProvider, connectionProperties, clientConfig);
+        }
+
+        AmazonS3Client client = null;
+        if (clientConfig != null) {
             client = doCreateClientWithClientConfig(credProvider, clientConfig, connectionProperties);
         } else {
             client = doCreateClient(credProvider, connectionProperties);
@@ -78,6 +88,24 @@ public abstract class AbstractAmazonS3ClientProducer {
                             connectionProperties.accessSecretKeyProperties.secretKey.getValue()));
         }
         return credProvider;
+    }
+
+    private AWSCredentialsProvider assumeRoleCredentials(AWSCredentialsProvider credProvider,
+            AwsS3ConnectionProperties connectionProperties, ClientConfiguration clientConfig) {
+        STSAssumeRoleSessionCredentialsProvider.Builder assumeRoleBuilder = new STSAssumeRoleSessionCredentialsProvider.Builder(
+                connectionProperties.assumeRoleProps.arn.getValue(),
+                connectionProperties.assumeRoleProps.roleSessionName.getValue()).withLongLivedCredentialsProvider(credProvider)
+                        .withRoleSessionDurationSeconds(connectionProperties.assumeRoleProps.getSessionDurationSeconds());
+
+        if (connectionProperties.setStsEndpoint.getValue()) {
+            assumeRoleBuilder.withServiceEndpoint(connectionProperties.stsEndpoint.getValue());
+        }
+
+        if (clientConfig != null) {
+            assumeRoleBuilder.withClientConfiguration(clientConfig);
+        }
+
+        return assumeRoleBuilder.build();
     }
 
     protected abstract AmazonS3Client doCreateClient(AWSCredentialsProvider credentialsProvider,

@@ -23,6 +23,8 @@ import com.amazonaws.Protocol;
 public class ClientConfigurationBuilder {
 
     public static ClientConfiguration createClientConfiguration(Map<AwsS3ClientConfigFields, Object> configData) {
+        if (configData == null || configData.isEmpty())
+            return null;
         ClientConfiguration clientConfig = new ClientConfiguration();
         boolean socketSizeHintsSet = false;
         int socketReceiveBufferSizeHint = 0;

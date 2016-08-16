@@ -3,6 +3,7 @@ package org.talend.components.s3;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
+import static org.talend.daikon.properties.property.PropertyFactory.newString;
 
 import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.api.properties.ComponentReferenceProperties;
@@ -50,6 +51,14 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
 
     public AwsS3ClientConfigTable configClientTable = new AwsS3ClientConfigTable("configClientTable");
 
+    public Property<Boolean> assumeRole = newBoolean("assumeRole", false);
+
+    public AwsAssumeRoleProperties assumeRoleProps = new AwsAssumeRoleProperties("assumeRoleProps");
+
+    public Property<Boolean> setStsEndpoint = newBoolean("setStsEndpoint", false);
+
+    public Property<String> stsEndpoint = newString("stsEndpoint", "");
+
     public AwsS3ConnectionProperties(String name) {
         super(name);
     }
@@ -58,6 +67,7 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
     public void setupProperties() {
         super.setupProperties();
         region.setValue(Region.DEFAULT);
+        stsEndpoint.setRequired();
     }
 
     @Override
@@ -66,6 +76,8 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
         Form mainForm = Form.create(this, Form.MAIN);
         mainForm.addRow(accessSecretKeyProperties.getForm(Form.MAIN));
         mainForm.addRow(inheritFromAwsRole);
+        mainForm.addRow(assumeRole);
+        mainForm.addRow(assumeRoleProps.getForm(Form.MAIN));
         mainForm.addRow(region);
         mainForm.addRow(encrypt);
         mainForm.addRow(encryptionProperties.getForm(Form.MAIN));
@@ -73,6 +85,8 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
         Form advancedForm = Form.create(this, Form.ADVANCED);
         advancedForm.addRow(configClient);
         advancedForm.addRow(widget(configClientTable).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        advancedForm.addRow(setStsEndpoint);
+        advancedForm.addColumn(stsEndpoint);
 
         Form refForm = Form.create(this, Form.REFERENCE);
         Widget compListWidget = widget(referencedComponent).setWidgetType(Widget.COMPONENT_REFERENCE_WIDGET_TYPE);
@@ -100,6 +114,14 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
         refreshLayout(getForm(Form.ADVANCED));
     }
 
+    public void afterAssumeRole() {
+        refreshLayout();
+    }
+
+    public void afterSetStsEndpoint() {
+        refreshLayout(getForm(Form.ADVANCED));
+    }
+
     public void refreshLayout() {
         refreshLayout(getForm(Form.MAIN));
         refreshLayout(getForm(Form.ADVANCED));
@@ -123,6 +145,8 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
                 } else {
                     keyPropertiesWidget.setHidden(false);
                 }
+                Widget assumeRolePropsWidget = getForm(Form.MAIN).getWidget(assumeRoleProps.getName());
+                assumeRolePropsWidget.setHidden(!assumeRole.getValue());
                 if (encrypt.getValue()) {
                     getForm(Form.MAIN).getWidget(encryptionProperties.getName()).setHidden(false);
                     encryptionProperties.refreshLayout();
@@ -136,6 +160,13 @@ public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
             } else {
                 form.setHidden(false);
                 form.getWidget(configClientTable.getName()).setHidden(!configClient.getValue());
+            }
+            if (assumeRole.getValue()) {
+                form.getWidget(setStsEndpoint.getName()).setHidden(false);
+                form.getWidget(stsEndpoint.getName()).setHidden(!setStsEndpoint.getValue());
+            } else {
+                form.getWidget(setStsEndpoint.getName()).setHidden(true);
+                form.getWidget(stsEndpoint.getName()).setHidden(true);
             }
         }
     }

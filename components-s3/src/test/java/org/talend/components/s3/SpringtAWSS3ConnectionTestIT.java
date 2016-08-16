@@ -127,6 +127,38 @@ public class SpringtAWSS3ConnectionTestIT extends AbstractComponentTest {
     }
 
     @Test
+    public void testAfterAssumeRole() throws Throwable {
+        ComponentProperties props;
+
+        props = new TAwsS3ConnectionDefinition().createProperties();
+        Property<Boolean> assumeRoleProp = (Property<Boolean>) props.getProperty("assumeRole");
+        assertEquals(false, assumeRoleProp.getValue());
+        Form mainForm = props.getForm(Form.MAIN);
+        assertTrue(mainForm.getWidget("assumeRoleProps").isHidden());
+        Form advForm = props.getForm(Form.ADVANCED);
+        assertTrue(advForm.getWidget("setStsEndpoint").isHidden());
+        assertTrue(advForm.getWidget("stsEndpoint").isHidden());
+
+        assumeRoleProp.setValue(true);
+        props = (ComponentProperties) checkAndAfter(mainForm, "assumeRole", props);
+        assertTrue(mainForm.isRefreshUI());
+        assertTrue(advForm.isRefreshUI());
+
+        assertFalse(mainForm.getWidget("assumeRoleProps").isHidden());
+        assertFalse(advForm.getWidget("setStsEndpoint").isHidden());
+
+        Property<Boolean> setStsEndpoint = (Property<Boolean>) props.getProperty("setStsEndpoint");
+        assertEquals(false, setStsEndpoint.getValue());
+        assertTrue(advForm.getWidget("stsEndpoint").isHidden());
+
+        setStsEndpoint.setValue(true);
+        props = (ComponentProperties) checkAndAfter(advForm, "setStsEndpoint", props);
+        assertTrue(advForm.isRefreshUI());
+
+        assertFalse(advForm.getWidget("stsEndpoint").isHidden());
+    }
+
+    @Test
     public void testAfterConfigClient() throws Throwable {
         ComponentProperties props;
 
