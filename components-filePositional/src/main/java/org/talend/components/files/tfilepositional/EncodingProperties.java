@@ -1,4 +1,4 @@
-package org.talend.components.files;
+package org.talend.components.files.tfilepositional;
 
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;

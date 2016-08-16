@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositional.tfilepositionalinput;
 
 import static org.talend.daikon.properties.presentation.Widget.widget;
 
@@ -14,8 +14,8 @@ import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.SchemaProperties;
-import org.talend.components.files.EncodingProperties;
-import org.talend.components.files.PositionalFormatTable;
+import org.talend.components.files.tfilepositional.EncodingProperties;
+import org.talend.components.files.tfilepositional.PositionalFormatTable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
@@ -41,7 +41,7 @@ import org.talend.daikon.properties.property.PropertyFactory;
  * <li>{code schema}, an embedded property referring to a Schema.</li>
  * </ol>
  */
-public class TFileInputPositionalProperties extends FixedConnectorsComponentProperties {
+public class TFilePositionalInputProperties extends FixedConnectorsComponentProperties {
 	
 	public ISchemaListener schemaListener;
 	//
@@ -84,7 +84,7 @@ public class TFileInputPositionalProperties extends FixedConnectorsComponentProp
     
     protected transient PropertyPathConnector mainConnector = new PropertyPathConnector(Connector.MAIN_NAME, "schema");
  
-    public TFileInputPositionalProperties(String name) {
+    public TFilePositionalInputProperties(String name) {
         super(name);
     }
 
@@ -190,7 +190,7 @@ public class TFileInputPositionalProperties extends FixedConnectorsComponentProp
     	//beforePositionalFormatTable();
     }
     
-    protected List<String> getFieldNames(Property schema) {
+    public List<String> getFieldNames(Property schema) {
         String sJson = schema.getStringValue();
         Schema s = new Schema.Parser().parse(sJson);
         List<String> fieldNames = new ArrayList<>();

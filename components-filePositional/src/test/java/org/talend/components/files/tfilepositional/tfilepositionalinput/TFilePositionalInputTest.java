@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositional.tfilepositionalinput;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -23,11 +23,14 @@ import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.service.internal.ComponentServiceImpl;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.api.test.SimpleComponentRegistry;
+import org.talend.components.files.tfilepositional.tfilepositionalinput.TFilePositionalInputDefinition;
+import org.talend.components.files.tfilepositional.tfilepositionalinput.TFilePositionalInputProperties;
+import org.talend.components.files.tfilepositionalinput.runtime.TFilePositionalInputSource;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.exception.TalendRuntimeException;
 
 @SuppressWarnings("nls")
-public class TFileInputPositionalTest {
+public class TFilePositionalInputTest {
 
     @Rule
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -44,7 +47,7 @@ public class TFileInputPositionalTest {
     public ComponentService getComponentService() {
         if (componentService == null) {
             SimpleComponentRegistry testComponentRegistry = new SimpleComponentRegistry();
-            testComponentRegistry.addComponent(TFileInputPositionalDefinition.COMPONENT_NAME, new TFileInputPositionalDefinition());
+            testComponentRegistry.addComponent(TFilePositionalInputDefinition.COMPONENT_NAME, new TFilePositionalInputDefinition());
             componentService = new ComponentServiceImpl(testComponentRegistry);
         }
         return componentService;
@@ -52,8 +55,8 @@ public class TFileInputPositionalTest {
 
     @Test
     public void testTestInputRuntime() throws Exception {
-    	TFileInputPositionalDefinition def = (TFileInputPositionalDefinition) getComponentService().getComponentDefinition("tFileInputPositional");
-        TFileInputPositionalProperties props = (TFileInputPositionalProperties) getComponentService().getComponentProperties("tFileInputPositional");
+    	TFilePositionalInputDefinition def = (TFilePositionalInputDefinition) getComponentService().getComponentDefinition("tFileInputPositional");
+        TFilePositionalInputProperties props = (TFilePositionalInputProperties) getComponentService().getComponentProperties("tFileInputPositional");
 
         // Set up the test schema - not really used for anything now
         Schema schema = SchemaBuilder.builder().record("testRecord").fields()
@@ -74,7 +77,7 @@ public class TFileInputPositionalTest {
             props.filename.setValue(temp.getAbsolutePath());
             Source source = def.getRuntime();
             source.initialize(null, props);
-            assertThat(source, instanceOf(TFileInputPositionalSource.class));
+            assertThat(source, instanceOf(TFilePositionalInputSource.class));
             
             Reader<?> reader = ((BoundedSource) source).createReader(null);
             assertThat(reader.start(), is(true));

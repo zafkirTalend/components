@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositionalinput.runtime;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
-
+import org.talend.components.files.tfilepositional.tfilepositionalinput.TFilePositionalInputProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -32,18 +32,18 @@ import org.talend.daikon.properties.ValidationResult;
  *     and</li>
  * </ul>
  */
-public class TFileInputPositionalSourceOrSink implements SourceOrSink {
+public class TFilePositionalInputSourceOrSink implements SourceOrSink {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
     /** Configuration extracted from the input properties. */
-    private TFileInputPositionalProperties properties;
+    private TFilePositionalInputProperties properties;
 
 	private transient Schema schema;
 
     public void initialize(RuntimeContainer container, ComponentProperties properties) {
-        this.properties = (TFileInputPositionalProperties) properties;
+        this.properties = (TFilePositionalInputProperties) properties;
         // FIXME - this should be moved to the properties setup
         schema = new Schema.Parser().parse(this.properties.schema.schema.getStringValue()); 
     }
@@ -93,7 +93,7 @@ public class TFileInputPositionalSourceOrSink implements SourceOrSink {
         return false;
      }
 
-     public TFileInputPositionalProperties getProperties() {
+     public TFilePositionalInputProperties getProperties() {
  		return properties;
  	}
 }

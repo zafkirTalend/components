@@ -1,4 +1,4 @@
-package org.talend.components.files;
+package org.talend.components.files.tfilepositional;
 
 import static org.talend.daikon.properties.property.PropertyFactory.newProperty;
 

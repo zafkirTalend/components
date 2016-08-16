@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositional.tfilepositionalinput;
 
 import javax.inject.Inject;
 
@@ -13,7 +13,7 @@ import org.talend.components.api.test.SpringTestApp;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SpringTestApp.class)
-public class SpringTFileInputPositionalTestIT extends AbstractComponentTest{
+public class SpringTFilePositionalInputTestIT extends AbstractComponentTest{
     @Inject
     private ComponentService componentService;
 

@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositionalinput.runtime;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,6 @@ import org.talend.components.api.component.runtime.BoundedReader;
 import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
-
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -31,7 +30,7 @@ import org.talend.daikon.properties.ValidationResult;
  *     and</li>
  * </ul>
  */
-public class TFileInputPositionalSource extends TFileInputPositionalSourceOrSink implements BoundedSource {
+public class TFilePositionalInputSource extends TFilePositionalInputSourceOrSink implements BoundedSource {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
@@ -42,7 +41,7 @@ public class TFileInputPositionalSource extends TFileInputPositionalSourceOrSink
 	private transient Schema schema;
 
     public BoundedReader createReader(RuntimeContainer container) {
-        return new TFileInputPositionalReader(container, this);
+        return new TFilePositionalInputReader(container, this);
     }
 
      public List<? extends BoundedSource> splitIntoBundles(long desiredBundleSizeBytes, RuntimeContainer adaptor) throws Exception {

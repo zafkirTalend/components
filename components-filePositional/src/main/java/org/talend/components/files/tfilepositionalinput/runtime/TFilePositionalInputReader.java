@@ -1,4 +1,4 @@
-package org.talend.components.files.tfileinputpositional;
+package org.talend.components.files.tfilepositionalinput.runtime;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.AbstractBoundedReader;
 import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.files.tfilepositional.tfilepositionalinput.TFilePositionalInputDefinition;
+import org.talend.components.files.tfilepositional.tfilepositionalinput.TFilePositionalInputProperties;
 import org.talend.daikon.avro.SchemaConstants;
 
 import com.cedarsoftware.util.io.JsonReader;
@@ -32,12 +34,12 @@ import com.cedarsoftware.util.io.JsonReader;
 /**
  * Simple implementation of a reader.
  */
-public class TFileInputPositionalReader extends AbstractBoundedReader<IndexedRecord> {
+public class TFilePositionalInputReader extends AbstractBoundedReader<IndexedRecord> {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TFileInputPositionalDefinition.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TFilePositionalInputDefinition.class);
 
     private RuntimeContainer container;
 
@@ -59,11 +61,11 @@ public class TFileInputPositionalReader extends AbstractBoundedReader<IndexedRec
     private String currentLine;
     private List<String> values;
     
-    protected TFileInputPositionalProperties properties;
+    protected TFilePositionalInputProperties properties;
     
     private Result result;
 
-    public TFileInputPositionalReader(RuntimeContainer container, TFileInputPositionalSource source) {
+    public TFilePositionalInputReader(RuntimeContainer container, TFilePositionalInputSource source) {
         super(source);
         this.container = container;
         this.properties = source.getProperties();
@@ -173,11 +175,11 @@ public class TFileInputPositionalReader extends AbstractBoundedReader<IndexedRec
         if (!started) {
             throw new NoSuchElementException();
         }
-        current = (IndexedRecord)GenericData.get().newRecord(null, properties.schema.schema.getValue());
-        values = readLineFromPattern(properties.pattern.getValue());
+        current = (IndexedRecord)GenericData.get().newRecord(null, this.properties.schema.schema.getValue());
+        values = readLineFromPattern(this.properties.pattern.getValue());
 
-        Schema schema = properties.schema.schema.getValue();
-        List<String> schemaFields = properties.getFieldNames(properties.schema.schema);
+        Schema schema = this.properties.schema.schema.getValue();
+        List<String> schemaFields = this.properties.getFieldNames(properties.schema.schema);
         
         int i=0;
         
