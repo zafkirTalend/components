@@ -32,6 +32,7 @@ import org.talend.components.api.container.DefaultComponentRuntimeContainerImpl;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.dropbox.DropboxProperties;
 import org.talend.components.dropbox.tdropboxconnection.TDropboxConnectionProperties;
+import org.talend.components.dropbox.tdropboxget.OutgoingContentType;
 import org.talend.components.dropbox.tdropboxget.TDropboxGetProperties;
 import org.talend.components.dropbox.tdropboxput.ContentType;
 import org.talend.components.dropbox.tdropboxput.TDropboxPutProperties;
@@ -66,7 +67,6 @@ public class DropboxRuntimeTestBase {
     protected DropboxWriteOperation writeOperation;
 
     protected void setupGetFileSchema() {
-        // get Schema for String class
         AvroRegistry registry = new AvroRegistry();
         Schema stringSchema = registry.getConverter(String.class).getSchema();
         Schema bytesSchema = registry.getConverter(ByteBuffer.class).getSchema();
@@ -133,9 +133,10 @@ public class DropboxRuntimeTestBase {
         getProperties.connection = connectionProperties;
         getProperties.saveAsFile.setValue(false);
         getProperties.saveTo.setValue(PATH_TO_SAVE);
+        getProperties.contentType.setValue(OutgoingContentType.BYTE_ARRAY);
         getProperties.schema.schema.setValue(getFileSchema);
-        getProperties.chunkMode.setValue(true);
-        getProperties.chunkSize.setValue(8192);
+        getProperties.chunkMode.chunkMode.setValue(true);
+        getProperties.chunkMode.chunkSize.setValue(8192);
     }
 
     /**

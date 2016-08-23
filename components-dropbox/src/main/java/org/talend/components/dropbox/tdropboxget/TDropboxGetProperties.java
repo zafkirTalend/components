@@ -13,6 +13,8 @@
 package org.talend.components.dropbox.tdropboxget;
 
 import static org.talend.daikon.avro.SchemaConstants.TALEND_IS_LOCKED;
+import static org.talend.daikon.avro.SchemaConstants.JAVA_CLASS_FLAG;
+import static org.talend.daikon.di.DiSchemaConstants.TALEND6_COLUMN_TALEND_TYPE;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -39,9 +41,14 @@ import org.talend.daikon.properties.property.PropertyFactory;
 public class TDropboxGetProperties extends DropboxProperties {
 
     /**
-     * Unchangeable Dropbox file schema
+     * Unchangeable schema for {@link OutgoingContentType#INPUT_STREAM}
      */
-    private static final Schema FILE_SCHEMA;
+    private static final Schema STREAM_SCHEMA;
+
+    /**
+     * Unchangeable schema for {@link OutgoingContentType#BYTE_ARRAY}
+     */
+    private static final Schema BYTES_SCHEMA;
 
     /**
      * Default value of chunk size
@@ -52,16 +59,22 @@ public class TDropboxGetProperties extends DropboxProperties {
      * Initializes schema constant
      */
     static {
-        // get Schema for String class
         AvroRegistry registry = new AvroRegistry();
         Schema stringSchema = registry.getConverter(String.class).getSchema();
         Schema bytesSchema = registry.getConverter(ByteBuffer.class).getSchema();
+        Schema streamSchema = registry.getConverter(ByteBuffer.class).getSchema();
 
-        Schema.Field fileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
-        Schema.Field contentField = new Schema.Field("content", bytesSchema, null, null, Order.ASCENDING);
-        List<Schema.Field> fields = Arrays.asList(fileNameField, contentField);
-        FILE_SCHEMA = Schema.createRecord("dropbox", null, null, false, fields);
-        FILE_SCHEMA.addProp(TALEND_IS_LOCKED, "true");
+        Schema.Field bytesFileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
+        Schema.Field bytesContentField = new Schema.Field("content", bytesSchema, null, null, Order.ASCENDING);
+        List<Schema.Field> bytesFields = Arrays.asList(bytesFileNameField, bytesContentField);
+        BYTES_SCHEMA = Schema.createRecord("dropbox", null, null, false, bytesFields);
+
+        Schema.Field streamsFileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
+        Schema.Field streamContentField = new Schema.Field("content", streamSchema, null, null, Order.ASCENDING);
+        streamContentField.addProp(TALEND6_COLUMN_TALEND_TYPE, "id_Object");
+        List<Schema.Field> streamFields = Arrays.asList(streamsFileNameField, streamContentField);
+        STREAM_SCHEMA = Schema.createRecord("dropbox", null, null, false, streamFields);
+        STREAM_SCHEMA.addProp(TALEND_IS_LOCKED, "true");
     }
 
     /**
@@ -75,6 +88,11 @@ public class TDropboxGetProperties extends DropboxProperties {
     public Property<String> saveTo = PropertyFactory.newString("saveTo");
 
     /**
+     * Defines, which type of content to produce. Possible values are: InputStream, byte[]
+     */
+    public Property<OutgoingContentType> contentType = PropertyFactory.newEnum("contentType", OutgoingContentType.class);
+
+    /**
      * Schema property, which defines to columns: filename and content
      */
     public SchemaProperties schema = new SchemaProperties("schema");
@@ -82,12 +100,7 @@ public class TDropboxGetProperties extends DropboxProperties {
     /**
      * Flag, which indicates whether to use chunkMode
      */
-    public Property<Boolean> chunkMode = PropertyFactory.newBoolean("chunkMode");
-
-    /**
-     * Specifies size of data chunk
-     */
-    public Property<Integer> chunkSize = PropertyFactory.newInteger("chunkSize");
+    public ChunkModeProperties chunkMode = new ChunkModeProperties("chunkMode");
 
     /**
      * Main connector (accepts Main flow connections) and provides schema property
@@ -110,8 +123,8 @@ public class TDropboxGetProperties extends DropboxProperties {
     public void setupProperties() {
         super.setupProperties();
         saveTo.setValue("");
-        schema.schema.setValue(FILE_SCHEMA);
-        chunkSize.setValue(DEFAULT_CHUNK_SIZE);
+        contentType.setValue(OutgoingContentType.INPUT_STREAM);
+        schema.schema.setValue(STREAM_SCHEMA);
     }
 
     /**
@@ -123,11 +136,11 @@ public class TDropboxGetProperties extends DropboxProperties {
         Form mainForm = getForm(Form.MAIN);
         mainForm.addRow(saveAsFile);
         mainForm.addColumn(saveTo);
+        mainForm.addRow(contentType);
         mainForm.addRow(schema.getForm(Form.REFERENCE));
 
         Form advancedForm = new Form(this, Form.ADVANCED);
-        advancedForm.addRow(chunkMode);
-        advancedForm.addColumn(chunkSize);
+        advancedForm.addRow(chunkMode.getForm(Form.MAIN));
     }
 
     /**
@@ -136,6 +149,7 @@ public class TDropboxGetProperties extends DropboxProperties {
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
+        OutgoingContentType contentTypeValue = contentType.getValue();
         if (form.getName().equals(Form.MAIN)) {
             boolean saveAsFileValue = saveAsFile.getValue();
             if (saveAsFileValue) {
@@ -143,14 +157,28 @@ public class TDropboxGetProperties extends DropboxProperties {
             } else {
                 form.getWidget(saveTo.getName()).setHidden(true);
             }
+            switch (contentTypeValue) {
+            case INPUT_STREAM: {
+                schema.schema.setValue(STREAM_SCHEMA);
+                break;
+            }
+            case BYTE_ARRAY: {
+                schema.schema.setValue(BYTES_SCHEMA);
+                break;
+            }
+            }
         }
 
         if (form.getName().equals(Form.ADVANCED)) {
-            boolean chunkModeValue = chunkMode.getValue();
-            if (chunkModeValue) {
-                form.getWidget(chunkSize.getName()).setHidden(false);
-            } else {
-                form.getWidget(chunkSize.getName()).setHidden(true);
+            switch (contentTypeValue) {
+            case INPUT_STREAM: {
+                form.getWidget(chunkMode.getName()).setHidden(true);
+                break;
+            }
+            case BYTE_ARRAY: {
+                form.getWidget(chunkMode.getName()).setHidden(false);
+                break;
+            }
             }
         }
     }
@@ -178,9 +206,10 @@ public class TDropboxGetProperties extends DropboxProperties {
     }
 
     /**
-     * Refreshes layout after Chunk Mode checkbox is changed
+     * Refreshes layout after Content Type combobox is changed
      */
-    public void afterChunkMode() {
+    public void afterContentType() {
+        refreshLayout(getForm(Form.MAIN));
         refreshLayout(getForm(Form.ADVANCED));
     }
 

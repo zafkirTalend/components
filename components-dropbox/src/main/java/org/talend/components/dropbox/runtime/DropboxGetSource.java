@@ -73,8 +73,8 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
             saveAsFile = getProperties.saveAsFile.getValue();
             saveTo = getProperties.saveTo.getValue();
             schema = getProperties.schema.schema.getValue();
-            chunkMode = getProperties.chunkMode.getValue();
-            chunkSize = getProperties.chunkSize.getValue();
+            chunkMode = getProperties.chunkMode.chunkMode.getValue();
+            chunkSize = getProperties.chunkMode.chunkSize.getValue();
         } else {
             LOG.debug("Wrong properties type");
         }

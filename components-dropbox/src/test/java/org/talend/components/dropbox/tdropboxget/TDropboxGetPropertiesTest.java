@@ -21,7 +21,9 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.talend.daikon.avro.SchemaConstants.JAVA_CLASS_FLAG;
 import static org.talend.daikon.avro.SchemaConstants.TALEND_IS_LOCKED;
+import static org.talend.daikon.di.DiSchemaConstants.TALEND6_COLUMN_TALEND_TYPE;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -73,46 +75,18 @@ public class TDropboxGetPropertiesTest {
     }
 
     /**
-     * Checks {@link TDropboxGetProperties#afterChunkMode()()} shows Chunk Size widget, when Chunk Mode checkbox is checked
-     */
-    @Test
-    public void testAfterChunkModeTrue() {
-        TDropboxGetProperties properties = new TDropboxGetProperties("root");
-        properties.init();
-        properties.chunkMode.setValue(true);
-
-        properties.afterChunkMode();
-
-        boolean chunkSizeHidden = properties.getForm(Form.ADVANCED).getWidget("chunkSize").isHidden();
-        assertFalse(chunkSizeHidden);
-    }
-
-    /**
-     * Checks {@link TDropboxGetProperties#afterChunkMode()} hides Chunk Size widget, when Chunk Mode checkbox is unchecked
-     */
-    @Test
-    public void testAfterChunkModeFalse() {
-        TDropboxGetProperties properties = new TDropboxGetProperties("root");
-        properties.init();
-        properties.chunkMode.setValue(false);
-
-        properties.afterChunkMode();
-
-        boolean chunkSizeHidden = properties.getForm(Form.ADVANCED).getWidget("chunkSize").isHidden();
-        assertTrue(chunkSizeHidden);
-    }
-
-    /**
      * Checks {@link TDropboxGetProperties#setupProperties()} sets correct initial property values
      */
     @Test
     public void testSetupProperties() {
         AvroRegistry registry = new AvroRegistry();
         Schema stringSchema = registry.getConverter(String.class).getSchema();
-        Schema bytesSchema = registry.getConverter(ByteBuffer.class).getSchema();
+        Schema streamSchema = registry.getConverter(ByteBuffer.class).getSchema();
+        streamSchema.addProp(JAVA_CLASS_FLAG, "java.io.InputStream");
 
         Schema.Field fileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
-        Schema.Field contentField = new Schema.Field("content", bytesSchema, null, null, Order.ASCENDING);
+        Schema.Field contentField = new Schema.Field("content", streamSchema, null, null, Order.ASCENDING);
+        contentField.addProp(TALEND6_COLUMN_TALEND_TYPE, "id_Object");
         List<Schema.Field> fields = Arrays.asList(fileNameField, contentField);
         Schema expectedSchema = Schema.createRecord("dropbox", null, null, false, fields);
         expectedSchema.addProp(TALEND_IS_LOCKED, "true");
@@ -123,20 +97,18 @@ public class TDropboxGetPropertiesTest {
         String pathValue = properties.path.getValue();
         boolean saveAsFileValue = properties.saveAsFile.getValue();
         String saveToValue = properties.saveTo.getValue();
+        OutgoingContentType contentTypeValue = properties.contentType.getValue();
         Schema schemaValue = properties.schema.schema.getValue();
-        boolean chunkMode = properties.chunkMode.getValue();
-        int chunkSize = properties.chunkSize.getValue();
 
         assertThat(pathValue, equalTo(""));
         assertFalse(saveAsFileValue);
         assertThat(saveToValue, equalTo(""));
+        assertThat(contentTypeValue, equalTo(OutgoingContentType.INPUT_STREAM));
         assertThat(schemaValue, equalTo(expectedSchema));
-        assertFalse(chunkMode);
-        assertThat(chunkSize, equalTo(8192));
     }
 
     /**
-     * Checks {@link TDropboxGetProperties#refreshLayout(Form)} hides saveTo widget in initial state
+     * Checks {@link TDropboxGetProperties#refreshLayout(Form)} hides saveTo and chunkMode widgets in initial state
      */
     @Test
     public void testRefreshLayoutMainInitial() {
@@ -150,14 +122,14 @@ public class TDropboxGetPropertiesTest {
         boolean pathIsHidden = properties.getForm(Form.MAIN).getWidget("path").isHidden();
         boolean saveAsFileIsHidden = properties.getForm(Form.MAIN).getWidget("saveAsFile").isHidden();
         boolean saveToIsHidden = properties.getForm(Form.MAIN).getWidget("saveTo").isHidden();
+        boolean chunkModeIsHidden = properties.getForm(Form.ADVANCED).getWidget("chunkMode").isHidden();
         boolean schemaIsHidden = properties.getForm(Form.MAIN).getWidget("schema").isHidden();
-        boolean chunkSizeIsHidden = properties.getForm(Form.ADVANCED).getWidget("chunkSize").isHidden();
         assertFalse(connectionIsHidden);
         assertFalse(pathIsHidden);
         assertFalse(saveAsFileIsHidden);
         assertTrue(saveToIsHidden);
+        assertTrue(chunkModeIsHidden);
         assertFalse(schemaIsHidden);
-        assertTrue(chunkSizeIsHidden);
     }
 
     /**
@@ -173,6 +145,7 @@ public class TDropboxGetPropertiesTest {
         boolean pathExpected = properties.getForm(Form.MAIN).getWidget("path").isHidden();
         boolean saveAsFileExpected = properties.getForm(Form.MAIN).getWidget("saveAsFile").isHidden();
         boolean saveToExpected = properties.getForm(Form.MAIN).getWidget("saveTo").isHidden();
+        boolean chunkModeExpected = properties.getForm(Form.ADVANCED).getWidget("chunkMode").isHidden();
         boolean schemaExpected = properties.getForm(Form.MAIN).getWidget("schema").isHidden();
 
         properties.refreshLayout(new Form(properties, "NotMain"));
@@ -181,25 +154,28 @@ public class TDropboxGetPropertiesTest {
         boolean pathActual = properties.getForm(Form.MAIN).getWidget("path").isHidden();
         boolean saveAsFileActual = properties.getForm(Form.MAIN).getWidget("saveAsFile").isHidden();
         boolean saveToActual = properties.getForm(Form.MAIN).getWidget("saveTo").isHidden();
+        boolean chunkModeActual = properties.getForm(Form.ADVANCED).getWidget("chunkMode").isHidden();
         boolean schemaActual = properties.getForm(Form.MAIN).getWidget("schema").isHidden();
 
         assertEquals(connectionExpected, connectionActual);
         assertEquals(pathExpected, pathActual);
         assertEquals(saveAsFileExpected, saveAsFileActual);
         assertEquals(saveToExpected, saveToActual);
+        assertEquals(chunkModeExpected, chunkModeActual);
         assertEquals(schemaExpected, schemaActual);
     }
 
     /**
      * Checks {@link TDropboxGetProperties#setupLayout()} creates Main form,
-     * which contains 5 widgets: Connection, Path, Save As File, Save To, Schema
-     * and Advanced form, which contains 2 widgets: Chunk Mode and Chunk Size
+     * which contains 6 widgets: Connection, Path, Save As File, Save To, Content Type and Schema
+     * and Advanced form, which contains 1 widget: Chunk Mode
      */
     @Test
     public void testSetupLayout() {
         TDropboxGetProperties properties = new TDropboxGetProperties("root");
         properties.connection.setupLayout();
         properties.schema.setupLayout();
+        properties.chunkMode.setupLayout();
         properties.setupLayout();
 
         Form main = properties.getForm(Form.MAIN);
@@ -208,7 +184,7 @@ public class TDropboxGetPropertiesTest {
         assertThat(advanced, notNullValue());
 
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(5));
+        assertThat(mainWidgets, hasSize(6));
 
         Widget connectionWidget = main.getWidget("connection");
         assertThat(connectionWidget, notNullValue());
@@ -218,16 +194,16 @@ public class TDropboxGetPropertiesTest {
         assertThat(saveAsFileWidget, notNullValue());
         Widget saveToWidget = main.getWidget("saveTo");
         assertThat(saveToWidget, notNullValue());
+        Widget contentTypeWidget = main.getWidget("contentType");
+        assertThat(contentTypeWidget, notNullValue());
         Widget schemaWidget = main.getWidget("schema");
         assertThat(schemaWidget, notNullValue());
 
         Collection<Widget> advancedWidgets = advanced.getWidgets();
-        assertThat(advancedWidgets, hasSize(2));
+        assertThat(advancedWidgets, hasSize(1));
 
         Widget chunkModeWidget = advanced.getWidget("chunkMode");
         assertThat(chunkModeWidget, notNullValue());
-        Widget chunkSizeWidget = advanced.getWidget("chunkSize");
-        assertThat(chunkSizeWidget, notNullValue());
     }
 
     /**
