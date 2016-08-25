@@ -1,0 +1,141 @@
+// ============================================================================
+//
+// Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
+package org.talend.components.dropbox.runtime.reader;
+
+import static org.talend.components.dropbox.tdropboxget.TDropboxGetProperties.DEFAULT_CHUNK_SIZE;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.avro.generic.IndexedRecord;
+import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.dropbox.avro.DropboxIndexedRecord;
+import org.talend.components.dropbox.runtime.DropboxGetSource;
+
+import com.dropbox.core.DbxDownloader;
+import com.dropbox.core.v2.files.FileMetadata;
+
+/**
+ * Dropbox Get component {@link Reader}, which produces records with {@link byte[]} as file content.
+ * This {@link Reader} has 2 modes: chunk mode and full mode.
+ * It produces several records in chunk mode and only one in full mode.
+ * This feature is designed to be compatible with cloud platforms
+ */
+public class DropboxGetBytesReader extends DropboxGetReader {
+
+    /**
+     * Denotes whether bytes were already read from {@link InputStream}
+     */
+    private boolean bytesWereRead = false;
+
+    /**
+     * Constructor sets {@link DropboxGetSource} 
+     * 
+     * @param source {@link DropboxGetSource} instance
+     */
+    public DropboxGetBytesReader(DropboxGetSource source) {
+        super(source);
+    }
+
+    /**
+     * Obtains {@link InputStream} from which file will be read,
+     * reads first record
+     * 
+     * @return true, if download was successful
+     */
+    @Override
+    public boolean start() throws IOException {
+        DbxDownloader<FileMetadata> downloader = getDownloader();
+        inputStream = downloader.getInputStream();
+        started = advance();
+        return started;
+    }
+
+    /**
+     * Tries to read more bytes and create next {@link IndexedRecord}
+     * This {@link Reader} has 2 modes: chunk and full.
+     * In chunk mode it divides file content to several byte[] chunks, so it 
+     * produces several {@link IndexedRecord}
+     * In full mode it stores entire content in one byte[], so it produces only
+     * one {@link IndexedRecord}
+     */
+    @Override
+    public boolean advance() throws IOException {
+        if (source.isChunkMode()) {
+            return advanceInChunkMode();
+        } else {
+            return advanceInFullMode();
+        }
+    }
+
+    /**
+     * Reads next chunk in byte array and packs it in next {@link IndexedRecord}
+     * 
+     * @return true, next chunk was read; false if there is no more data
+     * @throws IOException if some I/O error occurs during reading from {@link InputStream}
+     */
+    private boolean advanceInChunkMode() throws IOException {
+        int chunkSize = source.getChunkSize();
+        byte[] bytes = new byte[chunkSize];
+        int wasRead = inputStream.read(bytes);
+        if (wasRead == 0 || wasRead == -1) {
+            return false;
+        }
+        // trim byte array if it was read less bytes than chunk size
+        if (wasRead < chunkSize) {
+            byte[] trimmedBytes = new byte[wasRead];
+            System.arraycopy(bytes, 0, trimmedBytes, 0, wasRead);
+            bytes = trimmedBytes;
+        }
+        currentRecord = new DropboxIndexedRecord(source.getSchema());
+        currentRecord.put(0, fileName);
+        currentRecord.put(1, bytes);
+        return true;
+    }
+
+    /**
+     * Reads entire {@link InputStream} in byte array and packs it in single {@link IndexedRecord}
+     * 
+     * @return true, next chunk was read; false if there is no more data
+     * @throws IOException if some I/O error occurs during reading from {@link InputStream}
+     */
+    private boolean advanceInFullMode() throws IOException {
+        if (bytesWereRead) {
+            return false;
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int wasRead;
+        byte[] bytes = new byte[DEFAULT_CHUNK_SIZE];
+        while ((wasRead = inputStream.read(bytes, 0, bytes.length)) != -1) {
+            baos.write(bytes, 0, wasRead);
+        }
+        baos.flush();
+        currentRecord = new DropboxIndexedRecord(source.getSchema());
+        currentRecord.put(0, fileName);
+        currentRecord.put(1, baos.toByteArray());
+        bytesWereRead = true;
+        return true;
+    }
+
+    /**
+     * Closes underlying {@link InputStream}
+     * 
+     * @throws IOException if an I/O error occurs during reading from {@link InputStream}
+     */
+    @Override
+    public void close() throws IOException {
+        inputStream.close();
+    }
+
+}

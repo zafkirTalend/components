@@ -16,6 +16,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.joda.time.Instant;
@@ -45,33 +46,39 @@ public class DropboxGetReaderTest extends DropboxRuntimeTestBase {
      * Checks {@link DropboxGetReader#getCurrentTimestamp()} returns null
      * For now, this method returns null. Maybe it will be implemented later, when there will be more information
      * on how to implement it
+     * @throws IOException 
      */
     @Test
-    public void testGetCurrentTimestamp() {
-        DropboxGetReader reader = new DropboxGetReader(getSource);
+    public void testGetCurrentTimestamp() throws IOException {
+        DropboxGetReader reader = new DropboxGetStreamReader(getSource);
         Instant instant = reader.getCurrentTimestamp();
         assertThat(instant, nullValue());
+        reader.close();
     }
 
     /**
      * Checks {@link DropboxGetReader#getCurrentSource()} returns {@link Source} without any changes
+     * @throws IOException 
      */
     @Test
-    public void testGetCurrentSource() {
-        DropboxGetReader reader = new DropboxGetReader(getSource);
+    public void testGetCurrentSource() throws IOException {
+        DropboxGetReader reader = new DropboxGetStreamReader(getSource);
         DropboxGetSource actualSource = reader.getCurrentSource();
         assertEquals(getSource, actualSource);
+        reader.close();
     }
 
     /**
      * Checks {@link DropboxGetReader#getReturnValues()} returns empty map,
      * because this component supports only ERROR_MESSAGE return value, which is computed in generated code outside component
+     * @throws IOException 
      */
     @Test
-    public void testGetReturnValues() {
-        DropboxGetReader reader = new DropboxGetReader(getSource);
+    public void testGetReturnValues() throws IOException {
+        DropboxGetReader reader = new DropboxGetStreamReader(getSource);
         Map<String, Object> returnValues = reader.getReturnValues();
         assertEquals(0, returnValues.size());
+        reader.close();
     }
 
 }

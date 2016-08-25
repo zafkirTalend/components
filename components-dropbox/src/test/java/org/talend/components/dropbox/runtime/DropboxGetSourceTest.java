@@ -24,6 +24,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.dropbox.runtime.reader.DropboxGetBytesReader;
 import org.talend.components.dropbox.runtime.reader.DropboxGetReader;
 import org.talend.components.dropbox.tdropboxget.TDropboxGetProperties;
 
@@ -68,8 +69,9 @@ public class DropboxGetSourceTest extends DropboxRuntimeTestBase {
     @Test
     public void testCreateReader() {
         DropboxGetSource source = new DropboxGetSource();
+        source.initialize(container, getProperties);
         Reader<IndexedRecord> reader = source.createReader(container);
-        assertThat(reader, is(instanceOf(DropboxGetReader.class)));
+        assertThat(reader, is(instanceOf(DropboxGetBytesReader.class)));
     }
 
 }

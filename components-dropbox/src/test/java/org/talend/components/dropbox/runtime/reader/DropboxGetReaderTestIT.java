@@ -58,7 +58,7 @@ public class DropboxGetReaderTestIT extends DropboxRuntimeTestBase {
     public void testRead() throws IOException {
         ValidationResult vr = getSource.validate(container);
         assertEquals(ValidationResult.OK, vr);
-        DropboxGetReader reader = new DropboxGetReader(getSource);
+        DropboxGetReader reader = new DropboxGetBytesReader(getSource);
         List<IndexedRecord> records = new ArrayList<IndexedRecord>(1);
         ByteArrayOutputStream fileBuffer = new ByteArrayOutputStream();
         for (boolean hasNext = reader.start(); hasNext; hasNext = reader.advance()) {

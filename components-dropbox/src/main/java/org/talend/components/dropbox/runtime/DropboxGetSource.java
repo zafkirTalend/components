@@ -12,6 +12,8 @@
 // ============================================================================
 package org.talend.components.dropbox.runtime;
 
+import java.io.InputStream;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
@@ -21,7 +23,10 @@ import org.talend.components.api.component.runtime.Source;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.dropbox.runtime.reader.DropboxGetBytesReader;
 import org.talend.components.dropbox.runtime.reader.DropboxGetReader;
+import org.talend.components.dropbox.runtime.reader.DropboxGetStreamReader;
+import org.talend.components.dropbox.tdropboxget.OutgoingContentType;
 import org.talend.components.dropbox.tdropboxget.TDropboxGetProperties;
 
 /**
@@ -42,6 +47,11 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
      * Specifies path to save a file on filesystem
      */
     private String saveTo;
+
+    /**
+     * Specifies content type to produce. It could be either {@link InputStream} or byte[]
+     */
+    private OutgoingContentType contentType;
 
     /**
      * Data schema
@@ -72,6 +82,7 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
             TDropboxGetProperties getProperties = (TDropboxGetProperties) properties;
             saveAsFile = getProperties.saveAsFile.getValue();
             saveTo = getProperties.saveTo.getValue();
+            contentType = getProperties.contentType.getValue();
             schema = getProperties.schema.schema.getValue();
             chunkMode = getProperties.chunkMode.chunkMode.getValue();
             chunkSize = getProperties.chunkMode.chunkSize.getValue();
@@ -85,7 +96,14 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
      */
     @Override
     public Reader<IndexedRecord> createReader(RuntimeContainer container) {
-        return new DropboxGetReader(this);
+        switch (contentType) {
+        case BYTE_ARRAY: {
+            return new DropboxGetBytesReader(this);
+        }
+        case INPUT_STREAM:
+        default:
+            return new DropboxGetStreamReader(this);
+        }
     }
 
     /**
