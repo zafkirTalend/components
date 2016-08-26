@@ -109,28 +109,22 @@ public class TDropboxConnectionProperties extends ComponentPropertiesImpl implem
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
+        String refComponentIdValue = referencedComponent.componentInstanceId.getStringValue();
+        boolean useOtherConnection = refComponentIdValue != null
+                && refComponentIdValue.startsWith(TDropboxConnectionDefinition.COMPONENT_NAME);
         if (form.getName().equals(Form.MAIN)) {
-            boolean useHttpProxyValue = useHttpProxy.getValue();
-            if (useHttpProxyValue) {
-                form.getWidget(proxyHost.getName()).setHidden(false);
-                form.getWidget(proxyPort.getName()).setHidden(false);
+            if (useOtherConnection) {
+                form.setHidden(true);
             } else {
-                form.getWidget(proxyHost.getName()).setHidden(true);
-                form.getWidget(proxyPort.getName()).setHidden(true);
-            }
-        }
-
-        if (form.getName().equals(Form.REFERENCE)) {
-            String refComponentIdValue = referencedComponent.componentInstanceId.getValue();
-            if (refComponentIdValue != null && refComponentIdValue.startsWith(TDropboxConnectionDefinition.COMPONENT_NAME)) {
-                /*
-                 * Main form widget is stored in widgetMap under properties.getName() key. Generally, this name is "root"
-                 * See Form.getWidgetContentName() method for details
-                 * that's why this.getName() is used here
-                 */
-                form.getWidget(getName()).setHidden(true);
-            } else {
-                form.getWidget(getName()).setHidden(false);
+                form.setHidden(false);
+                boolean useHttpProxyValue = useHttpProxy.getValue();
+                if (useHttpProxyValue) {
+                    form.getWidget(proxyHost.getName()).setHidden(false);
+                    form.getWidget(proxyPort.getName()).setHidden(false);
+                } else {
+                    form.getWidget(proxyHost.getName()).setHidden(true);
+                    form.getWidget(proxyPort.getName()).setHidden(true);
+                }
             }
         }
     }
@@ -148,6 +142,7 @@ public class TDropboxConnectionProperties extends ComponentPropertiesImpl implem
     @Override
     public void afterReferencedComponent() {
         refreshLayout(getForm(Form.REFERENCE));
+        refreshLayout(getForm(Form.MAIN));
     }
 
 }
