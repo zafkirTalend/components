@@ -86,7 +86,6 @@ public class TDropboxGetPropertiesTest {
 
         Schema.Field fileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
         Schema.Field contentField = new Schema.Field("content", streamSchema, null, null, Order.ASCENDING);
-        contentField.addProp(TALEND6_COLUMN_TALEND_TYPE, "id_Object");
         List<Schema.Field> fields = Arrays.asList(fileNameField, contentField);
         Schema expectedSchema = Schema.createRecord("dropbox", null, null, false, fields);
         expectedSchema.addProp(TALEND_IS_LOCKED, "true");

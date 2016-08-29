@@ -63,6 +63,7 @@ public class TDropboxGetProperties extends DropboxProperties {
         Schema stringSchema = registry.getConverter(String.class).getSchema();
         Schema bytesSchema = registry.getConverter(ByteBuffer.class).getSchema();
         Schema streamSchema = registry.getConverter(ByteBuffer.class).getSchema();
+        streamSchema.addProp(JAVA_CLASS_FLAG, "java.io.InputStream");
 
         Schema.Field bytesFileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
         Schema.Field bytesContentField = new Schema.Field("content", bytesSchema, null, null, Order.ASCENDING);
@@ -71,7 +72,6 @@ public class TDropboxGetProperties extends DropboxProperties {
 
         Schema.Field streamsFileNameField = new Schema.Field("fileName", stringSchema, null, null, Order.ASCENDING);
         Schema.Field streamContentField = new Schema.Field("content", streamSchema, null, null, Order.ASCENDING);
-        streamContentField.addProp(TALEND6_COLUMN_TALEND_TYPE, "id_Object");
         List<Schema.Field> streamFields = Arrays.asList(streamsFileNameField, streamContentField);
         STREAM_SCHEMA = Schema.createRecord("dropbox", null, null, false, streamFields);
         STREAM_SCHEMA.addProp(TALEND_IS_LOCKED, "true");
