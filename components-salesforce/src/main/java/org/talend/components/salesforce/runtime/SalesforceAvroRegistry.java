@@ -8,13 +8,13 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.commons.lang3.StringUtils;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.avro.converter.AvroConverter;
 import org.talend.daikon.java8.SerializableFunction;
-
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
 
@@ -178,6 +178,9 @@ public class SalesforceAvroRegistry extends AvroRegistry {
         case datetime:
             base = AvroUtils._date();
             break;
+        case base64:
+            base = AvroUtils._bytes();
+            break;
         default:
             base = AvroUtils._string();
             break;
@@ -208,6 +211,8 @@ public class SalesforceAvroRegistry extends AvroRegistry {
             return new StringToIntegerConverter(f);
         } else if (AvroUtils.isSameType(fieldSchema, AvroUtils._date())) {
             return new StringToDateConverter(f);
+        } else if (AvroUtils.isSameType(fieldSchema, AvroUtils._bytes())) {
+            return new StringToBytesConverter(f);
         } else if (AvroUtils.isSameType(fieldSchema, AvroUtils._string())) {
             return super.getConverter(String.class);
         }
@@ -248,7 +253,19 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Boolean convertToAvro(String value) {
-            return value == null ? null : Boolean.parseBoolean(value);
+            return StringUtils.isEmpty(value) ? null : Boolean.parseBoolean(value);
+        }
+    }
+
+    public static class StringToBytesConverter extends AsStringConverter<byte[]> {
+
+        StringToBytesConverter(Schema.Field field) {
+            super(field);
+        }
+
+        @Override
+        public byte[] convertToAvro(String value) {
+            return value == null ? null : value.getBytes();
         }
     }
 
@@ -260,7 +277,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public BigDecimal convertToAvro(String value) {
-            return value == null ? null : new BigDecimal(value);
+            return StringUtils.isEmpty(value) ? null : new BigDecimal(value);
         }
     }
 
@@ -272,7 +289,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Double convertToAvro(String value) {
-            return value == null ? null : Double.parseDouble(value);
+            return StringUtils.isEmpty(value) ? null : Double.parseDouble(value);
         }
     }
 
@@ -290,7 +307,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
         @Override
         public Long convertToAvro(String value) {
             try {
-                return value == null ? null : format.parse(value).getTime();
+                return StringUtils.isEmpty(value) ? null : format.parse(value).getTime();
             } catch (ParseException e) {
                 throw new ComponentException(e);
             }
@@ -311,7 +328,7 @@ public class SalesforceAvroRegistry extends AvroRegistry {
 
         @Override
         public Integer convertToAvro(String value) {
-            return value == null ? null : Integer.parseInt(value);
+            return StringUtils.isEmpty(value) ? null : Integer.parseInt(value);
         }
     }
 

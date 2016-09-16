@@ -58,8 +58,9 @@ public class SalesforceSourceOrSink implements SourceOrSink {
     protected static final String KEY_CONNECTION = "Connection";
 
     @Override
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
         this.properties = (SalesforceProvideConnectionProperties) properties;
+        return ValidationResult.OK;
     }
 
     @Override
@@ -98,6 +99,7 @@ public class SalesforceSourceOrSink implements SourceOrSink {
          * stored in the ConnectorConfig instance. Use this key to initialize a BulkConnection:
          */
         ConnectorConfig bulkConfig = new ConnectorConfig();
+        setProxy(bulkConfig);
         bulkConfig.setSessionId(config.getSessionId());
         /*
          * The endpoint for the Bulk API service is the same as for the normal SOAP uri until the /Soap/ part. From here
@@ -314,7 +316,8 @@ public class SalesforceSourceOrSink implements SourceOrSink {
 
                         @Override
                         public PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(proxyHelper.getProxyPwd(), proxyHelper.getProxyPwd().toCharArray());
+                            return new PasswordAuthentication(proxyHelper.getProxyUser(),
+                                    proxyHelper.getProxyPwd().toCharArray());
                         }
 
                     });
