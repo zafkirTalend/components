@@ -12,22 +12,21 @@
 // ============================================================================
 package org.talend.components.dropbox.tdropboxconnection;
 
-import org.talend.components.api.Constants;
-import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.EndpointComponentDefinition;
-import org.talend.components.api.component.runtime.SourceOrSink;
+import java.util.EnumSet;
+import java.util.Set;
+
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.dropbox.DropboxDefinition;
 import org.talend.components.dropbox.runtime.DropboxSourceOrSink;
-
-import aQute.bnd.annotation.component.Component;
+import org.talend.daikon.properties.Properties;
 
 /**
  * Dropbox connection component definition
  */
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TDropboxConnectionDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TDropboxConnectionDefinition extends DropboxDefinition implements EndpointComponentDefinition {
+public class TDropboxConnectionDefinition extends DropboxDefinition {
 
     /**
      * Dropbox connection component name
@@ -45,14 +44,6 @@ public class TDropboxConnectionDefinition extends DropboxDefinition implements E
      * {@inheritDoc}
      */
     @Override
-    public SourceOrSink getRuntime() {
-        return new DropboxSourceOrSink();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Class<? extends ComponentProperties> getPropertyClass() {
         return TDropboxConnectionProperties.class;
     }
@@ -63,6 +54,27 @@ public class TDropboxConnectionDefinition extends DropboxDefinition implements E
     @Override
     public boolean isStartable() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
+        if (connectorTopology == ConnectorTopology.NONE) {
+            return new SimpleRuntimeInfo(this.getClass().getClassLoader(), DEPENDENCIES_FILE_PATH,
+                    DropboxSourceOrSink.class.getCanonicalName());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<ConnectorTopology> getSupportedConnectorTopologies() {
+        return EnumSet.of(ConnectorTopology.NONE);
     }
 
 }

@@ -23,6 +23,8 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.dropbox.tdropboxput.ContentType;
 import org.talend.components.dropbox.tdropboxput.TDropboxPutProperties;
 import org.talend.components.dropbox.tdropboxput.UploadMode;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResult.Result;
 
 /**
  * Dropbox Put component {@link Sink}
@@ -65,10 +67,14 @@ public class DropboxPutSink extends DropboxComponentSourceOrSink implements Sink
      * 
      * @param container {@link RuntimeContainer} instance
      * @param properties user specified properties
+     * @return {@link ValidationResult#OK}
      */
     @Override
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
-        super.initialize(container, properties);
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
+        ValidationResult validation = super.initialize(container, properties);
+        if (validation.getStatus() == Result.ERROR) {
+            return validation;
+        }
         if (properties instanceof TDropboxPutProperties) {
             TDropboxPutProperties putProperties = (TDropboxPutProperties) properties;
             uploadMode = putProperties.uploadMode.getValue();
@@ -79,6 +85,7 @@ public class DropboxPutSink extends DropboxComponentSourceOrSink implements Sink
         } else {
             LOG.debug("Wrong properties type");
         }
+        return ValidationResult.OK;
     }
 
     /**

@@ -53,9 +53,10 @@ public class DropboxComponentSourceOrSink extends DropboxSourceOrSink {
      * 
      * @param container {@link RuntimeContainer} instance
      * @param properties user specified properties
+     * @return {@link ValidationResult#OK}
      */
     @Override
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
         if (properties instanceof DropboxProperties) {
             DropboxProperties dropboxProperties = (DropboxProperties) properties;
             super.initialize(container, dropboxProperties.connection);
@@ -64,6 +65,7 @@ public class DropboxComponentSourceOrSink extends DropboxSourceOrSink {
         } else {
             LOG.debug("Wrong properties type");
         }
+        return ValidationResult.OK;
     }
 
     /**

@@ -13,6 +13,7 @@
 package org.talend.components.dropbox;
 
 import org.talend.components.api.component.AbstractComponentDefinition;
+import org.talend.components.api.component.runtime.DependenciesReader;
 import org.talend.daikon.properties.property.Property;
 
 /**
@@ -21,6 +22,12 @@ import org.talend.daikon.properties.property.Property;
  * and other components (at run-time).
  */
 public abstract class DropboxDefinition extends AbstractComponentDefinition {
+
+    /**
+     * Path where dependencies list for given artifact is stored
+     */
+    protected static final String DEPENDENCIES_FILE_PATH = DependenciesReader.computeDependenciesFilePath("org.talend.components",
+            "components-dropbox");
 
     /**
      * Constructor sets component name
@@ -43,23 +50,8 @@ public abstract class DropboxDefinition extends AbstractComponentDefinition {
      * {@inheritDoc}
      */
     @Override
-    public Property[] getReturnProperties() {
+    public Property<?>[] getReturnProperties() {
         return new Property[] { RETURN_ERROR_MESSAGE_PROP };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getMavenGroupId() {
-        return "org.talend.components";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getMavenArtifactId() {
-        return "components-dropbox";
     }
 
 }

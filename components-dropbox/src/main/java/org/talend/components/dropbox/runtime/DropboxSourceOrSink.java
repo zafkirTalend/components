@@ -94,9 +94,10 @@ public class DropboxSourceOrSink implements SourceOrSink {
      * 
      * @param container {@link RuntimeContainer} instance
      * @param properties user specified properties
+     * @return {@link ValidationResult#OK}
      */
     @Override
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
         if (properties instanceof TDropboxConnectionProperties) {
             TDropboxConnectionProperties connectionProperties = (TDropboxConnectionProperties) properties;
             accessToken = connectionProperties.accessToken.getValue();
@@ -106,6 +107,7 @@ public class DropboxSourceOrSink implements SourceOrSink {
         } else {
             LOG.debug("Wrong properties type");
         }
+        return ValidationResult.OK;
     }
 
     /**

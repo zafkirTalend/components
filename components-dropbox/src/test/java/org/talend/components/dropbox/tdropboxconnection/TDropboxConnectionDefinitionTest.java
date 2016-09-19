@@ -15,39 +15,17 @@ package org.talend.components.dropbox.tdropboxconnection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.talend.components.api.component.runtime.SourceOrSink;
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.RuntimeInfo;
 import org.talend.components.dropbox.DropboxDefinition;
-import org.talend.components.dropbox.runtime.DropboxSourceOrSink;
 
 /**
  * Unit-tests for {@link TDropboxConnectionDefinition} class
  */
 public class TDropboxConnectionDefinitionTest {
-
-    /**
-     * Check {@link TDropboxConnectionDefinition#getMavenGroupId()} returns "org.talend.components"
-     */
-    @Test
-    public void testGetMavenGroupId() {
-        DropboxDefinition definition = new TDropboxConnectionDefinition();
-        String mavenGroupId = definition.getMavenGroupId();
-        assertThat(mavenGroupId, equalTo("org.talend.components"));
-    }
-
-    /**
-     * Check {@link TDropboxConnectionDefinition#getMavenArtifactId()} returns "components-dropbox"
-     */
-    @Test
-    public void testGetMavenArtifactId() {
-        DropboxDefinition definition = new TDropboxConnectionDefinition();
-        String mavenArtifactId = definition.getMavenArtifactId();
-        assertThat(mavenArtifactId, equalTo("components-dropbox"));
-    }
 
     /**
      * Check {@link TDropboxConnectionDefinition#getFamilies()} returns string array, which contains "Cloud/Dropbox"
@@ -82,13 +60,15 @@ public class TDropboxConnectionDefinitionTest {
     }
 
     /**
-     * Check {@link TDropboxConnectionDefinition#getRuntime()} returns instance of {@link DropboxSourceOrSink}
+     * Check {@link TDropboxConnectionDefinition#RuntimeInfo()} returns {@link RuntimeInfo}, which contains 
+     * "org.talend.components.dropbox.runtime.DropboxSourceOrSink" runtime class name
      */
     @Test
-    public void testGetRuntime() {
+    public void testGetRuntimeInfo() {
         TDropboxConnectionDefinition definition = new TDropboxConnectionDefinition();
-        SourceOrSink source = definition.getRuntime();
-        assertThat(source, is(instanceOf(DropboxSourceOrSink.class)));
+        RuntimeInfo runtimeInfo = definition.getRuntimeInfo(null, ConnectorTopology.NONE);
+        String runtimeClassName = runtimeInfo.getRuntimeClassName();
+        assertEquals("org.talend.components.dropbox.runtime.DropboxSourceOrSink", runtimeClassName);
     }
 
 }

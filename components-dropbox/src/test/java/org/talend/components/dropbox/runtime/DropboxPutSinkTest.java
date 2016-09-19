@@ -23,6 +23,7 @@ import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.dropbox.tdropboxput.ContentType;
 import org.talend.components.dropbox.tdropboxput.TDropboxPutProperties;
 import org.talend.components.dropbox.tdropboxput.UploadMode;
+import org.talend.daikon.properties.ValidationResult;
 
 /**
  * Unit-tests for {@link DropboxPutSink}
@@ -45,7 +46,8 @@ public class DropboxPutSinkTest extends DropboxRuntimeTestBase {
     @Test
     public void testInitialize() {
         DropboxPutSink sink = new DropboxPutSink();
-        sink.initialize(container, putProperties);
+        ValidationResult validation = sink.initialize(container, putProperties);
+        assertEquals(ValidationResult.OK, validation);
 
         UploadMode uploadMode = sink.getUploadMode();
         assertEquals(UploadMode.RENAME, uploadMode);

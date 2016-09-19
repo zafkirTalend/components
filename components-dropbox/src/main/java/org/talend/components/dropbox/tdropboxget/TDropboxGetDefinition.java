@@ -12,21 +12,21 @@
 // ============================================================================
 package org.talend.components.dropbox.tdropboxget;
 
-import org.talend.components.api.Constants;
-import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.InputComponentDefinition;
-import org.talend.components.api.component.runtime.Source;
+import java.util.EnumSet;
+import java.util.Set;
+
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.dropbox.DropboxDefinition;
 import org.talend.components.dropbox.runtime.DropboxGetSource;
-
-import aQute.bnd.annotation.component.Component;
+import org.talend.daikon.properties.Properties;
 
 /**
  * Dropbox get component definition
  */
-@Component(name = Constants.COMPONENT_BEAN_PREFIX + TDropboxGetDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TDropboxGetDefinition extends DropboxDefinition implements InputComponentDefinition {
+public class TDropboxGetDefinition extends DropboxDefinition {
 
     /**
      * Dropbox get component name
@@ -44,16 +44,29 @@ public class TDropboxGetDefinition extends DropboxDefinition implements InputCom
      * {@inheritDoc}
      */
     @Override
-    public Source getRuntime() {
-        return new DropboxGetSource();
+    public Class<? extends ComponentProperties> getPropertyClass() {
+        return TDropboxGetProperties.class;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Class<? extends ComponentProperties> getPropertyClass() {
-        return TDropboxGetProperties.class;
+    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
+        if (connectorTopology == ConnectorTopology.OUTGOING) {
+            return new SimpleRuntimeInfo(this.getClass().getClassLoader(), DEPENDENCIES_FILE_PATH,
+                    DropboxGetSource.class.getCanonicalName());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<ConnectorTopology> getSupportedConnectorTopologies() {
+        return EnumSet.of(ConnectorTopology.OUTGOING);
     }
 
 }

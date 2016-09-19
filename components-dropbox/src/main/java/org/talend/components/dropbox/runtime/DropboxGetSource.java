@@ -28,6 +28,8 @@ import org.talend.components.dropbox.runtime.reader.DropboxGetReader;
 import org.talend.components.dropbox.runtime.reader.DropboxGetStreamReader;
 import org.talend.components.dropbox.tdropboxget.OutgoingContentType;
 import org.talend.components.dropbox.tdropboxget.TDropboxGetProperties;
+import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResult.Result;
 
 /**
  * {@link SourceOrSink} for DropboxGet component
@@ -74,10 +76,14 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
      * 
      * @param container {@link RuntimeContainer} instance
      * @param properties user specified properties
+     * @return {@link ValidationResult#OK}
      */
     @Override
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
-        super.initialize(container, properties);
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
+        ValidationResult validation = super.initialize(container, properties);
+        if (validation.getStatus() == Result.ERROR) {
+            return validation;
+        }
         if (properties instanceof TDropboxGetProperties) {
             TDropboxGetProperties getProperties = (TDropboxGetProperties) properties;
             saveAsFile = getProperties.saveAsFile.getValue();
@@ -89,6 +95,7 @@ public class DropboxGetSource extends DropboxComponentSourceOrSink implements So
         } else {
             LOG.debug("Wrong properties type");
         }
+        return ValidationResult.OK;
     }
 
     /**

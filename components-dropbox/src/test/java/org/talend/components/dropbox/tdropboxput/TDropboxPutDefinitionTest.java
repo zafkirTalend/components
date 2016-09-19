@@ -15,39 +15,17 @@ package org.talend.components.dropbox.tdropboxput;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.talend.components.api.component.runtime.Sink;
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.RuntimeInfo;
 import org.talend.components.dropbox.DropboxDefinition;
-import org.talend.components.dropbox.runtime.DropboxPutSink;
 
 /**
  * Unit-tests for {@link TDropboxPutDefinition} class
  */
 public class TDropboxPutDefinitionTest {
-
-    /**
-     * Check {@link TDropboxPutDefinition#getMavenGroupId()} returns "org.talend.components"
-     */
-    @Test
-    public void testGetMavenGroupId() {
-        DropboxDefinition definition = new TDropboxPutDefinition();
-        String mavenGroupId = definition.getMavenGroupId();
-        assertThat(mavenGroupId, equalTo("org.talend.components"));
-    }
-
-    /**
-     * Check {@link TDropboxPutDefinition#getMavenArtifactId()} returns "components-dropbox"
-     */
-    @Test
-    public void testGetMavenArtifactId() {
-        DropboxDefinition definition = new TDropboxPutDefinition();
-        String mavenArtifactId = definition.getMavenArtifactId();
-        assertThat(mavenArtifactId, equalTo("components-dropbox"));
-    }
 
     /**
      * Check {@link TDropboxPutDefinition#getFamilies()} returns string array, which contains "Cloud/Dropbox"
@@ -82,13 +60,15 @@ public class TDropboxPutDefinitionTest {
     }
 
     /**
-     * Check {@link TDropboxPutDefinition#getRuntime()} returns instance of {@link DropboxPutSink}
+     * Check {@link TDropboxPutDefinition#getRuntimeInfo()} returns {@link RuntimeInfo}, which contains 
+     * "org.talend.components.dropbox.runtime.DropboxSink" runtime class name
      */
     @Test
-    public void testGetRuntime() {
+    public void testGetRuntimeInfo() {
         TDropboxPutDefinition definition = new TDropboxPutDefinition();
-        Sink sink = definition.getRuntime();
-        assertThat(sink, is(instanceOf(DropboxPutSink.class)));
+        RuntimeInfo runtimeInfo = definition.getRuntimeInfo(null, ConnectorTopology.INCOMING);
+        String runtimeClassName = runtimeInfo.getRuntimeClassName();
+        assertEquals("org.talend.components.dropbox.runtime.DropboxPutSink", runtimeClassName);
     }
 
 }

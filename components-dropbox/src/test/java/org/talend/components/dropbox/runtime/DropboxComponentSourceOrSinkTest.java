@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.daikon.properties.ValidationResult;
 
 /**
  * Unit-tests for {@link DropboxComponentSourceOrSink} class
@@ -41,7 +42,8 @@ public class DropboxComponentSourceOrSinkTest extends DropboxRuntimeTestBase {
     public void testInitialize() {
         DropboxComponentSourceOrSink sourceOrSink = new DropboxComponentSourceOrSink();
 
-        sourceOrSink.initialize(null, commonProperties);
+        ValidationResult validation = sourceOrSink.initialize(null, commonProperties);
+        assertEquals(ValidationResult.OK, validation);
 
         String path = sourceOrSink.getPath();
         assertEquals("/path/to/test/file.txt", path);

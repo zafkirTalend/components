@@ -27,6 +27,7 @@ import org.talend.components.api.component.runtime.Reader;
 import org.talend.components.dropbox.runtime.reader.DropboxGetBytesReader;
 import org.talend.components.dropbox.runtime.reader.DropboxGetReader;
 import org.talend.components.dropbox.tdropboxget.TDropboxGetProperties;
+import org.talend.daikon.properties.ValidationResult;
 
 /**
  * Unit-tests for {@link DropboxGetSource}
@@ -49,7 +50,8 @@ public class DropboxGetSourceTest extends DropboxRuntimeTestBase {
     @Test
     public void testInitialize() {
         DropboxGetSource source = new DropboxGetSource();
-        source.initialize(container, getProperties);
+        ValidationResult validation = source.initialize(container, getProperties);
+        assertEquals(ValidationResult.OK, validation);
 
         boolean saveAsFile = source.isSaveAsFile();
         assertFalse(saveAsFile);
