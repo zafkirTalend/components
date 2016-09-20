@@ -1,24 +1,24 @@
 
 package org.talend.components.s3.tawss3connection;
 
-import org.talend.components.api.Constants;
-import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.EndpointComponentDefinition;
-import org.talend.components.api.component.runtime.SourceOrSink;
+import java.util.EnumSet;
+import java.util.Set;
+
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.DependenciesReader;
+import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.s3.AwsS3ConnectionProperties;
 import org.talend.components.s3.AwsS3Definition;
 import org.talend.components.s3.runtime.AwsS3SourceOrSink;
-
-import aQute.bnd.annotation.component.Component;
+import org.talend.daikon.properties.Properties;
 
 /**
  * The tAWSS3ConnectionDefinition acts as an entry point for all of services that a component provides to integrate with
  * the Studio (at design-time) and other components (at run-time).
  */
-@Component(name = Constants.COMPONENT_BEAN_PREFIX
-        + TAwsS3ConnectionDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TAwsS3ConnectionDefinition extends AwsS3Definition implements EndpointComponentDefinition {
+public class TAwsS3ConnectionDefinition extends AwsS3Definition {
 
     public static final String COMPONENT_NAME = "tAWSS3Connection"; //$NON-NLS-1$
 
@@ -32,7 +32,17 @@ public class TAwsS3ConnectionDefinition extends AwsS3Definition implements Endpo
     }
 
     @Override
-    public SourceOrSink getRuntime() {
-        return new AwsS3SourceOrSink();
+    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
+        if (connectorTopology == ConnectorTopology.NONE) {
+            return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
+                    DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-s3"),
+                    AwsS3SourceOrSink.class.getCanonicalName());
+        }
+        return null;
+    }
+
+    @Override
+    public Set<ConnectorTopology> getSupportedConnectorTopologies() {
+        return EnumSet.of(ConnectorTopology.NONE);
     }
 }

@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
 
@@ -32,7 +31,7 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 /**
  * created by dmytro.chmyga on Aug 8, 2016
  */
-public class AwsS3MultipartPutReader extends AwsS3Reader<TAwsS3PutProperties> {
+public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> {
 
     private final long partSize;
 
@@ -51,18 +50,17 @@ public class AwsS3MultipartPutReader extends AwsS3Reader<TAwsS3PutProperties> {
     /**
      * DOC dmytro.chmyga AwsS3MultipartPutReader constructor comment.
      * 
-     * @param source
+     * @param componentRuntime
      * @param container
      * @param properties
      */
-    protected AwsS3MultipartPutReader(BoundedSource source, RuntimeContainer container, TAwsS3PutProperties properties,
-            long partSize) {
-        super(source, container, properties);
+    protected AwsS3MultipartPutUploader(AwsS3ComponentRuntime<TAwsS3PutProperties> componentRuntime, RuntimeContainer container,
+            TAwsS3PutProperties properties, long partSize) {
+        super(componentRuntime, container, properties);
         this.partSize = partSize;
     }
 
-    @Override
-    public boolean start() throws IOException {
+    public void doWork() throws IOException {
         inputFile = new File(properties.fileBucketKeyProperties.filePath.getValue());
         fileLength = inputFile.length();
 
@@ -76,22 +74,19 @@ public class AwsS3MultipartPutReader extends AwsS3Reader<TAwsS3PutProperties> {
         }
         InitiateMultipartUploadResult initResponse = getConnection().initiateMultipartUpload(initRequest);
         uploadId = initResponse.getUploadId();
-        return true;
-    }
 
-    @Override
-    public boolean advance() throws IOException {
-        long curPartSize = Math.min(partSize, (fileLength - filePosition));
-        UploadPartRequest uploadRequest = new UploadPartRequest()
-                .withBucketName(properties.fileBucketKeyProperties.bucket.getValue())
-                .withKey(properties.fileBucketKeyProperties.key.getValue()).withUploadId(uploadId).withPartNumber(curPartNumber)
-                .withFileOffset(filePosition).withFile(inputFile).withPartSize(curPartSize);
+        while (filePosition < fileLength) {
+            long curPartSize = Math.min(partSize, (fileLength - filePosition));
+            UploadPartRequest uploadRequest = new UploadPartRequest()
+                    .withBucketName(properties.fileBucketKeyProperties.bucket.getValue())
+                    .withKey(properties.fileBucketKeyProperties.key.getValue()).withUploadId(uploadId)
+                    .withPartNumber(curPartNumber).withFileOffset(filePosition).withFile(inputFile).withPartSize(curPartSize);
 
-        // Upload part and add response to our list.
-        partsTags.add(getConnection().uploadPart(uploadRequest).getPartETag());
+            // Upload part and add response to our list.
+            partsTags.add(getConnection().uploadPart(uploadRequest).getPartETag());
 
-        filePosition += curPartSize;
-        return filePosition < fileLength;
+            filePosition += curPartSize;
+        }
     }
 
     @Override

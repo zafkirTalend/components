@@ -73,12 +73,10 @@ public class TAwsS3GetTestIT {
 
         f.delete();
 
-        TAwsS3GetSource getSource = new TAwsS3GetSource();
+        TAwsS3GetComponentDriverRuntime getSource = new TAwsS3GetComponentDriverRuntime();
         getSource.initialize(null, props);
 
-        AwsS3GetReader reader = getSource.createReader(null);
-        reader.start();
-        reader.close();
+        getSource.runAtDriver();
 
         File downloadedFile = new File(filePath);
         downloadedFile.deleteOnExit();

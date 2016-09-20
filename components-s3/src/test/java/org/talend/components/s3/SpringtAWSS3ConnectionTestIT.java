@@ -361,12 +361,6 @@ public class SpringtAWSS3ConnectionTestIT extends AbstractComponentTest {
         fos.close();
     }
 
-    @Test
-    // this is an integration test to check that the dependencies file is properly generated.
-    public void testDependencies() {
-        ComponentTestUtils.testAllDesignDependenciesPresent(componentService, errorCollector);
-    }
-
     protected Properties checkAndAfter(Form form, String propName, Properties props) throws Throwable {
         assertTrue(form.getWidget(propName).isCallAfter());
         return getComponentService().afterProperty(propName, props);

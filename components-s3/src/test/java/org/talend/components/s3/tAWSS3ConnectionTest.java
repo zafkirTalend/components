@@ -5,8 +5,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.service.ComponentService;
+import org.talend.components.api.service.internal.ComponentRegistry;
 import org.talend.components.api.service.internal.ComponentServiceImpl;
-import org.talend.components.api.test.SimpleComponentRegistry;
 import org.talend.components.s3.tawss3connection.TAwsS3ConnectionDefinition;
 
 @SuppressWarnings("nls")
@@ -26,8 +26,8 @@ public class tAWSS3ConnectionTest {
     // default implementation for pure java test.
     public ComponentService getComponentService() {
         if (componentService == null) {
-            SimpleComponentRegistry testComponentRegistry = new SimpleComponentRegistry();
-            testComponentRegistry.addComponent(TAwsS3ConnectionDefinition.COMPONENT_NAME, new TAwsS3ConnectionDefinition());
+            ComponentRegistry testComponentRegistry = new ComponentRegistry();
+            testComponentRegistry.registerComponentFamilyDefinition(new AwsS3FamilyDefinition());
             componentService = new ComponentServiceImpl(testComponentRegistry);
         }
         return componentService;

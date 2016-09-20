@@ -12,23 +12,15 @@
 // ============================================================================
 package org.talend.components.s3.tawss3put;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.avro.Schema;
-import org.talend.components.api.component.Connector;
-import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.common.FixedConnectorsComponentProperties;
-import org.talend.components.common.SchemaProperties;
+import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.s3.AwsS3ConnectionProperties;
-import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 import org.talend.components.s3.AwsS3FileBucketKeyProperties;
+import org.talend.components.s3.AwsS3LoaderPropertiesProvider;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
-public class TAwsS3PutProperties extends FixedConnectorsComponentProperties implements AwsS3ConnectionPropertiesProvider {
+public class TAwsS3PutProperties extends ComponentPropertiesImpl implements AwsS3LoaderPropertiesProvider {
 
     public AwsS3ConnectionProperties connectionProperties = new AwsS3ConnectionProperties("connectionProperties");
 
@@ -37,10 +29,6 @@ public class TAwsS3PutProperties extends FixedConnectorsComponentProperties impl
     public Property<Boolean> enableServerSideEncryption = PropertyFactory.newBoolean("enableServerSideEncryption", false);
 
     public Property<Integer> uploadPartSize = PropertyFactory.newInteger("uploadPartSize", 5);
-
-    public SchemaProperties reject = new SchemaProperties("reject");
-
-    protected transient PropertyPathConnector REJECT_CONNECTOR = new PropertyPathConnector(Connector.REJECT_NAME, "reject");
 
     public TAwsS3PutProperties(String name) {
         super(name);
@@ -64,17 +52,8 @@ public class TAwsS3PutProperties extends FixedConnectorsComponentProperties impl
     }
 
     @Override
-    protected Set<PropertyPathConnector> getAllSchemaPropertiesConnectors(boolean isOutputConnection) {
-        HashSet<PropertyPathConnector> connectors = new HashSet<>();
-        if (isOutputConnection) {
-            connectors.add(REJECT_CONNECTOR);
-            return connectors;
-        }
-        return Collections.emptySet();
-    }
-
-    public Schema getSchema() {
-        return reject.schema.getValue();
+    public AwsS3FileBucketKeyProperties getFileBucketKeyProperties() {
+        return fileBucketKeyProperties;
     }
 
 }

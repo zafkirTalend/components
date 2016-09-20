@@ -66,19 +66,10 @@ public class TAwsS3PutTestIT {
         props.fileBucketKeyProperties.key.setValue(s3FileKey);
         props.fileBucketKeyProperties.filePath.setValue(filePath);
 
-        TAwsS3PutSource putSource = new TAwsS3PutSource();
+        TAwsS3PutComponentDriverRuntime putSource = new TAwsS3PutComponentDriverRuntime();
         putSource.initialize(null, props);
 
-        AwsS3Reader<TAwsS3PutProperties> reader = putSource.createReader(null);
-        try {
-            boolean available = reader.start();
-            while (available) {
-                available = reader.advance();
-            }
-            reader.close();
-        } finally {
-            reader.close();
-        }
+        putSource.runAtDriver();
 
         f.delete();
 

@@ -35,16 +35,6 @@ public abstract class AwsS3Definition extends AbstractComponentDefinition {
     }
 
     @Override
-    public String getMavenGroupId() {
-        return "org.talend.components";
-    }
-
-    @Override
-    public String getMavenArtifactId() {
-        return "components-s3";
-    }
-
-    @Override
     public boolean isStartable() {
         return true;
     }

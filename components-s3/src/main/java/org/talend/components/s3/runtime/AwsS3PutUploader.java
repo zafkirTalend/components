@@ -15,7 +15,6 @@ package org.talend.components.s3.runtime;
 import java.io.File;
 import java.io.IOException;
 
-import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.AwsS3FileBucketKeyProperties;
 import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
@@ -26,14 +25,15 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 /**
  * created by dmytro.chmyga on Jul 28, 2016
  */
-public class AwsS3PutReader extends AwsS3Reader<TAwsS3PutProperties> {
+public class AwsS3PutUploader extends AwsS3Loader<TAwsS3PutProperties> {
 
-    protected AwsS3PutReader(BoundedSource source, RuntimeContainer container, TAwsS3PutProperties properties) {
-        super(source, container, properties);
+    protected AwsS3PutUploader(AwsS3ComponentRuntime<TAwsS3PutProperties> componentRuntime, RuntimeContainer container,
+            TAwsS3PutProperties properties) {
+        super(componentRuntime, container, properties);
     }
 
     @Override
-    public boolean start() throws IOException {
+    public void doWork() throws IOException {
         AwsS3FileBucketKeyProperties props = properties.fileBucketKeyProperties;
         PutObjectRequest putRequest = new PutObjectRequest(props.bucket.getValue(), props.key.getValue(),
                 new File(props.filePath.getValue()));
@@ -45,12 +45,6 @@ public class AwsS3PutReader extends AwsS3Reader<TAwsS3PutProperties> {
         }
 
         getConnection().putObject(putRequest);
-        return false;
-    }
-
-    @Override
-    public boolean advance() throws IOException {
-        return false;
     }
 
 }

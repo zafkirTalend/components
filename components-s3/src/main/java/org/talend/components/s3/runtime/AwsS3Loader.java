@@ -13,13 +13,7 @@
 package org.talend.components.s3.runtime;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
-import org.apache.avro.generic.IndexedRecord;
-import org.talend.components.api.component.runtime.AbstractBoundedReader;
-import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 
@@ -28,7 +22,9 @@ import com.amazonaws.services.s3.AmazonS3Client;
 /**
  * created by dmytro.chmyga on Jul 28, 2016
  */
-public abstract class AwsS3Reader<T extends AwsS3ConnectionPropertiesProvider> extends AbstractBoundedReader<IndexedRecord> {
+public abstract class AwsS3Loader<T extends AwsS3ConnectionPropertiesProvider> {
+
+    protected AwsS3ComponentRuntime<T> componentRuntime;
 
     protected RuntimeContainer container;
 
@@ -41,30 +37,21 @@ public abstract class AwsS3Reader<T extends AwsS3ConnectionPropertiesProvider> e
      * 
      * @param source
      */
-    protected AwsS3Reader(BoundedSource source, RuntimeContainer container, T properties) {
-        super(source);
+    protected AwsS3Loader(AwsS3ComponentRuntime<T> componentRuntime, RuntimeContainer container, T properties) {
+        this.componentRuntime = componentRuntime;
         this.container = container;
         this.properties = properties;
     }
 
+    public abstract void doWork() throws IOException;
+
     protected AmazonS3Client getConnection() throws IOException {
         if (connection == null) {
-            connection = ((AwsS3SourceOrSink) getCurrentSource()).connect(container);
+            connection = componentRuntime.connect(container);
         }
         return connection;
     }
 
-    @Override
-    public IndexedRecord getCurrent() throws NoSuchElementException {
-        return null;
-    }
-
-    @Override
-    public Map getReturnValues() {
-        return new HashMap<>();
-    }
-
-    @Override
     public void close() throws IOException {
         boolean useReferencedConnection = properties.getConnectionProperties().getReferencedComponentId() != null
                 && !properties.getConnectionProperties().getReferencedComponentId().isEmpty();

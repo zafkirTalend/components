@@ -15,32 +15,25 @@ package org.talend.components.s3.runtime;
 import java.io.File;
 import java.io.IOException;
 
-import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.AwsS3FileBucketKeyProperties;
 import org.talend.components.s3.tawss3get.TAwsS3GetProperties;
 
 import com.amazonaws.services.s3.model.GetObjectRequest;
 
-public class AwsS3GetReader extends AwsS3Reader<TAwsS3GetProperties> {
+public class AwsS3GetDownloader extends AwsS3Loader<TAwsS3GetProperties> {
 
     private AwsS3FileBucketKeyProperties fileProperties;
 
-    protected AwsS3GetReader(BoundedSource source, RuntimeContainer container, TAwsS3GetProperties properties) {
-        super(source, container, properties);
+    protected AwsS3GetDownloader(AwsS3ComponentRuntime<TAwsS3GetProperties> componentRuntime, RuntimeContainer container,
+            TAwsS3GetProperties properties) {
+        super(componentRuntime, container, properties);
     }
 
-    @Override
-    public boolean start() throws IOException {
+    public void doWork() throws IOException {
         fileProperties = properties.fileBucketKeyProperties;
         GetObjectRequest request = new GetObjectRequest(fileProperties.bucket.getValue(), fileProperties.key.getValue());
         getConnection().getObject(request, new File(fileProperties.filePath.getValue()));
-        return false;
-    }
-
-    @Override
-    public boolean advance() throws IOException {
-        return false;
     }
 
 }

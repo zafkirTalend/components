@@ -12,21 +12,22 @@
 // ============================================================================
 package org.talend.components.s3.tawss3get;
 
-import org.talend.components.api.Constants;
-import org.talend.components.api.component.ComponentDefinition;
-import org.talend.components.api.component.InputComponentDefinition;
-import org.talend.components.api.component.runtime.Source;
+import java.util.EnumSet;
+import java.util.Set;
+
+import org.talend.components.api.component.ConnectorTopology;
+import org.talend.components.api.component.runtime.DependenciesReader;
+import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.s3.AwsS3Definition;
-import org.talend.components.s3.runtime.TAwsS3GetSource;
-
-import aQute.bnd.annotation.component.Component;
+import org.talend.components.s3.runtime.TAwsS3GetComponentDriverRuntime;
+import org.talend.daikon.properties.Properties;
 
 /**
  * created by dmytro.chmyga on Jul 27, 2016
  */
-@Component(name = Constants.COMPONENT_BEAN_PREFIX + TAwsS3GetDefinition.COMPONENT_NAME, provide = ComponentDefinition.class)
-public class TAwsS3GetDefinition extends AwsS3Definition implements InputComponentDefinition {
+public class TAwsS3GetDefinition extends AwsS3Definition {
 
     public static final String COMPONENT_NAME = "tAWSS3Get"; //$NON-NLS-1$
 
@@ -35,13 +36,23 @@ public class TAwsS3GetDefinition extends AwsS3Definition implements InputCompone
     }
 
     @Override
-    public Source getRuntime() {
-        return new TAwsS3GetSource();
+    public Class<? extends ComponentProperties> getPropertyClass() {
+        return TAwsS3GetProperties.class;
     }
 
     @Override
-    public Class<? extends ComponentProperties> getPropertyClass() {
-        return TAwsS3GetProperties.class;
+    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
+        if (connectorTopology == ConnectorTopology.NONE) {
+            return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
+                    DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-s3"),
+                    TAwsS3GetComponentDriverRuntime.class.getCanonicalName());
+        }
+        return null;
+    }
+
+    @Override
+    public Set<ConnectorTopology> getSupportedConnectorTopologies() {
+        return EnumSet.of(ConnectorTopology.NONE);
     }
 
 }
