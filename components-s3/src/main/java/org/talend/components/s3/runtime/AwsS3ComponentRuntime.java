@@ -14,6 +14,8 @@ package org.talend.components.s3.runtime;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.ComponentRuntime;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
@@ -27,13 +29,15 @@ import com.amazonaws.services.s3.AmazonS3Client;
 /**
  * created by dmytro.chmyga on Sep 16, 2016
  */
-public class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesProvider> implements ComponentRuntime {
+public abstract class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesProvider> implements ComponentRuntime {
 
     protected T properties;
 
     protected RuntimeContainer container;
 
     protected static final String KEY_CONNECTION = "Connection";
+
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(AwsS3ComponentRuntime.class);
 
     @Override
     public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
@@ -48,10 +52,12 @@ public class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesProvider> 
         AmazonS3Client sharedConn = null;
         // Using another component's connection
         if (refComponentId != null) {
+            LOGGER.debug("Component uses shared connection. Trying to retrieve the connection.");
             // In a runtime container
             if (container != null) {
                 sharedConn = (AmazonS3Client) container.getComponentData(refComponentId, KEY_CONNECTION);
                 if (sharedConn != null) {
+                    LOGGER.debug("Connection found.");
                     return sharedConn;
                 }
                 throw new IOException("Referenced component: " + refComponentId + " not connected");
@@ -62,9 +68,11 @@ public class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesProvider> 
         if (container != null) {
             sharedConn = (AmazonS3Client) container.getComponentData(container.getCurrentComponentId(), KEY_CONNECTION);
             if (sharedConn != null) {
+                LOGGER.debug("Connection already exists. Returning connection.");
                 return sharedConn;
             }
         }
+        LOGGER.debug("Creating new connection.");
         sharedConn = createClient(properties.getConnectionProperties());
         if (container != null) {
             container.setComponentData(container.getCurrentComponentId(), KEY_CONNECTION, sharedConn);

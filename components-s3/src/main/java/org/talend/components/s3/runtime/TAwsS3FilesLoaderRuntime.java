@@ -14,6 +14,8 @@ package org.talend.components.s3.runtime;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.ComponentDriverInitialization;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
@@ -26,14 +28,21 @@ public abstract class TAwsS3FilesLoaderRuntime<T extends AwsS3LoaderPropertiesPr
 
     private static final long serialVersionUID = 3252346356479766553L;
 
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(TAwsS3FilesLoaderRuntime.class);
+
     @Override
     public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
+        if (!(properties instanceof AwsS3LoaderPropertiesProvider)) {
+            LOGGER.error("Properties must be of type " + AwsS3LoaderPropertiesProvider.class.getCanonicalName());
+            return new ValidationResult().setMessage("Wrong properties type.").setStatus(Result.ERROR);
+        }
         ValidationResult result = super.initialize(container, properties);
         if (result.getStatus() != Result.OK) {
             return result;
         }
         String fileName = ((AwsS3LoaderPropertiesProvider) properties).getFileBucketKeyProperties().filePath.getValue();
         if (fileName == null || fileName.isEmpty()) {
+            LOGGER.error("File name is empty. Check component properties.");
             result.setStatus(Result.ERROR);
             result.setMessage("File name cannot be empty.");
             return result;
@@ -47,16 +56,19 @@ public abstract class TAwsS3FilesLoaderRuntime<T extends AwsS3LoaderPropertiesPr
         try {
             worker.doWork();
         } catch (IOException e) {
+            LOGGER.error("Could not finish the loading process.", e);
             throw new RuntimeException(e);
         } finally {
             try {
+                LOGGER.debug("Closing loader.");
                 worker.close();
             } catch (IOException e) {
+                LOGGER.error("Could not close the connection.", e);
                 throw new RuntimeException(e);
             }
         }
     }
 
-    public abstract AwsS3Loader<T> getWorker();
+    protected abstract AwsS3Loader<T> getWorker();
 
 }

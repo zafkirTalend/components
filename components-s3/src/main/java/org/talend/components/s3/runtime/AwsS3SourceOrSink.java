@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.talend.components.api.component.runtime.SourceOrSink;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
@@ -23,10 +24,11 @@ import org.talend.daikon.properties.ValidationResult.Result;
  * <li>the simplified logic for reading is found in the {@link tAWSS3ConnectionReader}, and</li>
  * </ul>
  */
-public class AwsS3SourceOrSink extends AwsS3ComponentRuntime implements SourceOrSink {
+public class AwsS3SourceOrSink extends AwsS3ComponentRuntime<AwsS3ConnectionPropertiesProvider> implements SourceOrSink {
 
     private static final long serialVersionUID = -5982819304499842835L;
 
+    @Override
     public ValidationResult validate(RuntimeContainer container) {
         ValidationResult validationResult = new ValidationResult();
         try {

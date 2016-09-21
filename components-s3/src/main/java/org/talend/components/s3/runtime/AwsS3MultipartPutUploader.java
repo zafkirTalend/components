@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
 
@@ -46,6 +48,8 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
     private List<PartETag> partsTags;
 
     private File inputFile;
+
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(AwsS3MultipartPutUploader.class);
 
     /**
      * DOC dmytro.chmyga AwsS3MultipartPutReader constructor comment.
@@ -92,12 +96,14 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
     @Override
     public void close() throws IOException {
         if (filePosition >= fileLength) {
+            LOGGER.debug("File uploading process finished successfully. Sending the complete upload request.");
             CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(
                     properties.fileBucketKeyProperties.bucket.getValue(), properties.fileBucketKeyProperties.key.getValue(),
                     uploadId, partsTags);
 
             getConnection().completeMultipartUpload(compRequest);
         } else {
+            LOGGER.debug("File uploading process was not finished successfully. Aborting upload. Sending abort upload request.");
             getConnection()
                     .abortMultipartUpload(new AbortMultipartUploadRequest(properties.fileBucketKeyProperties.bucket.getValue(),
                             properties.fileBucketKeyProperties.key.getValue(), uploadId));
