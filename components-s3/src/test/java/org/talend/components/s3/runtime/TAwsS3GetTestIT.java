@@ -28,7 +28,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 /**
- * created by dmytro.chmyga on Jul 29, 2016
+ * Integration test for files download from Amazon S3 server.
  */
 public class TAwsS3GetTestIT {
 
