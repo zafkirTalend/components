@@ -21,6 +21,9 @@ import org.talend.components.s3.tawss3get.TAwsS3GetProperties;
 
 import com.amazonaws.services.s3.model.GetObjectRequest;
 
+/**
+ * Class used for Objects(files) downloading from Amazon S3 server.
+ */
 public class AwsS3GetDownloader extends AwsS3Loader<TAwsS3GetProperties> {
 
     private AwsS3FileBucketKeyProperties fileProperties;

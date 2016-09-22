@@ -18,7 +18,7 @@ import org.talend.daikon.properties.property.EnumProperty;
 import org.talend.daikon.properties.property.PropertyFactory;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Common property class for Properties, containing connection encryption algorithm property.
  */
 public class AwsS3WithAlgorithmEncryptionProperties extends PropertiesImpl {
 

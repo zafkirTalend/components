@@ -23,6 +23,9 @@ import org.talend.components.s3.AwsS3LoaderPropertiesProvider;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
 
+/**
+ * Basic runtime class for components, which load the files(upload or download) to or from Amazon S3 servers.
+ */
 public abstract class TAwsS3FilesLoaderRuntime<T extends AwsS3LoaderPropertiesProvider> extends AwsS3ComponentRuntime<T>
         implements ComponentDriverInitialization {
 
@@ -69,6 +72,9 @@ public abstract class TAwsS3FilesLoaderRuntime<T extends AwsS3LoaderPropertiesPr
         }
     }
 
+    /**
+     * Create the worker for loading files.
+     */
     protected abstract AwsS3Loader<T> getWorker();
 
 }

@@ -13,7 +13,7 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Encryption Algorithm to use for Amazon S3 connection.
  */
 public enum Algorithm {
     AES,

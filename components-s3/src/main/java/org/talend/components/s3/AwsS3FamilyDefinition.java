@@ -21,10 +21,13 @@ import org.talend.components.s3.tawss3put.TAwsS3PutDefinition;
 
 import aQute.bnd.annotation.component.Component;
 
+/**
+ * AwsS3FamilyDefinition provides definition for Amazon S3 components family.
+ */
 @Component(name = Constants.COMPONENT_INSTALLER_PREFIX + AwsS3FamilyDefinition.NAME, provide = ComponentInstaller.class)
 public class AwsS3FamilyDefinition extends AbstractComponentFamilyDefinition implements ComponentInstaller {
 
-    public static final String NAME = "S3";
+    public static final String NAME = "AwsS3";
 
     public AwsS3FamilyDefinition() {
         super(NAME,

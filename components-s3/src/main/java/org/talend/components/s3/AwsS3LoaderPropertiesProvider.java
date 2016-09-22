@@ -13,10 +13,13 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Sep 20, 2016
+ * Common interface for Properties, which provide properties for file upload/download.
  */
 public interface AwsS3LoaderPropertiesProvider extends AwsS3ConnectionPropertiesProvider {
 
+    /**
+     * Return properties containing local file path, S3 bucket and S3 object key values.
+     */
     public AwsS3FileBucketKeyProperties getFileBucketKeyProperties();
 
 }

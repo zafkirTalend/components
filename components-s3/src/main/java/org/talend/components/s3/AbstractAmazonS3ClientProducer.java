@@ -45,10 +45,13 @@ import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.model.StaticEncryptionMaterialsProvider;
 
 /**
- * created by dmytro.chmyga on Jul 26, 2016
+ * Abstract class of AmazonS3Client Producer.
  */
 public abstract class AbstractAmazonS3ClientProducer {
 
+    /**
+     * Method to create {@link AmazonS3Client} depending on connection properties set during design time.
+     */
     public AmazonS3Client createClient(AwsS3ConnectionProperties connectionProperties) throws IOException {
         AWSCredentialsProvider credProvider = createCredentialsProvider(connectionProperties);
         boolean isClientConfig = connectionProperties.configClient.getValue();
@@ -90,6 +93,15 @@ public abstract class AbstractAmazonS3ClientProducer {
         return credProvider;
     }
 
+    /**
+     * Method to create {@link AWSCredentialsProvider} if Assume roles feature is used.
+     * 
+     * @param credProvider - {@link AWSCredentialsProvider} containing access properties.
+     * {@link StaticCredentialsProvider} for properties, when access and secret key are used, or
+     * {@link InstanceProfileCredentialsProvider} if instance roles feature is setup.
+     * @param connectionProperties - connection properties, set during the design time.
+     * @param clientConfig - client configuration or null, if it is not used for this connection.
+     */
     private AWSCredentialsProvider assumeRoleCredentials(AWSCredentialsProvider credProvider,
             AwsS3ConnectionProperties connectionProperties, ClientConfiguration clientConfig) {
         STSAssumeRoleSessionCredentialsProvider.Builder assumeRoleBuilder = new STSAssumeRoleSessionCredentialsProvider.Builder(
@@ -108,12 +120,35 @@ public abstract class AbstractAmazonS3ClientProducer {
         return assumeRoleBuilder.build();
     }
 
+    /**
+     * Method used to create {@link AmazonS3Client} if Client Configuration properties were not set.
+     * 
+     * @param credentialsProvider - {@link AWSCredentialsProvider} containing access properties.
+     * {@link StaticCredentialsProvider} for properties, when access and secret key are used,
+     * {@link InstanceProfileCredentialsProvider} if instance roles feature is setup, or
+     * {@link STSAssumeRoleSessionCredentialsProvider} if assume roles feature is setup.
+     * @param connectionProperties - {@link AwsS3ConnectionProperties} set during design time.
+     */
     protected abstract AmazonS3Client doCreateClient(AWSCredentialsProvider credentialsProvider,
             AwsS3ConnectionProperties connectionProperties) throws IOException;
 
+    /**
+     * Method used to create {@link AmazonS3Client} if Client Configuration properties were set.
+     * 
+     * @param credentialsProvider - {@link AWSCredentialsProvider} containing access properties.
+     * {@link StaticCredentialsProvider} for properties, when access and secret key are used,
+     * {@link InstanceProfileCredentialsProvider} if instance roles feature is setup, or
+     * {@link STSAssumeRoleSessionCredentialsProvider} if assume roles feature is setup.
+     * @param clientConfig - client configuration or null, if it is not used for this connection.
+     * @param connectionProperties - {@link AwsS3ConnectionProperties} set during design time.
+     */
     protected abstract AmazonS3Client doCreateClientWithClientConfig(AWSCredentialsProvider credentialsProvider,
             ClientConfiguration clientConfig, AwsS3ConnectionProperties connectionProperties) throws IOException;
 
+    /**
+     * AmazonS3ClientProducer class for non encrypted connection. Used when "Encryption" property of connection
+     * properties is not checked.
+     */
     public static class NonEncryptedAmazonS3ClientProducer extends AbstractAmazonS3ClientProducer {
 
         @Override
@@ -130,7 +165,11 @@ public abstract class AbstractAmazonS3ClientProducer {
 
     }
 
-    protected static abstract class EncryptedAmazonS3ClientProducer extends AbstractAmazonS3ClientProducer {
+    /**
+     * AmazonS3ClientProducer class for encrypted connection. Used when "Encryption" property of connection properties
+     * is checked.
+     */
+    protected abstract static class EncryptedAmazonS3ClientProducer extends AbstractAmazonS3ClientProducer {
 
         @Override
         protected AmazonS3EncryptionClient doCreateClient(AWSCredentialsProvider credentialsProvider,
@@ -146,15 +185,30 @@ public abstract class AbstractAmazonS3ClientProducer {
                     clientConfig, createCryptoConfig(connectionProperties));
         }
 
+        /**
+         * Create {@link CryptoConfiguration} for AmazonS3Client using the {@link AwsS3ConnectionProperties} set during
+         * the design time.
+         * 
+         * @param connectionProperties - {@link AwsS3ConnectionProperties} set during the design time.
+         */
         protected CryptoConfiguration createCryptoConfig(AwsS3ConnectionProperties connectionProperties) {
             return new CryptoConfiguration();
         }
 
+        /**
+         * Create {@link EncryptionMaterialsProvider} for AmazonS3Client using the {@link AwsS3ConnectionProperties} set
+         * during the design time.
+         * 
+         * @param connectionProperties - {@link AwsS3ConnectionProperties} set during the design time.
+         */
         protected abstract EncryptionMaterialsProvider createEncryptionMaterials(AwsS3ConnectionProperties connectionProperties)
                 throws IOException;
 
     }
 
+    /**
+     * AmazonS3ClientProducer class for encrypted connection and selected "KMS CMK" {@link EncryptionKeyType}.
+     */
     public static class KmsCmkEncryptionAmazonS3ClientProducer extends EncryptedAmazonS3ClientProducer {
 
         @Override
@@ -173,6 +227,10 @@ public abstract class AbstractAmazonS3ClientProducer {
 
     }
 
+    /**
+     * AmazonS3ClientProducer class for encrypted connection and selected "SYMMETRIC_MASTER_KEY"
+     * {@link EncryptionKeyType}.
+     */
     public static class SymmetricKeyEncryptionAmazonS3ClientProvider extends EncryptedAmazonS3ClientProducer {
 
         @Override
@@ -203,6 +261,10 @@ public abstract class AbstractAmazonS3ClientProducer {
 
     }
 
+    /**
+     * AmazonS3ClientProducer class for encrypted connection and selected "ASYMMETRIC_MASTER_KEY"
+     * {@link EncryptionKeyType}.
+     */
     public static class AsymmetricKeyEncryptionAmazonS3ClientProvider extends EncryptedAmazonS3ClientProducer {
 
         @Override

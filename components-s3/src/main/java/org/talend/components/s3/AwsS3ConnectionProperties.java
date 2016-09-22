@@ -25,11 +25,6 @@ import org.talend.daikon.properties.property.Property;
  * <li>All of the UI information for laying out and presenting the properties to the user.</li>
  * </ol>
  * 
- * The tAWSS3ConnectionProperties has two properties:
- * <ol>
- * <li>{code filename}, a simple property which is a String containing the file path that this component will read.</li>
- * <li>{code schema}, an embedded property referring to a Schema.</li>
- * </ol>
  */
 public class AwsS3ConnectionProperties extends ComponentPropertiesImpl
         implements ComponentReferencePropertiesEnclosing, AwsS3ConnectionPropertiesProvider {

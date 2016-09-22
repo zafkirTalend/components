@@ -25,7 +25,8 @@ import org.talend.components.s3.runtime.TAwsS3PutComponentDriverRuntime;
 import org.talend.daikon.properties.Properties;
 
 /**
- * created by dmytro.chmyga on Jul 28, 2016
+ * The TAwsS3PutDefinition acts as an entry point for all of services that a component provides to integrate with the
+ * Studio (at design-time) and other components (at run-time).
  */
 public class TAwsS3PutDefinition extends AwsS3Definition {
 

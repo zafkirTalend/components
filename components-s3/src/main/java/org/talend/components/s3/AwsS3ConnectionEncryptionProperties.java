@@ -19,7 +19,7 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.EnumProperty;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Amazon S3 encrypted connection properties.
  */
 public class AwsS3ConnectionEncryptionProperties extends PropertiesImpl {
 

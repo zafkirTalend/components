@@ -23,7 +23,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 /**
- * created by dmytro.chmyga on Jul 28, 2016
+ * Worker class for uploading files in one single request.
  */
 public class AwsS3PutUploader extends AwsS3Loader<TAwsS3PutProperties> {
 

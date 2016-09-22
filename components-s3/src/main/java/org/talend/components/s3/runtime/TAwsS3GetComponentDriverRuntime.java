@@ -15,7 +15,7 @@ package org.talend.components.s3.runtime;
 import org.talend.components.s3.tawss3get.TAwsS3GetProperties;
 
 /**
- * created by dmytro.chmyga on Sep 16, 2016
+ * Class for Downloading files from Amazon S3 servers.
  */
 public class TAwsS3GetComponentDriverRuntime extends TAwsS3FilesLoaderRuntime<TAwsS3GetProperties> {
 

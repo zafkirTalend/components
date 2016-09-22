@@ -17,13 +17,21 @@ import java.io.IOException;
 import org.talend.components.s3.AbstractAmazonS3ClientProducer.AsymmetricKeyEncryptionAmazonS3ClientProvider;
 import org.talend.components.s3.AbstractAmazonS3ClientProducer.KmsCmkEncryptionAmazonS3ClientProducer;
 import org.talend.components.s3.AbstractAmazonS3ClientProducer.NonEncryptedAmazonS3ClientProducer;
-import org.talend.components.s3.AbstractAmazonS3ClientProducer.SymmetricKeyEncryptionAmazonS3ClientProvider;;
+import org.talend.components.s3.AbstractAmazonS3ClientProducer.SymmetricKeyEncryptionAmazonS3ClientProvider;
+
+import com.amazonaws.services.s3.AmazonS3Client;;
 
 /**
- * created by dmytro.chmyga on Jul 26, 2016
+ * Factory to create AmazonS3ClientProducer using the connection properties. AmazonS3ClientProducer created depends on
+ * the {@link EncryptionKeyType} set in the properties.
  */
 public class AmazonS3ClientProducerFactory {
 
+    /**
+     * Create a client producer, which will create a {@link AmazonS3Client}.
+     * 
+     * @param connectionProperties - {@link AwsS3ConnectionProperties} to be used for AmazonS3Client producer.
+     */
     public static AbstractAmazonS3ClientProducer createClientProducer(AwsS3ConnectionProperties connectionProperties)
             throws IOException {
         if (!connectionProperties.encrypt.getValue()) {

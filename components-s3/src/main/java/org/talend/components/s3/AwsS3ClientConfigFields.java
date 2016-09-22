@@ -13,7 +13,7 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Jul 26, 2016
+ * Configuration fields for Client Configuration table.
  */
 public enum AwsS3ClientConfigFields {
 

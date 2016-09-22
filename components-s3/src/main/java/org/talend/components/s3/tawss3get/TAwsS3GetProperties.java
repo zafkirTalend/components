@@ -19,7 +19,16 @@ import org.talend.components.s3.AwsS3LoaderPropertiesProvider;
 import org.talend.daikon.properties.presentation.Form;
 
 /**
- * created by dmytro.chmyga on Jul 27, 2016
+ * The ComponentProperties subclass provided by a component stores the configuration of a component and is used for:
+ * 
+ * <ol>
+ * <li>Specifying the format and type of information (properties) that is provided at design-time to configure a
+ * component for run-time,</li>
+ * <li>Validating the properties of the component at design-time,</li>
+ * <li>Containing the untyped values of the properties, and</li>
+ * <li>All of the UI information for laying out and presenting the properties to the user.</li>
+ * </ol>
+ * 
  */
 public class TAwsS3GetProperties extends ComponentPropertiesImpl implements AwsS3LoaderPropertiesProvider {
 
@@ -28,7 +37,7 @@ public class TAwsS3GetProperties extends ComponentPropertiesImpl implements AwsS
     public AwsS3FileBucketKeyProperties fileBucketKeyProperties = new AwsS3FileBucketKeyProperties("fileBucketKeyProperties");
 
     /**
-     * DOC dmytro.chmyga TAwsS3GetProperties constructor comment.
+     * TAwsS3GetProperties constructor comment.
      * 
      * @param name
      */

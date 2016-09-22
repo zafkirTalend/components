@@ -16,12 +16,16 @@ import java.util.Map;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
+import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
- * created by dmytro.chmyga on Jul 26, 2016
+ * Builder class, used to Build {@link ClientConfiguration} for {@link AmazonS3Client}.
  */
 public class ClientConfigurationBuilder {
 
+    /**
+     * Create {@link ClientConfiguration} using the data from Client configuration table of connection properties.
+     */
     public static ClientConfiguration createClientConfiguration(Map<AwsS3ClientConfigFields, Object> configData) {
         if (configData == null || configData.isEmpty())
             return null;

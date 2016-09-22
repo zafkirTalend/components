@@ -25,6 +25,9 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 
+/**
+ * Client configuration table for Amazon S3 connection.
+ */
 public class AwsS3ClientConfigTable extends ComponentPropertiesImpl {
 
     private static final TypeLiteral<List<AwsS3ClientConfigFields>> LIST_ENUM_TYPE = new TypeLiteral<List<AwsS3ClientConfigFields>>() {// empty

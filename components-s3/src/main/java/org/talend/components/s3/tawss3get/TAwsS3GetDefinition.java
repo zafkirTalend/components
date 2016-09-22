@@ -25,7 +25,8 @@ import org.talend.components.s3.runtime.TAwsS3GetComponentDriverRuntime;
 import org.talend.daikon.properties.Properties;
 
 /**
- * created by dmytro.chmyga on Jul 27, 2016
+ * The TAwsS3GetDefinition acts as an entry point for all of services that a component provides to integrate with the
+ * Studio (at design-time) and other components (at run-time).
  */
 public class TAwsS3GetDefinition extends AwsS3Definition {
 

@@ -16,7 +16,7 @@ import org.talend.components.api.component.AbstractComponentDefinition;
 import org.talend.daikon.properties.property.Property;
 
 /**
- * created by dmytro.chmyga on Jul 25, 2016
+ * Common class for Aws S3 Components definition classes.
  */
 public abstract class AwsS3Definition extends AbstractComponentDefinition {
 

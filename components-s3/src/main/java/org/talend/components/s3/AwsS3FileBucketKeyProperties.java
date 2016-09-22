@@ -21,7 +21,7 @@ import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 
 /**
- * created by dmytro.chmyga on Jul 27, 2016
+ * Properties providing path to local file, S3 bucket and S3 object key.
  */
 public class AwsS3FileBucketKeyProperties extends PropertiesImpl {
 

@@ -31,7 +31,7 @@ import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 
 /**
- * created by dmytro.chmyga on Aug 8, 2016
+ * Worker class for Uploading files using multiple requests.
  */
 public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> {
 
@@ -52,11 +52,13 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(AwsS3MultipartPutUploader.class);
 
     /**
-     * DOC dmytro.chmyga AwsS3MultipartPutReader constructor comment.
+     * AwsS3MultipartPutReader constructor comment.
      * 
      * @param componentRuntime
      * @param container
      * @param properties
+     * @param partSize - size of a single uploading part. This parameter will be used to upload parts of that side from
+     * local machine to Amazon S3 server. This value shouldn't be less than 5(MB).
      */
     protected AwsS3MultipartPutUploader(AwsS3ComponentRuntime<TAwsS3PutProperties> componentRuntime, RuntimeContainer container,
             TAwsS3PutProperties properties, long partSize) {
@@ -64,6 +66,7 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
         this.partSize = partSize;
     }
 
+    @Override
     public void doWork() throws IOException {
         inputFile = new File(properties.fileBucketKeyProperties.filePath.getValue());
         fileLength = inputFile.length();
@@ -80,7 +83,7 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
         uploadId = initResponse.getUploadId();
 
         while (filePosition < fileLength) {
-            long curPartSize = Math.min(partSize, (fileLength - filePosition));
+            long curPartSize = Math.min(partSize, fileLength - filePosition);
             UploadPartRequest uploadRequest = new UploadPartRequest()
                     .withBucketName(properties.fileBucketKeyProperties.bucket.getValue())
                     .withKey(properties.fileBucketKeyProperties.key.getValue()).withUploadId(uploadId)
@@ -93,6 +96,11 @@ public class AwsS3MultipartPutUploader extends AwsS3Loader<TAwsS3PutProperties> 
         }
     }
 
+    /**
+     * If there was an Exception during the uploading process, we should abort the uploading process. It is done by
+     * sending the {@link AbortMultipartUploadRequest}. Otherwise, in case the uploading is successful, we will send
+     * {@link CompleteMultipartUploadRequest} to finish the uploading process.
+     */
     @Override
     public void close() throws IOException {
         if (filePosition >= fileLength) {

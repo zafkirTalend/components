@@ -24,7 +24,7 @@ import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Class containing properties for Amazon S3 Symmetric key encrypted connection.
  */
 public class AwsS3SymmetricKeyEncryptionProperties extends AwsS3WithAlgorithmEncryptionProperties {
 

@@ -22,7 +22,8 @@ import org.talend.components.s3.AwsS3ConnectionPropertiesProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
- * created by dmytro.chmyga on Jul 28, 2016
+ * Common worker class for workers used to upload/download files to/from Amazon S3 servers. Instances of this class are
+ * used in {@link TAwsS3FilesLoaderRuntime} to do all the work related to downloading/uploading files.
  */
 public abstract class AwsS3Loader<T extends AwsS3ConnectionPropertiesProvider> {
 
@@ -37,9 +38,11 @@ public abstract class AwsS3Loader<T extends AwsS3ConnectionPropertiesProvider> {
     private static final transient Logger LOGGER = LoggerFactory.getLogger(AwsS3Loader.class);
 
     /**
-     * DOC dmytro.chmyga AwsS3Reader constructor comment.
+     * AwsS3Reader constructor comment.
      * 
-     * @param source
+     * @param componentRuntime - runtime, calling this class doWork() method
+     * @param container - runtime container
+     * @param properties - properties to use for files loading.
      */
     protected AwsS3Loader(AwsS3ComponentRuntime<T> componentRuntime, RuntimeContainer container, T properties) {
         this.componentRuntime = componentRuntime;
@@ -47,6 +50,9 @@ public abstract class AwsS3Loader<T extends AwsS3ConnectionPropertiesProvider> {
         this.properties = properties;
     }
 
+    /**
+     * Method to perform the files loading job.
+     */
     public abstract void doWork() throws IOException;
 
     protected AmazonS3Client getConnection() throws IOException {
@@ -58,6 +64,10 @@ public abstract class AwsS3Loader<T extends AwsS3ConnectionPropertiesProvider> {
         return connection;
     }
 
+    /**
+     * Close existing connection, if local components connection is used. Otherwise, leave the connection opened for
+     * next components.
+     */
     public void close() throws IOException {
         LOGGER.debug("Trying to close the connection.");
         boolean useReferencedConnection = properties.getConnectionProperties().getReferencedComponentId() != null

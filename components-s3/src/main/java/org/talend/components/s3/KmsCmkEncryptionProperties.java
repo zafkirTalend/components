@@ -21,7 +21,7 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Properties for Amazon S3 Encrypted connection, using KMS CMK.
  */
 public class KmsCmkEncryptionProperties extends PropertiesImpl {
 

@@ -13,7 +13,7 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Jul 21, 2016
+ * Encoding used for Amazon S3 Symmetric key encrypted connection.
  */
 public enum Encoding {
     BASE_64,

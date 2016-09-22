@@ -20,7 +20,7 @@ import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 
 /**
- * created by dmytro.chmyga on Jul 22, 2016
+ * Properties for Encrypted Amazon S3 connection with Asymmetric encryption key
  */
 public class AwsS3AsymmetricKeyEncryptionProperties extends AwsS3WithAlgorithmEncryptionProperties {
 
@@ -28,11 +28,6 @@ public class AwsS3AsymmetricKeyEncryptionProperties extends AwsS3WithAlgorithmEn
 
     public Property<String> privateKeyFilePath = newProperty("privateKeyFilePath").setRequired();
 
-    /**
-     * DOC dmytro.chmyga S3AsymmetricKeyEncryptionProperties constructor comment.
-     * 
-     * @param name
-     */
     public AwsS3AsymmetricKeyEncryptionProperties(String name) {
         super(name);
     }

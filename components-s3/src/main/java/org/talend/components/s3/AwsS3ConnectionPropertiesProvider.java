@@ -13,10 +13,13 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Jul 27, 2016
+ * Common interface for classes which provide Amazon S3 connection properties.
  */
 public interface AwsS3ConnectionPropertiesProvider {
 
+    /**
+     * Method to return Amazon S3 connection properties.
+     */
     public AwsS3ConnectionProperties getConnectionProperties();
 
 }

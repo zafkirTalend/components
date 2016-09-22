@@ -13,7 +13,7 @@
 package org.talend.components.s3;
 
 /**
- * created by dmytro.chmyga on Jul 20, 2016
+ * Amazon S3 Region.
  */
 public enum Region {
     DEFAULT("DEFAULT"),

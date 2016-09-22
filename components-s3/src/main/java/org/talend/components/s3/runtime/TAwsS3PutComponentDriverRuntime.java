@@ -17,7 +17,7 @@ import java.io.File;
 import org.talend.components.s3.tawss3put.TAwsS3PutProperties;
 
 /**
- * created by dmytro.chmyga on Sep 16, 2016
+ * Class for Uploading files to Amazon S3 servers.
  */
 public class TAwsS3PutComponentDriverRuntime extends TAwsS3FilesLoaderRuntime<TAwsS3PutProperties> {
 

@@ -15,7 +15,7 @@ import org.talend.components.s3.runtime.AwsS3SourceOrSink;
 import org.talend.daikon.properties.Properties;
 
 /**
- * The tAWSS3ConnectionDefinition acts as an entry point for all of services that a component provides to integrate with
+ * The TAwsS3ConnectionDefinition acts as an entry point for all of services that a component provides to integrate with
  * the Studio (at design-time) and other components (at run-time).
  */
 public class TAwsS3ConnectionDefinition extends AwsS3Definition {

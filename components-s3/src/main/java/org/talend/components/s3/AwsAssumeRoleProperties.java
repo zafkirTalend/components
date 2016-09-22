@@ -17,12 +17,24 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
+/**
+ * Properties for Amazon S3 "Assume roles" feature.
+ */
 public class AwsAssumeRoleProperties extends PropertiesImpl {
 
+    /**
+     * ARN to be used in Amazon S3 credentials with "Assume roles" feature.
+     */
     public Property<String> arn = PropertyFactory.newString("arn", "");
 
+    /**
+     * Role session name to be used in Amazon S3 credentials with "Assume roles" feature.
+     */
     public Property<String> roleSessionName = PropertyFactory.newString("roleSessionName", "");
 
+    /**
+     * Session duration for Amazon S3 credentials with "Assume roles" feature(in minutes).
+     */
     public Property<Integer> sessionDuration = PropertyFactory.newInteger("sessionDuration", 15);
 
     public AwsAssumeRoleProperties(String name) {

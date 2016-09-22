@@ -21,10 +21,19 @@ import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 
+/**
+ * Class, that represents panel with Access key and secret key properties.
+ */
 public class AccessSecretKeyProperties extends PropertiesImpl {
 
+    /**
+     * Access key used for Amazon S3 connection property.
+     */
     public Property<String> accessKey = newString("accessKey", "");
 
+    /**
+     * Secret key used for Amazon S3 connection property.
+     */
     public Property<String> secretKey = newProperty("secretKey").setRequired()
             .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 

@@ -27,7 +27,8 @@ import org.talend.daikon.properties.ValidationResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
- * created by dmytro.chmyga on Sep 16, 2016
+ * Common {@link ComponentRuntime} class for Amazon S3 components. Generic parameter is used for all Property classes
+ * which contain connection properties.
  */
 public abstract class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesProvider> implements ComponentRuntime {
 
@@ -46,6 +47,9 @@ public abstract class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesP
         return ValidationResult.OK;
     }
 
+    /**
+     * Method to create connection with Amazon S3 server.
+     */
     public AmazonS3Client connect(RuntimeContainer container) throws IOException {
         AwsS3ConnectionProperties connProps = properties.getConnectionProperties();
         String refComponentId = connProps.getReferencedComponentId();
@@ -73,7 +77,7 @@ public abstract class AwsS3ComponentRuntime<T extends AwsS3ConnectionPropertiesP
             }
         }
         LOGGER.debug("Creating new connection.");
-        sharedConn = createClient(properties.getConnectionProperties());
+        sharedConn = createClient(connProps);
         if (container != null) {
             container.setComponentData(container.getCurrentComponentId(), KEY_CONNECTION, sharedConn);
         }
