@@ -2,15 +2,17 @@ package org.talend.components.s3;
 
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.service.internal.ComponentRegistry;
 import org.talend.components.api.service.internal.ComponentServiceImpl;
-import org.talend.components.s3.tawss3connection.TAwsS3ConnectionDefinition;
+import org.talend.components.api.test.AbstractComponentTest;
 
+/**
+ * This test class is created only for testing the Internationalization messages.
+ */
 @SuppressWarnings("nls")
-public class tAWSS3ConnectionTest {
+public class TAwsS3ComponentTest extends AbstractComponentTest {
 
     @Rule
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -31,16 +33,6 @@ public class tAWSS3ConnectionTest {
             componentService = new ComponentServiceImpl(testComponentRegistry);
         }
         return componentService;
-    }
-
-    @Test
-    public void testtAWSS3ConnectionRuntime() throws Exception {
-        TAwsS3ConnectionDefinition def = (TAwsS3ConnectionDefinition) getComponentService()
-                .getComponentDefinition("tAWSS3Connection");
-        AwsS3ConnectionProperties props = (AwsS3ConnectionProperties) getComponentService()
-                .getComponentProperties("tAWSS3Connection");
-
-        // Set up the test schema - not really used for anything now
     }
 
 }
