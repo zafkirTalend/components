@@ -14,20 +14,17 @@ package org.talend.components.jira;
 
 import javax.inject.Inject;
 
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.Test;
 import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.test.AbstractComponentTest;
-import org.talend.components.api.test.SpringTestApp;
+import org.talend.components.jira.tjirainput.TJiraInputDefinition;
+import org.talend.components.jira.tjiraoutput.TJiraOutputDefinition;
 
 /**
  * Integration tests for Jira Input component, which check if nothing was missed
  * during component implementation
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SpringTestApp.class)
-public class JiraComponentsTestIT extends AbstractComponentTest {
+public class JiraComponentsTestBase extends AbstractComponentTest {
 
     @Inject
     private ComponentService componentService;
@@ -37,4 +34,9 @@ public class JiraComponentsTestIT extends AbstractComponentTest {
         return componentService;
     }
 
+    @Test
+    public void componentHasBeenRegistered() {
+        checkComponentIsRegistered(TJiraInputDefinition.COMPONENT_NAME);
+        checkComponentIsRegistered(TJiraOutputDefinition.COMPONENT_NAME);
+    }
 }
