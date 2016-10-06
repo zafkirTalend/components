@@ -26,6 +26,7 @@
 		<module>components-api-full-example</module>
 		<module>components-jdbc</module>
 		<module>components-s3</module>
+		<module>components-filedelimited</module>
 	</modules>
 	<profiles>
 		<profile>

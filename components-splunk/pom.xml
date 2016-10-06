@@ -13,10 +13,6 @@
     <groupId>org.talend.components</groupId>
     <artifactId>components-splunk</artifactId>
     <version>0.15.0-SNAPSHOT</version>
-    <properties>
-        <splunk.webui.port>8000</splunk.webui.port>
-        <splunk.ec.port>8088</splunk.ec.port>
-    </properties>
     <packaging>bundle</packaging>
     <dependencies>
 
@@ -179,8 +175,8 @@
 											<SPLUNK_START_ARGS>--accept-license</SPLUNK_START_ARGS>
 										</env>
 										<ports>
-											<port>${splunk.webui.port}:8000</port>
-											<port>${splunk.ec.port}:8088</port>
+											<port>splunk.webui.port:8000</port>
+											<port>splunk.ec.port:8088</port>
 										</ports>
 										<wait>
                                                                                    <http>
