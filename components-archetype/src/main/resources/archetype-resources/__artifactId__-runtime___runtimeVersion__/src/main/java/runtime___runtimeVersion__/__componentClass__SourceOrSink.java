@@ -1,4 +1,4 @@
-package ${package}.runtime_XXX;
+package ${package}.runtime_${runtimeVersion};
 
 import org.apache.avro.Schema;
 import ${packageTalend}.api.component.runtime.SourceOrSink;
@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ${componentClass}SourceOrSink implements SourceOrSink{
-
-    protected static final String DATABASE_GLOBALMAP_KEY = "database"; //FIXME only for Studio?
 
     protected transient ${componentClass}DatastoreProperties properties;
 
@@ -34,14 +32,6 @@ public class ${componentClass}SourceOrSink implements SourceOrSink{
         return ValidationResult.OK;
     }
 
-    protected MongoClient connect(RuntimeContainer container) throws IOException {
-        try {
-            return new MongoClient(new MongoClientURI(getUri()));
-        } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
-
     public ${componentClass}DatastoreProperties getProperties() {
         return properties;
     }
@@ -56,7 +46,6 @@ public class ${componentClass}SourceOrSink implements SourceOrSink{
         return null;
     }
 
-    // TODO what kind of check we need to do
     boolean doValidate (String name, ComponentProperties properties){
         try {
             //${componentClass}SourceOrSink mdbsos = new ${componentClass}SourceOrSink();

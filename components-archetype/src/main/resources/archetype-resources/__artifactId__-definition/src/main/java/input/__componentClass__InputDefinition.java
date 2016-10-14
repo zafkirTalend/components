@@ -1,17 +1,36 @@
+// ============================================================================
+//
+// Copyright (C) 2006-2015 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
+
 package ${package}.input;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 import ${packageTalend}.api.component.AbstractComponentDefinition;
 import ${packageTalend}.api.component.ConnectorTopology;
+import ${packageTalend}.api.component.runtime.DependenciesReader;
 import ${packageTalend}.api.component.runtime.RuntimeInfo;
+import ${packageTalend}.api.component.runtime.SimpleRuntimeInfo;
 import ${packageTalend}.api.properties.ComponentProperties;
+import ${packageTalend}.${componentName}.${componentClass}DatastoreProperties;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
 
 public class ${componentClass}InputDefinition extends AbstractComponentDefinition {
 
     public static final String COMPONENT_NAME = "t${componentClass}Input"; //$NON-NLS-1$
+
+    public static final String RUNTIME_${runtimeVersion} = "org.talend.components.${componentName}.runtime_${runtimeVersion}.${componentClass}Sink";
 
     public ${componentClass}InputDefinition() {
         super(COMPONENT_NAME);
@@ -23,16 +42,21 @@ public class ${componentClass}InputDefinition extends AbstractComponentDefinitio
     }
 
     public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
-        ${componentClass}InputProperties prop = (${componentClass}InputProperties) properties;
-        // Depending on the version, return a RuntimeInfo corresponding to ${componentClass}Source.
+        // TODO check to use parameters..
+        ${componentClass}InputProperties ${componentName}InputProperties = new ${componentClass}InputProperties(COMPONENT_NAME);
+        if(${componentName}InputProperties.dataset.datastore.version.getValue() == ${componentClass}DatastoreProperties.${componentClass}Version.V_${runtimeVersion}){
+            return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
+                    DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-${componentName}/${componentName}-runtime_${runtimeVersion}"),
+                    RUNTIME_${runtimeVersion} );
+        }
         return null;
     }
 
     public Property[] getReturnProperties() {
-        return new Property[0];
+        return new Property[]{};
     }
 
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
-        return null;
+        return EnumSet.of(ConnectorTopology.OUTGOING);
     }
 }

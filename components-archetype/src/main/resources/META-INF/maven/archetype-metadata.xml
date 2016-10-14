@@ -2,11 +2,11 @@
 <archetype-descriptor name="basic">
 
     <requiredProperties>
-        <requiredProperty key="component-name">
+        <requiredProperty key="componentName">
             <defaultValue>${artifactId}</defaultValue>
         </requiredProperty>
         <requiredProperty key="componentClass">
-            <defaultValue>${component-name.substring(0,1).toUpperCase()}${component-name.substring(1)}</defaultValue>
+            <defaultValue>${componentName.substring(0,1).toUpperCase()}${componentName.substring(1)}</defaultValue>
         </requiredProperty>
         <requiredProperty key="package">
             <defaultValue>${groupId}</defaultValue>
@@ -14,46 +14,33 @@
         <requiredProperty key="packageTalend">
             <defaultValue>org.talend.components</defaultValue>
         </requiredProperty>
-        <!--<requiredProperty key="resource-name">
-            <defaultValue>Resource-default</defaultValue>
-        </requiredProperty>-->
-
-        <!--JUnit version to use in generated project
-        <requiredProperty key="junit-version">
-            <defaultValue>4.10</defaultValue>
-        </requiredProperty>-->
+        <requiredProperty key="runtimeVersion"/>
     </requiredProperties>
 
     <fileSets>
-        <!-- Metadata for src module -->    
-
-
- <!-- Metadata for runtime module -->
+        <!-- Metadata for runtime module -->
         <fileSet filtered="true" packaged="true">
-            <directory>__artifactId__-runtime_XXX/src/main/java/</directory>
+            <directory>__artifactId__-runtime___runtimeVersion__/src/main/java/</directory>
             <includes>
                 <include>**/*.java</include>
             </includes>
         </fileSet>
-
         <fileSet filtered="true" packaged="true">
-                <directory>__artifactId__-runtime_XXX/src/main/resources/</directory>
+                <directory>__artifactId__-runtime___runtimeVersion__/src/main/resources/</directory>
         </fileSet>
         <fileSet filtered="true">
-            <directory>__artifactId__-runtime_XXX</directory>
+            <directory>__artifactId__-runtime___runtimeVersion__</directory>
             <includes>
                 <include>pom.xml</include>
             </includes>
         </fileSet>
-
-        <!-- Metadata for definition module -->
+        <!-- Metadata for definition module - main -->
         <fileSet filtered="true" packaged="true">
             <directory>__artifactId__-definition/src/main/java/</directory>
             <includes>
                 <include>**/*.java</include>
             </includes>
         </fileSet>
-
         <fileSet filtered="true" packaged="true">
                 <directory>__artifactId__-definition/src/main/resources/</directory>
         </fileSet>
@@ -63,35 +50,21 @@
                 <include>pom.xml</include>
             </includes>
         </fileSet>
-
-       
-
-        <!--<fileSet filtered="true" encoding="UTF-8">
-            <directory>src/test/resources</directory>
+        <!-- Metadata for definition module - test -->
+        <fileSet filtered="true" packaged="true">
+            <directory>__artifactId__-definition/src/test/java/</directory>
             <includes>
-                <include>**/*.*</include>
+                <include>**/*.java</include>
             </includes>
-        </fileSet> -->
-         <!--<fileSet filtered="true" packaged="true">
-                    <directory>components-test/src/main/java</directory>
-         </fileSet>   -->    	
+        </fileSet>
+        <fileSet filtered="true" packaged="true">
+            <directory>__artifactId__-definition/src/test/resources/</directory>
+        </fileSet>
+        <fileSet filtered="true">
+            <directory>__artifactId__-definition</directory>
+            <includes>
+                <include>pom.xml</include>
+            </includes>
+        </fileSet>
     </fileSets> 
-    <!--Add new fileset for resources-->
-    <!--Set filtered="true" to process files in that directory as templates-->
-    <!--Set packaged="false" to remove package folder structure from resource directory
-
-  <modules>
-			<module dir="jms-definition" name="sample-test"> 
-                	<fileSet filtered="true" encoding="UTF-8" >
-                    <directory>__artifactId__-definition</directory>
-                    <includes>
-                        <include>pom.xml</include>
-                    </includes>
-                </fileSet>	
-			</module>
-			<module dir="src" name="sample-src">
-
-			</module>
-		</modules>-->
-
 </archetype-descriptor>

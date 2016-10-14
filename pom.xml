@@ -25,7 +25,10 @@
 		<module>components-filedelimited</module>
 		<module>services</module>
 		<module>examples</module>
-	</modules>
+        	<module>components-kafka</module>
+		<module>services/components-api-service-rest</module>
+		<module>components-jms</module>
+  	</modules>
 	<profiles>
 		<profile>
 			<id>eclipse</id>
