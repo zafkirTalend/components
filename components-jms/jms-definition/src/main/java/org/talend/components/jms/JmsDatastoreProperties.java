@@ -48,9 +48,9 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
     public Property<Boolean> needUserIdentity = newBoolean("needUserIdentity", false);
 
     // TODO check if it is not better to do "UserPasswordProperties" class like for cassandra
-    public Property<String> userPassword = PropertyFactory.newString("userPassword","");
-
     public Property<String> userName = PropertyFactory.newString("userName","");
+
+    public Property<String> userPassword = PropertyFactory.newString("userPassword","");
 
     // Those advanced settings could be either in the datastore or in the dataset
     public Property<Boolean> use_https = PropertyFactory.newBoolean("use_https",false);
@@ -70,6 +70,8 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         mainForm.addRow(contextProvider);
         mainForm.addRow(serverUrl);
         mainForm.addRow(connectionFactoryName);
+        mainForm.addRow(userName);
+        mainForm.addRow(userPassword);
 
         Form advancedForm = new Form(this, Form.ADVANCED);
         advancedForm.addRow(use_https);

@@ -65,6 +65,10 @@ public class ${componentClass}InputPropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //FIXME
+        ${componentClass}InputProperties properties = new ${componentClass}InputProperties("test");
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
+        // FIXME add asserts for the layout
+        // assertFalse(properties.getForm(Form.MAIN).getWidget("msgType").isHidden());
     }
 }

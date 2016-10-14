@@ -6,11 +6,10 @@
         <groupId>org.talend.components</groupId>
         <artifactId>components-jms</artifactId>
         <version>0.15.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
      </parent>
 
     <artifactId>jms-definition</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <name>Components-jms-definition</name>
 </project>

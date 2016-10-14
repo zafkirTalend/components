@@ -19,10 +19,12 @@ import org.talend.daikon.properties.presentation.Widget;
 
 import java.util.Collection;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class JmsDatasetPropertiesTest {
     /**
@@ -59,5 +61,18 @@ public class JmsDatasetPropertiesTest {
         assertThat(msgType, notNullValue());
         Widget processingMode = main.getWidget("processingMode");
         assertThat(processingMode, notNullValue());
+    }
+
+    /**
+     * Checks {@link JmsDatasetProperties#refreshLayout(Form)}
+     */
+    @Test
+    public void testRefreshLayout() {
+        JmsDatasetProperties properties = new JmsDatasetProperties("test");
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
+
+        assertFalse(properties.getForm(Form.MAIN).getWidget("msgType").isHidden());
+        assertFalse(properties.getForm(Form.MAIN).getWidget("processingMode").isHidden());
     }
 }

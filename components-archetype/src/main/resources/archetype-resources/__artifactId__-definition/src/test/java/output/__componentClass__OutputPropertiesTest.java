@@ -63,6 +63,10 @@ public class JmsOutputPropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //FIXME
+        ${componentClass}OutputProperties properties = new ${componentClass}OutputProperties("test");
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
+        // FIXME add asserts for the layout
+        // assertFalse(properties.getForm(Form.MAIN).getWidget("msgType").isHidden());
     }
 }

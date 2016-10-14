@@ -19,6 +19,7 @@ import org.talend.daikon.properties.presentation.Widget;
 
 import java.util.Collection;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
@@ -76,16 +77,13 @@ public class JmsInputPropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //TODO FIX ISSUE
-        /*JmsInputProperties properties = new JmsInputProperties("test");
-        properties.main.init();
-        System.out.println(properties.toString());
+        JmsInputProperties properties = new JmsInputProperties("test");
+        properties.init();
         properties.refreshLayout(properties.getForm(Form.MAIN));
 
         assertFalse(properties.getForm(Form.MAIN).getWidget("from").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("timeout").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("max_msg").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("msg_selector").isHidden());
-*/
     }
 }

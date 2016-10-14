@@ -6,11 +6,10 @@
         <groupId>org.talend.components</groupId>
         <artifactId>${artifactId}-parent</artifactId>
         <version>0.14.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <name>Components-${componentName}}-definition</name>
     <artifactId>${artifactId}-definition</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
 </project>

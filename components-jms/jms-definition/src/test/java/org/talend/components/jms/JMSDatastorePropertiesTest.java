@@ -13,11 +13,13 @@
 
 package org.talend.components.jms;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -41,18 +43,22 @@ public class JmsDatastorePropertiesTest {
         assertEquals("tibjmsnaming://localhost:7222",properties.serverUrl.getValue());
         assertEquals("GenericConnectionFactory",properties.connectionFactoryName.getValue());
         assertEquals(false,properties.needUserIdentity.getValue());
-        assertEquals("",properties.userPassword.getValue());
         assertEquals("",properties.userName.getValue());
+        assertEquals("",properties.userPassword.getValue());
         assertEquals(false,properties.use_https.getValue());
         assertNull(properties.https_settings.getValue());
         assertEquals("",properties.property.getValue());
         assertEquals("",properties.value.getValue());
     }
 
+    /**
+     * Checks {@link JmsDatastoreProperties} sets correctly initial layout
+     * properties
+     */
     @Test
     public void testSetupLayout() {
         JmsDatastoreProperties properties = new JmsDatastoreProperties("test");
-        properties.main.init();
+        properties.init();
 
         properties.setupLayout();
 
@@ -62,7 +68,7 @@ public class JmsDatastorePropertiesTest {
         assertThat(advanced, notNullValue());
 
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(5));
+        assertThat(mainWidgets, hasSize(7));
         Widget mainWidget = main.getWidget("main");
         assertThat(mainWidget, notNullValue());
         Widget msgType = main.getWidget("version");
@@ -73,12 +79,15 @@ public class JmsDatastorePropertiesTest {
         assertThat(serverUrl, notNullValue());
         Widget connectionFactoryName = main.getWidget("connectionFactoryName");
         assertThat(connectionFactoryName, notNullValue());
+        Widget userName = main.getWidget("userName");
+        assertThat(userName, notNullValue());
+        Widget userPassword = main.getWidget("userPassword");
+        assertThat(userPassword, notNullValue());
 
         Collection<Widget> advancedWidgets = advanced.getWidgets();
         assertThat(advancedWidgets, hasSize(4));
-        // TODO Fix issue test use_htttp
-        Widget use_http = advanced.getWidget("use_http");
-        //assertThat(use_http, notNullValue());
+        Widget use_http = advanced.getWidget("use_https");
+        assertThat(use_http, notNullValue());
         Widget https_settings = advanced.getWidget("https_settings");
         assertThat(https_settings, notNullValue());
         Widget property = advanced.getWidget("property");
@@ -88,28 +97,27 @@ public class JmsDatastorePropertiesTest {
     }
 
     /**
-     * Checks {@link JmsDatastoreProperties#refreshLayout(Form)} doesn't hide userPassword and jqlWidget in initial state
+     * Checks {@link JmsDatastoreProperties#refreshLayout(Form)}
      */
     @Test
     public void testRefreshLayout() {
-        //TODO FIX ISSUE
         JmsDatastoreProperties properties = new JmsDatastoreProperties("test");
-        /*properties.main.init();
-        System.out.println(properties.toString());
-        //properties.refreshLayout(properties.getForm(Form.MAIN));
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
 
+        assertFalse(properties.getForm(Form.MAIN).getWidget("version").isHidden());
+        assertFalse(properties.getForm(Form.MAIN).getWidget("contextProvider").isHidden());
+        assertFalse(properties.getForm(Form.MAIN).getWidget("serverUrl").isHidden());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("userName").isHidden());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("userPassword").isHidden());
+
+        properties.needUserIdentity.setValue(true);
+        properties.refreshLayout(properties.getForm(Form.MAIN));
         assertFalse(properties.getForm(Form.MAIN).getWidget("version").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("contextProvider").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("serverUrl").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("userName").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("userPassword").isHidden());
 
-        properties.needUserIdentity.setValue(true);
-        assertFalse(properties.getForm(Form.MAIN).getWidget("version").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("contextProvider").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("serverUrl").isHidden());
-        assertTrue(properties.getForm(Form.MAIN).getWidget("userName").isHidden());
-        assertTrue(properties.getForm(Form.MAIN).getWidget("userPassword").isHidden());
-        */
     }
 }

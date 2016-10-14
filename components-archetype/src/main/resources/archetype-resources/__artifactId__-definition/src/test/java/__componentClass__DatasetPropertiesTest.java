@@ -63,6 +63,10 @@ public class ${componentClass}DatasetPropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //FIXME
+        ${componentClass}DatasetProperties properties = new ${componentClass}DatasetProperties("test");
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
+        // FIXME add asserts for the layout
+        // assertFalse(properties.getForm(Form.MAIN).getWidget("msgType").isHidden());
     }
 }

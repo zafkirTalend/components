@@ -57,4 +57,14 @@ public class JmsDatasetProperties extends PropertiesImpl implements DatasetPrope
         mainForm.addRow(msgType);
         mainForm.addRow(processingMode);
     }
+
+    @Override
+    public void refreshLayout(Form form) {
+        super.refreshLayout(form);
+        // Main properties
+        if (form.getName().equals(Form.MAIN)) {
+            form.getWidget(msgType.getName()).setHidden(false);
+            form.getWidget(processingMode.getName()).setHidden(false);
+        }
+    }
 }

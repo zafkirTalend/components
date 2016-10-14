@@ -19,11 +19,13 @@ import org.talend.daikon.properties.presentation.Widget;
 
 import java.util.Collection;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class JmsOutputPropertiesTest {
     /**
@@ -97,16 +99,33 @@ public class JmsOutputPropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //TODO FIX ISSUE
-        /*JmsInputProperties properties = new JmsInputProperties("test");
-        properties.main.init();
-        System.out.println(properties.toString());
+        JmsOutputProperties properties = new JmsOutputProperties("test");
+        properties.init();
         properties.refreshLayout(properties.getForm(Form.MAIN));
 
-        assertFalse(properties.getForm(Form.MAIN).getWidget("from").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("timeout").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("max_msg").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("msg_selector").isHidden());
-*/
+        assertFalse(properties.getForm(Form.MAIN).getWidget("to").isHidden());
+
+        properties.refreshLayout(properties.getForm(Form.ADVANCED));
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("delevery_mode").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_total").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_wait").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_min_Idle").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_Idle").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_use_eviction").isHidden());
+        assertTrue(properties.getForm(Form.ADVANCED).getWidget("pool_time_between_eviction").isHidden());
+        assertTrue(properties.getForm(Form.ADVANCED).getWidget("pool_eviction_min_idle_time").isHidden());
+        assertTrue(properties.getForm(Form.ADVANCED).getWidget("pool_eviction_soft_min_idle_time").isHidden());
+
+        properties.pool_use_eviction.setValue(true);
+        properties.refreshLayout(properties.getForm(Form.ADVANCED));
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("delevery_mode").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_total").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_wait").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_min_Idle").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_max_Idle").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_use_eviction").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_time_between_eviction").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_eviction_min_idle_time").isHidden());
+        assertFalse(properties.getForm(Form.ADVANCED).getWidget("pool_eviction_soft_min_idle_time").isHidden());
     }
 }

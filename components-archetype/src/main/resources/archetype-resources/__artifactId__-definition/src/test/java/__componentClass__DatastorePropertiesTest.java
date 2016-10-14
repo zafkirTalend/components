@@ -62,6 +62,10 @@ public class ${componentClass}DatastorePropertiesTest {
      */
     @Test
     public void testRefreshLayout() {
-        //FIXME
+        ${componentClass}DatastoreProperties properties = new ${componentClass}DatastoreProperties("test");
+        properties.init();
+        properties.refreshLayout(properties.getForm(Form.MAIN));
+        // FIXME add asserts for the layout
+        // assertFalse(properties.getForm(Form.MAIN).getWidget("msgType").isHidden());
     }
 }
