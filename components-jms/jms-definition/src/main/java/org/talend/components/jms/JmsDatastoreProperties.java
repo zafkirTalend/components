@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2015 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -53,9 +53,9 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
     public Property<String> userPassword = PropertyFactory.newString("userPassword","");
 
     // Those advanced settings could be either in the datastore or in the dataset
-    public Property<Boolean> use_https = PropertyFactory.newBoolean("use_https",false);
+    public Property<Boolean> useHttps = PropertyFactory.newBoolean("useHttps",false);
 
-    public Property<String> https_settings = PropertyFactory.newString("https_settings");
+    public Property<String> httpsSettings = PropertyFactory.newString("httpsSettings");
 
     public Property<String> property = PropertyFactory.newString("property","");
 
@@ -74,8 +74,8 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         mainForm.addRow(userPassword);
 
         Form advancedForm = new Form(this, Form.ADVANCED);
-        advancedForm.addRow(use_https);
-        advancedForm.addRow(widget(https_settings).setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE));
+        advancedForm.addRow(useHttps);
+        advancedForm.addRow(widget(httpsSettings).setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE));
         advancedForm.addRow(property);
         advancedForm.addRow(value);
     }
@@ -98,11 +98,11 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         }
         // Advanced Properties
         if (form.getName().equals(Form.ADVANCED)){
-            form.getWidget(use_https.getName()).setHidden(false);
-            if (use_https.getValue()){
-                form.getWidget(https_settings.getName()).setHidden(false);
+            form.getWidget(useHttps.getName()).setHidden(false);
+            if (useHttps.getValue()){
+                form.getWidget(httpsSettings.getName()).setHidden(false);
             } else {
-                form.getWidget(https_settings.getName()).setHidden(true);
+                form.getWidget(httpsSettings.getName()).setHidden(true);
             }
             form.getWidget(property.getName()).setHidden(false);
             form.getWidget(value.getName()).setHidden(false);

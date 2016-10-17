@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2015 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -26,7 +26,7 @@ import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 
 public class JmsOutputProperties extends ComponentPropertiesImpl {
 
-    public enum JmsAdvancedDeleveryMode {
+    public enum JmsAdvancedDeliveryMode {
         Non_persistent,
         persistent
     }
@@ -39,7 +39,7 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
 
     public Property<String> to = PropertyFactory.newString("to","");
 
-    public Property<JmsAdvancedDeleveryMode> delevery_mode = newEnum("delevery_mode", JmsAdvancedDeleveryMode.class).setRequired();
+    public Property<JmsAdvancedDeliveryMode> delivery_mode = newEnum("delivery_mode", JmsAdvancedDeliveryMode.class).setRequired();
 
     public Property<String> pool_max_total = PropertyFactory.newString("pool_max_total","8");
 
@@ -67,7 +67,7 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
         mainForm.addRow(to);
 
         Form advancedForm = new Form(this, Form.ADVANCED);
-        advancedForm.addRow(delevery_mode);
+        advancedForm.addRow(delivery_mode);
         advancedForm.addRow(pool_max_total);
         advancedForm.addRow(pool_max_wait);
         advancedForm.addRow(pool_min_Idle);
@@ -85,7 +85,7 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
             form.getWidget(to.getName()).setHidden(false);
         }
         if (Form.ADVANCED.equals(form.getName())) {
-            form.getWidget(delevery_mode.getName()).setHidden(false);
+            form.getWidget(delivery_mode.getName()).setHidden(false);
             form.getWidget(pool_max_total.getName()).setHidden(false);
             form.getWidget(pool_max_wait.getName()).setHidden(false);
             form.getWidget(pool_min_Idle.getName()).setHidden(false);
