@@ -14,10 +14,11 @@
 package org.talend.components.jms;
 
 import org.talend.components.api.component.runtime.DependenciesReader;
-import org.talend.components.api.component.runtime.RuntimeInfo;
 import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
+import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.datastore.DatastoreDefinition;
 import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.runtime.RuntimeInfo;
 
 public class JmsDatastoreDefinition extends SimpleNamedThing implements DatastoreDefinition<JmsDatastoreProperties> {
 
@@ -31,7 +32,12 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     @Override
     public RuntimeInfo getRuntimeInfo(JmsDatastoreProperties properties, Object ctx) {
         return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
-                    DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
-                    RUNTIME_1_1 );
+                DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
+                RUNTIME_1_1);
+    }
+
+    @Override
+    public DatasetProperties getDatasetProperties() {
+        return null;
     }
 }

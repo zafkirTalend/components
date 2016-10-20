@@ -19,12 +19,11 @@ import java.util.Set;
 import org.talend.components.api.component.AbstractComponentDefinition;
 import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.api.component.runtime.DependenciesReader;
-import org.talend.components.api.component.runtime.RuntimeInfo;
 import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.jms.JmsDatastoreProperties;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.runtime.RuntimeInfo;
 
 public class JmsInputDefinition extends AbstractComponentDefinition {
 
@@ -42,13 +41,13 @@ public class JmsInputDefinition extends AbstractComponentDefinition {
     }
 
     public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
-            return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
-                    DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
-                    RUNTIME_1_1 );
+        return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
+                DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
+                RUNTIME_1_1);
     }
 
     public Property[] getReturnProperties() {
-        return new Property[]{};
+        return new Property[] {};
     }
 
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
