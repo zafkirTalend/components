@@ -13,22 +13,16 @@
 
 package org.talend.components.jms;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.talend.components.api.ComponentFamilyDefinition;
-import org.talend.components.api.ComponentInstaller;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 
-public class JmsComponentFamilyDefinitionTest{
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.talend.components.api.ComponentFamilyDefinition;
+import org.talend.components.api.ComponentInstaller;
+
+public class JmsComponentFamilyDefinitionTest {
 
     private final JmsComponentFamilyDefinition componentFamilyDefinition = new JmsComponentFamilyDefinition();
 
@@ -44,10 +38,11 @@ public class JmsComponentFamilyDefinitionTest{
     }
 
     /**
-     * Check {@link JmsComponentFamilyDefinition#install(ComponentInstaller.ComponentFrameworkContext ctx)} which call once the method "registerComponentFamilyDefinition"
+     * Check {@link JmsComponentFamilyDefinition#install(ComponentInstaller.ComponentFrameworkContext ctx)} which call
+     * once the method "registerComponentFamilyDefinition"
      */
     @Test
-    public void testInstall(){
+    public void testInstall() {
         componentFamilyDefinition.install(ctx);
         Mockito.verify(ctx, times(1)).registerComponentFamilyDefinition(any(ComponentFamilyDefinition.class));
     }

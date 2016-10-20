@@ -13,23 +13,22 @@
 
 package org.talend.components.jms;
 
-import org.junit.Test;
-import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.properties.presentation.Widget;
-
-import java.util.Collection;
-
 import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
+
+import org.junit.Test;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
 
 public class JmsDatasetPropertiesTest {
+
     /**
-     * Checks {@link JmsDatasetProperties} sets correctly initial schema
-     * property
+     * Checks {@link JmsDatasetProperties} sets correctly initial schema property
      */
     @Test
     public void testDefaultProperties() {
@@ -40,8 +39,7 @@ public class JmsDatasetPropertiesTest {
     }
 
     /**
-     * Checks {@link JmsDatasetProperties} sets correctly initial layout
-     * properties
+     * Checks {@link JmsDatasetProperties} sets correctly initial layout properties
      */
     @Test
     public void testSetupLayout() {

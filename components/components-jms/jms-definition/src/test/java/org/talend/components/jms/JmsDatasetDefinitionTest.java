@@ -13,31 +13,30 @@
 
 package org.talend.components.jms;
 
-import org.junit.Test;
-
-import org.talend.components.api.component.runtime.RuntimeInfo;
-
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Test;
+import org.talend.daikon.runtime.RuntimeInfo;
+
 public class JmsDatasetDefinitionTest {
+
     private final JmsDatasetDefinition datasetDefinition = new JmsDatasetDefinition();
 
     /**
-     * Check {@link JmsDatasetDefinition#getRuntimeInfo(JmsDatasetProperties properties, Object ctx)} returns RuntimeInfo,
-     * which runtime class name is "org.talend.components.jms.runtime_1_1.DatasetRuntime"
+     * Check {@link JmsDatasetDefinition#getRuntimeInfo(JmsDatasetProperties properties, Object ctx)} returns
+     * RuntimeInfo, which runtime class name is "org.talend.components.jms.runtime_1_1.DatasetRuntime"
      */
     @Test
-    public void testGetRuntimeInfo(){
+    public void testGetRuntimeInfo() {
         RuntimeInfo runtimeInfo = datasetDefinition.getRuntimeInfo(null, null);
         assertEquals("org.talend.components.jms.runtime_1_1.DatasetRuntime", runtimeInfo.getRuntimeClassName());
     }
 
     /**
-     * Check {@link JmsDatasetDefinition#createProperties()} returns JmsDatasetProperties, which canonical name is
-     * "jms"
+     * Check {@link JmsDatasetDefinition#createProperties()} returns JmsDatasetProperties, which canonical name is "jms"
      */
     @Test
-    public void testCreateProperties(){
+    public void testCreateProperties() {
         JmsDatasetProperties props = datasetDefinition.createProperties();
         assertEquals("jms", props.getName());
     }

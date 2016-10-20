@@ -16,19 +16,20 @@ package org.talend.components.jms;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.daikon.runtime.RuntimeInfo;
 
 public class JmsDatastoreDefinitionTest {
+
     private final JmsDatastoreDefinition datastoreDefinition = new JmsDatastoreDefinition();
 
     @Test
-    public void testGetRuntimeInfo(){
+    public void testGetRuntimeInfo() {
         RuntimeInfo runtimeInfo = datastoreDefinition.getRuntimeInfo(null, null);
         assertEquals("org.talend.components.jms.runtime_1_1.DatastoreRuntime", runtimeInfo.getRuntimeClassName());
     }
 
     @Test
-    public void testCreateProperties(){
+    public void testCreateProperties() {
         JmsDatastoreProperties props = datastoreDefinition.createProperties();
         assertEquals("jms", props.getName());
     }

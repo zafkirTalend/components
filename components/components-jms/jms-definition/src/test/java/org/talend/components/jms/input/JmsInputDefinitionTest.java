@@ -15,7 +15,7 @@ package org.talend.components.jms.input;
 
 import org.junit.Test;
 import org.talend.components.api.component.ConnectorTopology;
-import org.talend.components.api.component.runtime.RuntimeInfo;
+import org.talend.daikon.runtime.RuntimeInfo;
 import org.talend.daikon.properties.Properties;
 
 import java.util.Set;

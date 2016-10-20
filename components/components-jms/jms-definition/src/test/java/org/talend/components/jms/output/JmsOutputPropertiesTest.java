@@ -37,7 +37,7 @@ public class JmsOutputPropertiesTest {
         JmsOutputProperties properties = new JmsOutputProperties("test");
         assertNull(properties.main.schema.getValue());
         assertEquals("",properties.to.getValue());
-        assertNull(properties.delevery_mode.getValue());
+        assertNull(properties.delivery_mode.getValue());
         assertEquals("8",properties.pool_max_total.getValue());
         assertEquals("-1",properties.pool_max_wait.getValue());
         assertEquals("0",properties.pool_min_Idle.getValue());
