@@ -9,7 +9,7 @@
      </parent>
 
     <artifactId>jms-definition</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>Components-jms-definition</name>
 </project>

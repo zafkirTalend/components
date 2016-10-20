@@ -25,7 +25,6 @@
 		<module>components-filedelimited</module>
 		<module>services</module>
 		<module>examples</module>
-		<module>services/components-api-service-rest</module>
 		<module>components</module>
   	</modules>
 	<profiles>
