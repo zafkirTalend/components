@@ -37,14 +37,9 @@ public class JmsDatasetProperties extends PropertiesImpl implements DatasetPrope
         content
     }
 
-    public enum JmsMsgType {
-        topic,
-        queue
-    }
-
     public SchemaProperties main = new SchemaProperties("main");
 
-    public Property<JmsMsgType> msgType = newEnum("msgType", JmsMsgType.class).setRequired();
+    public Property<JmsMessageType> msgType = newEnum("msgType", JmsMessageType.class).setRequired();
 
     public Property<ProcessingMode> processingMode = newEnum("processingMode", ProcessingMode.class);
 

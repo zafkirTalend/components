@@ -15,12 +15,13 @@
   <dependencies>
       <dependency>
           <groupId>org.talend.components</groupId>
-          <artifactId>components-api-beam</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>org.talend.components</groupId>
           <artifactId>jms-definition</artifactId>
           <version>${project.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-sdks-java-core</artifactId>
+          <version>0.3.0-incubating-SNAPSHOT</version>
       </dependency>
   </dependencies>
 

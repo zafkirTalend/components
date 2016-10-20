@@ -26,7 +26,7 @@
 		<module>services</module>
 		<module>examples</module>
 		<module>services/components-api-service-rest</module>
-		<module>components-jms</module>
+		<module>components</module>
   	</modules>
 	<profiles>
 		<profile>

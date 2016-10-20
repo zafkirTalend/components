@@ -1,8 +1,41 @@
 package org.talend.components.jms.runtime_1_1;
 
-public class JmsDatastoreRuntime {/*
+import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.jms.JmsDatastoreProperties;
+import org.talend.components.jms.JmsMessageType;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.SimpleNamedThing;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jms.JMSException;
+import javax.jms.Queue;
+import javax.jms.Topic;
+import javax.naming.Binding;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+
+public class JmsDatastoreRuntime {
+
+    private JmsDatastoreProperties.JmsVersion version;
+
+    private String contextProvider;
+
+    private String serverUrl;
+
+    private String connectionFactoryName;
+
+    private String userName;
+
+    private String userPassword;
+
+    private JmsMessageType msgType;
+
     List<NamedThing> getPossibleDatasetNames(RuntimeContainer container) throws IOException {
-        // ajout dependence vers dataset pour avoir le type de destination
         List<NamedThing> datasetList = new ArrayList();
         try {
             Context context = new InitialContext();
@@ -10,19 +43,19 @@ public class JmsDatastoreRuntime {/*
             while (list.hasMore()) {
                 Binding nc = (Binding) list.next();
                 Object jmsObject = context.lookup(nc.getName());
-                if (messageType.equals("topic") && jmsObject instanceof Topic) {
+                /*if (messageType.equals("TOPIC") && jmsObject instanceof Topic) {
                     datasetList.add(new SimpleNamedThing(nc.getName(),nc.getName()));
-                } else if (messageType.equals("queue") && jmsObject instanceof Queue) {
+                } else if (messageType.equals("QUEUE") && jmsObject instanceof Queue) {
                     datasetList.add(new SimpleNamedThing(nc.getName(),nc.getName()));
-                }
+                }*/
             }
         }catch (NamingException e) {
             e.printStackTrace();
         }
         return datasetList;
     }
-
-/*public void connect (RuntimeContainer container) throws NamingException,JMSException {
+/*
+    public void connect (RuntimeContainer container) throws NamingException,JMSException {
         JmsDatastoreProperties connProps = properties.getConnectionProperties();
         InitialContext context;
         Hashtable env = new Hashtable();
