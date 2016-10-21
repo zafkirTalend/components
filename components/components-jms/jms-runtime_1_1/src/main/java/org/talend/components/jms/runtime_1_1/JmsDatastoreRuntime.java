@@ -8,11 +8,16 @@ import org.talend.daikon.SimpleNamedThing;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -20,6 +25,8 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
 public class JmsDatastoreRuntime {
+
+    protected transient JmsDatastoreProperties properties;
 
     private JmsDatastoreProperties.JmsVersion version;
 
@@ -36,6 +43,7 @@ public class JmsDatastoreRuntime {
     private JmsMessageType msgType;
 
     List<NamedThing> getPossibleDatasetNames(RuntimeContainer container) throws IOException {
+        // TODO check the datasetList Problem to know if destination = topic or queue
         List<NamedThing> datasetList = new ArrayList();
         try {
             Context context = new InitialContext();
@@ -43,26 +51,27 @@ public class JmsDatastoreRuntime {
             while (list.hasMore()) {
                 Binding nc = (Binding) list.next();
                 Object jmsObject = context.lookup(nc.getName());
-                /*if (messageType.equals("TOPIC") && jmsObject instanceof Topic) {
+                if (jmsObject instanceof Topic) {
                     datasetList.add(new SimpleNamedThing(nc.getName(),nc.getName()));
-                } else if (messageType.equals("QUEUE") && jmsObject instanceof Queue) {
+                } else if (jmsObject instanceof Queue) {
                     datasetList.add(new SimpleNamedThing(nc.getName(),nc.getName()));
-                }*/
+                }
             }
         }catch (NamingException e) {
             e.printStackTrace();
         }
         return datasetList;
     }
-/*
+
     public void connect (RuntimeContainer container) throws NamingException,JMSException {
-        JmsDatastoreProperties connProps = properties.getConnectionProperties();
+        JmsDatastoreProperties connProps = properties;
         InitialContext context;
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY,connProps.contextProvider);
         env.put(Context.PROVIDER_URL, connProps.serverUrl);
             context = new InitialContext(env);
-            if (connProps.msgType.getValue().equals("topic")) {
+        //TODO Change the check connection - msgType is no longer part of the datastore Properties
+            /*if (connProps.msgType.getValue().equals("topic")) {
                 TopicConnectionFactory tcf = (javax.jms.TopicConnectionFactory)context.lookup(connProps.connectionFactoryName.getValue());
                 TopicConnection connection;
                 if (connProps.needUserIdentity.getValue()) {
@@ -82,6 +91,6 @@ public class JmsDatastoreRuntime {
                 }
                 qcf.createQueueConnection();
                 connection.start();
-            }
-    }*/
+            }*/
+    }
 }
