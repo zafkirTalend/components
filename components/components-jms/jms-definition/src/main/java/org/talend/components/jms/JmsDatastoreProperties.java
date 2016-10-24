@@ -24,6 +24,13 @@ import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
+import java.util.Hashtable;
+
+import javax.jms.ConnectionFactory;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreProperties {
 
     public enum JmsVersion{
@@ -107,5 +114,28 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
             form.getWidget(property.getName()).setHidden(false);
             form.getWidget(value.getName()).setHidden(false);
         }
+    }
+
+    public ConnectionFactory getConnectionFactory() {
+        InitialContext context;
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY,contextProvider);
+        env.put(Context.PROVIDER_URL, serverUrl);
+        ConnectionFactory connection = null;
+        try {
+            context = new InitialContext(env);
+            connection = (ConnectionFactory)context.lookup(connectionFactoryName.getValue());
+            //TODO check if username required how it works
+            /*
+            if (datastore.needUserIdentity.getValue()) {
+                connection = tcf.createConnection(datastore.userName.getValue(),datastore.userPassword.getValue());
+            } else {
+                connection = tcf.createTopicConnection();
+            }*/
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
+
+        return connection;
     }
 }

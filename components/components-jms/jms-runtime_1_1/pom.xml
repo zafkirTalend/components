@@ -23,6 +23,17 @@
           <artifactId>beam-sdks-java-core</artifactId>
           <version>0.3.0-incubating-SNAPSHOT</version>
       </dependency>
+      <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-sdks-java-core</artifactId>
+          <version>0.3.0-incubating-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-sdks-java-io-jms</artifactId>
+          <version>0.2.0-incubating</version>
+      </dependency>
   </dependencies>
 
 </project>
