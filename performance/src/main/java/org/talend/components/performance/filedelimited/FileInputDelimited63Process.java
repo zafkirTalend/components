@@ -7,6 +7,8 @@ import java.io.ObjectOutputStream;
 import routines.system.TDieException;
 
 public class FileInputDelimited63Process {
+    
+    public static final String OUTPUT_FILE = "D:/TOSWorkspace/Performance/out.csv";
 
     public void tFileInputDelimited_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 0);
@@ -74,7 +76,7 @@ public class FileInputDelimited63Process {
                 props_tFileInputDelimited_2.setValue("checkDate", false);
                 props_tFileInputDelimited_2.setValue("splitRecord", false);
                 props_tFileInputDelimited_2.setValue("enableDecode", false);
-                props_tFileInputDelimited_2.setValue("fileName", "D:/tmp/bench/out.csv");
+                props_tFileInputDelimited_2.setValue("fileName", OUTPUT_FILE);
                 props_tFileInputDelimited_2.setValue("csvOptions", false);
                 props_tFileInputDelimited_2.setValue("rowSeparator", "\n");
                 props_tFileInputDelimited_2.setValue("fieldSeparator", ";");
