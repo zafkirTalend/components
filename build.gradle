@@ -1,0 +1,25 @@
+
+repositories {
+	mavenCentral()
+	maven {
+        url "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/"
+    }
+	maven {
+        url "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/"
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+	apply plugin: 'eclipse'
+    
+	repositories {
+		mavenCentral()
+		maven {
+			url "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/"
+		}
+		maven {
+			url "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/"
+		}
+    }
+}

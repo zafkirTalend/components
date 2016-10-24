@@ -1,13 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-
-repositories {
-	mavenCentral()
-}
 
 dependencies {
 	compile 'log4j:log4j:1.2.17'
     compile 'dom4j:dom4j:1.6.1'
+    compile project(':components-filedelimited')
     compile fileTree(dir: 'libs', include: '*.jar')
     testCompile 'junit:junit:4.12'
 }

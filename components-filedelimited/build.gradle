@@ -1,0 +1,17 @@
+
+dependencies {
+	compile 'org.talend.components:components-api:0.15.0-SNAPSHOT'
+	compile 'org.talend.components:components-common:0.15.0-SNAPSHOT'
+	compile 'biz.aQute.bnd:annotation:2.4.0'
+	compile 'com.google.code.gson:gson:2.3.1'
+	compile 'org.talend.libraries:talendcsv:6.0.0'
+	compile 'org.talend.libraries:talend_file_enhanced_20070724:6.0.0'
+	testCompile 'org.talend.daikon:daikon:0.13.0-SNAPSHOT:tests'
+	testCompile 'org.talend.daikon:daikon-spring:0.13.0-SNAPSHOT'
+	testCompile 'org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE'
+	testCompile 'org.talend.components:components-api-service-rest:0.15.0-SNAPSHOT'
+	testCompile 'org.talend.components:components-api:0.15.0-SNAPSHOT:tests'
+	testCompile 'org.talend.components:components-api-service-common:0.15.0-SNAPSHOT'
+	testCompile 'org.springframework:spring-test:4.2.0.RELEASE'
+	testCompile 'junit:junit:4.12'
+}
