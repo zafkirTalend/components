@@ -8,5 +8,6 @@ repositories {
 dependencies {
 	compile 'log4j:log4j:1.2.17'
     compile 'dom4j:dom4j:1.6.1'
+    compile fileTree(dir: 'libs', include: '*.jar')
     testCompile 'junit:junit:4.12'
 }
