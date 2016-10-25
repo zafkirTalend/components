@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.apache.avro.generic.IndexedRecord;
 import org.talend.components.stopwatch.StopWatch;
 
 import routines.system.TDieException;
@@ -326,171 +327,171 @@ public class FileInputDelimited63Process {
                     }
 
                     try {
-                        Object data_tFileInputDelimited_2 = reader_tFileInputDelimited_2.getCurrent();
+                        IndexedRecord data_tFileInputDelimited_2 = (IndexedRecord) reader_tFileInputDelimited_2.getCurrent();
 
                         if (multi_output_is_allowed_tFileInputDelimited_2) {
                             row1 = new row1Struct();
                         }
 
-                        // Construct the factory once when the first data
-                        // arrives.
-                        if (factory_tFileInputDelimited_2 == null) {
-                            factory_tFileInputDelimited_2 = (org.talend.daikon.avro.converter.IndexedRecordConverter<Object, ? extends org.apache.avro.generic.IndexedRecord>) new org.talend.daikon.avro.AvroRegistry()
-                                    .createIndexedRecordConverter(data_tFileInputDelimited_2.getClass());
-                        }
-
-                        // Enforce the outgoing schema on the input.
-                        current_tFileInputDelimited_2
-                                .setWrapped(factory_tFileInputDelimited_2.convertToAvro(data_tFileInputDelimited_2));
-                        if (current_tFileInputDelimited_2.get(0) == null) {
+//                        // Construct the factory once when the first data
+//                        // arrives.
+//                        if (factory_tFileInputDelimited_2 == null) {
+//                            factory_tFileInputDelimited_2 = (org.talend.daikon.avro.converter.IndexedRecordConverter<Object, ? extends org.apache.avro.generic.IndexedRecord>) new org.talend.daikon.avro.AvroRegistry()
+//                                    .createIndexedRecordConverter(data_tFileInputDelimited_2.getClass());
+//                        }
+//
+//                        // Enforce the outgoing schema on the input.
+//                        current_tFileInputDelimited_2
+//                                .setWrapped(factory_tFileInputDelimited_2.convertToAvro(data_tFileInputDelimited_2));
+                        if (data_tFileInputDelimited_2.get(0) == null) {
                             row1.Column1 = null;
                         } else {
-                            row1.Column1 = String.valueOf(current_tFileInputDelimited_2.get(0));
+                            row1.Column1 = String.valueOf(data_tFileInputDelimited_2.get(0));
                         }
-                        if (current_tFileInputDelimited_2.get(1) == null) {
+                        if (data_tFileInputDelimited_2.get(1) == null) {
                             row1.Column2 = null;
                         } else {
-                            row1.Column2 = String.valueOf(current_tFileInputDelimited_2.get(1));
+                            row1.Column2 = String.valueOf(data_tFileInputDelimited_2.get(1));
                         }
-                        if (current_tFileInputDelimited_2.get(2) == null) {
+                        if (data_tFileInputDelimited_2.get(2) == null) {
                             row1.Column3 = null;
                         } else {
-                            row1.Column3 = String.valueOf(current_tFileInputDelimited_2.get(2));
+                            row1.Column3 = String.valueOf(data_tFileInputDelimited_2.get(2));
                         }
-                        if (current_tFileInputDelimited_2.get(3) == null) {
+                        if (data_tFileInputDelimited_2.get(3) == null) {
                             row1.Column4 = null;
                         } else {
-                            row1.Column4 = String.valueOf(current_tFileInputDelimited_2.get(3));
+                            row1.Column4 = String.valueOf(data_tFileInputDelimited_2.get(3));
                         }
-                        if (current_tFileInputDelimited_2.get(4) == null) {
+                        if (data_tFileInputDelimited_2.get(4) == null) {
                             row1.Column5 = null;
                         } else {
-                            row1.Column5 = String.valueOf(current_tFileInputDelimited_2.get(4));
+                            row1.Column5 = String.valueOf(data_tFileInputDelimited_2.get(4));
                         }
-                        if (current_tFileInputDelimited_2.get(5) == null) {
+                        if (data_tFileInputDelimited_2.get(5) == null) {
                             row1.Column6 = null;
                         } else {
-                            row1.Column6 = String.valueOf(current_tFileInputDelimited_2.get(5));
+                            row1.Column6 = String.valueOf(data_tFileInputDelimited_2.get(5));
                         }
-                        if (current_tFileInputDelimited_2.get(6) == null) {
+                        if (data_tFileInputDelimited_2.get(6) == null) {
                             row1.Column7 = null;
                         } else {
-                            row1.Column7 = String.valueOf(current_tFileInputDelimited_2.get(6));
+                            row1.Column7 = String.valueOf(data_tFileInputDelimited_2.get(6));
                         }
-                        if (current_tFileInputDelimited_2.get(7) == null) {
+                        if (data_tFileInputDelimited_2.get(7) == null) {
                             row1.Column8 = null;
                         } else {
-                            row1.Column8 = String.valueOf(current_tFileInputDelimited_2.get(7));
+                            row1.Column8 = String.valueOf(data_tFileInputDelimited_2.get(7));
                         }
-                        if (current_tFileInputDelimited_2.get(8) == null) {
+                        if (data_tFileInputDelimited_2.get(8) == null) {
                             row1.Column9 = null;
                         } else {
-                            row1.Column9 = String.valueOf(current_tFileInputDelimited_2.get(8));
+                            row1.Column9 = String.valueOf(data_tFileInputDelimited_2.get(8));
                         }
-                        if (current_tFileInputDelimited_2.get(9) == null) {
+                        if (data_tFileInputDelimited_2.get(9) == null) {
                             row1.Column10 = null;
                         } else {
-                            row1.Column10 = String.valueOf(current_tFileInputDelimited_2.get(9));
+                            row1.Column10 = String.valueOf(data_tFileInputDelimited_2.get(9));
                         }
-                        if (current_tFileInputDelimited_2.get(10) == null) {
+                        if (data_tFileInputDelimited_2.get(10) == null) {
                             row1.Column11 = null;
                         } else {
-                            row1.Column11 = String.valueOf(current_tFileInputDelimited_2.get(10));
+                            row1.Column11 = String.valueOf(data_tFileInputDelimited_2.get(10));
                         }
-                        if (current_tFileInputDelimited_2.get(11) == null) {
+                        if (data_tFileInputDelimited_2.get(11) == null) {
                             row1.Column12 = null;
                         } else {
-                            row1.Column12 = String.valueOf(current_tFileInputDelimited_2.get(11));
+                            row1.Column12 = String.valueOf(data_tFileInputDelimited_2.get(11));
                         }
-                        if (current_tFileInputDelimited_2.get(12) == null) {
+                        if (data_tFileInputDelimited_2.get(12) == null) {
                             row1.Column13 = null;
                         } else {
-                            row1.Column13 = String.valueOf(current_tFileInputDelimited_2.get(12));
+                            row1.Column13 = String.valueOf(data_tFileInputDelimited_2.get(12));
                         }
-                        if (current_tFileInputDelimited_2.get(13) == null) {
+                        if (data_tFileInputDelimited_2.get(13) == null) {
                             row1.Column14 = null;
                         } else {
-                            row1.Column14 = String.valueOf(current_tFileInputDelimited_2.get(13));
+                            row1.Column14 = String.valueOf(data_tFileInputDelimited_2.get(13));
                         }
-                        if (current_tFileInputDelimited_2.get(14) == null) {
+                        if (data_tFileInputDelimited_2.get(14) == null) {
                             row1.Column15 = null;
                         } else {
-                            row1.Column15 = String.valueOf(current_tFileInputDelimited_2.get(14));
+                            row1.Column15 = String.valueOf(data_tFileInputDelimited_2.get(14));
                         }
-                        if (current_tFileInputDelimited_2.get(15) == null) {
+                        if (data_tFileInputDelimited_2.get(15) == null) {
                             row1.Column16 = null;
                         } else {
-                            row1.Column16 = String.valueOf(current_tFileInputDelimited_2.get(15));
+                            row1.Column16 = String.valueOf(data_tFileInputDelimited_2.get(15));
                         }
-                        if (current_tFileInputDelimited_2.get(16) == null) {
+                        if (data_tFileInputDelimited_2.get(16) == null) {
                             row1.Column17 = null;
                         } else {
-                            row1.Column17 = String.valueOf(current_tFileInputDelimited_2.get(16));
+                            row1.Column17 = String.valueOf(data_tFileInputDelimited_2.get(16));
                         }
-                        if (current_tFileInputDelimited_2.get(17) == null) {
+                        if (data_tFileInputDelimited_2.get(17) == null) {
                             row1.Column18 = null;
                         } else {
-                            row1.Column18 = String.valueOf(current_tFileInputDelimited_2.get(17));
+                            row1.Column18 = String.valueOf(data_tFileInputDelimited_2.get(17));
                         }
-                        if (current_tFileInputDelimited_2.get(18) == null) {
+                        if (data_tFileInputDelimited_2.get(18) == null) {
                             row1.Column19 = null;
                         } else {
-                            row1.Column19 = String.valueOf(current_tFileInputDelimited_2.get(18));
+                            row1.Column19 = String.valueOf(data_tFileInputDelimited_2.get(18));
                         }
-                        if (current_tFileInputDelimited_2.get(19) == null) {
+                        if (data_tFileInputDelimited_2.get(19) == null) {
                             row1.Column20 = null;
                         } else {
-                            row1.Column20 = String.valueOf(current_tFileInputDelimited_2.get(19));
+                            row1.Column20 = String.valueOf(data_tFileInputDelimited_2.get(19));
                         }
-                        if (current_tFileInputDelimited_2.get(20) == null) {
+                        if (data_tFileInputDelimited_2.get(20) == null) {
                             row1.Column21 = null;
                         } else {
-                            row1.Column21 = String.valueOf(current_tFileInputDelimited_2.get(20));
+                            row1.Column21 = String.valueOf(data_tFileInputDelimited_2.get(20));
                         }
-                        if (current_tFileInputDelimited_2.get(21) == null) {
+                        if (data_tFileInputDelimited_2.get(21) == null) {
                             row1.Column22 = null;
                         } else {
-                            row1.Column22 = String.valueOf(current_tFileInputDelimited_2.get(21));
+                            row1.Column22 = String.valueOf(data_tFileInputDelimited_2.get(21));
                         }
-                        if (current_tFileInputDelimited_2.get(22) == null) {
+                        if (data_tFileInputDelimited_2.get(22) == null) {
                             row1.Column23 = null;
                         } else {
-                            row1.Column23 = String.valueOf(current_tFileInputDelimited_2.get(22));
+                            row1.Column23 = String.valueOf(data_tFileInputDelimited_2.get(22));
                         }
-                        if (current_tFileInputDelimited_2.get(23) == null) {
+                        if (data_tFileInputDelimited_2.get(23) == null) {
                             row1.Column24 = null;
                         } else {
-                            row1.Column24 = String.valueOf(current_tFileInputDelimited_2.get(23));
+                            row1.Column24 = String.valueOf(data_tFileInputDelimited_2.get(23));
                         }
-                        if (current_tFileInputDelimited_2.get(24) == null) {
+                        if (data_tFileInputDelimited_2.get(24) == null) {
                             row1.Column25 = null;
                         } else {
-                            row1.Column25 = String.valueOf(current_tFileInputDelimited_2.get(24));
+                            row1.Column25 = String.valueOf(data_tFileInputDelimited_2.get(24));
                         }
-                        if (current_tFileInputDelimited_2.get(25) == null) {
+                        if (data_tFileInputDelimited_2.get(25) == null) {
                             row1.Column26 = null;
                         } else {
-                            row1.Column26 = String.valueOf(current_tFileInputDelimited_2.get(25));
+                            row1.Column26 = String.valueOf(data_tFileInputDelimited_2.get(25));
                         }
-                        if (current_tFileInputDelimited_2.get(26) == null) {
+                        if (data_tFileInputDelimited_2.get(26) == null) {
                             row1.Column27 = null;
                         } else {
-                            row1.Column27 = String.valueOf(current_tFileInputDelimited_2.get(26));
+                            row1.Column27 = String.valueOf(data_tFileInputDelimited_2.get(26));
                         }
-                        if (current_tFileInputDelimited_2.get(27) == null) {
+                        if (data_tFileInputDelimited_2.get(27) == null) {
                             row1.Column28 = null;
                         } else {
-                            row1.Column28 = String.valueOf(current_tFileInputDelimited_2.get(27));
+                            row1.Column28 = String.valueOf(data_tFileInputDelimited_2.get(27));
                         }
-                        if (current_tFileInputDelimited_2.get(28) == null) {
+                        if (data_tFileInputDelimited_2.get(28) == null) {
                             row1.Column29 = null;
                         } else {
-                            row1.Column29 = String.valueOf(current_tFileInputDelimited_2.get(28));
+                            row1.Column29 = String.valueOf(data_tFileInputDelimited_2.get(28));
                         }
-                        if (current_tFileInputDelimited_2.get(29) == null) {
+                        if (data_tFileInputDelimited_2.get(29) == null) {
                             row1.Column30 = null;
                         } else {
-                            row1.Column30 = String.valueOf(current_tFileInputDelimited_2.get(29));
+                            row1.Column30 = String.valueOf(data_tFileInputDelimited_2.get(29));
                         }
                     } catch (org.talend.components.api.exception.DataRejectException e_tFileInputDelimited_2) {
                         java.util.Map<String, Object> info_tFileInputDelimited_2 = e_tFileInputDelimited_2.getRejectInfo();
@@ -621,7 +622,7 @@ public class FileInputDelimited63Process {
             } // end the resume
 
         } catch (java.lang.Exception e) {
-
+            e.printStackTrace();
             TalendException te = new TalendException(e, currentComponent, globalMap);
 
             throw te;
