@@ -32,31 +32,31 @@ public class StopWatch {
     }
     
     public void startStageHere(int stageIndex) {
-        if (stageIndex < 0 || stageIndex > stageNumber) {
-            throw new IllegalArgumentException("wrong stage index");
-        }
+//        if (stageIndex < 0 || stageIndex > stageNumber) {
+//            throw new IllegalArgumentException("wrong stage index");
+//        }
      
-        if (stageStarted[stageIndex]) {
-            throw new IllegalStateException("stage " + stageIndex + "already started");
-        } else {
+//        if (stageStarted[stageIndex]) {
+//            throw new IllegalStateException("stage " + stageIndex + "already started");
+//        } else {
             stageStartTimes[stageIndex] = System.nanoTime();
             stageStarted[stageIndex] = true;
-        }
+//        }
     }
     
     public void finishStageHere(int stageIndex) {
-        if (stageIndex < 0 || stageIndex > stageNumber) {
-            throw new IllegalArgumentException("wrong stage index");
-        }
+//        if (stageIndex < 0 || stageIndex > stageNumber) {
+//            throw new IllegalArgumentException("wrong stage index");
+//        }
         
-        if (stageStarted[stageIndex]) {
+//        if (stageStarted[stageIndex]) {
             long currentTime = System.nanoTime();
             long duration = currentTime - stageStartTimes[stageIndex];
             stageDurations[stageIndex] = stageDurations[stageIndex] + duration;
             stageStarted[stageIndex] = false;
-        } else {
-            throw new IllegalStateException("stage " + stageIndex + "is not started");
-        }
+//        } else {
+//            throw new IllegalStateException("stage " + stageIndex + "is not started");
+//        }
     }
     
     public void showResults() {

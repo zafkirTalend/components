@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+
 import routines.system.TDieException;
 
 public class FileInputDelimited63Process {
@@ -13,6 +15,10 @@ public class FileInputDelimited63Process {
     public void tFileInputDelimited_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 0);
 
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO stage 1 contains initialization prior components and JavaRow begin part
+        watch.startStageHere(1); 
+        
         String iterateId = "";
 
         String currentComponent = "";
@@ -44,6 +50,7 @@ public class FileInputDelimited63Process {
 
                 int nb_line_tJavaRow_1 = 0;
 
+                watch.finishStageHere(1);
                 /**
                  * [tJavaRow_1 begin ] stop
                  */
@@ -51,7 +58,8 @@ public class FileInputDelimited63Process {
                 /**
                  * [tFileInputDelimited_2 begin ] start
                  */
-
+                // TODO stage 2 FileInputDelimited initialization
+                watch.startStageHere(2);
                 currentComponent = "tFileInputDelimited_2";
 
                 int tos_count_tFileInputDelimited_2 = 0;
@@ -297,12 +305,19 @@ public class FileInputDelimited63Process {
                 org.talend.daikon.avro.converter.IndexedRecordConverter<Object, ? extends org.apache.avro.generic.IndexedRecord> factory_tFileInputDelimited_2 = null;
 
                 // Iterate through the incoming data.
+                
+                watch.finishStageHere(2);  
+                
+             // TODO stage 3 cycle upon records
+                watch.startStageHere(3);
                 boolean available_tFileInputDelimited_2 = reader_tFileInputDelimited_2.start();
 
                 resourceMap.put("reader_tFileInputDelimited_2", reader_tFileInputDelimited_2);
 
                 for (; available_tFileInputDelimited_2; available_tFileInputDelimited_2 = reader_tFileInputDelimited_2
                         .advance()) {
+                    // TODO stage 4 retrieve columns from file
+                    watch.startStageHere(4);
                     nb_line_tFileInputDelimited_2++;
 
                     if (multi_output_is_allowed_tFileInputDelimited_2) {
@@ -485,6 +500,7 @@ public class FileInputDelimited63Process {
                                 + info_tFileInputDelimited_2.get("error");
                         System.err.println(errorMessage_tFileInputDelimited_2);
                     }
+                    watch.finishStageHere(4);
 
                     /**
                      * [tFileInputDelimited_2 begin ] stop
@@ -539,6 +555,11 @@ public class FileInputDelimited63Process {
                     resourceMap.put("finish_tFileInputDelimited_2", Boolean.TRUE);
 
                 } // while
+                watch.finishStageHere(3);
+                
+                // TODO stage 9 end parts
+                watch.startStageHere(9);
+                
                 reader_tFileInputDelimited_2.close();
                 final java.util.Map<String, Object> resultMap_tFileInputDelimited_2 = reader_tFileInputDelimited_2
                         .getReturnValues();
@@ -655,6 +676,7 @@ public class FileInputDelimited63Process {
         }
 
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 1);
+        watch.finishStageHere(9);
     }
 
     private class TalendException extends Exception {

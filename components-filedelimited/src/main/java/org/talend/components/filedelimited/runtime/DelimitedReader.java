@@ -18,7 +18,7 @@ public class DelimitedReader extends FileDelimitedReader {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DelimitedReader.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(DelimitedReader.class);
 
     private FileInputDelimited fid;
 
@@ -31,7 +31,7 @@ public class DelimitedReader extends FileDelimitedReader {
         boolean startAble = false;
         try {
             inputRuntime.init();
-            LOGGER.debug("open: " + properties.fileName.getStringValue());
+           // LOGGER.debug("open: " + properties.fileName.getStringValue());
             fid = inputRuntime.getFileDelimited();
             startAble = fid != null && fid.nextRecord();
             if (startAble) {
@@ -89,7 +89,7 @@ public class DelimitedReader extends FileDelimitedReader {
                 fid.close();
             }
         }
-        LOGGER.debug("close: " + properties.fileName.getStringValue());
+        //LOGGER.debug("close: " + properties.fileName.getStringValue());
     }
 
     protected void retrieveValues() throws IOException {

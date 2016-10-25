@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+
 import routines.system.TDieException;
 
 public class FileInputDelimitedProcess {
@@ -27,6 +29,10 @@ public class FileInputDelimitedProcess {
     public void tFileInputDelimited_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 0);
 
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO stage 1 contains initialization prior components and JavaRow begin part
+        watch.startStageHere(1);
+        
         String iterateId = "";
 
         String currentComponent = "";
@@ -48,6 +54,7 @@ public class FileInputDelimitedProcess {
 
                 int nb_line_tJavaRow_1 = 0;
 
+                watch.finishStageHere(1);
                 /**
                  * [tJavaRow_1 begin ] stop
                  */
@@ -55,7 +62,8 @@ public class FileInputDelimitedProcess {
                 /**
                  * [tFileInputDelimited_2 begin ] start
                  */
-
+             // TODO stage 2 FileInputDelimited initialization
+                watch.startStageHere(2);
                 currentComponent = "tFileInputDelimited_2";
 
                 int tos_count_tFileInputDelimited_2 = 0;
@@ -85,7 +93,12 @@ public class FileInputDelimitedProcess {
 
                     }
 
+                    watch.finishStageHere(2);
+                    // TODO stage 3 cycle upon records
+                    watch.startStageHere(3);
                     while (fid_tFileInputDelimited_2 != null && fid_tFileInputDelimited_2.nextRecord()) {
+                     // TODO stage 4 retrieve columns from file
+                        watch.startStageHere(4);
                         rowstate_tFileInputDelimited_2.reset();
 
                         row1 = null;
@@ -227,7 +240,7 @@ public class FileInputDelimitedProcess {
                             row1 = null;
 
                         }
-
+                        watch.finishStageHere(4);
                         /**
                          * [tFileInputDelimited_2 begin ] stop
                          */
@@ -277,6 +290,10 @@ public class FileInputDelimitedProcess {
                         currentComponent = "tFileInputDelimited_2";
 
                     }
+                    watch.finishStageHere(3);
+                    
+                    // TODO stage 9 end parts
+                    watch.startStageHere(9);
                 } finally {
                     if (!((Object) ("D:/TOSWorkspace/Performance/out.csv") instanceof java.io.InputStream)) {
                         if (fid_tFileInputDelimited_2 != null) {
@@ -348,6 +365,7 @@ public class FileInputDelimitedProcess {
         }
 
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 1);
+        watch.finishStageHere(9);
     }
 
     private class TalendException extends Exception {

@@ -25,7 +25,7 @@ import com.talend.csv.CSVReader;
 
 public class FileInputDelimitedRuntime {
 
-    private transient static final Logger LOG = LoggerFactory.getLogger(FileInputDelimitedRuntime.class);
+    //private transient static final Logger LOG = LoggerFactory.getLogger(FileInputDelimitedRuntime.class);
 
     private FileDelimitedProperties props;
 
@@ -318,7 +318,7 @@ public class FileInputDelimitedRuntime {
                     if (retrieveHeader) {
                         result.put("columnNames", rowData);
                         columnNames = Arrays.asList(rowData);
-                        LOG.debug("columnNames " + columnNames);
+//                        LOG.debug("columnNames " + columnNames);
                     } else {
                         data.add(rowData);
                         updateColumnsLength(rowData);
@@ -334,7 +334,7 @@ public class FileInputDelimitedRuntime {
                         }
                         data.add(rowData);
                         updateColumnsLength(rowData);
-                        LOG.debug("Preview row " + currentLine + " : " + Arrays.asList(rowData));
+//                        LOG.debug("Preview row " + currentLine + " : " + Arrays.asList(rowData));
                     }
                 }
             } finally {
@@ -363,13 +363,13 @@ public class FileInputDelimitedRuntime {
                     if (retrieveHeader) {
                         result.put("columnNames", rowData);
                         columnNames = Arrays.asList(rowData);
-                        LOG.debug("columnNames " + columnNames);
+//                        LOG.debug("columnNames " + columnNames);
                         retrieveHeader = false;
                     } else {
                         currentLine++;
                         data.add(rowData);
                         updateColumnsLength(rowData);
-                        LOG.debug("Preview row " + currentLine + " : " + Arrays.asList(rowData));
+//                        LOG.debug("Preview row " + currentLine + " : " + Arrays.asList(rowData));
                     }
                 }
             } finally {
@@ -380,7 +380,7 @@ public class FileInputDelimitedRuntime {
         }
         result.put("data", data);
         if (data.size() > 0) {
-            LOG.debug("Max columns count:" + columnsLength.size());
+//            LOG.debug("Max columns count:" + columnsLength.size());
         }
         Gson gson = new Gson();
         return gson.toJson(result);

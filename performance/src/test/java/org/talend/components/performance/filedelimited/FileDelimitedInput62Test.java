@@ -12,6 +12,10 @@ public class FileDelimitedInput62Test {
     @Test
     public void testProcess() throws Exception {
         FileInputDelimitedProcess process = new FileInputDelimitedProcess();
+        StopWatch watch = StopWatch.getInstance(10);
+        watch.startStageHere(0);
         process.tFileInputDelimited_2Process(globalMap);
+        watch.finishStageHere(0);
+        watch.showResults();
     }
 }

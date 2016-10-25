@@ -23,7 +23,7 @@ public class FileDelimitedSource extends FileSourceOrSink implements BoundedSour
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileDelimitedSource.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(FileDelimitedSource.class);
 
     private static final I18nMessages messages = GlobalI18N.getI18nMessageProvider().getI18nMessages(FileDelimitedSource.class);
 
@@ -53,7 +53,7 @@ public class FileDelimitedSource extends FileSourceOrSink implements BoundedSour
             vr.setStatus(ValidationResult.Result.ERROR);
         } else {
             if (fileOrStream instanceof InputStream) {
-                LOGGER.debug("Source is a stream");
+             //   LOGGER.debug("Source is a stream");
             } else {
                 File file = new File(String.valueOf(fileOrStream));
                 if (!file.exists()) {
@@ -85,9 +85,9 @@ public class FileDelimitedSource extends FileSourceOrSink implements BoundedSour
         ss.initialize(null, properties);
         FileDelimitedReader reader = ss.createReader(container);
         String jsonData = reader.inputRuntime.previewData(maxRowsToPreview);
-        LOGGER.debug("Return json data: " + jsonData);
+      //  LOGGER.debug("Return json data: " + jsonData);
         Schema schema = getSchema(properties.name.getValue(), reader.inputRuntime.columnNames, reader.inputRuntime.columnsLength);
-        LOGGER.debug("Guessed schema: " + schema);
+      //  LOGGER.debug("Guessed schema: " + schema);
         result.put(jsonData, schema);
         return result;
     }
