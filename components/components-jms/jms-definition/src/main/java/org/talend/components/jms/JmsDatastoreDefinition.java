@@ -17,6 +17,7 @@ import org.talend.components.api.component.runtime.DependenciesReader;
 import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.datastore.DatastoreDefinition;
+import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.runtime.RuntimeInfo;
 
@@ -37,7 +38,7 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     }
 
     @Override
-    public DatasetProperties getDatasetProperties() {
+    public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
         return null;
     }
 }
