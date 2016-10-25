@@ -4,6 +4,7 @@ import org.apache.avro.Schema;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.components.jms.runtime_1_1.JmsDatastoreRuntime;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -28,7 +29,7 @@ public class JmsDatastoreRuntimeTest {
     }
 
     /**
-     * Check {@link JmsDatastoreRuntime#initialize(RuntimeContainer, ComponentProperties)}
+     * Check {@link JmsDatastoreRuntime#initialize(RuntimeContainer, DatastoreProperties)}
      * Returns OK
      */
     @Test

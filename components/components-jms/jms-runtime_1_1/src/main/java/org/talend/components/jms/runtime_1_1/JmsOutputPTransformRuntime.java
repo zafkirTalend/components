@@ -1,23 +1,23 @@
 package org.talend.components.jms.runtime_1_1;
 
 import org.apache.avro.generic.IndexedRecord;
+
 import org.apache.beam.sdk.io.jms.JmsIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
-import org.apache.beam.sdk.values.PInput;
-import org.apache.beam.sdk.values.POutput;
 
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.jms.JmsMessageType;
 import org.talend.components.jms.output.JmsOutputProperties;
+
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
 import org.talend.daikon.exception.error.CommonErrorCodes;
+import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.exception.TalendRuntimeException;
 
@@ -26,11 +26,10 @@ public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, 
 
     private JmsOutputProperties properties;
 
+    JmsMessageType messageType = properties.dataset.msgType.getValue();
+
     @Override public PDone apply(PCollection<Object> objectPCollection) {
-
-        // TODO Object to indexedRecord
         PCollection<IndexedRecord> test = objectPCollection.apply("ExtractIndexedRecord", ParDo.of(new DoFn<Object, IndexedRecord>() {
-
             IndexedRecordConverter converter;
             AvroRegistry avroRegistry = new AvroRegistry();
             @DoFn.ProcessElement public void processElement(ProcessContext c) throws Exception {
@@ -42,16 +41,12 @@ public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, 
             }
         }));
 
-        IndexedRecord indexedRecord = (IndexedRecord) objectPCollection;
-        JmsMessageType messageType = properties.dataset.msgType.getValue();
-
-        // TODO Object to String
         PCollection<String> jmsCollection = test.apply("ExtractString", ParDo.of(new DoFn<IndexedRecord, String>() {
-
             @DoFn.ProcessElement public void processElement(ProcessContext c) throws Exception {
                 c.output(c.element().toString());
             }
         }));
+
         if (messageType.equals(JmsMessageType.QUEUE)) {
             return jmsCollection.apply(JmsIO.write()
                     .withConnectionFactory(properties.dataset.datastore.getConnectionFactory())
@@ -65,9 +60,7 @@ public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, 
         }
     }
 
-    @Override public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
+    @Override public ValidationResult initialize(RuntimeContainer container, Properties properties) {
         this.properties = (JmsOutputProperties) properties;
-        return ValidationResult.OK;
-    }
-
+        return ValidationResult.OK;    }
 }
