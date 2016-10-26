@@ -345,156 +345,156 @@ public class FileInputDelimited63Process {
 //                        // Enforce the outgoing schema on the input.
 //                        current_tFileInputDelimited_2
 //                                .setWrapped(factory_tFileInputDelimited_2.convertToAvro(data_tFileInputDelimited_2));
-                        if (data_tFileInputDelimited_2.get(0) == null) {
-                            row1.Column1 = null;
-                        } else {
+//                        if (data_tFileInputDelimited_2.get(0) == null) {
+//                            row1.Column1 = null;
+//                        } else {
                             row1.Column1 = String.valueOf(data_tFileInputDelimited_2.get(0));
-                        }
-                        if (data_tFileInputDelimited_2.get(1) == null) {
-                            row1.Column2 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(1) == null) {
+//                            row1.Column2 = null;
+//                        } else {
                             row1.Column2 = String.valueOf(data_tFileInputDelimited_2.get(1));
-                        }
-                        if (data_tFileInputDelimited_2.get(2) == null) {
-                            row1.Column3 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(2) == null) {
+//                            row1.Column3 = null;
+//                        } else {
                             row1.Column3 = String.valueOf(data_tFileInputDelimited_2.get(2));
-                        }
-                        if (data_tFileInputDelimited_2.get(3) == null) {
-                            row1.Column4 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(3) == null) {
+//                            row1.Column4 = null;
+//                        } else {
                             row1.Column4 = String.valueOf(data_tFileInputDelimited_2.get(3));
-                        }
-                        if (data_tFileInputDelimited_2.get(4) == null) {
-                            row1.Column5 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(4) == null) {
+//                            row1.Column5 = null;
+//                        } else {
                             row1.Column5 = String.valueOf(data_tFileInputDelimited_2.get(4));
-                        }
-                        if (data_tFileInputDelimited_2.get(5) == null) {
-                            row1.Column6 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(5) == null) {
+//                            row1.Column6 = null;
+//                        } else {
                             row1.Column6 = String.valueOf(data_tFileInputDelimited_2.get(5));
-                        }
-                        if (data_tFileInputDelimited_2.get(6) == null) {
-                            row1.Column7 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(6) == null) {
+//                            row1.Column7 = null;
+//                        } else {
                             row1.Column7 = String.valueOf(data_tFileInputDelimited_2.get(6));
-                        }
-                        if (data_tFileInputDelimited_2.get(7) == null) {
-                            row1.Column8 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(7) == null) {
+//                            row1.Column8 = null;
+//                        } else {
                             row1.Column8 = String.valueOf(data_tFileInputDelimited_2.get(7));
-                        }
-                        if (data_tFileInputDelimited_2.get(8) == null) {
-                            row1.Column9 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(8) == null) {
+//                            row1.Column9 = null;
+//                        } else {
                             row1.Column9 = String.valueOf(data_tFileInputDelimited_2.get(8));
-                        }
-                        if (data_tFileInputDelimited_2.get(9) == null) {
-                            row1.Column10 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(9) == null) {
+//                            row1.Column10 = null;
+//                        } else {
                             row1.Column10 = String.valueOf(data_tFileInputDelimited_2.get(9));
-                        }
-                        if (data_tFileInputDelimited_2.get(10) == null) {
-                            row1.Column11 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(10) == null) {
+//                            row1.Column11 = null;
+//                        } else {
                             row1.Column11 = String.valueOf(data_tFileInputDelimited_2.get(10));
-                        }
-                        if (data_tFileInputDelimited_2.get(11) == null) {
-                            row1.Column12 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(11) == null) {
+//                            row1.Column12 = null;
+//                        } else {
                             row1.Column12 = String.valueOf(data_tFileInputDelimited_2.get(11));
-                        }
-                        if (data_tFileInputDelimited_2.get(12) == null) {
-                            row1.Column13 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(12) == null) {
+//                            row1.Column13 = null;
+//                        } else {
                             row1.Column13 = String.valueOf(data_tFileInputDelimited_2.get(12));
-                        }
-                        if (data_tFileInputDelimited_2.get(13) == null) {
-                            row1.Column14 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(13) == null) {
+//                            row1.Column14 = null;
+//                        } else {
                             row1.Column14 = String.valueOf(data_tFileInputDelimited_2.get(13));
-                        }
-                        if (data_tFileInputDelimited_2.get(14) == null) {
-                            row1.Column15 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(14) == null) {
+//                            row1.Column15 = null;
+//                        } else {
                             row1.Column15 = String.valueOf(data_tFileInputDelimited_2.get(14));
-                        }
-                        if (data_tFileInputDelimited_2.get(15) == null) {
-                            row1.Column16 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(15) == null) {
+//                            row1.Column16 = null;
+//                        } else {
                             row1.Column16 = String.valueOf(data_tFileInputDelimited_2.get(15));
-                        }
-                        if (data_tFileInputDelimited_2.get(16) == null) {
-                            row1.Column17 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(16) == null) {
+//                            row1.Column17 = null;
+//                        } else {
                             row1.Column17 = String.valueOf(data_tFileInputDelimited_2.get(16));
-                        }
-                        if (data_tFileInputDelimited_2.get(17) == null) {
-                            row1.Column18 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(17) == null) {
+//                            row1.Column18 = null;
+//                        } else {
                             row1.Column18 = String.valueOf(data_tFileInputDelimited_2.get(17));
-                        }
-                        if (data_tFileInputDelimited_2.get(18) == null) {
-                            row1.Column19 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(18) == null) {
+//                            row1.Column19 = null;
+//                        } else {
                             row1.Column19 = String.valueOf(data_tFileInputDelimited_2.get(18));
-                        }
-                        if (data_tFileInputDelimited_2.get(19) == null) {
-                            row1.Column20 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(19) == null) {
+//                            row1.Column20 = null;
+//                        } else {
                             row1.Column20 = String.valueOf(data_tFileInputDelimited_2.get(19));
-                        }
-                        if (data_tFileInputDelimited_2.get(20) == null) {
-                            row1.Column21 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(20) == null) {
+//                            row1.Column21 = null;
+//                        } else {
                             row1.Column21 = String.valueOf(data_tFileInputDelimited_2.get(20));
-                        }
-                        if (data_tFileInputDelimited_2.get(21) == null) {
-                            row1.Column22 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(21) == null) {
+//                            row1.Column22 = null;
+//                        } else {
                             row1.Column22 = String.valueOf(data_tFileInputDelimited_2.get(21));
-                        }
-                        if (data_tFileInputDelimited_2.get(22) == null) {
-                            row1.Column23 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(22) == null) {
+//                            row1.Column23 = null;
+//                        } else {
                             row1.Column23 = String.valueOf(data_tFileInputDelimited_2.get(22));
-                        }
-                        if (data_tFileInputDelimited_2.get(23) == null) {
-                            row1.Column24 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(23) == null) {
+//                            row1.Column24 = null;
+//                        } else {
                             row1.Column24 = String.valueOf(data_tFileInputDelimited_2.get(23));
-                        }
-                        if (data_tFileInputDelimited_2.get(24) == null) {
-                            row1.Column25 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(24) == null) {
+//                            row1.Column25 = null;
+//                        } else {
                             row1.Column25 = String.valueOf(data_tFileInputDelimited_2.get(24));
-                        }
-                        if (data_tFileInputDelimited_2.get(25) == null) {
-                            row1.Column26 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(25) == null) {
+//                            row1.Column26 = null;
+//                        } else {
                             row1.Column26 = String.valueOf(data_tFileInputDelimited_2.get(25));
-                        }
-                        if (data_tFileInputDelimited_2.get(26) == null) {
-                            row1.Column27 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(26) == null) {
+//                            row1.Column27 = null;
+//                        } else {
                             row1.Column27 = String.valueOf(data_tFileInputDelimited_2.get(26));
-                        }
-                        if (data_tFileInputDelimited_2.get(27) == null) {
-                            row1.Column28 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(27) == null) {
+//                            row1.Column28 = null;
+//                        } else {
                             row1.Column28 = String.valueOf(data_tFileInputDelimited_2.get(27));
-                        }
-                        if (data_tFileInputDelimited_2.get(28) == null) {
-                            row1.Column29 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(28) == null) {
+//                            row1.Column29 = null;
+//                        } else {
                             row1.Column29 = String.valueOf(data_tFileInputDelimited_2.get(28));
-                        }
-                        if (data_tFileInputDelimited_2.get(29) == null) {
-                            row1.Column30 = null;
-                        } else {
+//                        }
+//                        if (data_tFileInputDelimited_2.get(29) == null) {
+//                            row1.Column30 = null;
+//                        } else {
                             row1.Column30 = String.valueOf(data_tFileInputDelimited_2.get(29));
-                        }
+//                        }
                     } catch (org.talend.components.api.exception.DataRejectException e_tFileInputDelimited_2) {
                         java.util.Map<String, Object> info_tFileInputDelimited_2 = e_tFileInputDelimited_2.getRejectInfo();
                         // TODO use a method instead of getting method by the

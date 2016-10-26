@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.talend.components.api.exception.DataRejectException;
 import org.talend.components.filedelimited.FileDelimitedProperties;
 import org.talend.components.filedelimited.tfileinputdelimited.TFileInputDelimitedProperties;
+import org.talend.components.stopwatch.StopWatch;
 import org.talend.daikon.avro.converter.AvroConverter;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
@@ -92,11 +93,13 @@ public class DelimitedAdaptorFactory implements IndexedRecordConverter<String[],
 
         @Override
         public Object get(int index) {
+            StopWatch.getInstance(10).startStageHere(6);
             // Lazy initialization of the cached converter objects.
+            StopWatch.getInstance(10).startStageHere(7);
             if (trimValues == null) {
                 initializeConverters();
             }
-
+            StopWatch.getInstance(10).finishStageHere(7);
             Object value = null;
             if (index < values.length) {
                 try {
@@ -115,6 +118,7 @@ public class DelimitedAdaptorFactory implements IndexedRecordConverter<String[],
                     }
                 }
             }
+            StopWatch.getInstance(10).finishStageHere(6);
             return value;
         }
 
