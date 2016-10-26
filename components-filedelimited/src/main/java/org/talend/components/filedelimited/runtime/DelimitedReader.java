@@ -9,6 +9,7 @@ import org.talend.components.api.component.runtime.BoundedSource;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.filedelimited.FileDelimitedProperties;
 import org.talend.components.filedelimited.tfileinputdelimited.TFileInputDelimitedProperties;
+import org.talend.components.stopwatch.StopWatch;
 import org.talend.fileprocess.FileInputDelimited;
 
 /*
@@ -56,6 +57,7 @@ public class DelimitedReader extends FileDelimitedReader {
 
     @Override
     public boolean advance() throws IOException {
+        StopWatch.getInstance(10).startStageHere(5);
         boolean isContinue = false;
         try {
             isContinue = fid.nextRecord();
@@ -78,7 +80,7 @@ public class DelimitedReader extends FileDelimitedReader {
                 isContinue = advance();
             }
         }
-
+        StopWatch.getInstance(10).finishStageHere(5);
         return isContinue;
     }
 

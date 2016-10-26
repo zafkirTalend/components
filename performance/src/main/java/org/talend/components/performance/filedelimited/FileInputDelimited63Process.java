@@ -318,7 +318,7 @@ public class FileInputDelimited63Process {
                 for (; available_tFileInputDelimited_2; available_tFileInputDelimited_2 = reader_tFileInputDelimited_2
                         .advance()) {
                     // TODO stage 4 retrieve columns from file
-                    watch.startStageHere(4);
+                    
                     nb_line_tFileInputDelimited_2++;
 
                     if (multi_output_is_allowed_tFileInputDelimited_2) {
@@ -327,12 +327,14 @@ public class FileInputDelimited63Process {
                     }
 
                     try {
+                        
                         IndexedRecord data_tFileInputDelimited_2 = (IndexedRecord) reader_tFileInputDelimited_2.getCurrent();
-
+                        
                         if (multi_output_is_allowed_tFileInputDelimited_2) {
                             row1 = new row1Struct();
                         }
-
+                        // TODO stage 4 indexedRecord.get()
+                        watch.startStageHere(4);
 //                        // Construct the factory once when the first data
 //                        // arrives.
 //                        if (factory_tFileInputDelimited_2 == null) {
