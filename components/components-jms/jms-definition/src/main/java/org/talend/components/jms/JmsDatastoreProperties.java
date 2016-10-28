@@ -26,10 +26,10 @@ import org.talend.daikon.properties.property.PropertyFactory;
 
 import java.util.Hashtable;
 
-import javax.jms.ConnectionFactory;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+//import javax.jms.ConnectionFactory;
+//import javax.naming.Context;
+//import javax.naming.InitialContext;
+//import javax.naming.NamingException;
 
 public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreProperties {
 
@@ -67,6 +67,7 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
     public Property<String> property = PropertyFactory.newString("property","");
 
     public Property<String> value = PropertyFactory.newString("value","");
+
 
     @Override
     public void setupLayout() {
@@ -115,27 +116,33 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
             form.getWidget(value.getName()).setHidden(false);
         }
     }
-
+/*
     public ConnectionFactory getConnectionFactory() {
-        InitialContext context;
-        Hashtable env = new Hashtable();
-        env.put(Context.INITIAL_CONTEXT_FACTORY,contextProvider);
-        env.put(Context.PROVIDER_URL, serverUrl);
+
+        Context context = null;
+        Hashtable<String, String> env  = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY,"org.exolab.jms.jndi.InitialContextFactory");
+        env.put(Context.PROVIDER_URL, "tcp://localhost:3035");
+        env.put(Context.SECURITY_PRINCIPAL, "admin");
+        env.put(Context.SECURITY_CREDENTIALS, "openjms");
+
         ConnectionFactory connection = null;
+        System.out.println("test : " + connectionFactoryName.getValue());
         try {
             context = new InitialContext(env);
-            connection = (ConnectionFactory)context.lookup(connectionFactoryName.getValue());
+            System.out.println("context");
+            connection = (ConnectionFactory)context.lookup("ConnectionFactory");
             //TODO check if username required how it works
             /*
             if (datastore.needUserIdentity.getValue()) {
                 connection = tcf.createConnection(datastore.userName.getValue(),datastore.userPassword.getValue());
             } else {
                 connection = tcf.createTopicConnection();
-            }*/
+            }
         } catch (NamingException e) {
             e.printStackTrace();
         }
 
-        return connection;
-    }
+        return null;
+    }*/
 }

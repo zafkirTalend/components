@@ -14,6 +14,7 @@ import org.talend.daikon.properties.ValidationResult;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.jms.Connection;
@@ -66,19 +67,36 @@ public class JmsDatastoreRuntime implements DatastoreRuntime {
     }
 
     @Override public Iterable<ValidationResult> doHealthChecks(RuntimeContainer container) {
-        ConnectionFactory connectionFactory = properties.getConnectionFactory();
-        Connection connection = null;
+
+        Context context = null;
+        Hashtable<String, String> env  = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY,"org.exolab.jms.jndi.InitialContextFactory");
+        env.put(Context.PROVIDER_URL, "tcp://localhost:3035");
+        env.put(Context.SECURITY_PRINCIPAL, "admin");
+        env.put(Context.SECURITY_CREDENTIALS, "openjms");
+
+        ConnectionFactory connection = null;
         try {
-            if (properties.needUserIdentity.getValue()) {
-                connection = connectionFactory.createConnection(properties.userName.getValue(), properties.userPassword.getValue());
-            } else {
-                connection = connectionFactory.createConnection();
-            }
-            connection.start();
-            connection.close();
-        } catch (JMSException e) {
+            context = new InitialContext(env);
+            System.out.println("context");
+            connection = (ConnectionFactory)context.lookup("ConnectionFactory");
+
+        } catch (NamingException e) {
             e.printStackTrace();
         }
+
+
+
+
+        ConnectionFactory connectionFactory = null;//properties.getConnectionFactory();
+        connection = null;
+        if (properties.needUserIdentity.getValue()) {
+            //connection = connectionFactory.createConnection(properties.userName.getValue(), properties.userPassword.getValue());
+        } else {
+            //connection = connectionFactory.createConnection();
+        }
+        //connection.start();
+        //connection.close();
 
         if (connection != null) {
             return Arrays.asList(ValidationResult.OK);
@@ -88,6 +106,11 @@ public class JmsDatastoreRuntime implements DatastoreRuntime {
 
     @Override public ValidationResult initialize(RuntimeContainer container, DatastoreProperties properties) {
         this.properties = (JmsDatastoreProperties) properties;
+        return ValidationResult.OK;
+    }
+
+    public ValidationResult initialize(RuntimeContainer container, JmsDatastoreProperties properties) {
+        this.properties = properties;
         return ValidationResult.OK;
     }
 }

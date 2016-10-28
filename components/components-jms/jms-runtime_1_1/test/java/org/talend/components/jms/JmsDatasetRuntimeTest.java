@@ -13,9 +13,6 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by slemoing on 10/24/2016.
- */
 public class JmsDatasetRuntimeTest {
 
     private final JmsDatasetRuntime datasetRuntime = new JmsDatasetRuntime();
