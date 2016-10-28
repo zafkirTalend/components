@@ -14,12 +14,12 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
-import org.talend.components.jobs.filedelimited.FileOutputDelimitedProcess62;
+import org.talend.components.jobs.filedelimited.FileOutputDelimitedProcess63;
 
 @State(Scope.Thread)
-public class FileOutputDelimitedBenchmark62 {
+public class FileOutputDelimitedBenchmark63 {
 
-    FileOutputDelimitedProcess62 process = new FileOutputDelimitedProcess62();
+    FileOutputDelimitedProcess63 process = new FileOutputDelimitedProcess63();
 
     HashMap<String, Object> globalMap = new HashMap<>();
 
@@ -34,7 +34,7 @@ public class FileOutputDelimitedBenchmark62 {
      * run benchmark
      */
     public static void main(String[] args) throws RunnerException {
-        Options opt = new OptionsBuilder().include(FileOutputDelimitedBenchmark62.class.getSimpleName()).warmupIterations(5)
+        Options opt = new OptionsBuilder().include(FileOutputDelimitedBenchmark63.class.getSimpleName()).warmupIterations(5)
                 .measurementTime(TimeValue.seconds(20)).measurementIterations(5).forks(1).build();
 
         new Runner(opt).run();
