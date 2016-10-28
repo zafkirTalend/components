@@ -12,7 +12,20 @@
 // ============================================================================
 package org.talend.components.salesforce.runtime;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,20 +55,10 @@ import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputDefinit
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputDefinition;
 import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.properties.property.Property;
-import com.sforce.ws.util.Base64;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.sforce.ws.util.Base64;
 
 public class SalesforceWriterTestIT extends SalesforceTestBase {
 
@@ -107,6 +110,11 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
             .name("ParentId").type().stringType().noDefault() //
             .name("Id").type().stringType().noDefault() //
             .endRecord();
+
+    /** Test schema for inserting accounts. */
+    public static Schema SCHEMA_INSERT_ACCOUNT_DECIMAL = SchemaBuilder.builder().record("Schema").fields() //
+            .name("Name").type().stringType().noDefault() //
+            .name("AnnualRevenue").type(AvroUtils._decimal()).noDefault().endRecord();
 
     public Writer<Result> createSalesforceOutputWriter(TSalesforceOutputProperties props) {
         SalesforceSink salesforceSink = new SalesforceSink();
@@ -199,6 +207,29 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
     @Test
     public void testOutputInsertAndDeleteDynamic() throws Throwable {
         runOutputInsert(true);
+    }
+
+    @Test
+    public void testWriteDecimal() throws Throwable {
+        TSalesforceOutputProperties props = createSalesforceoutputProperties(EXISTING_MODULE_NAME);
+        setupProps(props.connection, !SalesforceTestBase.ADD_QUOTES);
+
+        props.module.moduleName.setValue(EXISTING_MODULE_NAME);
+        props.module.main.schema.setValue(SCHEMA_INSERT_ACCOUNT_DECIMAL);
+
+        props.outputAction.setValue(TSalesforceOutputProperties.OutputAction.INSERT);
+
+        String random = createNewRandom();
+        List<IndexedRecord> outputRows = new ArrayList<>();
+        GenericData.Record row1 = new GenericData.Record(SCHEMA_INSERT_ACCOUNT_DECIMAL);
+        row1.put(0, UNIQUE_NAME + "_" + UNIQUE_ID);
+        row1.put(1, new BigDecimal("12.5"));
+        outputRows.add(row1);
+
+        Writer<Result> saleforceWriter = createSalesforceOutputWriter(props);
+        Result writeResult = writeRows(saleforceWriter, outputRows);
+        Map<String, Object> resultMap = getConsolidatedResults(writeResult, saleforceWriter);
+        assertEquals(1, resultMap.get(ComponentDefinition.RETURN_TOTAL_RECORD_COUNT));
     }
 
     @Test
