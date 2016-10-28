@@ -38,10 +38,9 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     }
 
     public DatasetProperties getDatasetProperties() {
+    @Override
+    public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
         return null;
     }
 
-    @Override public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
-        return null;
-    }
 }
