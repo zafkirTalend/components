@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.runtime;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -993,8 +994,8 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
 
         DefaultComponentRuntimeContainerImpl container = new DefaultComponentRuntimeContainerImpl();
 
-        List records = new ArrayList<IndexedRecord>();
-        String random = String.valueOf(createNewRandom());
+        List<IndexedRecord> records = new ArrayList<>();
+        String random = createNewRandom();
         IndexedRecord r1 = new GenericData.Record(SCHEMA_INSERT_EVENT);
         r1.put(0, "2011-02-02T02:02:02");
         r1.put(1, "2011-02-02T22:02:02.000Z");
@@ -1022,37 +1023,28 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
 
         assertEquals(2, ((SalesforceWriter) batchWriter).getSuccessfulWrites().size());
 
-        sfProps.extendInsert.setValue(false);
-        salesforceSink.initialize(adaptor, sfProps);
-        salesforceSink.validate(adaptor);
-        Writer<Result> noBatchWriter = salesforceSink.createWriteOperation().createWriter(adaptor);
-        writeRows(noBatchWriter, records);
-
-        assertEquals(1, ((SalesforceWriter) noBatchWriter).getSuccessfulWrites().size());
-
         ComponentDefinition sfInputDef = new TSalesforceInputDefinition();
         TSalesforceInputProperties sfInputProps = (TSalesforceInputProperties) sfInputDef.createRuntimeProperties();
         sfInputProps.copyValuesFrom(sfProps);
-        sfInputProps.condition.setValue("Subject = '" + random + "'");
+        sfInputProps.condition.setValue("Subject = '" + random + "' ORDER BY DurationInMinutes ASC");
 
         sfInputProps.module.main.schema.setValue(SCHEMA_INPUT_AND_DELETE_EVENT);
         List<IndexedRecord> inpuRecords = readRows(sfInputProps);
         try {
-            assertEquals(4, inpuRecords.size());
+            assertEquals(2, inpuRecords.size());
             IndexedRecord inputRecords_1 = inpuRecords.get(0);
             IndexedRecord inputRecords_2 = inpuRecords.get(1);
             assertEquals(random, inputRecords_1.get(6));
             assertEquals(random, inputRecords_2.get(6));
-            assertEquals("2011-02-02T02:02:02.000Z", inputRecords_1.get(1));
-            assertEquals("2016-02-02T02:02:02.000Z", inputRecords_2.get(1));
-            assertEquals("2011-02-02T22:02:02.000Z", inputRecords_1.get(2));
-            assertEquals("2016-02-02T12:02:02.000Z", inputRecords_2.get(2));
-            assertEquals("2011-02-02", inputRecords_1.get(3));
-            assertEquals("2016-02-02", inputRecords_2.get(3));
-            assertEquals("1200", inputRecords_1.get(4));
-            assertEquals("600", inputRecords_2.get(4));
-            assertEquals("true", inputRecords_1.get(5));
-            assertEquals("false", inputRecords_2.get(5));
+            // we use containsInAnyOrder because we are not garanteed to have the same order every run.
+            assertThat(Arrays.asList("2011-02-02T02:02:02.000Z", "2016-02-02T02:02:02.000Z"),
+                    containsInAnyOrder(inputRecords_1.get(1), inputRecords_2.get(1)));
+            assertThat(Arrays.asList("2011-02-02T22:02:02.000Z", "2016-02-02T12:02:02.000Z"),
+                    containsInAnyOrder(inputRecords_1.get(2), inputRecords_2.get(2)));
+            assertThat(Arrays.asList("2011-02-02", "2016-02-02"),
+                    containsInAnyOrder(inputRecords_1.get(3), inputRecords_2.get(3)));
+            assertThat(Arrays.asList("1200", "600"), containsInAnyOrder(inputRecords_1.get(4), inputRecords_2.get(4)));
+            assertThat(Arrays.asList("true", "false"), containsInAnyOrder(inputRecords_1.get(5), inputRecords_2.get(5)));
 
         } finally {
             deleteRows(inpuRecords, sfInputProps);
