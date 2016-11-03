@@ -1,17 +1,15 @@
 package org.talend.components.jdbc.dataprep;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.api.exception.ComponentException;
@@ -24,6 +22,9 @@ import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
+
+import com.cedarsoftware.util.io.JsonObject;
+import com.cedarsoftware.util.io.JsonReader;
 
 public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperties implements RuntimeSettingProvider {
 
@@ -95,28 +96,33 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
         return setting;
     }
 
+    @SuppressWarnings("rawtypes")
     private void setDriverAndClass(AllSetting setting) {
+        StringBuilder json = new StringBuilder();
         // TODO this is only a simple implement
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
-        JSONParser parser = new JSONParser();
-        JSONArray ja = null;
-        try {
-            ja = (JSONArray) parser.parse(new InputStreamReader(is));
-        } catch (IOException | ParseException e) {
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+            String row = null;
+            while ((row = br.readLine()) != null) {
+                json.append(row);
+            }
+        } catch (IOException e) {
             throw new ComponentException(e);
         }
+
+        Map map = JsonReader.jsonToMaps(json.toString());
 
         List<String> mavenPaths = new ArrayList<String>();
         String driverClass = null;
 
-        for (Object o : ja) {
-            JSONObject jo = (JSONObject) o;
-            String id = (String) jo.get("id");
+        for (Object o : (Object[]) map.get("@items")) {
+            JsonObject eachDBInfo = (JsonObject) o;
+            String id = (String) eachDBInfo.get("id");
             if (dbTypes.getValue().name().equals(id)) {
-                driverClass = (String) jo.get("class");
-                JSONArray paths = (JSONArray) jo.get("paths");
+                driverClass = (String) eachDBInfo.get("class");
+                Object[] paths = (Object[]) eachDBInfo.get("paths");
                 for (Object path : paths) {
-                    JSONObject jo_path = (JSONObject) path;
+                    JsonObject jo_path = (JsonObject) path;
                     mavenPaths.add((String) jo_path.get("path"));
                 }
                 break;
@@ -126,4 +132,5 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
         setting.setDriverPaths(mavenPaths);
         setting.setDriverClass(driverClass);
     }
+
 }
