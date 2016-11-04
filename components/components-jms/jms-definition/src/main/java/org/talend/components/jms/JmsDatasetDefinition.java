@@ -37,7 +37,8 @@ public class JmsDatasetDefinition extends SimpleNamedThing implements DatasetDef
                 RUNTIME_1_1);
     }
 
-    @Override public String getImagePath() {
+    @Override
+    public String getImagePath() {
         return null;
     }
 }
