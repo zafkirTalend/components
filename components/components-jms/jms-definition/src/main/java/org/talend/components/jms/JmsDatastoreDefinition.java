@@ -41,4 +41,9 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
         return null;
     }
+
+    @Override
+    public String getImagePath() {
+        return null;
+    }
 }
