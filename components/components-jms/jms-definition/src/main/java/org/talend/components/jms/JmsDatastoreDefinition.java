@@ -25,22 +25,24 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
 
     public static final String RUNTIME_1_1 = "org.talend.components.jms.runtime_1_1.DatastoreRuntime";
 
-    @Override
-    public JmsDatastoreProperties createProperties() {
-        return new JmsDatastoreProperties(JmsComponentFamilyDefinition.NAME);
+    @Override public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
+        return null;
     }
 
+    @Override public JmsDatastoreProperties createProperties() {
+        return null;
+    }
+
+    /*
+        public JmsDatastoreProperties createProperties() {
+            return new JmsDatastoreProperties(JmsComponentFamilyDefinition.NAME);
+        }
+    */
     @Override
     public RuntimeInfo getRuntimeInfo(JmsDatastoreProperties properties, Object ctx) {
         return new SimpleRuntimeInfo(this.getClass().getClassLoader(),
                 DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
                 RUNTIME_1_1);
-    }
-
-    public DatasetProperties getDatasetProperties() {
-    @Override
-    public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
-        return null;
     }
 
 }

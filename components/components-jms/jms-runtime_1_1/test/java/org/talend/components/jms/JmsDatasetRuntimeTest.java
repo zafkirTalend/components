@@ -2,7 +2,6 @@ package org.talend.components.jms;
 
 import org.apache.avro.Schema;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.jms.runtime_1_1.JmsDatasetRuntime;

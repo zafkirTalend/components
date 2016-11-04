@@ -44,6 +44,8 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         super(name);
     }
 
+    // FIXME Default values are not working => There are just some examples for the user
+
     public Property<JmsVersion> version = newEnum("version", JmsVersion.class).setRequired();
 
     public Property<String> contextProvider = PropertyFactory.newString("contextProvider","com.tibco.tibjms.naming.TibjmsInitialContextFactory").setRequired();
@@ -93,56 +95,27 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         super.refreshLayout(form);
         // Main properties
         if (form.getName().equals(Form.MAIN)) {
-                form.getWidget(version.getName()).setHidden(false);
-                form.getWidget(contextProvider.getName()).setHidden(false);
-                form.getWidget(serverUrl.getName()).setHidden(false);
+                form.getWidget(version.getName()).setVisible();
+                form.getWidget(contextProvider.getName()).setVisible();
+                form.getWidget(serverUrl.getName()).setVisible();
                 if (needUserIdentity.getValue()) {
-                    form.getWidget(userName.getName()).setHidden(false);
-                    form.getWidget(userPassword.getName()).setHidden(false);
+                    form.getWidget(userName.getName()).setVisible();
+                    form.getWidget(userPassword.getName()).setVisible();
                 } else {
-                    form.getWidget(userName.getName()).setHidden(true);
-                    form.getWidget(userPassword.getName()).setHidden(true);
+                    form.getWidget(userName.getName()).setHidden();
+                    form.getWidget(userPassword.getName()).setHidden();
                 }
         }
         // Advanced Properties
         if (form.getName().equals(Form.ADVANCED)){
-            form.getWidget(useHttps.getName()).setHidden(false);
+            form.getWidget(useHttps.getName()).setVisible();
             if (useHttps.getValue()){
-                form.getWidget(httpsSettings.getName()).setHidden(false);
+                form.getWidget(httpsSettings.getName()).setVisible();
             } else {
-                form.getWidget(httpsSettings.getName()).setHidden(true);
+                form.getWidget(httpsSettings.getName()).setHidden();
             }
-            form.getWidget(property.getName()).setHidden(false);
-            form.getWidget(value.getName()).setHidden(false);
+            form.getWidget(property.getName()).setVisible();
+            form.getWidget(value.getName()).setVisible();
         }
     }
-/*
-    public ConnectionFactory getConnectionFactory() {
-
-        Context context = null;
-        Hashtable<String, String> env  = new Hashtable();
-        env.put(Context.INITIAL_CONTEXT_FACTORY,"org.exolab.jms.jndi.InitialContextFactory");
-        env.put(Context.PROVIDER_URL, "tcp://localhost:3035");
-        env.put(Context.SECURITY_PRINCIPAL, "admin");
-        env.put(Context.SECURITY_CREDENTIALS, "openjms");
-
-        ConnectionFactory connection = null;
-        System.out.println("test : " + connectionFactoryName.getValue());
-        try {
-            context = new InitialContext(env);
-            System.out.println("context");
-            connection = (ConnectionFactory)context.lookup("ConnectionFactory");
-            //TODO check if username required how it works
-            /*
-            if (datastore.needUserIdentity.getValue()) {
-                connection = tcf.createConnection(datastore.userName.getValue(),datastore.userPassword.getValue());
-            } else {
-                connection = tcf.createTopicConnection();
-            }
-        } catch (NamingException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }*/
 }

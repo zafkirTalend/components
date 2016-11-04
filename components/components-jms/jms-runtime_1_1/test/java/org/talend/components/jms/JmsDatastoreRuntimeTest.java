@@ -1,14 +1,19 @@
 package org.talend.components.jms;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.components.jms.runtime_1_1.JmsDatastoreRuntime;
+import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.ValidationResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,13 +27,9 @@ public class JmsDatastoreRuntimeTest {
     @Test
     public void testDoHealthChecks() {
         JmsDatastoreProperties props = new JmsDatastoreProperties("test");
-        props.contextProvider.setValue("org.exolab.jms.jndi.InitialContextFactory");
-        props.serverUrl.setValue("tcp://localhost:3035");
-        props.version.setValue(JmsDatastoreProperties.JmsVersion.V_1_1);
-        props.connectionFactoryName.setValue("ConnectionFactory");
         datastoreRuntime.initialize(null,props);
-        datastoreRuntime.doHealthChecks(null);
-        //assertEquals(ValidationResult.OK, healthResult);
+        Iterable<ValidationResult> healthResult = datastoreRuntime.doHealthChecks(null);
+        assertEquals(Arrays.asList(ValidationResult.OK), healthResult);
     }
 
     /**
@@ -41,14 +42,18 @@ public class JmsDatastoreRuntimeTest {
         assertEquals(ValidationResult.OK, result);
     }
 
-
     /**
      * Check {@link JmsDatastoreRuntime#getPossibleDatasetNames(RuntimeContainer, String)}
      * Returns // TODO
      */
-    @Test
+    /*@Test
     public void testGetPossibleDatasetNames() {
-        ValidationResult result = datastoreRuntime.initialize(null, null);
-        assertEquals(ValidationResult.OK, result);
-    }
+        List<NamedThing> datasetListResult = new ArrayList();
+        try {
+            datasetListResult = datastoreRuntime.getPossibleDatasetNames(null, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assertEquals(null, datasetListResult);
+    }*/
 }
