@@ -12,8 +12,18 @@
 // ============================================================================
 package org.talend.components.salesforce.runtime;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,10 +50,6 @@ import org.talend.components.api.component.runtime.Result;
 import org.talend.components.api.component.runtime.Writer;
 import org.talend.components.api.container.DefaultComponentRuntimeContainerImpl;
 import org.talend.components.salesforce.SalesforceOutputProperties.OutputAction;
-import org.talend.components.salesforce.runtime.SalesforceSink;
-import org.talend.components.salesforce.runtime.SalesforceSource;
-import org.talend.components.salesforce.runtime.SalesforceWriteOperation;
-import org.talend.components.salesforce.runtime.SalesforceWriter;
 import org.talend.components.salesforce.test.SalesforceTestBase;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputDefinition;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
@@ -262,7 +268,7 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
 
     /**
      * @param isDynamic true if the actual rows should contain more columns than the schema specified in the component
-     *            properties.
+     * properties.
      */
     protected void runOutputInsert(boolean isDynamic) throws Exception {
         TSalesforceOutputProperties props = createSalesforceoutputProperties(EXISTING_MODULE_NAME);
@@ -604,7 +610,7 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
         DefaultComponentRuntimeContainerImpl container = new DefaultComponentRuntimeContainerImpl();
 
         List<IndexedRecord> records = new ArrayList<>();
-        String random = String.valueOf(createNewRandom());
+        String random = createNewRandom();
         IndexedRecord r1 = new GenericData.Record(SCHEMA_INSERT_EVENT);
         r1.put(0, "2011-02-02T02:02:02");
         r1.put(1, "2011-02-02T22:02:02.000Z");
@@ -632,23 +638,15 @@ public class SalesforceWriterTestIT extends SalesforceTestBase {
 
         assertEquals(2, ((SalesforceWriter) batchWriter).getSuccessfulWrites().size());
 
-        sfProps.extendInsert.setValue(false);
-        salesforceSink.initialize(adaptor, sfProps);
-        salesforceSink.validate(adaptor);
-        Writer<Result> noBatchWriter = salesforceSink.createWriteOperation().createWriter(adaptor);
-        writeRows(noBatchWriter, records);
-
-        assertEquals(1, ((SalesforceWriter) noBatchWriter).getSuccessfulWrites().size());
-
         ComponentDefinition sfInputDef = new TSalesforceInputDefinition();
         TSalesforceInputProperties sfInputProps = (TSalesforceInputProperties) sfInputDef.createRuntimeProperties();
         sfInputProps.copyValuesFrom(sfProps);
-        sfInputProps.condition.setValue("Subject = '" + random + "'");
+        sfInputProps.condition.setValue("Subject = '" + random + "' ORDER BY DurationInMinutes ASC");
 
         sfInputProps.module.main.schema.setValue(SCHEMA_INPUT_AND_DELETE_EVENT);
         List<IndexedRecord> inpuRecords = readRows(sfInputProps);
         try {
-            assertEquals(4, inpuRecords.size());
+            assertEquals(2, inpuRecords.size());
             IndexedRecord inputRecords_1 = inpuRecords.get(0);
             IndexedRecord inputRecords_2 = inpuRecords.get(1);
             assertEquals(random, inputRecords_1.get(6));

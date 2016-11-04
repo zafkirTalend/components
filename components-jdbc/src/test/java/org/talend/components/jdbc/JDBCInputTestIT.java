@@ -31,8 +31,8 @@ import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.Reader;
 import org.talend.components.jdbc.common.DBTestUtils;
-import org.talend.components.jdbc.module.JDBCConnectionModule;
 import org.talend.components.jdbc.runtime.JDBCSource;
+import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.components.jdbc.tjdbcinput.TJDBCInputDefinition;
 import org.talend.components.jdbc.tjdbcinput.TJDBCInputProperties;
 import org.talend.daikon.NamedThing;
@@ -55,7 +55,7 @@ public class JDBCInputTestIT {
 
     private static String sql;
 
-    public static JDBCConnectionModule connectionInfo;
+    public static AllSetting allSetting;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -77,19 +77,18 @@ public class JDBCInputTestIT {
 
         sql = props.getProperty("sql");
 
-        connectionInfo = new JDBCConnectionModule("connection");
+        allSetting = new AllSetting();
+        allSetting.setDriverClass(driverClass);
+        allSetting.setJdbcUrl(jdbcUrl);
+        allSetting.setUsername(userId);
+        allSetting.setPassword(password);
 
-        connectionInfo.driverClass.setValue(driverClass);
-        connectionInfo.jdbcUrl.setValue(jdbcUrl);
-        connectionInfo.userPassword.userId.setValue(userId);
-        connectionInfo.userPassword.password.setValue(password);
-
-        DBTestUtils.prepareTableAndData(connectionInfo);
+        DBTestUtils.prepareTableAndData(allSetting);
     }
 
     @AfterClass
     public static void clean() throws ClassNotFoundException, SQLException {
-        DBTestUtils.releaseResource(connectionInfo);
+        DBTestUtils.releaseResource(allSetting);
     }
 
     @Test
@@ -101,7 +100,7 @@ public class JDBCInputTestIT {
         properties.tableSelection.tablename.setValue(tablename);
         properties.sql.setValue(sql);
 
-        JDBCSource source = DBTestUtils.createCommonJDBCSource(definition, properties);
+        JDBCSource source = DBTestUtils.createCommonJDBCSource(properties);
 
         List<NamedThing> schemaNames = source.getSchemaNames(null);
         assertTrue(schemaNames != null);
@@ -127,7 +126,7 @@ public class JDBCInputTestIT {
         properties.tableSelection.tablename.setValue(tablename);
         properties.sql.setValue(sql);
 
-        JDBCSource source = DBTestUtils.createCommonJDBCSource(definition, properties);
+        JDBCSource source = DBTestUtils.createCommonJDBCSource(properties);
 
         Schema schema = source.getEndpointSchema(null, "TEST");
         assertEquals("TEST", schema.getName().toUpperCase());
@@ -171,7 +170,7 @@ public class JDBCInputTestIT {
             properties.tableSelection.tablename.setValue(tablename);
             properties.sql.setValue(sql);
 
-            reader = DBTestUtils.createCommonJDBCInputReader(definition, properties);
+            reader = DBTestUtils.createCommonJDBCInputReader(properties);
 
             reader.start();
 
@@ -228,7 +227,7 @@ public class JDBCInputTestIT {
         properties.tableSelection.tablename.setValue(tablename);
         properties.sql.setValue(sql);
 
-        Reader reader = DBTestUtils.createCommonJDBCInputReader(definition, properties);
+        Reader reader = DBTestUtils.createCommonJDBCInputReader(properties);
 
         try {
             IndexedRecordConverter<Object, ? extends IndexedRecord> converter = null;
