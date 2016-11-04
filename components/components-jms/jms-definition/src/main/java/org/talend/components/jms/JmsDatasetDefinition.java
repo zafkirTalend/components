@@ -36,4 +36,8 @@ public class JmsDatasetDefinition extends SimpleNamedThing implements DatasetDef
                 DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-jms/jms-runtime_1_1"),
                 RUNTIME_1_1);
     }
+
+    @Override public String getImagePath() {
+        return null;
+    }
 }
