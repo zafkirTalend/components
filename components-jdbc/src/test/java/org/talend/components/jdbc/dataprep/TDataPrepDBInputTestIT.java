@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.Reader;
 import org.talend.components.jdbc.common.DBTestUtils;
-import org.talend.components.jdbc.dataprep.TDataPrepDBInputProperties.DBType;
 import org.talend.components.jdbc.runtime.JDBCSource;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.NamedThing;
@@ -240,7 +239,7 @@ public class TDataPrepDBInputTestIT {
     private TDataPrepDBInputProperties createCommonJDBCInputProperties(TDataPrepDBInputDefinition definition) {
         TDataPrepDBInputProperties properties = (TDataPrepDBInputProperties) definition.createRuntimeProperties();
 
-        properties.dbTypes.setValue(DBType.DERBY);
+        properties.dbTypes.setValue("DERBY");
         properties.jdbcUrl.setValue(jdbcUrl);
         properties.userPassword.userId.setValue(userId);
         properties.userPassword.password.setValue(password);

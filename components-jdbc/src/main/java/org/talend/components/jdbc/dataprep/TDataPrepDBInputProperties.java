@@ -20,6 +20,7 @@ import org.talend.components.jdbc.CommonUtils;
 import org.talend.components.jdbc.RuntimeSettingProvider;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
@@ -28,8 +29,24 @@ import com.cedarsoftware.util.io.JsonReader;
 
 public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperties implements RuntimeSettingProvider {
 
+    @SuppressWarnings("rawtypes")
+    private transient Map dyTypesInfo;
+
     public TDataPrepDBInputProperties(String name) {
         super(name);
+
+        StringBuilder json = new StringBuilder();
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+            String row = null;
+            while ((row = br.readLine()) != null) {
+                json.append(row);
+            }
+        } catch (IOException e) {
+            throw new ComponentException(e);
+        }
+
+        dyTypesInfo = JsonReader.jsonToMaps(json.toString());
     }
 
     // declare the connector and schema
@@ -45,13 +62,7 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
         return Collections.emptySet();
     }
 
-    // basic setting
-    public enum DBType {
-        MYSQL,
-        DERBY
-    }
-
-    public Property<DBType> dbTypes = PropertyFactory.newEnum("dbTypes", DBType.class).setRequired();
+    public Property<String> dbTypes = PropertyFactory.newString("dbTypes").setRequired();
 
     public Property<String> jdbcUrl = PropertyFactory.newProperty("jdbcUrl").setRequired();
 
@@ -65,7 +76,7 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
 
         Form mainForm = CommonUtils.addForm(this, Form.MAIN);
 
-        mainForm.addRow(dbTypes);
+        mainForm.addRow(Widget.widget(dbTypes).setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
         mainForm.addRow(jdbcUrl);
         mainForm.addRow(userPassword.getForm(Form.MAIN));
 
@@ -78,7 +89,17 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
     public void setupProperties() {
         super.setupProperties();
 
-        dbTypes.setValue(DBType.MYSQL);
+        List<String> dbTypesId = new ArrayList<String>();
+
+        for (Object o : (Object[]) dyTypesInfo.get("@items")) {
+            @SuppressWarnings("rawtypes")
+            JsonObject eachDBInfo = (JsonObject) o;
+            String id = (String) eachDBInfo.get("id");
+            dbTypesId.add(id);
+        }
+
+        dbTypes.setPossibleValues(dbTypesId);
+        dbTypes.setValue(dbTypesId.get(0));
     }
 
     @Override
@@ -98,27 +119,13 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
 
     @SuppressWarnings("rawtypes")
     private void setDriverAndClass(AllSetting setting) {
-        StringBuilder json = new StringBuilder();
-        // TODO this is only a simple implement
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
-            String row = null;
-            while ((row = br.readLine()) != null) {
-                json.append(row);
-            }
-        } catch (IOException e) {
-            throw new ComponentException(e);
-        }
-
-        Map map = JsonReader.jsonToMaps(json.toString());
-
         List<String> mavenPaths = new ArrayList<String>();
         String driverClass = null;
 
-        for (Object o : (Object[]) map.get("@items")) {
+        for (Object o : (Object[]) dyTypesInfo.get("@items")) {
             JsonObject eachDBInfo = (JsonObject) o;
             String id = (String) eachDBInfo.get("id");
-            if (dbTypes.getValue().name().equals(id)) {
+            if (dbTypes.getValue().equals(id)) {
                 driverClass = (String) eachDBInfo.get("class");
                 Object[] paths = (Object[]) eachDBInfo.get("paths");
                 for (Object path : paths) {
