@@ -26,7 +26,7 @@ import org.talend.daikon.exception.TalendRuntimeException;
 public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, PDone>
         implements RuntimableRuntime {
 
-    transient private JmsOutputProperties properties;
+    private JmsOutputProperties properties;
 
     private JmsMessageType messageType;
 
@@ -60,7 +60,7 @@ public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, 
         } else if (messageType.equals(JmsMessageType.TOPIC)) {
             // TODO label comes from user
            return jmsCollection.apply("writeToJms", JmsIO.write()
-                   // .withConnectionFactory(properties.dataset.datastore.getConnectionFactory())
+                    //.withConnectionFactory(properties.dataset.datastore.getConnectionFactory())
                     .withTopic(properties.to.toString()));
         } else {
             throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT);
