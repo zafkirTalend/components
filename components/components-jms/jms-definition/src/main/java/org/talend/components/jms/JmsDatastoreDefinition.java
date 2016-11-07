@@ -45,7 +45,8 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
                 RUNTIME_1_1);
     }
 
-    @Override public String getImagePath() {
+    @Override
+    public String getImagePath() {
         return null;
     }
 }
