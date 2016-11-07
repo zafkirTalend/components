@@ -1,6 +1,7 @@
 package org.talend.components.jdbc.dataprep;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,11 +33,15 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
     @SuppressWarnings("rawtypes")
     private transient Map dyTypesInfo;
 
+    private final static String CONFIG_FILE_lOCATION_KEY = "org.talend.component.jdbc.config.file";
+
     public TDataPrepDBInputProperties(String name) {
         super(name);
 
         StringBuilder json = new StringBuilder();
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
+        String config_file = System.getProperty(CONFIG_FILE_lOCATION_KEY);
+        try (InputStream is = config_file != null ? (new FileInputStream(config_file))
+                : this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
             String row = null;
             while ((row = br.readLine()) != null) {
