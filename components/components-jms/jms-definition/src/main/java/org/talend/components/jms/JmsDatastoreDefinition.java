@@ -48,9 +48,4 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     @Override public String getImagePath() {
         return null;
     }
-
-    @Override
-    public String getImagePath() {
-        return null;
-    }
 }

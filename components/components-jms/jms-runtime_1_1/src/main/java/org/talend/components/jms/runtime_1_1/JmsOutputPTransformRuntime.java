@@ -2,6 +2,8 @@ package org.talend.components.jms.runtime_1_1;
 
 import org.apache.avro.generic.IndexedRecord;
 
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.jms.JmsIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -24,22 +26,26 @@ import org.talend.daikon.exception.TalendRuntimeException;
 public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, PDone>
         implements RuntimableRuntime {
 
-    private JmsOutputProperties properties;
+    transient private JmsOutputProperties properties;
 
-    JmsMessageType messageType = properties.dataset.msgType.getValue();
+    private JmsMessageType messageType;
 
     @Override public PDone apply(PCollection<Object> objectPCollection) {
+        System.out.println("deb apply");
         PCollection<IndexedRecord> test = objectPCollection.apply("ExtractIndexedRecord", ParDo.of(new DoFn<Object, IndexedRecord>() {
             IndexedRecordConverter converter;
-            AvroRegistry avroRegistry = new AvroRegistry();
+            transient AvroRegistry avroRegistry = new AvroRegistry();
             @DoFn.ProcessElement public void processElement(ProcessContext c) throws Exception {
-                if (c.element() == null)
+                if (c.element() == null){
                     return;
-                if (converter == null)
+                }
+                if (converter == null){
                     converter = avroRegistry.createIndexedRecordConverter(c.element().getClass());
-               c.output((IndexedRecord)converter.convertToAvro(c.element()));
+                    c.output((IndexedRecord)converter.convertToAvro(c.element()));
+                }
             }
         }));
+        //test.setCoder(AvroCoder.of(IndexedRecord.class));
 
         PCollection<String> jmsCollection = test.apply("ExtractString", ParDo.of(new DoFn<IndexedRecord, String>() {
             @DoFn.ProcessElement public void processElement(ProcessContext c) throws Exception {
@@ -64,4 +70,8 @@ public class JmsOutputPTransformRuntime extends PTransform<PCollection<Object>, 
     @Override public ValidationResult initialize(RuntimeContainer container, Properties properties) {
         this.properties = (JmsOutputProperties) properties;
         return ValidationResult.OK;    }
+
+    public void setMessageType(){
+        messageType = properties.dataset.msgType.getValue();
+    }
 }

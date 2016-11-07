@@ -85,20 +85,20 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
             form.getWidget(to.getName()).setHidden(false);
         }
         if (Form.ADVANCED.equals(form.getName())) {
-            form.getWidget(delivery_mode.getName()).setHidden(false);
-            form.getWidget(pool_max_total.getName()).setHidden(false);
-            form.getWidget(pool_max_wait.getName()).setHidden(false);
-            form.getWidget(pool_min_Idle.getName()).setHidden(false);
-            form.getWidget(pool_max_Idle.getName()).setHidden(false);
-            form.getWidget(pool_use_eviction.getName()).setHidden(false);
+            form.getWidget(delivery_mode.getName()).setVisible();
+            form.getWidget(pool_max_total.getName()).setVisible();
+            form.getWidget(pool_max_wait.getName()).setVisible();
+            form.getWidget(pool_min_Idle.getName()).setVisible();
+            form.getWidget(pool_max_Idle.getName()).setVisible();
+            form.getWidget(pool_use_eviction.getName()).setVisible();
             if (pool_use_eviction.getValue()) {
-                form.getWidget(pool_time_between_eviction.getName()).setHidden(false);
-                form.getWidget(pool_eviction_min_idle_time.getName()).setHidden(false);
-                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setHidden(false);
+                form.getWidget(pool_time_between_eviction.getName()).setVisible();
+                form.getWidget(pool_eviction_min_idle_time.getName()).setVisible();
+                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setVisible();
             } else {
-                form.getWidget(pool_time_between_eviction.getName()).setHidden(true);
-                form.getWidget(pool_eviction_min_idle_time.getName()).setHidden(true);
-                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setHidden(true);
+                form.getWidget(pool_time_between_eviction.getName()).setHidden();
+                form.getWidget(pool_eviction_min_idle_time.getName()).setHidden();
+                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setHidden();
             }
         }
     }
