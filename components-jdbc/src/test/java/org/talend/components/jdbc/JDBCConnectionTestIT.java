@@ -17,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,19 +57,18 @@ public class JDBCConnectionTestIT {
         TJDBCConnectionDefinition definition = new TJDBCConnectionDefinition();
         TJDBCConnectionProperties properties = DBTestUtils.createCommonJDBCConnectionProperties(allSetting, definition);
 
+        // the maven path below is a library at my local repository, you can change it to any jdbc driver which exists in your
+        // maven repository for running the test. I can't use derby for test as i have added the derby dependency in the pom file.
+        properties.connection.driverTable.drivers
+                .setValue(Arrays.asList("mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.3.0"));
+
         RuntimeInfo runtimeInfo = definition.getRuntimeInfo(properties, ConnectorTopology.NONE);
         try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo,
                 definition.getClass().getClassLoader())) {
-            JDBCSourceOrSink sourceOrSink = (JDBCSourceOrSink) sandboxedInstance.getInstance();
-            sourceOrSink.initialize(null, properties);
-            ValidationResult result = sourceOrSink.validate(null);
-            assertTrue(result.getStatus() == ValidationResult.Result.OK);
-            try (Connection conn1 = sourceOrSink.getConnection(null); Connection conn2 = sourceOrSink.getConnection(null)) {
-                assertTrue(conn1 == conn2);
-                assertTrue(!conn1.isClosed());
-            } catch (ClassNotFoundException | SQLException e) {
-                Assert.fail(e.getMessage());
-            }
+            sandboxedInstance.getInstance();
+            Class.forName("org.gjt.mm.mysql.Driver");
+        } catch (ClassNotFoundException e) {
+            Assert.fail("can't find the jdbc driver class, fail to load the library");
         }
     }
 
