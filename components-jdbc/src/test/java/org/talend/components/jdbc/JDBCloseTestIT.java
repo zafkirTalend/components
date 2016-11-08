@@ -67,7 +67,7 @@ public class JDBCloseTestIT {
     };
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCloseTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
@@ -78,7 +78,7 @@ public class JDBCloseTestIT {
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.shutdownDBIfNecessary();
     }
 
@@ -102,16 +102,14 @@ public class JDBCloseTestIT {
         closeSourceOrSink.initialize(container, closeProperties);
         closeSourceOrSink.validate(container);
 
-        java.sql.Connection conn = (java.sql.Connection) container.getComponentData(refComponentId,
-                ComponentConstants.CONNECTION_KEY);
-        if (conn != null) {
-            try {
+        try (java.sql.Connection conn = (java.sql.Connection) container.getComponentData(refComponentId,
+                ComponentConstants.CONNECTION_KEY)) {
+            if (conn != null) {
                 Assert.assertTrue(conn.isClosed());
-            } catch (SQLException e) {
-                Assert.fail(e.getMessage());
             }
+        } catch (SQLException e) {
+            Assert.fail(e.getMessage());
         }
-
     }
 
 }

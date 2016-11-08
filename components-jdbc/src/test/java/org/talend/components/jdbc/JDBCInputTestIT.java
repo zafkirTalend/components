@@ -26,6 +26,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
@@ -42,32 +43,29 @@ import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class JDBCInputTestIT {
 
-    private static String tablename;
-
-    private static String sql;
-
     public static AllSetting allSetting;
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCInputTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
             props.load(is);
         }
 
-        tablename = props.getProperty("tablename");
-
-        sql = props.getProperty("sql");
-
         allSetting = DBTestUtils.createAllSetting(props);
 
-        DBTestUtils.prepareTableAndData(allSetting);
+        DBTestUtils.createTable(allSetting);
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.releaseResource(allSetting);
+    }
+
+    @Before
+    public void before() throws SQLException, ClassNotFoundException {
+        DBTestUtils.truncateTableAndLoadData(allSetting);
     }
 
     @Test
@@ -76,8 +74,8 @@ public class JDBCInputTestIT {
         TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
-        properties.tableSelection.tablename.setValue(tablename);
-        properties.sql.setValue(sql);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+        properties.sql.setValue(DBTestUtils.getSQL());
 
         JDBCSource source = DBTestUtils.createCommonJDBCSource(properties);
 
@@ -102,8 +100,8 @@ public class JDBCInputTestIT {
         TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
-        properties.tableSelection.tablename.setValue(tablename);
-        properties.sql.setValue(sql);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+        properties.sql.setValue(DBTestUtils.getSQL());
 
         JDBCSource source = DBTestUtils.createCommonJDBCSource(properties);
 
@@ -146,8 +144,8 @@ public class JDBCInputTestIT {
             TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
             properties.main.schema.setValue(DBTestUtils.createTestSchema());
-            properties.tableSelection.tablename.setValue(tablename);
-            properties.sql.setValue(sql);
+            properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+            properties.sql.setValue(DBTestUtils.getSQL());
 
             reader = DBTestUtils.createCommonJDBCInputReader(properties);
 
@@ -203,8 +201,8 @@ public class JDBCInputTestIT {
         TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
-        properties.tableSelection.tablename.setValue(tablename);
-        properties.sql.setValue(sql);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+        properties.sql.setValue(DBTestUtils.getSQL());
 
         Reader reader = DBTestUtils.createCommonJDBCInputReader(properties);
 

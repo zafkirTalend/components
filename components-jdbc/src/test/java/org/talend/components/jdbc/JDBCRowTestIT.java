@@ -53,31 +53,29 @@ import org.talend.daikon.sandbox.SandboxedInstance;
 
 public class JDBCRowTestIT {
 
-    private static String tablename;
-
     public static AllSetting allSetting;
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCRowTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
             props.load(is);
         }
 
-        tablename = props.getProperty("tablename");
-
         allSetting = DBTestUtils.createAllSetting(props);
+
+        DBTestUtils.createTable(allSetting);
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.releaseResource(allSetting);
     }
 
     @Before
     public void before() throws Exception {
-        DBTestUtils.prepareTableAndData(allSetting);
+        DBTestUtils.truncateTableAndLoadData(allSetting);
     }
 
     @Test
@@ -85,7 +83,7 @@ public class JDBCRowTestIT {
         TJDBCRowDefinition definition = new TJDBCRowDefinition();
         TJDBCRowProperties properties = DBTestUtils.createCommonJDBCRowProperties(allSetting, definition);
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(4, 'momo')");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -100,8 +98,8 @@ public class JDBCRowTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, DBTestUtils.createTestSchema(),
-                definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(),
+                DBTestUtils.createTestSchema(), definition1, properties1);
 
         assertThat(records, hasSize(4));
         Assert.assertEquals(4, records.get(3).get(0));
@@ -113,7 +111,7 @@ public class JDBCRowTestIT {
         TJDBCRowDefinition definition = new TJDBCRowDefinition();
         TJDBCRowProperties properties = DBTestUtils.createCommonJDBCRowProperties(allSetting, definition);
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(?, ?)");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -134,8 +132,8 @@ public class JDBCRowTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, DBTestUtils.createTestSchema(),
-                definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(),
+                DBTestUtils.createTestSchema(), definition1, properties1);
 
         assertThat(records, hasSize(4));
         Assert.assertEquals(4, records.get(3).get(0));
@@ -147,7 +145,7 @@ public class JDBCRowTestIT {
         TJDBCRowDefinition definition = new TJDBCRowDefinition();
         TJDBCRowProperties properties = DBTestUtils.createCommonJDBCRowProperties(allSetting, definition);
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(4, 'a too long value')");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -172,7 +170,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("select id, name from test");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -228,7 +226,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("select id, name from test where id = ?");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -281,7 +279,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("select id, name from notexists");
         properties.dieOnError.setValue(false);
         randomCommit(properties);
@@ -331,7 +329,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(?,?)");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -378,7 +376,8 @@ public class JDBCRowTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(5));
         Assert.assertEquals(4, records.get(3).get(0));
@@ -397,7 +396,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(?,?)");
         properties.dieOnError.setValue(false);
         randomCommit(properties);
@@ -467,7 +466,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("insert into test values(?,?)");
         properties.dieOnError.setValue(true);
         randomCommit(properties);
@@ -516,7 +515,7 @@ public class JDBCRowTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.sql.setValue("select id, name from test where id = ?");
         properties.dieOnError.setValue(true);
         randomCommit(properties);

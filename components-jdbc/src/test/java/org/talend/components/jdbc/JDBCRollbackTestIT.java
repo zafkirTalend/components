@@ -50,8 +50,6 @@ import org.talend.daikon.properties.ValidationResult;
 
 public class JDBCRollbackTestIT {
 
-    private static String tablename;
-
     public static AllSetting allSetting;
 
     private final String refComponentId = "tJDBCConnection1";
@@ -83,26 +81,26 @@ public class JDBCRollbackTestIT {
     };
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCRollbackTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
             props.load(is);
         }
 
-        tablename = props.getProperty("tablename");
-
         allSetting = DBTestUtils.createAllSetting(props);
+
+        DBTestUtils.createTable(allSetting);
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.releaseResource(allSetting);
     }
 
     @Before
     public void before() throws Exception {
-        DBTestUtils.prepareTableAndData(allSetting);
+        DBTestUtils.truncateTableAndLoadData(allSetting);
     }
 
     @SuppressWarnings("rawtypes")
@@ -126,7 +124,7 @@ public class JDBCRollbackTestIT {
         outputProperties.main.schema.setValue(DBTestUtils.createTestSchema());
         outputProperties.updateOutputSchemas();
 
-        outputProperties.tableSelection.tablename.setValue(tablename);
+        outputProperties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
 
         outputProperties.dataAction.setValue(DataAction.INSERT);
 
@@ -184,12 +182,11 @@ public class JDBCRollbackTestIT {
 
         Assert.assertEquals(3, count);
 
-        java.sql.Connection refConnection = (java.sql.Connection) container.getComponentData(refComponentId,
-                ComponentConstants.CONNECTION_KEY);
-
-        assertTrue(refConnection != null);
-        Assert.assertTrue(!refConnection.isClosed());
-        refConnection.close();
+        try (java.sql.Connection refConnection = (java.sql.Connection) container.getComponentData(refComponentId,
+                ComponentConstants.CONNECTION_KEY)) {
+            assertTrue(refConnection != null);
+            Assert.assertTrue(!refConnection.isClosed());
+        }
     }
 
     @Test
@@ -216,11 +213,11 @@ public class JDBCRollbackTestIT {
         rollbackSourceOrSink.initialize(container, rollbackProperties);
         rollbackSourceOrSink.validate(container);
 
-        java.sql.Connection refConnection = (java.sql.Connection) container.getComponentData(refComponentId,
-                ComponentConstants.CONNECTION_KEY);
-
-        assertTrue(refConnection != null);
-        Assert.assertTrue(refConnection.isClosed());
+        try (java.sql.Connection refConnection = (java.sql.Connection) container.getComponentData(refComponentId,
+                ComponentConstants.CONNECTION_KEY)) {
+            assertTrue(refConnection != null);
+            Assert.assertTrue(refConnection.isClosed());
+        }
     }
 
 }

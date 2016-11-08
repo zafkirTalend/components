@@ -37,33 +37,27 @@ public class JDBCTypeMappingTestIT {
 
     public static AllSetting allSetting;
 
-    private static String tablename;
-
-    private static String sql;
-
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCConnectionTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
             props.load(is);
         }
 
-        tablename = props.getProperty("tablename");
-
-        sql = props.getProperty("sql");
-
         allSetting = DBTestUtils.createAllSetting(props);
+
+        DBTestUtils.createTableForEveryType(allSetting);
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.releaseResource(allSetting);
     }
 
     @Before
     public void before() throws Exception {
-        DBTestUtils.prepareTableAndDataForEveryType(allSetting);
+        DBTestUtils.truncateTableAndLoadDataForEveryType(allSetting);
     }
 
     @Test
@@ -72,8 +66,8 @@ public class JDBCTypeMappingTestIT {
         TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema3(true));
-        properties.tableSelection.tablename.setValue(tablename);
-        properties.sql.setValue(sql);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+        properties.sql.setValue(DBTestUtils.getSQL());
 
         JDBCSource source = DBTestUtils.createCommonJDBCSource(properties);
 
@@ -267,8 +261,8 @@ public class JDBCTypeMappingTestIT {
         TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
-        properties.tableSelection.tablename.setValue(tablename);
-        properties.sql.setValue(sql);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+        properties.sql.setValue(DBTestUtils.getSQL());
 
         Reader reader = DBTestUtils.createCommonJDBCInputReader(properties);
 
@@ -321,8 +315,8 @@ public class JDBCTypeMappingTestIT {
             TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
             properties.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
-            properties.tableSelection.tablename.setValue(tablename);
-            properties.sql.setValue(sql);
+            properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+            properties.sql.setValue(DBTestUtils.getSQL());
 
             reader = DBTestUtils.createCommonJDBCInputReader(properties);
 
@@ -539,7 +533,7 @@ public class JDBCTypeMappingTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
 
         properties.dataAction.setValue(DataAction.INSERT);
 
@@ -567,8 +561,8 @@ public class JDBCTypeMappingTestIT {
             TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
 
             properties1.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
-            properties1.tableSelection.tablename.setValue(tablename);
-            properties1.sql.setValue(sql);
+            properties1.tableSelection.tablename.setValue(DBTestUtils.getTablename());
+            properties1.sql.setValue(DBTestUtils.getSQL());
 
             reader = DBTestUtils.createCommonJDBCInputReader(properties1);
 

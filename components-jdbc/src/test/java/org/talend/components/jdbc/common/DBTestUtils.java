@@ -73,26 +73,30 @@ public class DBTestUtils {
     public static void releaseResource(AllSetting allSetting) throws ClassNotFoundException, SQLException {
         try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
             dropTestTable(conn);
-        } catch (Exception e) {
-            // do nothing
         } finally {
             shutdownDBIfNecessary();
         }
     }
 
-    public static void createTestTable(Connection conn) throws Exception {
+    public static void createTestTable(Connection conn) throws SQLException {
         try (Statement statement = conn.createStatement()) {
             statement.execute("create table TEST (ID int, NAME varchar(8))");
         }
     }
 
-    public static void dropTestTable(Connection conn) throws Exception {
+    public static void dropTestTable(Connection conn) throws SQLException {
         try (Statement statement = conn.createStatement()) {
             statement.execute("drop table TEST");
         }
     }
 
-    public static void loadTestData(Connection conn) throws Exception {
+    public static void truncateTable(Connection conn) throws SQLException {
+        try (Statement statement = conn.createStatement()) {
+            statement.execute("delete from TEST");
+        }
+    }
+
+    public static void loadTestData(Connection conn) throws SQLException {
         try (PreparedStatement statement = conn.prepareStatement("insert into TEST values(?,?)")) {
             statement.setInt(1, 1);
             statement.setString(2, "wangwei");
@@ -129,14 +133,15 @@ public class DBTestUtils {
         return builder.endRecord();
     }
 
-    public static void prepareTableAndData(AllSetting allSetting) throws Exception {
+    public static void createTable(AllSetting allSetting) throws Exception {
         try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
-            try {
-                dropTestTable(conn);
-            } catch (Exception e) {
-                // do nothing
-            }
             createTestTable(conn);
+        }
+    }
+
+    public static void truncateTableAndLoadData(AllSetting allSetting) throws ClassNotFoundException, SQLException {
+        try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
+            truncateTable(conn);
             loadTestData(conn);
         }
     }
@@ -156,14 +161,15 @@ public class DBTestUtils {
         return builder.endRecord();
     }
 
-    public static void prepareTableAndDataForEveryType(AllSetting allSetting) throws Exception {
+    public static void createTableForEveryType(AllSetting allSetting) throws SQLException, ClassNotFoundException {
         try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
-            try {
-                dropTestTable(conn);
-            } catch (Exception e) {
-                // do nothing
-            }
             createTestTableForEveryType(conn);
+        }
+    }
+
+    public static void truncateTableAndLoadDataForEveryType(AllSetting allSetting) throws SQLException, ClassNotFoundException {
+        try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
+            truncateTable(conn);
             loadTestDataForEveryType(conn);
         }
     }
@@ -717,5 +723,13 @@ public class DBTestUtils {
         allSetting.setPassword(password);
 
         return allSetting;
+    }
+
+    public static String getTablename() {
+        return "TEST";
+    }
+
+    public static String getSQL() {
+        return "select * from TEST";
     }
 }

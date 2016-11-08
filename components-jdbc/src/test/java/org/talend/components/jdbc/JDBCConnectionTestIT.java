@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -36,12 +35,10 @@ import org.talend.daikon.sandbox.SandboxedInstance;
 
 public class JDBCConnectionTestIT {
 
-    private JDBCSourceOrSink sourceOrSink = null;
-
     public static AllSetting allSetting;
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCConnectionTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
@@ -49,22 +46,6 @@ public class JDBCConnectionTestIT {
         }
 
         allSetting = DBTestUtils.createAllSetting(props);
-    }
-
-    @After
-    public void release() {
-        if (sourceOrSink == null) {
-            return;
-        }
-
-        try {
-            Connection conn = sourceOrSink.getConnection(null);
-            conn.close();
-        } catch (ClassNotFoundException | SQLException e) {
-            // close quietly
-        } finally {
-            DBTestUtils.shutdownDBIfNecessary();
-        }
     }
 
     // we want to test the dynamic library loading with the field driverPath, but fail, so seems that no way to test it
@@ -78,14 +59,13 @@ public class JDBCConnectionTestIT {
         RuntimeInfo runtimeInfo = definition.getRuntimeInfo(properties, ConnectorTopology.NONE);
         try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo,
                 definition.getClass().getClassLoader())) {
-            sourceOrSink = (JDBCSourceOrSink) sandboxedInstance.getInstance();
+            JDBCSourceOrSink sourceOrSink = (JDBCSourceOrSink) sandboxedInstance.getInstance();
             sourceOrSink.initialize(null, properties);
             ValidationResult result = sourceOrSink.validate(null);
             assertTrue(result.getStatus() == ValidationResult.Result.OK);
-            try {
-                Connection conn = sourceOrSink.getConnection(null);
-                assertTrue(conn == sourceOrSink.getConnection(null));
-                assertTrue(!conn.isClosed());
+            try (Connection conn1 = sourceOrSink.getConnection(null); Connection conn2 = sourceOrSink.getConnection(null)) {
+                assertTrue(conn1 == conn2);
+                assertTrue(!conn1.isClosed());
             } catch (ClassNotFoundException | SQLException e) {
                 Assert.fail(e.getMessage());
             }
@@ -96,14 +76,13 @@ public class JDBCConnectionTestIT {
         TJDBCConnectionDefinition definition = new TJDBCConnectionDefinition();
         TJDBCConnectionProperties properties = DBTestUtils.createCommonJDBCConnectionProperties(allSetting, definition);
 
-        sourceOrSink = new JDBCSourceOrSink();
+        JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
         ValidationResult result = sourceOrSink.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.OK);
-        try {
-            Connection conn = sourceOrSink.getConnection(null);
-            assertTrue(conn == sourceOrSink.getConnection(null));
-            assertTrue(!conn.isClosed());
+        try (Connection conn1 = sourceOrSink.getConnection(null); Connection conn2 = sourceOrSink.getConnection(null)) {
+            assertTrue(conn1 == conn2);
+            assertTrue(!conn1.isClosed());
         } catch (ClassNotFoundException | SQLException e) {
             Assert.fail(e.getMessage());
         }
@@ -119,7 +98,7 @@ public class JDBCConnectionTestIT {
         properties.connection.userPassword.userId.setValue(allSetting.getUsername());
         properties.connection.userPassword.password.setValue(allSetting.getPassword());
 
-        sourceOrSink = new JDBCSourceOrSink();
+        JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
         ValidationResult result = sourceOrSink.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.ERROR);
@@ -136,7 +115,7 @@ public class JDBCConnectionTestIT {
         properties.connection.userPassword.userId.setValue(allSetting.getUsername());
         properties.connection.userPassword.password.setValue(allSetting.getPassword());
 
-        sourceOrSink = new JDBCSourceOrSink();
+        JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
         ValidationResult result = sourceOrSink.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.ERROR);
@@ -151,13 +130,12 @@ public class JDBCConnectionTestIT {
         properties.useAutoCommit.setValue(true);
         properties.autocommit.setValue(false);
 
-        sourceOrSink = new JDBCSourceOrSink();
+        JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
         ValidationResult result = sourceOrSink.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.OK);
 
-        try {
-            Connection conn = sourceOrSink.getConnection(null);
+        try (Connection conn = sourceOrSink.getConnection(null)) {
             assertTrue(!conn.getAutoCommit());
             assertTrue(!conn.isClosed());
         } catch (ClassNotFoundException | SQLException e) {
@@ -173,13 +151,12 @@ public class JDBCConnectionTestIT {
         properties.useAutoCommit.setValue(true);
         properties.autocommit.setValue(true);
 
-        sourceOrSink = new JDBCSourceOrSink();
+        JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
         ValidationResult result = sourceOrSink.validate(null);
         assertTrue(result.getStatus() == ValidationResult.Result.OK);
 
-        try {
-            Connection conn = sourceOrSink.getConnection(null);
+        try (Connection conn = sourceOrSink.getConnection(null)) {
             assertTrue(conn.getAutoCommit());
             assertTrue(!conn.isClosed());
         } catch (ClassNotFoundException | SQLException e) {

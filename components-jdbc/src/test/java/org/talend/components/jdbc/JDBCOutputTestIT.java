@@ -39,31 +39,29 @@ import org.talend.components.jdbc.tjdbcoutput.TJDBCOutputProperties.DataAction;
 
 public class JDBCOutputTestIT {
 
-    private static String tablename;
-
     private static AllSetting allSetting;
 
     @BeforeClass
-    public static void init() throws Exception {
+    public static void beforeClass() throws Exception {
         java.util.Properties props = new java.util.Properties();
         try (InputStream is = JDBCOutputTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
             props = new java.util.Properties();
             props.load(is);
         }
 
-        tablename = props.getProperty("tablename");
-
         allSetting = DBTestUtils.createAllSetting(props);
+
+        DBTestUtils.createTable(allSetting);
     }
 
     @AfterClass
-    public static void clean() throws ClassNotFoundException, SQLException {
+    public static void afterClass() throws ClassNotFoundException, SQLException {
         DBTestUtils.releaseResource(allSetting);
     }
 
     @Before
     public void before() throws Exception {
-        DBTestUtils.prepareTableAndData(allSetting);
+        DBTestUtils.truncateTableAndLoadData(allSetting);
     }
 
     @Test
@@ -75,7 +73,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.INSERT);
         properties.dieOnError.setValue(true);
 
@@ -107,7 +105,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(5));
         Assert.assertEquals(4, records.get(3).get(0));
@@ -125,7 +124,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.INSERT);
         properties.useBatch.setValue(false);// reject function can't work with batch function
 
@@ -178,7 +177,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(6));
         Assert.assertEquals(4, records.get(3).get(0));
@@ -198,7 +198,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.UPDATE);
         properties.dieOnError.setValue(true);
 
@@ -230,7 +230,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(3));
         Assert.assertEquals(1, records.get(0).get(0));
@@ -250,7 +251,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.UPDATE);
         properties.useBatch.setValue(false);// reject function can't work with batch function
 
@@ -303,7 +304,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(3));
         Assert.assertEquals(1, records.get(0).get(0));
@@ -323,7 +325,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.DELETE);
         properties.dieOnError.setValue(true);
 
@@ -353,7 +355,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(1));
         Assert.assertEquals(3, records.get(0).get(0));
@@ -370,7 +373,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.DELETE);
         properties.useBatch.setValue(false);// reject function can't work with batch function
 
@@ -423,7 +426,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(0));
     }
@@ -437,7 +441,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.INSERTORUPDATE);
         properties.dieOnError.setValue(true);
 
@@ -476,7 +480,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(4));
         Assert.assertEquals(1, records.get(0).get(0));
@@ -499,7 +504,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         properties.dataAction.setValue(DataAction.UPDATEORINSERT);
         properties.dieOnError.setValue(true);
 
@@ -538,7 +543,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         assertThat(records, hasSize(4));
         Assert.assertEquals(1, records.get(0).get(0));
@@ -560,7 +566,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
 
         DataAction action = DBTestUtils.randomDataAction();
         properties.dataAction.setValue(action);
@@ -595,7 +601,8 @@ public class JDBCOutputTestIT {
 
         TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
         TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
-        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(tablename, schema, definition1, properties1);
+        List<IndexedRecord> records = DBTestUtils.fetchDataByReaderFromTable(DBTestUtils.getTablename(), schema, definition1,
+                properties1);
 
         if (action == DataAction.INSERT || action == DataAction.INSERTORUPDATE || action == DataAction.UPDATEORINSERT) {
             assertThat(records, hasSize(2));
@@ -626,7 +633,7 @@ public class JDBCOutputTestIT {
         properties.main.schema.setValue(schema);
         properties.updateOutputSchemas();
 
-        properties.tableSelection.tablename.setValue(tablename);
+        properties.tableSelection.tablename.setValue(DBTestUtils.getTablename());
         DataAction action = DBTestUtils.randomDataActionExceptDelete();
         properties.dataAction.setValue(action);
         properties.dieOnError.setValue(true);
