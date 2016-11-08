@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 import org.apache.avro.Schema;
@@ -32,11 +33,15 @@ import org.talend.components.jdbc.runtime.JDBCTemplate;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.components.jdbc.runtime.writer.JDBCOutputWriter;
 import org.talend.components.jdbc.runtime.writer.JDBCRowWriter;
+import org.talend.components.jdbc.tjdbcconnection.TJDBCConnectionDefinition;
+import org.talend.components.jdbc.tjdbcconnection.TJDBCConnectionProperties;
 import org.talend.components.jdbc.tjdbcinput.TJDBCInputDefinition;
 import org.talend.components.jdbc.tjdbcinput.TJDBCInputProperties;
 import org.talend.components.jdbc.tjdbcoutput.TJDBCOutputDefinition;
 import org.talend.components.jdbc.tjdbcoutput.TJDBCOutputProperties;
 import org.talend.components.jdbc.tjdbcoutput.TJDBCOutputProperties.DataAction;
+import org.talend.components.jdbc.tjdbcrow.TJDBCRowDefinition;
+import org.talend.components.jdbc.tjdbcrow.TJDBCRowProperties;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
@@ -124,7 +129,7 @@ public class DBTestUtils {
         return builder.endRecord();
     }
 
-    public static void prepareTableAndData(AllSetting allSetting) throws ClassNotFoundException, SQLException, Exception {
+    public static void prepareTableAndData(AllSetting allSetting) throws Exception {
         try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
             try {
                 dropTestTable(conn);
@@ -151,8 +156,7 @@ public class DBTestUtils {
         return builder.endRecord();
     }
 
-    public static void prepareTableAndDataForEveryType(AllSetting allSetting)
-            throws ClassNotFoundException, SQLException, Exception {
+    public static void prepareTableAndDataForEveryType(AllSetting allSetting) throws Exception {
         try (Connection conn = JDBCTemplate.createConnection(allSetting)) {
             try {
                 dropTestTable(conn);
@@ -646,4 +650,72 @@ public class DBTestUtils {
         return builder.endRecord();
     }
 
+    public static TJDBCConnectionProperties createCommonJDBCConnectionProperties(AllSetting allSetting,
+            TJDBCConnectionDefinition connectionDefinition) {
+        TJDBCConnectionProperties connectionProperties = (TJDBCConnectionProperties) connectionDefinition
+                .createRuntimeProperties();
+
+        // TODO now framework doesn't support to load the JDBC jar by the setting
+        // properties.connection.driverJar.setValue(null);
+        connectionProperties.connection.driverClass.setValue(allSetting.getDriverClass());
+        connectionProperties.connection.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        connectionProperties.connection.userPassword.userId.setValue(allSetting.getUsername());
+        connectionProperties.connection.userPassword.password.setValue(allSetting.getPassword());
+        return connectionProperties;
+    }
+
+    public static TJDBCOutputProperties createCommonJDBCOutputProperties(AllSetting allSetting,
+            TJDBCOutputDefinition definition) {
+        TJDBCOutputProperties properties = (TJDBCOutputProperties) definition.createRuntimeProperties();
+
+        // TODO now framework doesn't support to load the JDBC jar by the setting
+        // properties.connection.driverJar.setValue(null);
+        properties.connection.driverClass.setValue(allSetting.getDriverClass());
+        properties.connection.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.connection.userPassword.userId.setValue(allSetting.getUsername());
+        properties.connection.userPassword.password.setValue(allSetting.getPassword());
+        return properties;
+    }
+
+    public static TJDBCInputProperties createCommonJDBCInputProperties(AllSetting allSetting, TJDBCInputDefinition definition) {
+        TJDBCInputProperties properties = (TJDBCInputProperties) definition.createRuntimeProperties();
+
+        // TODO now framework doesn't support to load the JDBC jar by the setting
+        // properties.connection.driverJar.setValue(null);
+        properties.connection.driverClass.setValue(allSetting.getDriverClass());
+        properties.connection.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.connection.userPassword.userId.setValue(allSetting.getUsername());
+        properties.connection.userPassword.password.setValue(allSetting.getPassword());
+        return properties;
+    }
+
+    public static TJDBCRowProperties createCommonJDBCRowProperties(AllSetting allSetting, TJDBCRowDefinition definition) {
+        TJDBCRowProperties properties = (TJDBCRowProperties) definition.createRuntimeProperties();
+
+        // properties.connection.driverTable.drivers.setValue(Arrays.asList(driverPath));
+        properties.connection.driverClass.setValue(allSetting.getDriverClass());
+        properties.connection.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.connection.userPassword.userId.setValue(allSetting.getUsername());
+        properties.connection.userPassword.password.setValue(allSetting.getPassword());
+        return properties;
+    }
+
+    public static AllSetting createAllSetting(Properties props) {
+        String driverClass = props.getProperty("driverClass");
+
+        String jdbcUrl = props.getProperty("jdbcUrl");
+
+        String userId = props.getProperty("userId");
+
+        String password = props.getProperty("password");
+
+        AllSetting allSetting = new AllSetting();
+
+        allSetting.setDriverClass(driverClass);
+        allSetting.setJdbcUrl(jdbcUrl);
+        allSetting.setUsername(userId);
+        allSetting.setPassword(password);
+
+        return allSetting;
+    }
 }

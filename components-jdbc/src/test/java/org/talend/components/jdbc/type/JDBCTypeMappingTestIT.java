@@ -35,14 +35,6 @@ import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class JDBCTypeMappingTestIT {
 
-    private static String driverClass;
-
-    private static String jdbcUrl;
-
-    private static String userId;
-
-    private static String password;
-
     public static AllSetting allSetting;
 
     private static String tablename;
@@ -57,23 +49,11 @@ public class JDBCTypeMappingTestIT {
             props.load(is);
         }
 
-        driverClass = props.getProperty("driverClass");
-
-        jdbcUrl = props.getProperty("jdbcUrl");
-
-        userId = props.getProperty("userId");
-
-        password = props.getProperty("password");
-
         tablename = props.getProperty("tablename");
 
         sql = props.getProperty("sql");
 
-        allSetting = new AllSetting();
-        allSetting.setDriverClass(driverClass);
-        allSetting.setJdbcUrl(jdbcUrl);
-        allSetting.setUsername(userId);
-        allSetting.setPassword(password);
+        allSetting = DBTestUtils.createAllSetting(props);
     }
 
     @AfterClass
@@ -82,26 +62,14 @@ public class JDBCTypeMappingTestIT {
     }
 
     @Before
-    public void before() throws ClassNotFoundException, SQLException, Exception {
+    public void before() throws Exception {
         DBTestUtils.prepareTableAndDataForEveryType(allSetting);
-    }
-
-    private TJDBCInputProperties createCommonJDBCInputProperties(TJDBCInputDefinition definition) {
-        TJDBCInputProperties properties = (TJDBCInputProperties) definition.createRuntimeProperties();
-
-        // TODO now framework doesn't support to load the JDBC jar by the setting
-        // properties.connection.driverJar.setValue("port", props.getProperty("port"));
-        properties.connection.driverClass.setValue(driverClass);
-        properties.connection.jdbcUrl.setValue(jdbcUrl);
-        properties.connection.userPassword.userId.setValue(userId);
-        properties.connection.userPassword.password.setValue(password);
-        return properties;
     }
 
     @Test
     public void testGetSchema() throws Exception {
         TJDBCInputDefinition definition = new TJDBCInputDefinition();
-        TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+        TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema3(true));
         properties.tableSelection.tablename.setValue(tablename);
@@ -296,7 +264,7 @@ public class JDBCTypeMappingTestIT {
     @SuppressWarnings({ "rawtypes" })
     private void doReadType(boolean nullableForAnyColumn) throws IOException {
         TJDBCInputDefinition definition = new TJDBCInputDefinition();
-        TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+        TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
         properties.tableSelection.tablename.setValue(tablename);
@@ -350,7 +318,7 @@ public class JDBCTypeMappingTestIT {
         Reader reader = null;
         try {
             TJDBCInputDefinition definition = new TJDBCInputDefinition();
-            TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+            TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
             properties.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
             properties.tableSelection.tablename.setValue(tablename);
@@ -565,7 +533,7 @@ public class JDBCTypeMappingTestIT {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void doWriteWithAllType(boolean nullableForAnyColumn) throws IOException {
         TJDBCOutputDefinition definition = new TJDBCOutputDefinition();
-        TJDBCOutputProperties properties = createCommonJDBCOutputProperties(definition);
+        TJDBCOutputProperties properties = DBTestUtils.createCommonJDBCOutputProperties(allSetting, definition);
 
         Schema schema = DBTestUtils.createTestSchema3(nullableForAnyColumn);
         properties.main.schema.setValue(schema);
@@ -596,7 +564,7 @@ public class JDBCTypeMappingTestIT {
         Reader reader = null;
         try {
             TJDBCInputDefinition definition1 = new TJDBCInputDefinition();
-            TJDBCInputProperties properties1 = createCommonJDBCInputProperties(definition1);
+            TJDBCInputProperties properties1 = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition1);
 
             properties1.main.schema.setValue(DBTestUtils.createTestSchema3(nullableForAnyColumn));
             properties1.tableSelection.tablename.setValue(tablename);
@@ -800,18 +768,6 @@ public class JDBCTypeMappingTestIT {
                 }
             }
         }
-    }
-
-    private TJDBCOutputProperties createCommonJDBCOutputProperties(TJDBCOutputDefinition definition) {
-        TJDBCOutputProperties properties = (TJDBCOutputProperties) definition.createRuntimeProperties();
-
-        // TODO now framework doesn't support to load the JDBC jar by the setting
-        // properties.connection.driverJar.setValue(null);
-        properties.connection.driverClass.setValue(driverClass);
-        properties.connection.jdbcUrl.setValue(jdbcUrl);
-        properties.connection.userPassword.userId.setValue(userId);
-        properties.connection.userPassword.password.setValue(password);
-        return properties;
     }
 
 }

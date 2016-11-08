@@ -27,6 +27,7 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.jdbc.common.DBTestUtils;
 import org.talend.components.jdbc.runtime.JDBCCloseSourceOrSink;
 import org.talend.components.jdbc.runtime.JDBCSourceOrSink;
+import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.components.jdbc.tjdbcclose.TJDBCCloseDefinition;
 import org.talend.components.jdbc.tjdbcclose.TJDBCCloseProperties;
 import org.talend.components.jdbc.tjdbcconnection.TJDBCConnectionDefinition;
@@ -35,15 +36,9 @@ import org.talend.daikon.properties.ValidationResult;
 
 public class JDBCloseTestIT {
 
-    private static String driverClass;
-
-    private static String jdbcUrl;
-
-    private static String userId;
-
-    private static String password;
-
     private final String refComponentId = "tJDBCConnection1";
+
+    public static AllSetting allSetting;
 
     RuntimeContainer container = new RuntimeContainer() {
 
@@ -79,13 +74,7 @@ public class JDBCloseTestIT {
             props.load(is);
         }
 
-        driverClass = props.getProperty("driverClass");
-
-        jdbcUrl = props.getProperty("jdbcUrl");
-
-        userId = props.getProperty("userId");
-
-        password = props.getProperty("password");
+        allSetting = DBTestUtils.createAllSetting(props);
     }
 
     @AfterClass
@@ -96,7 +85,7 @@ public class JDBCloseTestIT {
     @Test
     public void testClose() {
         TJDBCConnectionDefinition connectionDefinition = new TJDBCConnectionDefinition();
-        TJDBCConnectionProperties properties = createCommonJDBCConnectionProperties(connectionDefinition);
+        TJDBCConnectionProperties properties = DBTestUtils.createCommonJDBCConnectionProperties(allSetting, connectionDefinition);
 
         JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, properties);
@@ -123,18 +112,6 @@ public class JDBCloseTestIT {
             }
         }
 
-    }
-
-    private TJDBCConnectionProperties createCommonJDBCConnectionProperties(TJDBCConnectionDefinition connectionDefinition) {
-        TJDBCConnectionProperties properties = (TJDBCConnectionProperties) connectionDefinition.createRuntimeProperties();
-
-        // TODO now framework doesn't support to load the JDBC jar by the setting
-        // properties.connection.driverJar.setValue("port", props.getProperty("port"));
-        properties.connection.driverClass.setValue(driverClass);
-        properties.connection.jdbcUrl.setValue(jdbcUrl);
-        properties.connection.userPassword.userId.setValue(userId);
-        properties.connection.userPassword.password.setValue(password);
-        return properties;
     }
 
 }

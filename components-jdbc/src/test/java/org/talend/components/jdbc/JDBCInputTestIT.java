@@ -42,14 +42,6 @@ import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class JDBCInputTestIT {
 
-    private static String driverClass;
-
-    private static String jdbcUrl;
-
-    private static String userId;
-
-    private static String password;
-
     private static String tablename;
 
     private static String sql;
@@ -64,23 +56,11 @@ public class JDBCInputTestIT {
             props.load(is);
         }
 
-        driverClass = props.getProperty("driverClass");
-
-        jdbcUrl = props.getProperty("jdbcUrl");
-
-        userId = props.getProperty("userId");
-
-        password = props.getProperty("password");
-
         tablename = props.getProperty("tablename");
 
         sql = props.getProperty("sql");
 
-        allSetting = new AllSetting();
-        allSetting.setDriverClass(driverClass);
-        allSetting.setJdbcUrl(jdbcUrl);
-        allSetting.setUsername(userId);
-        allSetting.setPassword(password);
+        allSetting = DBTestUtils.createAllSetting(props);
 
         DBTestUtils.prepareTableAndData(allSetting);
     }
@@ -93,7 +73,7 @@ public class JDBCInputTestIT {
     @Test
     public void testGetSchemaNames() throws Exception {
         TJDBCInputDefinition definition = new TJDBCInputDefinition();
-        TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+        TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
         properties.tableSelection.tablename.setValue(tablename);
@@ -119,7 +99,7 @@ public class JDBCInputTestIT {
     @Test
     public void testGetSchema() throws Exception {
         TJDBCInputDefinition definition = new TJDBCInputDefinition();
-        TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+        TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
         properties.tableSelection.tablename.setValue(tablename);
@@ -163,7 +143,7 @@ public class JDBCInputTestIT {
         Reader reader = null;
         try {
             TJDBCInputDefinition definition = new TJDBCInputDefinition();
-            TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+            TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
             properties.main.schema.setValue(DBTestUtils.createTestSchema());
             properties.tableSelection.tablename.setValue(tablename);
@@ -220,7 +200,7 @@ public class JDBCInputTestIT {
     @Test
     public void testType() throws Exception {
         TJDBCInputDefinition definition = new TJDBCInputDefinition();
-        TJDBCInputProperties properties = createCommonJDBCInputProperties(definition);
+        TJDBCInputProperties properties = DBTestUtils.createCommonJDBCInputProperties(allSetting, definition);
 
         properties.main.schema.setValue(DBTestUtils.createTestSchema());
         properties.tableSelection.tablename.setValue(tablename);
@@ -244,18 +224,6 @@ public class JDBCInputTestIT {
         } finally {
             reader.close();
         }
-    }
-
-    private TJDBCInputProperties createCommonJDBCInputProperties(TJDBCInputDefinition definition) {
-        TJDBCInputProperties properties = (TJDBCInputProperties) definition.createRuntimeProperties();
-
-        // TODO now framework doesn't support to load the JDBC jar by the setting
-        // properties.connection.driverJar.setValue("port", props.getProperty("port"));
-        properties.connection.driverClass.setValue(driverClass);
-        properties.connection.jdbcUrl.setValue(jdbcUrl);
-        properties.connection.userPassword.userId.setValue(userId);
-        properties.connection.userPassword.password.setValue(password);
-        return properties;
     }
 
 }

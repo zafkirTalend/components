@@ -40,14 +40,6 @@ import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class TDataPrepDBInputTestIT {
 
-    private static String driverClass;
-
-    private static String jdbcUrl;
-
-    private static String userId;
-
-    private static String password;
-
     private static String sql;
 
     public static AllSetting allSetting;
@@ -60,21 +52,9 @@ public class TDataPrepDBInputTestIT {
             props.load(is);
         }
 
-        driverClass = props.getProperty("driverClass");
-
-        jdbcUrl = props.getProperty("jdbcUrl");
-
-        userId = props.getProperty("userId");
-
-        password = props.getProperty("password");
-
         sql = props.getProperty("sql");
 
-        allSetting = new AllSetting();
-        allSetting.setDriverClass(driverClass);
-        allSetting.setJdbcUrl(jdbcUrl);
-        allSetting.setUsername(userId);
-        allSetting.setPassword(password);
+        allSetting = DBTestUtils.createAllSetting(props);
 
         DBTestUtils.prepareTableAndData(allSetting);
     }
@@ -240,9 +220,9 @@ public class TDataPrepDBInputTestIT {
         TDataPrepDBInputProperties properties = (TDataPrepDBInputProperties) definition.createRuntimeProperties();
 
         properties.dbTypes.dbTypes.setValue("DERBY");
-        properties.jdbcUrl.setValue(jdbcUrl);
-        properties.userPassword.userId.setValue(userId);
-        properties.userPassword.password.setValue(password);
+        properties.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.userPassword.userId.setValue(allSetting.getUsername());
+        properties.userPassword.password.setValue(allSetting.getPassword());
         return properties;
     }
 

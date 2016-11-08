@@ -50,14 +50,6 @@ import org.talend.daikon.properties.ValidationResult;
 
 public class JDBCCommitTestIT {
 
-    public static String driverClass;
-
-    private static String jdbcUrl;
-
-    private static String userId;
-
-    private static String password;
-
     private static String tablename;
 
     public static AllSetting allSetting;
@@ -98,21 +90,9 @@ public class JDBCCommitTestIT {
             props.load(is);
         }
 
-        driverClass = props.getProperty("driverClass");
-
-        jdbcUrl = props.getProperty("jdbcUrl");
-
-        userId = props.getProperty("userId");
-
-        password = props.getProperty("password");
-
         tablename = props.getProperty("tablename");
 
-        allSetting = new AllSetting();
-        allSetting.setDriverClass(driverClass);
-        allSetting.setJdbcUrl(jdbcUrl);
-        allSetting.setUsername(userId);
-        allSetting.setPassword(password);
+        allSetting = DBTestUtils.createAllSetting(props);
     }
 
     @AfterClass
@@ -121,7 +101,7 @@ public class JDBCCommitTestIT {
     }
 
     @Before
-    public void before() throws ClassNotFoundException, SQLException, Exception {
+    public void before() throws Exception {
         DBTestUtils.prepareTableAndData(allSetting);
     }
 
@@ -130,7 +110,8 @@ public class JDBCCommitTestIT {
     public void testCommit() throws IOException, ClassNotFoundException, SQLException {
         // connection part
         TJDBCConnectionDefinition connectionDefinition = new TJDBCConnectionDefinition();
-        TJDBCConnectionProperties connectionProperties = createCommonJDBCConnectionProperties(connectionDefinition);
+        TJDBCConnectionProperties connectionProperties = DBTestUtils.createCommonJDBCConnectionProperties(allSetting,
+                connectionDefinition);
 
         JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, connectionProperties);
@@ -217,7 +198,8 @@ public class JDBCCommitTestIT {
     public void testClose() throws IOException, ClassNotFoundException, SQLException {
         // connection part
         TJDBCConnectionDefinition connectionDefinition = new TJDBCConnectionDefinition();
-        TJDBCConnectionProperties connectionProperties = createCommonJDBCConnectionProperties(connectionDefinition);
+        TJDBCConnectionProperties connectionProperties = DBTestUtils.createCommonJDBCConnectionProperties(allSetting,
+                connectionDefinition);
 
         JDBCSourceOrSink sourceOrSink = new JDBCSourceOrSink();
         sourceOrSink.initialize(null, connectionProperties);
@@ -241,19 +223,6 @@ public class JDBCCommitTestIT {
 
         assertTrue(refConnection != null);
         Assert.assertTrue(refConnection.isClosed());
-    }
-
-    private TJDBCConnectionProperties createCommonJDBCConnectionProperties(TJDBCConnectionDefinition connectionDefinition) {
-        TJDBCConnectionProperties connectionProperties = (TJDBCConnectionProperties) connectionDefinition
-                .createRuntimeProperties();
-
-        // TODO now framework doesn't support to load the JDBC jar by the setting
-        // properties.connection.driverJar.setValue("port", props.getProperty("port"));
-        connectionProperties.connection.driverClass.setValue(driverClass);
-        connectionProperties.connection.jdbcUrl.setValue(jdbcUrl);
-        connectionProperties.connection.userPassword.userId.setValue(userId);
-        connectionProperties.connection.userPassword.password.setValue(password);
-        return connectionProperties;
     }
 
 }
