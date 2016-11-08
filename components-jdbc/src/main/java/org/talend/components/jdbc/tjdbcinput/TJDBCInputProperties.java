@@ -205,11 +205,7 @@ public class TJDBCInputProperties extends FixedConnectorsComponentProperties
         setting.setReferencedComponentId(referencedComponent.componentInstanceId.getValue());
         setting.setReferencedComponentProperties(referencedComponent.componentProperties);
 
-        setting.setDriverPaths(this.connection.driverTable.drivers.getValue());
-        setting.setDriverClass(this.connection.driverClass.getValue());
-        setting.setJdbcUrl(this.connection.jdbcUrl.getValue());
-        setting.setUsername(this.connection.userPassword.userId.getValue());
-        setting.setPassword(this.connection.userPassword.password.getValue());
+        CommonUtils.setCommonConnectionInfo(setting, connection);
 
         setting.setTablename(this.tableSelection.tablename.getValue());
         setting.setSql(this.sql.getValue());
