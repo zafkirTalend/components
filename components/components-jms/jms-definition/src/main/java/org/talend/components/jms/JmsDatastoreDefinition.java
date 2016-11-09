@@ -18,17 +18,14 @@ import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.datastore.DatastoreDefinition;
 import org.talend.components.common.datastore.DatastoreProperties;
+import org.talend.components.jms.input.JmsInputDefinition;
+import org.talend.components.jms.output.JmsOutputDefinition;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 public class JmsDatastoreDefinition extends SimpleNamedThing implements DatastoreDefinition<JmsDatastoreProperties> {
 
     public static final String RUNTIME_1_1 = "org.talend.components.jms.runtime_1_1.DatastoreRuntime";
-
-    @Override
-    public DatasetProperties createDatasetProperties(DatastoreProperties storeProp) {
-        return null;
-    }
 
     @Override
     public JmsDatastoreProperties createProperties() {
@@ -45,5 +42,22 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
     @Override
     public String getImagePath() {
         return null;
+    }
+
+    @Override
+    public DatasetProperties createDatasetProperties(JmsDatastoreProperties storeProp) {
+        JmsDatasetProperties setProp = new JmsDatasetProperties(null);
+        setProp.setDatastoreProperties(storeProp);
+        return setProp;
+    }
+
+    @Override
+    public String getInputCompDefinitionName() {
+        return JmsInputDefinition.COMPONENT_NAME;
+    }
+
+    @Override
+    public String getOutputCompDefinitionName() {
+        return JmsOutputDefinition.COMPONENT_NAME;
     }
 }

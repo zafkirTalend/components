@@ -12,6 +12,7 @@ import org.talend.components.jms.JmsDatastoreProperties;
 import org.talend.components.jms.JmsMessageType;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 
 import java.io.IOException;
@@ -20,7 +21,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -76,13 +76,9 @@ public class JmsDatastoreRuntime implements DatastoreRuntime {
         return null;
     }
 
-    @Override public ValidationResult initialize(RuntimeContainer container, DatastoreProperties properties) {
+    @Override
+    public ValidationResult initialize(RuntimeContainer container, Properties properties) {
         this.properties = (JmsDatastoreProperties) properties;
-        return ValidationResult.OK;
-    }
-
-    public ValidationResult initialize(RuntimeContainer container, JmsDatastoreProperties properties) {
-        this.properties = properties;
         return ValidationResult.OK;
     }
 /*
