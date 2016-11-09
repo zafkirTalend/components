@@ -28,20 +28,20 @@ public class TDataPrepDBInputTest {
         TDataPrepDBInputProperties properties = new TDataPrepDBInputProperties("input");
         properties.setupProperties();
 
-        List<?> dbTypes = properties.dbTypes.dbTypes.getPossibleValues();
+        List<?> dbTypes = properties.dbTypes.getPossibleValues();
         assertTrue("the list should not be empty", dbTypes != null && !dbTypes.isEmpty());
         assertTrue("The size of list is not right", dbTypes.size() == 2);
         assertTrue("The first element is not right", "MYSQL".equals(dbTypes.get(0)));
         assertTrue("The second element is not right", "DERBY".equals(dbTypes.get(1)));
 
-        assertTrue("The default value is not right", "MYSQL".equals(properties.dbTypes.dbTypes.getValue()));
+        assertTrue("The default value is not right", "MYSQL".equals(properties.dbTypes.getValue()));
 
         AllSetting setting = properties.getRuntimeSetting();
         assertTrue("the driver class is not right", "org.gjt.mm.mysql.Driver".equals(setting.getDriverClass()));
         assertTrue("the driver paths is not right", setting.getDriverPaths() != null && !setting.getDriverPaths().isEmpty()
                 && "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.3.0".equals(setting.getDriverPaths().get(0)));
 
-        // properties.dbTypes.dbTypes.setValue("DERBY");
+        // properties.dbTypes.setValue("DERBY");
         // setting = properties.getRuntimeSetting();
         // assertTrue("the driver class is not right : " + setting.getDriverClass(),
         // "org.apache.derby.jdbc.EmbeddedDriver".equals(setting.getDriverClass()));
