@@ -3,6 +3,7 @@ package org.talend.components.jdbc;
 import org.talend.components.api.AbstractComponentFamilyDefinition;
 import org.talend.components.api.ComponentInstaller;
 import org.talend.components.api.Constants;
+import org.talend.components.jdbc.dataprep.TDataPrepDBInputDefinition;
 import org.talend.components.jdbc.tjdbcclose.TJDBCCloseDefinition;
 import org.talend.components.jdbc.tjdbccommit.TJDBCCommitDefinition;
 import org.talend.components.jdbc.tjdbcconnection.TJDBCConnectionDefinition;
@@ -27,6 +28,7 @@ public class JDBCFamilyDefinition extends AbstractComponentFamilyDefinition impl
                 // Components
                 new TJDBCCloseDefinition(), new TJDBCCommitDefinition(), new TJDBCConnectionDefinition(),
                 new TJDBCInputDefinition(), new TJDBCOutputDefinition(), new TJDBCRollbackDefinition(), new TJDBCRowDefinition(),
+                new TDataPrepDBInputDefinition(),
                 // Component wizards
                 new JDBCConnectionWizardDefinition());
     }
