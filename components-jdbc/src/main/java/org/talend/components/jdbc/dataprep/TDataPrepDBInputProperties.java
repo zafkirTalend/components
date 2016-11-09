@@ -112,8 +112,8 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
     public void refreshLayout(Form form) {
         if (Form.MAIN.equals(form.getName())) {
             DBType currentDBType = this.getCurrentDBType();
-            jdbcUrl.setValue(currentDBType.jdbcUrlTemplate);
-            driverClass.setValue(currentDBType.driver);
+            jdbcUrl.setValue("\"" + currentDBType.jdbcUrlTemplate + "\"");
+            driverClass.setValue("\"" + currentDBType.driver + "\"");
         }
     }
 
@@ -139,8 +139,8 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
         dbTypes.setPossibleValues(dbTypesId);
         dbTypes.setValue(defaultDBType.id);
 
-        jdbcUrl.setValue(defaultDBType.jdbcUrlTemplate);
-        driverClass.setValue(defaultDBType.driver);
+        jdbcUrl.setValue("\"" + defaultDBType.jdbcUrlTemplate + "\"");
+        driverClass.setValue("\"" + defaultDBType.driver + "\"");
     }
 
     @Override
