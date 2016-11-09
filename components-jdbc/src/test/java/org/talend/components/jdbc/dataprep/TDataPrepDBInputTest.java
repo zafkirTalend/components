@@ -41,6 +41,16 @@ public class TDataPrepDBInputTest {
                 setting.getDriverPaths() != null && !setting.getDriverPaths().isEmpty()
                         && "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.3.0"
                                 .equals(removeQuoteIfExists(setting.getDriverPaths().get(0))));
+
+        properties.dbTypes.setValue("DERBY");
+        properties.afterDbTypes();
+        setting = properties.getRuntimeSetting();
+        assertTrue("the driver class is not right : " + setting.getDriverClass(),
+                "org.apache.derby.jdbc.EmbeddedDriver".equals(removeQuoteIfExists(setting.getDriverClass())));
+        assertTrue("the driver paths is not right : " + setting.getDriverPaths(),
+                setting.getDriverPaths() != null && !setting.getDriverPaths().isEmpty()
+                        && "mvn:org.apache.derby/derby/10.12.1.1".equals(removeQuoteIfExists(setting.getDriverPaths().get(0))));
+
     }
 
     private String removeQuoteIfExists(String input) {
