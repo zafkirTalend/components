@@ -1,10 +1,13 @@
 package org.talend.components.jms.runtime_1_1;
 
+import net.bytebuddy.implementation.bytecode.Throw;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.components.common.datastore.runtime.DatastoreRuntime;
@@ -12,6 +15,7 @@ import org.talend.components.jms.JmsDatastoreProperties;
 import org.talend.components.jms.JmsMessageType;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
+import org.talend.daikon.exception.error.ErrorCode;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -71,9 +75,8 @@ public class JmsDatastoreRuntime implements DatastoreRuntime {
         }
 
         } catch (JMSException e) {
-            e.printStackTrace();
-        }
-        return null;
+            throw new ComponentException(e);
+        } return null;
     }
 
     @Override

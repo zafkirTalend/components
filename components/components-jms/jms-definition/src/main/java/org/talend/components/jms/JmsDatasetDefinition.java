@@ -23,12 +23,16 @@ public class JmsDatasetDefinition extends SimpleNamedThing implements DatasetDef
 
     public static final String RUNTIME_1_1 = "org.talend.components.jms.runtime_1_1.DatasetRuntime";
 
+    public static final String NAME = "JmsDataset";
+
     public JmsDatasetDefinition() {
-        super(JmsComponentFamilyDefinition.NAME);
+        super(NAME);
     }
 
     public JmsDatasetProperties createProperties() {
-        return new JmsDatasetProperties(JmsComponentFamilyDefinition.NAME);
+        JmsDatasetProperties properties = new JmsDatasetProperties(NAME);
+        properties.init();
+        return properties;
     }
 
     public RuntimeInfo getRuntimeInfo(JmsDatasetProperties properties, Object ctx) {

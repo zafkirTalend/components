@@ -44,8 +44,6 @@ public class JmsDatasetProperties extends PropertiesImpl implements DatasetPrope
         content
     }
 
-    public SchemaProperties main = new SchemaProperties("main");
-
     public Property<JmsMessageType> msgType = newEnum("msgType", JmsMessageType.class).setRequired();
 
     public Property<JmsProcessingMode> processingMode = newEnum("processingMode", JmsProcessingMode.class);
@@ -65,20 +63,10 @@ public class JmsDatasetProperties extends PropertiesImpl implements DatasetPrope
     @Override
     public void setupLayout() {
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(main.getForm(Form.MAIN));
         mainForm.addRow(msgType);
         mainForm.addRow(processingMode);
     }
 
-    @Override
-    public void refreshLayout(Form form) {
-        super.refreshLayout(form);
-        // Main properties
-        if (form.getName().equals(Form.MAIN)) {
-            form.getWidget(msgType.getName()).setVisible();
-            form.getWidget(processingMode.getName()).setVisible();
-        }
-    }
     /*
 public QueueConnection getQueueConnectionFactory() {
 

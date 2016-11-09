@@ -33,7 +33,6 @@ public class JmsDatasetPropertiesTest {
     @Test
     public void testDefaultProperties() {
         JmsDatasetProperties properties = new JmsDatasetProperties("test");
-        assertNull(properties.main.schema.getValue());
         assertNull(properties.msgType.getValue());
         assertNull(properties.processingMode.getValue());
     }
@@ -44,7 +43,6 @@ public class JmsDatasetPropertiesTest {
     @Test
     public void testSetupLayout() {
         JmsDatasetProperties properties = new JmsDatasetProperties("test");
-        properties.main.init();
 
         properties.setupLayout();
 

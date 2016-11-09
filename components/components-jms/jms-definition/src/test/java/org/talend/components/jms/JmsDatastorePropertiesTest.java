@@ -33,15 +33,14 @@ public class JmsDatastorePropertiesTest {
     @Test
     public void testDefaultProperties() {
         JmsDatastoreProperties properties = new JmsDatastoreProperties("test");
-        assertNull(properties.main.schema.getValue());
         assertNull(properties.version.getValue());
         // assertNull(properties.contextProvider.getValue());
         assertEquals("com.tibco.tibjms.naming.TibjmsInitialContextFactory", properties.contextProvider.getValue());
         assertEquals("tibjmsnaming://localhost:7222", properties.serverUrl.getValue());
         assertEquals("GenericConnectionFactory", properties.connectionFactoryName.getValue());
         assertEquals(false, properties.needUserIdentity.getValue());
-        assertEquals("", properties.userName.getValue());
-        assertEquals("", properties.userPassword.getValue());
+        assertEquals("", properties.userPassword.userId.getValue());
+        assertEquals("", properties.userPassword.password.getValue());
         assertEquals(false, properties.useHttps.getValue());
         assertNull(properties.httpsSettings.getValue());
         assertEquals("", properties.property.getValue());

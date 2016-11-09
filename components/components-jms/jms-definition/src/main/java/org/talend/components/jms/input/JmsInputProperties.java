@@ -29,8 +29,6 @@ public class JmsInputProperties extends ComponentPropertiesImpl {
         super(name);
     }
 
-    public SchemaProperties main = new SchemaProperties("main");
-
     public Property<String> from = PropertyFactory.newString("from","");
 
     public Property<Integer> timeout = PropertyFactory.newInteger("timeout",-1);
@@ -45,21 +43,9 @@ public class JmsInputProperties extends ComponentPropertiesImpl {
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(main);
         mainForm.addRow(from);
         mainForm.addRow(timeout);
         mainForm.addRow(max_msg);
         mainForm.addRow(msg_selector);
-    }
-
-    @Override
-    public void refreshLayout(Form form) {
-        super.refreshLayout(form);
-        if (form.getName().equals(Form.MAIN)) {
-            form.getWidget(from.getName()).setHidden(false);
-            form.getWidget(timeout.getName()).setHidden(false);
-            form.getWidget(max_msg.getName()).setHidden(false);
-            form.getWidget(msg_selector.getName()).setHidden(false);
-        }
     }
 }

@@ -27,9 +27,13 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
 
     public static final String RUNTIME_1_1 = "org.talend.components.jms.runtime_1_1.DatastoreRuntime";
 
+    public static final String NAME = "JmsDatastore";
+
     @Override
     public JmsDatastoreProperties createProperties() {
-        return new JmsDatastoreProperties(JmsComponentFamilyDefinition.NAME);
+        JmsDatastoreProperties properties = new JmsDatastoreProperties(NAME);
+        properties.init();
+        return properties;
     }
 
     @Override
@@ -46,7 +50,8 @@ public class JmsDatastoreDefinition extends SimpleNamedThing implements Datastor
 
     @Override
     public DatasetProperties createDatasetProperties(JmsDatastoreProperties storeProp) {
-        JmsDatasetProperties setProp = new JmsDatasetProperties(null);
+        JmsDatasetProperties setProp = new JmsDatasetProperties(JmsDatasetDefinition.NAME);
+        setProp.init();
         setProp.setDatastoreProperties(storeProp);
         return setProp;
     }

@@ -35,8 +35,6 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
         super(name);
     }
 
-    public SchemaProperties main = new SchemaProperties("main");
-
     public Property<String> to = PropertyFactory.newString("to","");
 
     public Property<JmsAdvancedDeliveryMode> delivery_mode = newEnum("delivery_mode", JmsAdvancedDeliveryMode.class).setRequired();
@@ -63,7 +61,6 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(main);
         mainForm.addRow(to);
 
         Form advancedForm = new Form(this, Form.ADVANCED);
@@ -91,15 +88,13 @@ public class JmsOutputProperties extends ComponentPropertiesImpl {
             form.getWidget(pool_min_Idle.getName()).setVisible();
             form.getWidget(pool_max_Idle.getName()).setVisible();
             form.getWidget(pool_use_eviction.getName()).setVisible();
-            if (pool_use_eviction.getValue()) {
-                form.getWidget(pool_time_between_eviction.getName()).setVisible();
-                form.getWidget(pool_eviction_min_idle_time.getName()).setVisible();
-                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setVisible();
-            } else {
-                form.getWidget(pool_time_between_eviction.getName()).setHidden();
-                form.getWidget(pool_eviction_min_idle_time.getName()).setHidden();
-                form.getWidget(pool_eviction_soft_min_idle_time.getName()).setHidden();
-            }
+            form.getWidget(pool_time_between_eviction.getName()).setVisible(pool_use_eviction);
+            form.getWidget(pool_eviction_min_idle_time.getName()).setVisible(pool_use_eviction);
+            form.getWidget(pool_eviction_soft_min_idle_time.getName()).setVisible(pool_use_eviction);
         }
+    }
+
+    public void afterPool_use_eviction() {
+        refreshLayout(getForm(Form.MAIN));
     }
 }

@@ -35,7 +35,6 @@ public class JmsOutputPropertiesTest {
     @Test
     public void testDefaultProperties() {
         JmsOutputProperties properties = new JmsOutputProperties("test");
-        assertNull(properties.main.schema.getValue());
         assertEquals("",properties.to.getValue());
         assertNull(properties.delivery_mode.getValue());
         assertEquals("8",properties.pool_max_total.getValue());
@@ -54,7 +53,6 @@ public class JmsOutputPropertiesTest {
     @Test
     public void testSetupLayout() {
         JmsOutputProperties properties = new JmsOutputProperties("test");
-        properties.main.init();
 
         properties.setupLayout();
 

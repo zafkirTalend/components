@@ -36,7 +36,6 @@ public class JmsInputPropertiesTest {
     @Test
     public void testDefaultProperties() {
         JmsInputProperties properties = new JmsInputProperties("test");
-        assertNull(properties.main.schema.getValue());
         assertEquals("",properties.from.getValue());
         assertEquals(-1,(long)properties.timeout.getValue());
         assertEquals(-1,(long)properties.max_msg.getValue());
@@ -50,7 +49,6 @@ public class JmsInputPropertiesTest {
     @Test
     public void testSetupLayout() {
         JmsInputProperties properties = new JmsInputProperties("test");
-        properties.main.init();
 
         properties.setupLayout();
 

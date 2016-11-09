@@ -17,6 +17,7 @@ import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.*;
 
 import org.talend.components.common.SchemaProperties;
+import org.talend.components.common.UserPasswordProperties;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
@@ -38,31 +39,25 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
         V_2_0
     }
 
-    public SchemaProperties main = new SchemaProperties("main");
-
     public JmsDatastoreProperties(String name) {
         super(name);
     }
 
-    // FIXME Default values are not working => There are just some examples for the user
-
     public Property<JmsVersion> version = newEnum("version", JmsVersion.class).setRequired();
 
-    public Property<String> contextProvider = PropertyFactory.newString("contextProvider","com.tibco.tibjms.naming.TibjmsInitialContextFactory").setRequired();
+    public Property<String> contextProvider = PropertyFactory.newString("contextProvider").setRequired();
 
-    public Property<String> serverUrl = PropertyFactory.newString("serverUrl","tibjmsnaming://localhost:7222");
+    public Property<String> serverUrl = PropertyFactory.newString("serverUrl");
 
-    public Property<String> connectionFactoryName = PropertyFactory.newString("connectionFactoryName","GenericConnectionFactory");
+    public Property<String> connectionFactoryName = PropertyFactory.newString("connectionFactoryName");
 
-    public Property<Boolean> needUserIdentity = newBoolean("needUserIdentity", false);
+    public Property<Boolean> needUserIdentity = newBoolean("needUserIdentity");
 
     // TODO check if it is not better to do "UserPasswordProperties" class like for cassandra
-    public Property<String> userName = PropertyFactory.newString("userName","");
-
-    public Property<String> userPassword = PropertyFactory.newString("userPassword","");
+    public UserPasswordProperties userPassword = new UserPasswordProperties("userPassword");
 
     // Those advanced settings could be either in the datastore or in the dataset
-    public Property<Boolean> useHttps = PropertyFactory.newBoolean("useHttps",false);
+    public Property<Boolean> useHttps = PropertyFactory.newBoolean("useHttps");
 
     public Property<String> httpsSettings = PropertyFactory.newString("httpsSettings");
 
@@ -70,24 +65,32 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
 
     public Property<String> value = PropertyFactory.newString("value","");
 
+    @Override
+    public void setupProperties(){
+        super.setupProperties();
+        contextProvider.setValue("com.tibco.tibjms.naming.TibjmsInitialContextFactory");
+        serverUrl.setValue("tibjmsnaming://localhost:7222");
+        connectionFactoryName.setValue("GenericConnectionFactory");
+        needUserIdentity.setValue(false);
+        userPassword.userId.setValue("");
+        userPassword.password.setValue("");
+        useHttps.setValue(false);
+    }
 
     @Override
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(main.getForm(Form.MAIN));
         mainForm.addRow(version);
         mainForm.addRow(contextProvider);
         mainForm.addRow(serverUrl);
         mainForm.addRow(connectionFactoryName);
-        mainForm.addRow(userName);
         mainForm.addRow(userPassword);
 
-        Form advancedForm = new Form(this, Form.ADVANCED);
-        advancedForm.addRow(useHttps);
-        advancedForm.addRow(widget(httpsSettings).setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE));
-        advancedForm.addRow(property);
-        advancedForm.addRow(value);
+        mainForm.addRow(useHttps);
+        mainForm.addRow(httpsSettings);
+        mainForm.addRow(property);
+        mainForm.addRow(value);
     }
 
     @Override
@@ -98,24 +101,15 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
                 form.getWidget(version.getName()).setVisible();
                 form.getWidget(contextProvider.getName()).setVisible();
                 form.getWidget(serverUrl.getName()).setVisible();
-                if (needUserIdentity.getValue()) {
-                    form.getWidget(userName.getName()).setVisible();
-                    form.getWidget(userPassword.getName()).setVisible();
-                } else {
-                    form.getWidget(userName.getName()).setHidden();
-                    form.getWidget(userPassword.getName()).setHidden();
-                }
+                form.getWidget(userPassword.getName()).setVisible(needUserIdentity);
+                form.getWidget(useHttps.getName()).setVisible();
+                form.getWidget(httpsSettings.getName()).setVisible(useHttps);
+                form.getWidget(property.getName()).setVisible();
+                form.getWidget(value.getName()).setVisible();
         }
-        // Advanced Properties
-        if (form.getName().equals(Form.ADVANCED)){
-            form.getWidget(useHttps.getName()).setVisible();
-            if (useHttps.getValue()){
-                form.getWidget(httpsSettings.getName()).setVisible();
-            } else {
-                form.getWidget(httpsSettings.getName()).setHidden();
-            }
-            form.getWidget(property.getName()).setVisible();
-            form.getWidget(value.getName()).setVisible();
-        }
+    }
+
+    public void afterNeedUserIdentity() {
+        refreshLayout(getForm(Form.MAIN));
     }
 }
