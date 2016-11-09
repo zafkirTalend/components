@@ -36,8 +36,6 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
 
     public DBTypeProperties dbTypes = new DBTypeProperties("dbTypes");
 
-    public Property<String> jdbcUrl = PropertyFactory.newProperty("jdbcUrl").setRequired();
-
     public UserPasswordProperties userPassword = new UserPasswordProperties("userPassword");
 
     public Property<String> sql = PropertyFactory.newString("sql").setRequired(true);
@@ -49,7 +47,7 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
         Form mainForm = CommonUtils.addForm(this, Form.MAIN);
 
         mainForm.addRow(dbTypes.getForm(Form.MAIN));
-        mainForm.addRow(jdbcUrl);
+
         mainForm.addRow(userPassword.getForm(Form.MAIN));
 
         mainForm.addRow(main.getForm(Form.REFERENCE));
@@ -61,19 +59,19 @@ public class TDataPrepDBInputProperties extends FixedConnectorsComponentProperti
     public void setupProperties() {
         super.setupProperties();
 
-        dbTypes.setupProperties();
+        dbTypes.initProperties();
     }
 
     @Override
     public AllSetting getRuntimeSetting() {
         AllSetting setting = new AllSetting();
 
-        setting.setDriverPaths(dbTypes.getDriverPaths());
-        setting.setDriverClass(dbTypes.getDriverClass());
+        setting.setDriverPaths(dbTypes.getCurrentDriverPaths());
+        setting.setDriverClass(dbTypes.driverClass.getValue());
+        setting.setJdbcUrl(dbTypes.jdbcUrl.getValue());
 
-        setting.setJdbcUrl(this.jdbcUrl.getValue());
-        setting.setUsername(this.userPassword.userId.getValue());
-        setting.setPassword(this.userPassword.password.getValue());
+        setting.setUsername(userPassword.userId.getValue());
+        setting.setPassword(userPassword.password.getValue());
 
         setting.setSql(this.sql.getValue());
 

@@ -222,7 +222,9 @@ public class TDataPrepDBInputTestIT {
         TDataPrepDBInputProperties properties = (TDataPrepDBInputProperties) definition.createRuntimeProperties();
 
         properties.dbTypes.dbTypes.setValue("DERBY");
-        properties.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.dbTypes.jdbcUrl.setValue(allSetting.getJdbcUrl());
+        properties.dbTypes.driverClass.setValue(allSetting.getDriverClass());
+
         properties.userPassword.userId.setValue(allSetting.getUsername());
         properties.userPassword.password.setValue(allSetting.getPassword());
         return properties;

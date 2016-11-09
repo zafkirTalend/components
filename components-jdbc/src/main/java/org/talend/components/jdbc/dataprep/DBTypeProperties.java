@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.jdbc.CommonUtils;
@@ -17,35 +20,50 @@ import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
-import com.cedarsoftware.util.io.JsonObject;
-import com.cedarsoftware.util.io.JsonReader;
-
 public class DBTypeProperties extends PropertiesImpl {
 
-    @SuppressWarnings("rawtypes")
-    private transient Map dyTypesInfo;
+    private transient Map<String, DBType> dyTypesInfo = new HashMap<String, DBType>();
 
     private final static String CONFIG_FILE_lOCATION_KEY = "org.talend.component.jdbc.config.file";
 
     public Property<String> dbTypes = PropertyFactory.newString("dbTypes").setRequired();
 
+    public Property<String> jdbcUrl = PropertyFactory.newProperty("jdbcUrl").setRequired();
+
+    public Property<String> driverClass = PropertyFactory.newProperty("driverClass").setRequired();
+
+    private static Pattern dbInfoPattern = Pattern.compile("(.+?);(.+?);(.+?);(.+)");
+
     public DBTypeProperties(String name) {
         super(name);
 
-        StringBuilder json = new StringBuilder();
         String config_file = System.getProperty(CONFIG_FILE_lOCATION_KEY);
         try (InputStream is = config_file != null ? (new FileInputStream(config_file))
-                : this.getClass().getClassLoader().getResourceAsStream("db_type_config.json");
+                : this.getClass().getClassLoader().getResourceAsStream("db_type_config");
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
             String row = null;
+            boolean first = true;
             while ((row = br.readLine()) != null) {
-                json.append(row);
+                if (first) {
+                    first = false;
+                    continue;
+                }
+
+                Matcher matcher = dbInfoPattern.matcher(row);
+                if (matcher.find()) {
+                    DBType type = new DBType();
+
+                    type.id = matcher.group(1);
+                    type.jar = matcher.group(2);
+                    type.driver = matcher.group(3);
+                    type.jdbcUrlTemplate = matcher.group(4);
+
+                    dyTypesInfo.put(type.id, type);
+                }
             }
         } catch (IOException e) {
             throw new ComponentException(e);
         }
-
-        dyTypesInfo = JsonReader.jsonToMaps(json.toString());
     }
 
     @Override
@@ -54,58 +72,49 @@ public class DBTypeProperties extends PropertiesImpl {
 
         Form mainForm = CommonUtils.addForm(this, Form.MAIN);
         mainForm.addRow(Widget.widget(dbTypes).setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
+        mainForm.addRow(jdbcUrl);
+        mainForm.addRow(driverClass);
     }
 
     @Override
-    public void setupProperties() {
-        super.setupProperties();
+    public void refreshLayout(Form form) {
+        if (Form.MAIN.equals(form.getName())) {
+            DBType currentDBType = this.getCurrentDBType();
+            jdbcUrl.setValue(currentDBType.jdbcUrlTemplate);
+            driverClass.setValue(currentDBType.driver);
+        }
+    }
 
+    public void afterDbTypes() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void initProperties() {
         List<String> dbTypesId = new ArrayList<String>();
-        for (Object o : (Object[]) dyTypesInfo.get("@items")) {
-            @SuppressWarnings("rawtypes")
-            JsonObject eachDBInfo = (JsonObject) o;
-            String id = (String) eachDBInfo.get("id");
+        for (String id : dyTypesInfo.keySet()) {
             dbTypesId.add(id);
         }
 
+        DBType defaultDBType = dyTypesInfo.get(dbTypesId.get(0));
+
         dbTypes.setPossibleValues(dbTypesId);
-        dbTypes.setValue(dbTypesId.get(0));
+        dbTypes.setValue(defaultDBType.id);
+
+        jdbcUrl.setValue(defaultDBType.jdbcUrlTemplate);
+        driverClass.setValue(defaultDBType.driver);
     }
 
-    public String getDriverClass() {
-        String driverClass = null;
-
-        for (Object o : (Object[]) dyTypesInfo.get("@items")) {
-            @SuppressWarnings("rawtypes")
-            JsonObject eachDBInfo = (JsonObject) o;
-            String id = (String) eachDBInfo.get("id");
-            if (dbTypes.getValue().equals(id)) {
-                driverClass = (String) eachDBInfo.get("class");
-                break;
-            }
-        }
-
-        return driverClass;
-    }
-
-    @SuppressWarnings("rawtypes")
-    public List<String> getDriverPaths() {
+    public List<String> getCurrentDriverPaths() {
         List<String> mavenPaths = new ArrayList<String>();
 
-        for (Object o : (Object[]) dyTypesInfo.get("@items")) {
-            JsonObject eachDBInfo = (JsonObject) o;
-            String id = (String) eachDBInfo.get("id");
-            if (dbTypes.getValue().equals(id)) {
-                Object[] paths = (Object[]) eachDBInfo.get("paths");
-                for (Object path : paths) {
-                    JsonObject jo_path = (JsonObject) path;
-                    mavenPaths.add((String) jo_path.get("path"));
-                }
-                break;
-            }
-        }
+        DBType currentDBType = dyTypesInfo.get(dbTypes.getValue());
+        mavenPaths.add(currentDBType.jar);
 
         return mavenPaths;
+    }
+
+    private DBType getCurrentDBType() {
+        return dyTypesInfo.get(dbTypes.getValue());
     }
 
 }

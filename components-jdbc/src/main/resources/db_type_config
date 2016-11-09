@@ -1,0 +1,3 @@
+type;jar;driver;url_template
+MYSQL;mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.3.0;org.gjt.mm.mysql.Driver;jdbc:mysql://{host}:{port}/{database}
+DERBY;mvn:org.apache.derby/derby/10.12.1.1;org.apache.derby.jdbc.EmbeddedDriver;jdbc:derby://{host}:{port}/{database}

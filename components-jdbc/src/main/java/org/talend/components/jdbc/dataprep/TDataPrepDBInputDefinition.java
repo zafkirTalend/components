@@ -26,7 +26,7 @@ import org.talend.daikon.runtime.RuntimeInfo;
 
 public class TDataPrepDBInputDefinition extends AbstractComponentDefinition {
 
-    public static final String COMPONENT_NAME = "tDataPrepDBInputDefinition";
+    public static final String COMPONENT_NAME = "tDataPrepDBInput";
 
     public TDataPrepDBInputDefinition() {
         super(COMPONENT_NAME);
