@@ -38,6 +38,6 @@ public class JmsDatasetDefinitionTest {
     @Test
     public void testCreateProperties() {
         JmsDatasetProperties props = datasetDefinition.createProperties();
-        assertEquals("jms", props.getName());
+        assertEquals("JmsDataset", props.getName());
     }
 }

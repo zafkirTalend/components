@@ -33,6 +33,7 @@ public class JmsDatastorePropertiesTest {
     @Test
     public void testDefaultProperties() {
         JmsDatastoreProperties properties = new JmsDatastoreProperties("test");
+        properties.init();
         assertNull(properties.version.getValue());
         // assertNull(properties.contextProvider.getValue());
         assertEquals("com.tibco.tibjms.naming.TibjmsInitialContextFactory", properties.contextProvider.getValue());
@@ -59,13 +60,8 @@ public class JmsDatastorePropertiesTest {
 
         Form main = properties.getForm(Form.MAIN);
         assertThat(main, notNullValue());
-        Form advanced = properties.getForm(Form.ADVANCED);
-        assertThat(advanced, notNullValue());
-
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(7));
-        Widget mainWidget = main.getWidget("main");
-        assertThat(mainWidget, notNullValue());
+        assertThat(mainWidgets, hasSize(9));
         Widget msgType = main.getWidget("version");
         assertThat(msgType, notNullValue());
         Widget contextProvider = main.getWidget("contextProvider");
@@ -74,20 +70,15 @@ public class JmsDatastorePropertiesTest {
         assertThat(serverUrl, notNullValue());
         Widget connectionFactoryName = main.getWidget("connectionFactoryName");
         assertThat(connectionFactoryName, notNullValue());
-        Widget userName = main.getWidget("userName");
-        assertThat(userName, notNullValue());
         Widget userPassword = main.getWidget("userPassword");
         assertThat(userPassword, notNullValue());
-
-        Collection<Widget> advancedWidgets = advanced.getWidgets();
-        assertThat(advancedWidgets, hasSize(4));
-        Widget use_http = advanced.getWidget("use_https");
-        assertThat(use_http, notNullValue());
-        Widget https_settings = advanced.getWidget("https_settings");
-        assertThat(https_settings, notNullValue());
-        Widget property = advanced.getWidget("property");
+        Widget useHttps = main.getWidget("useHttps");
+        assertThat(useHttps, notNullValue());
+        Widget httpsSettings = main.getWidget("httpsSettings");
+        assertThat(httpsSettings, notNullValue());
+        Widget property = main.getWidget("property");
         assertThat(property, notNullValue());
-        Widget value = advanced.getWidget("value");
+        Widget value = main.getWidget("value");
         assertThat(value, notNullValue());
     }
 
@@ -103,15 +94,12 @@ public class JmsDatastorePropertiesTest {
         assertFalse(properties.getForm(Form.MAIN).getWidget("version").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("contextProvider").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("serverUrl").isHidden());
-        assertTrue(properties.getForm(Form.MAIN).getWidget("userName").isHidden());
         assertTrue(properties.getForm(Form.MAIN).getWidget("userPassword").isHidden());
-
         properties.needUserIdentity.setValue(true);
         properties.refreshLayout(properties.getForm(Form.MAIN));
         assertFalse(properties.getForm(Form.MAIN).getWidget("version").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("contextProvider").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("serverUrl").isHidden());
-        assertFalse(properties.getForm(Form.MAIN).getWidget("userName").isHidden());
         assertFalse(properties.getForm(Form.MAIN).getWidget("userPassword").isHidden());
 
     }

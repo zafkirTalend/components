@@ -50,9 +50,7 @@ public class JmsDatasetPropertiesTest {
         assertThat(main, notNullValue());
 
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(3));
-        Widget mainWidget = main.getWidget("main");
-        assertThat(mainWidget, notNullValue());
+        assertThat(mainWidgets, hasSize(2));
         Widget msgType = main.getWidget("msgType");
         assertThat(msgType, notNullValue());
         Widget processingMode = main.getWidget("processingMode");

@@ -8,6 +8,7 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.components.jms.runtime_1_1.JmsDatastoreRuntime;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.ValidationResult;
 
 import java.io.IOException;
@@ -27,13 +28,14 @@ public class JmsDatastoreRuntimeTest {
     @Test
     public void testDoHealthChecks() {
         JmsDatastoreProperties props = new JmsDatastoreProperties("test");
+        props.serverUrl.setValue("tcp://localhost:61616");
         datastoreRuntime.initialize(null,props);
         Iterable<ValidationResult> healthResult = datastoreRuntime.doHealthChecks(null);
         assertEquals(Arrays.asList(ValidationResult.OK), healthResult);
     }
 
     /**
-     * Check {@link JmsDatastoreRuntime#initialize(RuntimeContainer, DatastoreProperties)}
+     * Check {@link JmsDatastoreRuntime#initialize(RuntimeContainer, Properties)}
      * Returns OK
      */
     @Test

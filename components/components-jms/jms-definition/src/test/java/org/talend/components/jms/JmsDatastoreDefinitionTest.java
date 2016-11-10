@@ -31,6 +31,6 @@ public class JmsDatastoreDefinitionTest {
     @Test
     public void testCreateProperties() {
         JmsDatastoreProperties props = datastoreDefinition.createProperties();
-        assertEquals("jms", props.getName());
+        assertEquals("JmsDatastore", props.getName());
     }
 }

@@ -57,7 +57,7 @@ public class JmsDatastoreProperties extends PropertiesImpl implements DatastoreP
     public UserPasswordProperties userPassword = new UserPasswordProperties("userPassword");
 
     // Those advanced settings could be either in the datastore or in the dataset
-    public Property<Boolean> useHttps = PropertyFactory.newBoolean("useHttps");
+    public Property<Boolean> useHttps = PropertyFactory.newBoolean("useHttps", false);
 
     public Property<String> httpsSettings = PropertyFactory.newString("httpsSettings");
 
