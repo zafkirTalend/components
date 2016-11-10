@@ -14,7 +14,6 @@ package org.talend.components.jdbc;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -40,13 +39,7 @@ public class JDBCConnectionTestIT {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-        try (InputStream is = JDBCConnectionTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
-            props = new java.util.Properties();
-            props.load(is);
-        }
-
-        allSetting = DBTestUtils.createAllSetting(props);
+        allSetting = DBTestUtils.createAllSetting();
     }
 
     // we want to test the dynamic library loading with the field driverPath, but fail, so seems that no way to test it

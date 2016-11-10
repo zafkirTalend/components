@@ -17,13 +17,14 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.junit.Test;
+import org.talend.components.jdbc.datastore.JDBCDatastoreProperties;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 
-public class TDataPrepDBInputTest {
+public class JDBCDatastoreTest {
 
     @Test
     public void testGetSchemaNames() throws Exception {
-        TDataPrepDBInputProperties properties = new TDataPrepDBInputProperties("input");
+        JDBCDatastoreProperties properties = new JDBCDatastoreProperties("input");
         properties.init();
 
         List<?> dbTypes = properties.dbTypes.getPossibleValues();

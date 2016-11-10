@@ -3,7 +3,6 @@ package org.talend.components.jdbc.type;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,7 +18,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.Reader;
-import org.talend.components.jdbc.JDBCConnectionTestIT;
 import org.talend.components.jdbc.common.DBTestUtils;
 import org.talend.components.jdbc.runtime.JDBCSource;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
@@ -39,13 +37,7 @@ public class JDBCTypeMappingTestIT {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-        try (InputStream is = JDBCConnectionTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
-            props = new java.util.Properties();
-            props.load(is);
-        }
-
-        allSetting = DBTestUtils.createAllSetting(props);
+        allSetting = DBTestUtils.createAllSetting();
 
         DBTestUtils.createTableForEveryType(allSetting);
     }

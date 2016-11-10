@@ -15,7 +15,6 @@ package org.talend.components.jdbc;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -82,13 +81,7 @@ public class JDBCCommitTestIT {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-        try (InputStream is = JDBCCommitTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
-            props = new java.util.Properties();
-            props.load(is);
-        }
-
-        allSetting = DBTestUtils.createAllSetting(props);
+        allSetting = DBTestUtils.createAllSetting();
 
         DBTestUtils.createTable(allSetting);
     }

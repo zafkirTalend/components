@@ -2,12 +2,12 @@ package org.talend.components.jdbc.dataprep;
 
 public class DBType {
 
-    String id;
+    public String id;
 
-    String jar;
+    public String jar;
 
-    String driver;
+    public String driver;
 
-    String jdbcUrlTemplate;
+    public String jdbcUrlTemplate;
 
 }

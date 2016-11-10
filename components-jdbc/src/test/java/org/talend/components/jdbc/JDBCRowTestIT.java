@@ -16,7 +16,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
-import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -57,13 +56,7 @@ public class JDBCRowTestIT {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-        try (InputStream is = JDBCRowTestIT.class.getClassLoader().getResourceAsStream("connection.properties")) {
-            props = new java.util.Properties();
-            props.load(is);
-        }
-
-        allSetting = DBTestUtils.createAllSetting(props);
+        allSetting = DBTestUtils.createAllSetting();
 
         DBTestUtils.createTable(allSetting);
     }

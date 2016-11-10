@@ -3,9 +3,11 @@ package org.talend.components.jdbc.common;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,10 +15,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
 import org.apache.avro.generic.GenericData;
@@ -706,7 +708,16 @@ public class DBTestUtils {
         return properties;
     }
 
-    public static AllSetting createAllSetting(Properties props) {
+    private static java.util.Properties props = null;
+
+    public static AllSetting createAllSetting() throws IOException {
+        if (props == null) {
+            try (InputStream is = DBTestUtils.class.getClassLoader().getResourceAsStream("connection.properties")) {
+                props = new java.util.Properties();
+                props.load(is);
+            }
+        }
+
         String driverClass = props.getProperty("driverClass");
 
         String jdbcUrl = props.getProperty("jdbcUrl");
@@ -731,5 +742,29 @@ public class DBTestUtils {
 
     public static String getSQL() {
         return "select * from TEST";
+    }
+
+    public static void testMetadata(List<Field> columns) {
+        Schema.Field field = columns.get(0);
+
+        assertEquals("ID", field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.INT, AvroUtils.unwrapIfNullable(field.schema()).getType());
+        assertEquals(java.sql.Types.INTEGER, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(10, field.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
+
+        field = columns.get(1);
+
+        assertEquals("NAME", field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_COLUMN_NAME));
+        assertEquals(Schema.Type.STRING, AvroUtils.unwrapIfNullable(field.schema()).getType());
+        assertEquals(java.sql.Types.VARCHAR, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_TYPE));
+        assertEquals(8, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DB_LENGTH));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_PRECISION));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_SCALE));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_PATTERN));
+        assertEquals(null, field.getObjectProp(SchemaConstants.TALEND_COLUMN_DEFAULT));
     }
 }
