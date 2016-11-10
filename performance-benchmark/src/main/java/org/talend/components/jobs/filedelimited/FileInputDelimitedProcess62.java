@@ -6,11 +6,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+
 import routines.system.TDieException;
 
 public class FileInputDelimitedProcess62 {
 
     public void tFileInputDelimited_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO Prepare process start ---------------------------------------------------------------------------------------------------
+        watch.startStageHere(1);
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 0);
 
         String iterateId = "";
@@ -22,8 +27,15 @@ public class FileInputDelimitedProcess62 {
 
             String currentMethodName = new java.lang.Exception().getStackTrace()[0].getMethodName();
             if (true) {
+                
                 row1Struct row1 = new row1Struct();
-
+        
+                // Prepare process end --------------------------------------------------------------------------------------------------
+                watch.finishStageHere(1);
+                
+                // TODO Other component initialization start
+                watch.startStageHere(2);
+                
                 /**
                  * [tJavaRow_1 begin ] start
                  */
@@ -37,7 +49,13 @@ public class FileInputDelimitedProcess62 {
                 /**
                  * [tJavaRow_1 begin ] stop
                  */
+                
+                watch.finishStageHere(2);
+                // Other component initialization end -----------------------------------------------------------------------------------
 
+                // TODO Connect to source start -----------------------------------------------------------------------------------------
+                watch.startStageHere(3);
+              
                 /**
                  * [tFileInputDelimited_2 begin ] start
                  */
@@ -71,7 +89,20 @@ public class FileInputDelimitedProcess62 {
 
                     }
 
-                    while (fid_tFileInputDelimited_2 != null && fid_tFileInputDelimited_2.nextRecord()) {
+                    // Connect to source end ------------------------------------------------------------------------------------------------
+                    watch.finishStageHere(3);
+                    
+                    // TODO Read record start -----------------------------------------------------------------------------------------------
+                    // also see in the end of while loop
+                    watch.startStageHere(4);
+                    boolean continueOrNot = fid_tFileInputDelimited_2 != null && fid_tFileInputDelimited_2.nextRecord();
+                    // Read record end ------------------------------------------------------------------------------------------------------
+                    watch.finishStageHere(4);
+                    while (continueOrNot) {
+                        
+                        // TODO Set record values to POJO row2struct start ------------------------------------------------------------------------
+                        watch.startStageHere(5);
+                        
                         rowstate_tFileInputDelimited_2.reset();
 
                         row1 = null;
@@ -225,10 +256,17 @@ public class FileInputDelimitedProcess62 {
                         currentComponent = "tFileInputDelimited_2";
 
                         tos_count_tFileInputDelimited_2++;
-
+                        
+                        // Set record values to POJO row2struct end  ------------------------------------------------------------------------
+                        watch.finishStageHere(5);
+                        
                         /**
                          * [tFileInputDelimited_2 main ] stop
                          */
+                        
+                        // TODO other component main part start -----------------------------------------------------------------------------
+                        watch.startStageHere(6);
+                        
                         // Start of branch "row1"
                         if (row1 != null) {
 
@@ -261,8 +299,19 @@ public class FileInputDelimitedProcess62 {
                          */
 
                         currentComponent = "tFileInputDelimited_2";
+                        
+                        // other component main part end -----------------------------------------------------------------------------
+                        watch.finishStageHere(6);
 
+                        // TODO Read record start -----------------------------------------------------------------------------------------------
+                        // also see in the before while loop
+                        watch.startStageHere(4);
+                        continueOrNot = fid_tFileInputDelimited_2 != null && fid_tFileInputDelimited_2.nextRecord();
+                        // Read record end ------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(4);
                     }
+                    // TODO Close connection start ----------------------------------------------------------------------------------------------
+                    watch.startStageHere(7);
                 } finally {
                     if (!((Object) (FILE_NAME) instanceof java.io.InputStream)) {
                         if (fid_tFileInputDelimited_2 != null) {
@@ -275,10 +324,16 @@ public class FileInputDelimitedProcess62 {
                     }
                 }
 
+                // Close connection end ----------------------------------------------------------------------------------------------
+                watch.finishStageHere(7);
+                
                 /**
                  * [tFileInputDelimited_2 end ] stop
                  */
 
+                // TODO Other component closing start ----------------------------------------------------------------------------------
+                watch.startStageHere(8);
+                
                 /**
                  * [tJavaRow_1 end ] start
                  */
@@ -290,9 +345,14 @@ public class FileInputDelimitedProcess62 {
                 /**
                  * [tJavaRow_1 end ] stop
                  */
+                // Other component closing end ----------------------------------------------------------------------------------
+                watch.finishStageHere(8);
 
             } // end the resume
 
+            // TODO finalization start -----------------------------------------------------------------------------------------------
+            watch.startStageHere(9);
+            
         } catch (java.lang.Exception e) {
 
             TalendException te = new TalendException(e, currentComponent, globalMap);
@@ -334,6 +394,9 @@ public class FileInputDelimitedProcess62 {
         }
 
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 1);
+        
+        // TODO finalization end -----------------------------------------------------------------------------------------------
+        watch.finishStageHere(9);
     }
 
     private class TalendException extends Exception {

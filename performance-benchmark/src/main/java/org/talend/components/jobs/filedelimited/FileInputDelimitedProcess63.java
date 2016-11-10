@@ -6,11 +6,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+import org.talend.daikon.di.EnforcerCreator;
+
 import routines.system.TDieException;
 
 public class FileInputDelimitedProcess63 {
 
     public void tFileInputDelimited_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO Prepare process start ---------------------------------------------------------------------------------------------------
+        watch.startStageHere(1);
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 0);
 
         String iterateId = "";
@@ -24,6 +30,12 @@ public class FileInputDelimitedProcess63 {
             if (true) {
 
                 row1Struct row1 = new row1Struct();
+                
+                // Prepare process end --------------------------------------------------------------------------------------------------
+                watch.finishStageHere(1);
+                
+                // TODO Other component initialization start
+                watch.startStageHere(2);
 
                 /**
                  * [tJavaRow_1 begin ] start
@@ -47,11 +59,17 @@ public class FileInputDelimitedProcess63 {
                 /**
                  * [tJavaRow_1 begin ] stop
                  */
+                
+                watch.finishStageHere(2);
+                // Other component initialization end -----------------------------------------------------------------------------------
 
                 /**
                  * [tFileInputDelimited_2 begin ] start
                  */
 
+                // TODO Set properties start -------------------------------------------------------------------------------------------
+                watch.startStageHere(3);
+                
                 currentComponent = "tFileInputDelimited_2";
 
                 int tos_count_tFileInputDelimited_2 = 0;
@@ -225,6 +243,7 @@ public class FileInputDelimitedProcess63 {
                         "{\"type\":\"record\",\"name\":\"metadata\",\"fields\":[{\"name\":\"Column1\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column1\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column1\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column2\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column2\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column2\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column3\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column3\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column3\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column4\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column4\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column4\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column5\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column5\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column5\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column6\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column6\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column6\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column7\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column7\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column7\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column8\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column8\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column8\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column9\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column9\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column9\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column10\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column10\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column10\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column11\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column11\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column11\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column12\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column12\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column12\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column13\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column13\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column13\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column14\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column14\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column14\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column15\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column15\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column15\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column16\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column16\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column16\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column17\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column17\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column17\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column18\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column18\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column18\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column19\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column19\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column19\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column20\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column20\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column20\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column21\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column21\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column21\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column22\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column22\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column22\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column23\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column23\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column23\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column24\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column24\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column24\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column25\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column25\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column25\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column26\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column26\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column26\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column27\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column27\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column27\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column28\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column28\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column28\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column29\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column29\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column29\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"},{\"name\":\"Column30\",\"type\":[\"string\",\"null\"],\"di.table.comment\":\"\",\"talend.field.dbColumnName\":\"Column30\",\"di.column.talendType\":\"id_String\",\"di.column.isNullable\":\"true\",\"talend.field.pattern\":\"dd-MM-yyyy\",\"talend.field.length\":\"6\",\"di.column.relationshipType\":\"\",\"di.column.originalLength\":\"0\",\"di.table.label\":\"Column30\",\"talend.field.precision\":\"0\",\"di.column.relatedEntity\":\"\"}],\"di.table.name\":\"tFileInputDelimited_2\",\"di.table.label\":\"metadata\"}"));
                 props_tFileInputDelimited_2.encoding.setValue("encodingType", "CUSTOM");
                 props_tFileInputDelimited_2.encoding.setValue("customEncoding", "US-ASCII");
+                
                 org.talend.components.api.container.RuntimeContainer container_tFileInputDelimited_2 = new org.talend.components.api.container.RuntimeContainer() {
 
                     public Object getComponentData(String componentId, String key) {
@@ -244,6 +263,13 @@ public class FileInputDelimitedProcess63 {
                     }
                 };
 
+                // Set properties end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(3);
+                
+                // TODO Initialize Source, Reader, Enforcer, IndexedRecordConverter start ---------------------------------------------------------------------------------------------------------------
+                watch.startStageHere(4);
+                
+                
                 int nb_line_tFileInputDelimited_2 = 0;
 
                 org.talend.components.api.component.ConnectorTopology topology_tFileInputDelimited_2 = null;
@@ -290,20 +316,30 @@ public class FileInputDelimitedProcess63 {
                         .getSchema(c_tFileInputDelimited_2, true);
 
                 org.talend.daikon.di.DiOutgoingSchemaEnforcer current_tFileInputDelimited_2 = 
-                        org.talend.daikon.di.EnforcerCreator.createOutgoingEnforcer(schema_tFileInputDelimited_2, false);
-                        
+                        EnforcerCreator.createOutgoingEnforcer(schema_tFileInputDelimited_2, false); 
 
                 // Create a reusable factory that converts the output of the
                 // reader to an IndexedRecord.
                 org.talend.daikon.avro.converter.IndexedRecordConverter<Object, ? extends org.apache.avro.generic.IndexedRecord> factory_tFileInputDelimited_2 = null;
 
+                // Initialize Source and Reader end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(4);
+                
+                // TODO connect to source start ---------------------------------------------------------------------------------------------------------------
+                watch.startStageHere(5);
+                
                 // Iterate through the incoming data.
                 boolean available_tFileInputDelimited_2 = reader_tFileInputDelimited_2.start();
 
                 resourceMap.put("reader_tFileInputDelimited_2", reader_tFileInputDelimited_2);
+                
+                // connect to source end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(5);
 
-                for (; available_tFileInputDelimited_2; available_tFileInputDelimited_2 = reader_tFileInputDelimited_2
-                        .advance()) {
+                for (; available_tFileInputDelimited_2;) {
+                    
+                    // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                    watch.startStageHere(8);
                     nb_line_tFileInputDelimited_2++;
 
                     if (multi_output_is_allowed_tFileInputDelimited_2) {
@@ -314,170 +350,476 @@ public class FileInputDelimitedProcess63 {
                     try {
                         Object data_tFileInputDelimited_2 = reader_tFileInputDelimited_2.getCurrent();
 
+
                         if (multi_output_is_allowed_tFileInputDelimited_2) {
                             row1 = new row1Struct();
                         }
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
 
                         // Construct the factory once when the first data
                         // arrives.
+                        // TODO Initialize Source and Reader start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(4);
                         if (factory_tFileInputDelimited_2 == null) {
                             factory_tFileInputDelimited_2 = (org.talend.daikon.avro.converter.IndexedRecordConverter<Object, ? extends org.apache.avro.generic.IndexedRecord>) new org.talend.daikon.avro.AvroRegistry()
                                     .createIndexedRecordConverter(data_tFileInputDelimited_2.getClass());
                         }
+                        // Initialize Source and Reader end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(4);
 
                         // Enforce the outgoing schema on the input.
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
                         current_tFileInputDelimited_2
                                 .setWrapped(factory_tFileInputDelimited_2.convertToAvro(data_tFileInputDelimited_2));
-                        if (current_tFileInputDelimited_2.get(0) == null) {
+                        Object columnValue_0 = current_tFileInputDelimited_2.get(0);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_0 == null) {
                             row1.Column1 = null;
                         } else {
-                            row1.Column1 = String.valueOf(current_tFileInputDelimited_2.get(0));
+                            row1.Column1 = String.valueOf(columnValue_0);
                         }
-                        if (current_tFileInputDelimited_2.get(1) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_1 = current_tFileInputDelimited_2.get(1);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_1 == null) {
                             row1.Column2 = null;
                         } else {
-                            row1.Column2 = String.valueOf(current_tFileInputDelimited_2.get(1));
+                            row1.Column2 = String.valueOf(columnValue_1);
                         }
-                        if (current_tFileInputDelimited_2.get(2) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_2 = current_tFileInputDelimited_2.get(2);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_2 == null) {
                             row1.Column3 = null;
                         } else {
-                            row1.Column3 = String.valueOf(current_tFileInputDelimited_2.get(2));
+                            row1.Column3 = String.valueOf(columnValue_2);
                         }
-                        if (current_tFileInputDelimited_2.get(3) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_3 = current_tFileInputDelimited_2.get(3);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_3 == null) {
                             row1.Column4 = null;
                         } else {
-                            row1.Column4 = String.valueOf(current_tFileInputDelimited_2.get(3));
+                            row1.Column4 = String.valueOf(columnValue_3);
                         }
-                        if (current_tFileInputDelimited_2.get(4) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_4 = current_tFileInputDelimited_2.get(4);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_4 == null) {
                             row1.Column5 = null;
                         } else {
-                            row1.Column5 = String.valueOf(current_tFileInputDelimited_2.get(4));
+                            row1.Column5 = String.valueOf(columnValue_4);
                         }
-                        if (current_tFileInputDelimited_2.get(5) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_5 = current_tFileInputDelimited_2.get(5);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_5 == null) {
                             row1.Column6 = null;
                         } else {
-                            row1.Column6 = String.valueOf(current_tFileInputDelimited_2.get(5));
+                            row1.Column6 = String.valueOf(columnValue_5);
                         }
-                        if (current_tFileInputDelimited_2.get(6) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_6 = current_tFileInputDelimited_2.get(6);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_6 == null) {
                             row1.Column7 = null;
                         } else {
-                            row1.Column7 = String.valueOf(current_tFileInputDelimited_2.get(6));
+                            row1.Column7 = String.valueOf(columnValue_6);
                         }
-                        if (current_tFileInputDelimited_2.get(7) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_7 = current_tFileInputDelimited_2.get(7);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_7 == null) {
                             row1.Column8 = null;
                         } else {
-                            row1.Column8 = String.valueOf(current_tFileInputDelimited_2.get(7));
+                            row1.Column8 = String.valueOf(columnValue_7);
                         }
-                        if (current_tFileInputDelimited_2.get(8) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_8 = current_tFileInputDelimited_2.get(8);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_8 == null) {
                             row1.Column9 = null;
                         } else {
-                            row1.Column9 = String.valueOf(current_tFileInputDelimited_2.get(8));
+                            row1.Column9 = String.valueOf(columnValue_8);
                         }
-                        if (current_tFileInputDelimited_2.get(9) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_9 = current_tFileInputDelimited_2.get(9);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_9 == null) {
                             row1.Column10 = null;
                         } else {
-                            row1.Column10 = String.valueOf(current_tFileInputDelimited_2.get(9));
+                            row1.Column10 = String.valueOf(columnValue_9);
                         }
-                        if (current_tFileInputDelimited_2.get(10) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_10 = current_tFileInputDelimited_2.get(10);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_10 == null) {
                             row1.Column11 = null;
                         } else {
-                            row1.Column11 = String.valueOf(current_tFileInputDelimited_2.get(10));
+                            row1.Column11 = String.valueOf(columnValue_10);
                         }
-                        if (current_tFileInputDelimited_2.get(11) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_11 = current_tFileInputDelimited_2.get(11);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_11 == null) {
                             row1.Column12 = null;
                         } else {
-                            row1.Column12 = String.valueOf(current_tFileInputDelimited_2.get(11));
+                            row1.Column12 = String.valueOf(columnValue_11);
                         }
-                        if (current_tFileInputDelimited_2.get(12) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_12 = current_tFileInputDelimited_2.get(12);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_12 == null) {
                             row1.Column13 = null;
                         } else {
-                            row1.Column13 = String.valueOf(current_tFileInputDelimited_2.get(12));
+                            row1.Column13 = String.valueOf(columnValue_12);
                         }
-                        if (current_tFileInputDelimited_2.get(13) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_13 = current_tFileInputDelimited_2.get(13);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_13 == null) {
                             row1.Column14 = null;
                         } else {
-                            row1.Column14 = String.valueOf(current_tFileInputDelimited_2.get(13));
+                            row1.Column14 = String.valueOf(columnValue_13);
                         }
-                        if (current_tFileInputDelimited_2.get(14) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_14 = current_tFileInputDelimited_2.get(14);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_14 == null) {
                             row1.Column15 = null;
                         } else {
-                            row1.Column15 = String.valueOf(current_tFileInputDelimited_2.get(14));
+                            row1.Column15 = String.valueOf(columnValue_14);
                         }
-                        if (current_tFileInputDelimited_2.get(15) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_15 = current_tFileInputDelimited_2.get(15);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_15 == null) {
                             row1.Column16 = null;
                         } else {
-                            row1.Column16 = String.valueOf(current_tFileInputDelimited_2.get(15));
+                            row1.Column16 = String.valueOf(columnValue_15);
                         }
-                        if (current_tFileInputDelimited_2.get(16) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_16 = current_tFileInputDelimited_2.get(16);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_16 == null) {
                             row1.Column17 = null;
                         } else {
-                            row1.Column17 = String.valueOf(current_tFileInputDelimited_2.get(16));
+                            row1.Column17 = String.valueOf(columnValue_16);
                         }
-                        if (current_tFileInputDelimited_2.get(17) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_17 = current_tFileInputDelimited_2.get(17);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_17 == null) {
                             row1.Column18 = null;
                         } else {
-                            row1.Column18 = String.valueOf(current_tFileInputDelimited_2.get(17));
+                            row1.Column18 = String.valueOf(columnValue_17);
                         }
-                        if (current_tFileInputDelimited_2.get(18) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_18 = current_tFileInputDelimited_2.get(18);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_18 == null) {
                             row1.Column19 = null;
                         } else {
-                            row1.Column19 = String.valueOf(current_tFileInputDelimited_2.get(18));
+                            row1.Column19 = String.valueOf(columnValue_18);
                         }
-                        if (current_tFileInputDelimited_2.get(19) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_19 = current_tFileInputDelimited_2.get(19);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_19 == null) {
                             row1.Column20 = null;
                         } else {
-                            row1.Column20 = String.valueOf(current_tFileInputDelimited_2.get(19));
+                            row1.Column20 = String.valueOf(columnValue_19);
                         }
-                        if (current_tFileInputDelimited_2.get(20) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_20 = current_tFileInputDelimited_2.get(20);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_20 == null) {
                             row1.Column21 = null;
                         } else {
-                            row1.Column21 = String.valueOf(current_tFileInputDelimited_2.get(20));
+                            row1.Column21 = String.valueOf(columnValue_20);
                         }
-                        if (current_tFileInputDelimited_2.get(21) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_21 = current_tFileInputDelimited_2.get(21);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_21 == null) {
                             row1.Column22 = null;
                         } else {
-                            row1.Column22 = String.valueOf(current_tFileInputDelimited_2.get(21));
+                            row1.Column22 = String.valueOf(columnValue_21);
                         }
-                        if (current_tFileInputDelimited_2.get(22) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_22 = current_tFileInputDelimited_2.get(22);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_22 == null) {
                             row1.Column23 = null;
                         } else {
-                            row1.Column23 = String.valueOf(current_tFileInputDelimited_2.get(22));
+                            row1.Column23 = String.valueOf(columnValue_22);
                         }
-                        if (current_tFileInputDelimited_2.get(23) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_23 = current_tFileInputDelimited_2.get(23);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_23 == null) {
                             row1.Column24 = null;
                         } else {
-                            row1.Column24 = String.valueOf(current_tFileInputDelimited_2.get(23));
+                            row1.Column24 = String.valueOf(columnValue_23);
                         }
-                        if (current_tFileInputDelimited_2.get(24) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_24 = current_tFileInputDelimited_2.get(24);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_24 == null) {
                             row1.Column25 = null;
                         } else {
-                            row1.Column25 = String.valueOf(current_tFileInputDelimited_2.get(24));
+                            row1.Column25 = String.valueOf(columnValue_24);
                         }
-                        if (current_tFileInputDelimited_2.get(25) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_25 = current_tFileInputDelimited_2.get(25);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_25 == null) {
                             row1.Column26 = null;
                         } else {
-                            row1.Column26 = String.valueOf(current_tFileInputDelimited_2.get(25));
+                            row1.Column26 = String.valueOf(columnValue_25);
                         }
-                        if (current_tFileInputDelimited_2.get(26) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_26 = current_tFileInputDelimited_2.get(26);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_26 == null) {
                             row1.Column27 = null;
                         } else {
-                            row1.Column27 = String.valueOf(current_tFileInputDelimited_2.get(26));
+                            row1.Column27 = String.valueOf(columnValue_26);
                         }
-                        if (current_tFileInputDelimited_2.get(27) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_27 = current_tFileInputDelimited_2.get(27);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_27 == null) {
                             row1.Column28 = null;
                         } else {
-                            row1.Column28 = String.valueOf(current_tFileInputDelimited_2.get(27));
+                            row1.Column28 = String.valueOf(columnValue_27);
                         }
-                        if (current_tFileInputDelimited_2.get(28) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_28 = current_tFileInputDelimited_2.get(28);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_28 == null) {
                             row1.Column29 = null;
                         } else {
-                            row1.Column29 = String.valueOf(current_tFileInputDelimited_2.get(28));
+                            row1.Column29 = String.valueOf(columnValue_28);
                         }
-                        if (current_tFileInputDelimited_2.get(29) == null) {
+                        // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                        watch.finishStageHere(8);
+                        
+                        // TODO Convert to Talend types start -----------------------------------------------------------------------------------
+                        watch.startStageHere(7);
+                        Object columnValue_29 = current_tFileInputDelimited_2.get(29);
+                        // Convert to Talend types end  -----------------------------------------------------------------------------------------
+                        watch.finishStageHere(7);
+                        // TODO Set POJO start ---------------------------------------------------------------------------------------------------------------
+                        watch.startStageHere(8);
+                        if (columnValue_29 == null) {
                             row1.Column30 = null;
                         } else {
-                            row1.Column30 = String.valueOf(current_tFileInputDelimited_2.get(29));
+                            row1.Column30 = String.valueOf(columnValue_29);
                         }
+
+                        
                     } catch (org.talend.components.api.exception.DataRejectException e_tFileInputDelimited_2) {
                         java.util.Map<String, Object> info_tFileInputDelimited_2 = e_tFileInputDelimited_2.getRejectInfo();
                         // TODO use a method instead of getting method by the
@@ -486,6 +828,7 @@ public class FileInputDelimitedProcess63 {
                                 + info_tFileInputDelimited_2.get("error");
                         System.err.println(errorMessage_tFileInputDelimited_2);
                     }
+
 
                     /**
                      * [tFileInputDelimited_2 begin ] stop
@@ -498,10 +841,15 @@ public class FileInputDelimitedProcess63 {
                     currentComponent = "tFileInputDelimited_2";
 
                     tos_count_tFileInputDelimited_2++;
+                    // Set POJO end ---------------------------------------------------------------------------------------------------------------
+                    watch.finishStageHere(8);
 
                     /**
                      * [tFileInputDelimited_2 main ] stop
                      */
+                    
+                    // TODO other component main part start -----------------------------------------------------------------------------
+                    watch.startStageHere(9);
                     // Start of branch "row1"
                     if (row1 != null) {
 
@@ -534,12 +882,23 @@ public class FileInputDelimitedProcess63 {
                      */
 
                     currentComponent = "tFileInputDelimited_2";
+                    // other component main part end -----------------------------------------------------------------------------
+                    watch.finishStageHere(9);
 
                     // end of generic
 
                     resourceMap.put("finish_tFileInputDelimited_2", Boolean.TRUE);
+                    
+                    // TODO read record start ---------------------------------------------------------------------------------------------------------------
+                    watch.startStageHere(6);
+                    available_tFileInputDelimited_2 = reader_tFileInputDelimited_2.advance();
+                    // read record end ---------------------------------------------------------------------------------------------------------------
+                    watch.finishStageHere(6);
+                    
 
                 } // while
+                // TODO Close connection start ----------------------------------------------------------------------------------------------
+                watch.startStageHere(10);
                 reader_tFileInputDelimited_2.close();
                 final java.util.Map<String, Object> resultMap_tFileInputDelimited_2 = reader_tFileInputDelimited_2
                         .getReturnValues();
@@ -581,11 +940,15 @@ public class FileInputDelimitedProcess63 {
                         }
                     }
                 }
+                // Close connection end ----------------------------------------------------------------------------------------------
+                watch.finishStageHere(10);
 
                 /**
                  * [tFileInputDelimited_2 end ] stop
                  */
 
+                // TODO Other component closing start ----------------------------------------------------------------------------------
+                watch.startStageHere(11);
                 /**
                  * [tJavaRow_1 end ] start
                  */
@@ -593,6 +956,9 @@ public class FileInputDelimitedProcess63 {
                 currentComponent = "tJavaRow_1";
 
                 globalMap.put("tJavaRow_1_NB_LINE", nb_line_tJavaRow_1);
+                
+                // Other component closing end ----------------------------------------------------------------------------------
+                watch.finishStageHere(11);
 
                 /**
                  * [tJavaRow_1 end ] stop
@@ -600,6 +966,9 @@ public class FileInputDelimitedProcess63 {
 
             } // end the resume
 
+        // TODO finalization start -----------------------------------------------------------------------------------------------
+        watch.startStageHere(12);
+            
         } catch (java.lang.Exception e) {
 
             TalendException te = new TalendException(e, currentComponent, globalMap);
@@ -656,6 +1025,8 @@ public class FileInputDelimitedProcess63 {
         }
 
         globalMap.put("tFileInputDelimited_2_SUBPROCESS_STATE", 1);
+        // finalization end -----------------------------------------------------------------------------------------------
+        watch.finishStageHere(12);
     }
 
     private class TalendException extends Exception {
