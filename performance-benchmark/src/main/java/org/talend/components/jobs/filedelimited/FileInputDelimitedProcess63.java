@@ -289,8 +289,9 @@ public class FileInputDelimitedProcess63 {
                 org.apache.avro.Schema schema_tFileInputDelimited_2 = props_tFileInputDelimited_2
                         .getSchema(c_tFileInputDelimited_2, true);
 
-                org.talend.daikon.di.DiOutgoingSchemaEnforcer current_tFileInputDelimited_2 = new org.talend.daikon.di.DiOutgoingSchemaEnforcer(
-                        schema_tFileInputDelimited_2, false);
+                org.talend.daikon.di.DiOutgoingSchemaEnforcer current_tFileInputDelimited_2 = 
+                        org.talend.daikon.di.EnforcerCreator.createOutgoingEnforcer(schema_tFileInputDelimited_2, false);
+                        
 
                 // Create a reusable factory that converts the output of the
                 // reader to an IndexedRecord.
