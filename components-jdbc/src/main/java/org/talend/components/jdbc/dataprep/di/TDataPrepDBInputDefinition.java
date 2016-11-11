@@ -10,7 +10,7 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.jdbc.dataprep;
+package org.talend.components.jdbc.dataprep.di;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class TDataPrepDBInputDefinition extends AbstractComponentDefinition {
     }
 
     @Override
-    public RuntimeInfo getRuntimeInfo(ComponentProperties properties, ConnectorTopology connectorTopology) {
+    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
         if (connectorTopology == ConnectorTopology.OUTGOING) {
             return JDBCTemplate.createCommonRuntime(this.getClass().getClassLoader(), properties,
                     JDBCSource.class.getCanonicalName());

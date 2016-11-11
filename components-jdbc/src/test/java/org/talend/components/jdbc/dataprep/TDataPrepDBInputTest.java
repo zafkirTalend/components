@@ -17,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.junit.Test;
+import org.talend.components.jdbc.dataprep.di.TDataPrepDBInputProperties;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 
 public class TDataPrepDBInputTest {

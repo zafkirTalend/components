@@ -16,7 +16,7 @@ public class JDBCDatasetDefinition extends SimpleNamedThing implements DatasetDe
 
     @Override
     public JDBCDatasetProperties createProperties() {
-        JDBCDatasetProperties properties = new JDBCDatasetProperties(NAME);
+        JDBCDatasetProperties properties = new JDBCDatasetProperties("dataset");
         properties.init();
         return properties;
     }
@@ -29,7 +29,6 @@ public class JDBCDatasetDefinition extends SimpleNamedThing implements DatasetDe
 
     @Override
     public String getImagePath() {
-        // TODO Auto-generated method stub
-        return null;
+        return NAME + "_icon32.png";
     }
 }

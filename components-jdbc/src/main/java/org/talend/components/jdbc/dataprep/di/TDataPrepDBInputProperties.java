@@ -1,4 +1,4 @@
-package org.talend.components.jdbc.dataprep;
+package org.talend.components.jdbc.dataprep.di;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -22,6 +22,7 @@ import org.talend.components.common.SchemaProperties;
 import org.talend.components.common.UserPasswordProperties;
 import org.talend.components.jdbc.CommonUtils;
 import org.talend.components.jdbc.RuntimeSettingProvider;
+import org.talend.components.jdbc.dataprep.DBType;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;

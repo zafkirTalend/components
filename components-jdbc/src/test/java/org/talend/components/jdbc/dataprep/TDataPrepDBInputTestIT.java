@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.runtime.Reader;
 import org.talend.components.jdbc.common.DBTestUtils;
+import org.talend.components.jdbc.dataprep.di.TDataPrepDBInputDefinition;
+import org.talend.components.jdbc.dataprep.di.TDataPrepDBInputProperties;
 import org.talend.components.jdbc.runtime.JDBCSource;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.NamedThing;

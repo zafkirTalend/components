@@ -52,8 +52,7 @@ public class JDBCDatastoreDefinition extends SimpleNamedThing implements Datasto
 
     @Override
     public String getImagePath() {
-        // TODO
-        return null;
+        return NAME + "_icon32.png";
     }
 
 }

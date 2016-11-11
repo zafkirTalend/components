@@ -4,7 +4,7 @@ import org.talend.components.api.AbstractComponentFamilyDefinition;
 import org.talend.components.api.ComponentInstaller;
 import org.talend.components.api.Constants;
 import org.talend.components.jdbc.dataprep.JDBCInputDefinition;
-import org.talend.components.jdbc.dataprep.TDataPrepDBInputDefinition;
+import org.talend.components.jdbc.dataprep.di.TDataPrepDBInputDefinition;
 import org.talend.components.jdbc.dataset.JDBCDatasetDefinition;
 import org.talend.components.jdbc.datastore.JDBCDatastoreDefinition;
 import org.talend.components.jdbc.tjdbcclose.TJDBCCloseDefinition;
