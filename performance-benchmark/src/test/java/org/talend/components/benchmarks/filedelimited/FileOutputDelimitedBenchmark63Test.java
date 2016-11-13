@@ -14,7 +14,7 @@ public class FileOutputDelimitedBenchmark63Test {
 
     @Test
     public void measureRowGenerator_2Process() throws Exception {
-        StopWatch watch = StopWatch.getInstance(10);
+        StopWatch watch = StopWatch.getInstance(15);
         watch.startStageHere(0);
         process.tRowGenerator_2Process(globalMap);
         watch.finishStageHere(0);

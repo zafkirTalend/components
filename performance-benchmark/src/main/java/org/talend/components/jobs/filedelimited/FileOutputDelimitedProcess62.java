@@ -6,12 +6,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+
 import routines.TalendString;
 import routines.system.TDieException;
 
 public class FileOutputDelimitedProcess62 {
 
     public void tRowGenerator_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO Prepare process start ---------------------------------------------------------------------------------------------------
+        watch.startStageHere(1);
         globalMap.put("tRowGenerator_2_SUBPROCESS_STATE", 0);
         
         String iterateId = "";
@@ -24,10 +29,15 @@ public class FileOutputDelimitedProcess62 {
             String currentMethodName = new java.lang.Exception().getStackTrace()[0].getMethodName();
 
                 row2Struct row2 = new row2Struct();
+                
+                // Prepare process end ---------------------------------------------------------------------------------------------------
+                watch.finishStageHere(1);
 
                 /**
                  * [tFileOutputDelimited_2 begin ] start
                  */
+                // TODO Connect to source start -----------------------------------------------------------------------------------------
+                watch.startStageHere(2);
 
                 int tos_count_tFileOutputDelimited_2 = 0;
 
@@ -103,6 +113,9 @@ public class FileOutputDelimitedProcess62 {
 
                 resourceMap.put("out_tFileOutputDelimited_2", outtFileOutputDelimited_2);
                 resourceMap.put("nb_line_tFileOutputDelimited_2", nb_line_tFileOutputDelimited_2);
+                
+                // Connect to source end -----------------------------------------------------------------------------------------
+                watch.finishStageHere(2);
 
                 /**
                  * [tFileOutputDelimited_2 begin ] stop
@@ -112,6 +125,9 @@ public class FileOutputDelimitedProcess62 {
                  * [tRowGenerator_2 begin ] start
                  */
 
+                // TODO Row generator initialization start ------------------------------------------------------------------------
+                watch.startStageHere(3);
+                
                 currentComponent = "tRowGenerator_2";
 
                 int tos_count_tRowGenerator_2 = 0;
@@ -302,8 +318,15 @@ public class FileOutputDelimitedProcess62 {
                     }
                 }
                 tRowGenerator_2Randomizer randtRowGenerator_2 = new tRowGenerator_2Randomizer();
+                
+                // Row generator initialization end ------------------------------------------------------------------------
+                watch.finishStageHere(3);
 
                 for (int itRowGenerator_2 = 0; itRowGenerator_2 < nb_max_row_tRowGenerator_2; itRowGenerator_2++) {
+                    
+                    // TODO Generate rows start ------------------------------------------------------------------------
+                    watch.startStageHere(4);
+                    
                     row2.Column1 = randtRowGenerator_2.getRandomColumn1();
                     row2.Column2 = randtRowGenerator_2.getRandomColumn2();
                     row2.Column3 = randtRowGenerator_2.getRandomColumn3();
@@ -336,6 +359,8 @@ public class FileOutputDelimitedProcess62 {
                     row2.Column30 = randtRowGenerator_2.getRandomColumn30();
                     nb_line_tRowGenerator_2++;
 
+
+                    
                     /**
                      * [tRowGenerator_2 begin ] stop
                      */
@@ -347,6 +372,9 @@ public class FileOutputDelimitedProcess62 {
                     currentComponent = "tRowGenerator_2";
 
                     tos_count_tRowGenerator_2++;
+                    
+                    // Generate rows end ------------------------------------------------------------------------
+                    watch.finishStageHere(4);
 
                     /**
                      * [tRowGenerator_2 main ] stop
@@ -355,6 +383,9 @@ public class FileOutputDelimitedProcess62 {
                     /**
                      * [tFileOutputDelimited_2 main ] start
                      */
+                    
+                    // TODO write record start ------------------------------------------------------------------------
+                    watch.startStageHere(5);
 
                     currentComponent = "tFileOutputDelimited_2";
 
@@ -496,6 +527,9 @@ public class FileOutputDelimitedProcess62 {
                      */
 
                     currentComponent = "tRowGenerator_2";
+                    
+                    // write record end ------------------------------------------------------------------------
+                    watch.finishStageHere(5);
 
                 }
                 globalMap.put("tRowGenerator_2_NB_LINE", nb_line_tRowGenerator_2);
@@ -507,6 +541,9 @@ public class FileOutputDelimitedProcess62 {
                 /**
                  * [tFileOutputDelimited_2 end ] start
                  */
+                
+                // TODO close connection start --------------------------------------------------------------------------------------------
+                watch.startStageHere(6);
 
                 currentComponent = "tFileOutputDelimited_2";
 
@@ -519,11 +556,17 @@ public class FileOutputDelimitedProcess62 {
                 globalMap.put("tFileOutputDelimited_2_FILE_NAME", fileName_tFileOutputDelimited_2);
 
                 resourceMap.put("finish_tFileOutputDelimited_2", true);
+                
+                // close connection end ---------------------------------------------------------------------------------------------------
+                watch.finishStageHere(6);
 
                 /**
                  * [tFileOutputDelimited_2 end ] stop
                  */
 
+                
+                // TODO finalize start --------------------------------------------------------------------------------------------
+                watch.startStageHere(7);
 
         } catch (java.lang.Exception e) {
 
@@ -575,6 +618,9 @@ public class FileOutputDelimitedProcess62 {
         }
 
         globalMap.put("tRowGenerator_2_SUBPROCESS_STATE", 1);
+        
+        // finalize end --------------------------------------------------------------------------------------------
+        watch.finishStageHere(7);
     }
 
     private class TalendException extends Exception {

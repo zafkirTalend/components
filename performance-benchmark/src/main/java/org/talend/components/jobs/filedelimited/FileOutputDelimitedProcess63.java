@@ -6,12 +6,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.talend.components.stopwatch.StopWatch;
+
 import routines.TalendString;
 import routines.system.TDieException;
 
 public class FileOutputDelimitedProcess63 {
 
     public void tRowGenerator_2Process(final java.util.Map<String, Object> globalMap) throws TalendException {
+        StopWatch watch = StopWatch.getInstance(10);
+        // TODO Prepare process start ---------------------------------------------------------------------------------------------------
+        watch.startStageHere(1);
         globalMap.put("tRowGenerator_2_SUBPROCESS_STATE", 0);
 
         String iterateId = "";
@@ -26,10 +31,16 @@ public class FileOutputDelimitedProcess63 {
             if (true) {
 
                 row2Struct row2 = new row2Struct();
+                
+                // Prepare process end ---------------------------------------------------------------------------------------------------
+                watch.finishStageHere(1);
 
                 /**
                  * [tFileOutputDelimited_2 begin ] start
                  */
+                
+                // TODO Set properties start ---------------------------------------------------------------------------------------------------
+                watch.startStageHere(2);
 
                 currentComponent = "tFileOutputDelimited_2";
 
@@ -88,6 +99,12 @@ public class FileOutputDelimitedProcess63 {
                     }
                 };
 
+                // Set properties end ---------------------------------------------------------------------------------------------------
+                watch.finishStageHere(2);
+                
+                // TODO Initialize Source, Reader, Enforcer, IndexedRecordConverter start ---------------------------------------------------------------------------------------------------------------
+                watch.startStageHere(3);
+                
                 int nb_line_tFileOutputDelimited_2 = 0;
 
                 org.talend.components.api.component.ConnectorTopology topology_tFileOutputDelimited_2 = null;
@@ -113,10 +130,23 @@ public class FileOutputDelimitedProcess63 {
                 writeOperation_tFileOutputDelimited_2.initialize(container_tFileOutputDelimited_2);
                 org.talend.components.api.component.runtime.Writer writer_tFileOutputDelimited_2 = writeOperation_tFileOutputDelimited_2
                         .createWriter(container_tFileOutputDelimited_2);
+                
+                // Initialize Source, Reader, Enforcer, IndexedRecordConverter end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(3);
+                
+                // TODO connect to source start ---------------------------------------------------------------------------------------------------------------
+                watch.startStageHere(4);
+                
                 writer_tFileOutputDelimited_2.open("tFileOutputDelimited_2");
 
                 resourceMap.put("writer_tFileOutputDelimited_2", writer_tFileOutputDelimited_2);
+                
+                // connect to source end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(4);
 
+                // TODO Initialize Source, Reader, Enforcer, IndexedRecordConverter start ---------------------------------------------------------------------------------------------------------------
+                watch.startStageHere(3);
+                
                 org.talend.components.api.component.Connector c_tFileOutputDelimited_2 = null;
                 for (org.talend.components.api.component.Connector currentConnector : props_tFileOutputDelimited_2
                         .getAvailableConnectors(null, false)) {
@@ -125,11 +155,15 @@ public class FileOutputDelimitedProcess63 {
                         break;
                     }
                 }
+                
                 org.apache.avro.Schema designSchema_tFileOutputDelimited_2 = props_tFileOutputDelimited_2
                         .getSchema(c_tFileOutputDelimited_2, false);
                 org.talend.daikon.di.DiIncomingSchemaEnforcer current_tFileOutputDelimited_2 = new org.talend.daikon.di.DiIncomingSchemaEnforcer(
                         designSchema_tFileOutputDelimited_2);
 
+                // Initialize Source, Reader, Enforcer, IndexedRecordConverter end ---------------------------------------------------------------------------------------------------------------
+                watch.finishStageHere(3);
+                
                 /**
                  * [tFileOutputDelimited_2 begin ] stop
                  */
@@ -137,6 +171,9 @@ public class FileOutputDelimitedProcess63 {
                 /**
                  * [tRowGenerator_2 begin ] start
                  */
+                
+                // TODO Row generator initialization start ------------------------------------------------------------------------
+                watch.startStageHere(5);
 
                 currentComponent = "tRowGenerator_2";
 
@@ -337,8 +374,15 @@ public class FileOutputDelimitedProcess63 {
                     }
                 }
                 tRowGenerator_2Randomizer randtRowGenerator_2 = new tRowGenerator_2Randomizer();
+                
+                // Row generator initialization end ------------------------------------------------------------------------
+                watch.finishStageHere(5);
 
                 for (int itRowGenerator_2 = 0; itRowGenerator_2 < nb_max_row_tRowGenerator_2; itRowGenerator_2++) {
+                    
+                    // TODO Generate rows start ------------------------------------------------------------------------
+                    watch.startStageHere(6);
+                    
                     row2.Column1 = randtRowGenerator_2.getRandomColumn1();
                     row2.Column2 = randtRowGenerator_2.getRandomColumn2();
                     row2.Column3 = randtRowGenerator_2.getRandomColumn3();
@@ -382,6 +426,9 @@ public class FileOutputDelimitedProcess63 {
                     currentComponent = "tRowGenerator_2";
 
                     tos_count_tRowGenerator_2++;
+                    
+                    // Generate rows end ------------------------------------------------------------------------
+                    watch.finishStageHere(6);
 
                     /**
                      * [tRowGenerator_2 main ] stop
@@ -391,6 +438,9 @@ public class FileOutputDelimitedProcess63 {
                      * [tFileOutputDelimited_2 main ] start
                      */
 
+                    // TODO transform values from Talend to Avro start ------------------------------------------------------------------------
+                    watch.startStageHere(7);
+                    
                     currentComponent = "tFileOutputDelimited_2";
 
                     current_tFileOutputDelimited_2.put("Column1", row2.Column1);
@@ -424,6 +474,12 @@ public class FileOutputDelimitedProcess63 {
                     current_tFileOutputDelimited_2.put("Column29", row2.Column29);
                     current_tFileOutputDelimited_2.put("Column30", row2.Column30);
                     Object data_tFileOutputDelimited_2 = current_tFileOutputDelimited_2.createIndexedRecord();
+                    
+                    // transform values from Talend to Avro end ------------------------------------------------------------------------
+                    watch.finishStageHere(7);
+                    
+                    // TODO write record start ------------------------------------------------------------------------
+                    watch.startStageHere(8);
 
                     writer_tFileOutputDelimited_2.write(data_tFileOutputDelimited_2);
 
@@ -440,6 +496,9 @@ public class FileOutputDelimitedProcess63 {
                      */
 
                     currentComponent = "tRowGenerator_2";
+                    
+                    // write record end ------------------------------------------------------------------------
+                    watch.finishStageHere(8);
 
                 }
                 globalMap.put("tRowGenerator_2_NB_LINE", nb_line_tRowGenerator_2);
@@ -452,6 +511,9 @@ public class FileOutputDelimitedProcess63 {
                  * [tFileOutputDelimited_2 end ] start
                  */
 
+                // TODO close connection start ------------------------------------------------------------------------------------------
+                watch.startStageHere(9);
+                
                 currentComponent = "tFileOutputDelimited_2";
 
                 // end of generic
@@ -502,6 +564,9 @@ public class FileOutputDelimitedProcess63 {
                         }
                     }
                 }
+                
+                // close connection end ------------------------------------------------------------------------------------------
+                watch.finishStageHere(9);
 
                 /**
                  * [tFileOutputDelimited_2 end ] stop
@@ -509,6 +574,9 @@ public class FileOutputDelimitedProcess63 {
 
             } // end the resume
 
+            // TODO finalize process start ------------------------------------------------------------------------------------------
+            watch.startStageHere(10);
+            
         } catch (java.lang.Exception e) {
 
             TalendException te = new TalendException(e, currentComponent, globalMap);
@@ -565,6 +633,9 @@ public class FileOutputDelimitedProcess63 {
         }
 
         globalMap.put("tRowGenerator_2_SUBPROCESS_STATE", 1);
+        
+        // finalize process end ------------------------------------------------------------------------------------------
+        watch.finishStageHere(10);
     }
 
     private class TalendException extends Exception {
