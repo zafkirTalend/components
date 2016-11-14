@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.talend.daikon.properties.property.Property.Flags.DESIGN_TIME_ONLY;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
+import org.talend.daikon.util.NameUtils;
 
 /**
  * The ComponentProperties subclass provided by a component stores the configuration of a component and is used for:
@@ -129,11 +131,16 @@ public class TDataSetInputProperties extends DataPrepProperties {
             }
 
             DataPrepField[] schemaRow = new DataPrepField[columnList.size()];
-            int i = 0;
+
+            List<String> existNames = new ArrayList<String>();
+            int index = 0;
             for (Column column : columnList) {
-                schemaRow[i] = new DataPrepField(column.getName(), column.getType(), null);
-                i++;
+                String newName = NameUtils.validateColumnName(column.getName(), index, existNames);
+                existNames.add(newName);
+                schemaRow[index] = new DataPrepField(newName, column.getType(), null);
+                index++;
             }
+
             AvroRegistry avroRegistry = DataPrepAvroRegistry.getDataPrepInstance();
             schema.schema.setValue(avroRegistry.inferSchema(schemaRow));
 
