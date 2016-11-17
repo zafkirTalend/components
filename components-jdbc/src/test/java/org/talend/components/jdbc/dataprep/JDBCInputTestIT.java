@@ -32,7 +32,6 @@ import org.talend.components.jdbc.datastore.JDBCDatastoreDefinition;
 import org.talend.components.jdbc.datastore.JDBCDatastoreProperties;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
-import org.talend.daikon.di.DiOutgoingSchemaEnforcer;
 
 public class JDBCInputTestIT {
 
@@ -138,7 +137,7 @@ public class JDBCInputTestIT {
 
     private JDBCInputProperties createCommonJDBCInputProperties(JDBCInputDefinition definition) {
         JDBCDatastoreDefinition datastore_def = new JDBCDatastoreDefinition();
-        JDBCDatastoreProperties datastore_props = datastore_def.createProperties();
+        JDBCDatastoreProperties datastore_props = new JDBCDatastoreProperties("datastore");
 
         datastore_props.dbTypes.setValue("DERBY");
         datastore_props.afterDbTypes();

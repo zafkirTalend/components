@@ -31,7 +31,7 @@ public class JDBCInputDefinition extends AbstractComponentDefinition {
     }
 
     @Override
-    public RuntimeInfo getRuntimeInfo(Properties properties, ConnectorTopology connectorTopology) {
+    public RuntimeInfo getRuntimeInfo(ComponentProperties properties, ConnectorTopology connectorTopology) {
         // TODO may need to use the different runtime
         return JDBCTemplate.createCommonRuntime(this.getClass().getClassLoader(), properties,
                 JDBCSource.class.getCanonicalName());

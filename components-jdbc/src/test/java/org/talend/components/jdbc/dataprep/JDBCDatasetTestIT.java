@@ -43,7 +43,7 @@ public class JDBCDatasetTestIT {
     @Test
     public void testUpdateSchema() {
         JDBCDatastoreDefinition def = new JDBCDatastoreDefinition();
-        JDBCDatastoreProperties datastore = def.createProperties();
+        JDBCDatastoreProperties datastore = new JDBCDatastoreProperties("datastore");
 
         datastore.dbTypes.setValue("DERBY");
         datastore.afterDbTypes();

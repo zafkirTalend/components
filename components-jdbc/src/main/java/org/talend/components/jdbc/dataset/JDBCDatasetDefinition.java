@@ -15,13 +15,6 @@ public class JDBCDatasetDefinition extends SimpleNamedThing implements DatasetDe
     }
 
     @Override
-    public JDBCDatasetProperties createProperties() {
-        JDBCDatasetProperties properties = new JDBCDatasetProperties("dataset");
-        properties.init();
-        return properties;
-    }
-
-    @Override
     public RuntimeInfo getRuntimeInfo(JDBCDatasetProperties properties, Object ctx) {
         return JDBCTemplate.createCommonRuntime(this.getClass().getClassLoader(), properties,
                 JDBCDatasetRuntime.class.getCanonicalName());
@@ -30,5 +23,10 @@ public class JDBCDatasetDefinition extends SimpleNamedThing implements DatasetDe
     @Override
     public String getImagePath() {
         return NAME + "_icon32.png";
+    }
+
+    @Override
+    public Class<JDBCDatasetProperties> getPropertiesClass() {
+        return JDBCDatasetProperties.class;
     }
 }

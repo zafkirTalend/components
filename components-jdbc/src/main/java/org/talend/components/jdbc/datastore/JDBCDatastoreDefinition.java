@@ -18,13 +18,6 @@ public class JDBCDatastoreDefinition extends SimpleNamedThing implements Datasto
     }
 
     @Override
-    public JDBCDatastoreProperties createProperties() {
-        JDBCDatastoreProperties datastoreProperties = new JDBCDatastoreProperties("datastore");
-        datastoreProperties.init();
-        return datastoreProperties;
-    }
-
-    @Override
     public RuntimeInfo getRuntimeInfo(JDBCDatastoreProperties properties, Object ctx) {
         return JDBCTemplate.createCommonRuntime(this.getClass().getClassLoader(), properties,
                 JDBCDatastoreRuntime.class.getCanonicalName());
@@ -53,6 +46,11 @@ public class JDBCDatastoreDefinition extends SimpleNamedThing implements Datasto
     @Override
     public String getImagePath() {
         return NAME + "_icon32.png";
+    }
+
+    @Override
+    public Class<JDBCDatastoreProperties> getPropertiesClass() {
+        return JDBCDatastoreProperties.class;
     }
 
 }

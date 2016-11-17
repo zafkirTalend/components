@@ -5,10 +5,12 @@ import org.talend.components.common.SchemaProperties;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.jdbc.CommonUtils;
 import org.talend.components.jdbc.RuntimeSettingProvider;
+import org.talend.components.jdbc.datastore.JDBCDatastoreDefinition;
 import org.talend.components.jdbc.datastore.JDBCDatastoreProperties;
 import org.talend.components.jdbc.runtime.dataprep.JDBCDatasetRuntime;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.properties.PropertiesImpl;
+import org.talend.daikon.properties.ReferenceProperties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
@@ -19,7 +21,8 @@ import org.talend.daikon.sandbox.SandboxedInstance;
 public class JDBCDatasetProperties extends PropertiesImpl
         implements DatasetProperties<JDBCDatastoreProperties>, RuntimeSettingProvider {
 
-    public JDBCDatastoreProperties datastore = new JDBCDatastoreProperties("datastore");
+    public transient ReferenceProperties<JDBCDatastoreProperties> datastore = new ReferenceProperties<>("datastore",
+            JDBCDatastoreDefinition.NAME);
 
     public Property<String> sql = PropertyFactory.newString("sql").setRequired(true);
 
@@ -64,24 +67,24 @@ public class JDBCDatasetProperties extends PropertiesImpl
 
     @Override
     public JDBCDatastoreProperties getDatastoreProperties() {
-        return datastore;
+        return datastore.getReference();
     }
 
     @Override
     public void setDatastoreProperties(JDBCDatastoreProperties datastoreProperties) {
-        datastore = datastoreProperties;
+        datastore.setReference(datastoreProperties);
     }
 
     @Override
     public AllSetting getRuntimeSetting() {
         AllSetting setting = new AllSetting();
 
-        setting.setDriverPaths(datastore.getCurrentDriverPaths());
-        setting.setDriverClass(datastore.driverClass.getValue());
-        setting.setJdbcUrl(datastore.jdbcUrl.getValue());
+        setting.setDriverPaths(datastore.getReference().getCurrentDriverPaths());
+        setting.setDriverClass(datastore.getReference().driverClass.getValue());
+        setting.setJdbcUrl(datastore.getReference().jdbcUrl.getValue());
 
-        setting.setUsername(datastore.userPassword.userId.getValue());
-        setting.setPassword(datastore.userPassword.password.getValue());
+        setting.setUsername(datastore.getReference().userPassword.userId.getValue());
+        setting.setPassword(datastore.getReference().userPassword.password.getValue());
 
         setting.setSql(sql.getValue());
 

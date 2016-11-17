@@ -8,14 +8,17 @@ import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.io.IOProperties;
 import org.talend.components.jdbc.RuntimeSettingProvider;
+import org.talend.components.jdbc.dataset.JDBCDatasetDefinition;
 import org.talend.components.jdbc.dataset.JDBCDatasetProperties;
 import org.talend.components.jdbc.datastore.JDBCDatastoreProperties;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
+import org.talend.daikon.properties.ReferenceProperties;
 
 public class JDBCInputProperties extends FixedConnectorsComponentProperties
         implements IOProperties<JDBCDatasetProperties>, RuntimeSettingProvider {
 
-    public JDBCDatasetProperties dataset = new JDBCDatasetProperties("dataset");
+    public transient ReferenceProperties<JDBCDatasetProperties> dataset = new ReferenceProperties<>("dataset",
+            JDBCDatasetDefinition.NAME);
 
     protected transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "dataset.main");
 
@@ -45,19 +48,20 @@ public class JDBCInputProperties extends FixedConnectorsComponentProperties
 
     @Override
     public JDBCDatasetProperties getDatasetProperties() {
-        return dataset;
+        return dataset.getReference();
     }
 
     @Override
     public void setDatasetProperties(JDBCDatasetProperties datasetProperties) {
-        this.dataset = datasetProperties;
+        dataset.setReference(datasetProperties);
     }
 
     @Override
     public AllSetting getRuntimeSetting() {
         AllSetting setting = new AllSetting();
 
-        JDBCDatastoreProperties datastore = dataset.getDatastoreProperties();
+        JDBCDatasetProperties ds = dataset.getReference();
+        JDBCDatastoreProperties datastore = ds.getDatastoreProperties();
         setting.setDriverPaths(datastore.getCurrentDriverPaths());
         setting.setDriverClass(datastore.driverClass.getValue());
         setting.setJdbcUrl(datastore.jdbcUrl.getValue());
@@ -65,7 +69,7 @@ public class JDBCInputProperties extends FixedConnectorsComponentProperties
         setting.setUsername(datastore.userPassword.userId.getValue());
         setting.setPassword(datastore.userPassword.password.getValue());
 
-        setting.setSql(dataset.sql.getValue());
+        setting.setSql(ds.sql.getValue());
 
         return setting;
     }

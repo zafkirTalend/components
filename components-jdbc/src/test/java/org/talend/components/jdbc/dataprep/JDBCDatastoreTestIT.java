@@ -17,7 +17,6 @@ import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.talend.components.jdbc.common.DBTestUtils;
-import org.talend.components.jdbc.datastore.JDBCDatastoreDefinition;
 import org.talend.components.jdbc.datastore.JDBCDatastoreProperties;
 import org.talend.components.jdbc.runtime.setting.AllSetting;
 import org.talend.daikon.properties.ValidationResult;
@@ -34,8 +33,7 @@ public class JDBCDatastoreTestIT {
 
     @Test
     public void testValidate() {
-        JDBCDatastoreDefinition def = new JDBCDatastoreDefinition();
-        JDBCDatastoreProperties datastore = def.createProperties();
+        JDBCDatastoreProperties datastore = new JDBCDatastoreProperties("datastore");
 
         datastore.dbTypes.setValue("DERBY");
         datastore.afterDbTypes();
