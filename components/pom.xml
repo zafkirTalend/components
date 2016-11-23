@@ -17,5 +17,6 @@
     <modules>
         <module>components-jms</module>
         <module>components-kafka</module>
+        <module>components-udp</module>
     </modules>
 </project>
