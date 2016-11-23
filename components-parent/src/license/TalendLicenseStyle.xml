@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<additionalHeaders>
+    <talend_style>
+        <firstLine>// ============================================================================EOL//</firstLine>
+        <beforeEachLine>// </beforeEachLine>
+        <endLine>//EOL// ============================================================================</endLine>
+        <firstLineDetectionPattern>// ============================================================================EOL//.*$</firstLineDetectionPattern>
+        <lastLineDetectionPattern>//EOL// ============================================================================</lastLineDetectionPattern>
+        <allowBlankLines>true</allowBlankLines>
+        <isMultiline>true</isMultiline>
+    </talend_style>
+</additionalHeaders>
