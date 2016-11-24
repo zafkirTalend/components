@@ -1,3 +1,16 @@
+
+// ============================================================================
+//
+// Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
 package org.talend.components.udp;
 
 import java.io.File;
@@ -41,17 +54,17 @@ public class tUdpSocketInputSource implements BoundedSource {
     
     private transient Schema schema;
 
-    public void initialize(RuntimeContainer container, ComponentProperties properties) {
+    public ValidationResult initialize(RuntimeContainer container, ComponentProperties properties) {
         this.properties = (tUdpSocketInputProperties) properties;
         schema = new Schema.Parser().parse(this.properties.schema.schema.getStringValue());
+        return ValidationResult.OK;
     }
 
     public BoundedReader createReader(RuntimeContainer container) {
-        return new tUdpSocketInputReader(container, this, (Integer) this.properties.port.getValue(),(Integer) this.properties.sizeArray.getValue(), schema);
+        return new tUdpSocketInputReader(container, this, (Integer)this.properties.port.getValue(),(Integer)this.properties.sizeArray.getValue(),schema);
     }
 
     public ValidationResult validate(RuntimeContainer adaptor) {
-
         // Check that there is exactly one column to contain the output.
         if (schema.getFields().size() != 1) {
             ValidationResult vr = new ValidationResult();
