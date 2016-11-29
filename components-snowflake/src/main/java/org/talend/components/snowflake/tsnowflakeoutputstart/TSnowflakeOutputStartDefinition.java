@@ -10,33 +10,28 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.snowflake.tsnowflakeoutput;
+package org.talend.components.snowflake.tsnowflakeoutputstart;
 
-import org.talend.components.api.component.ComponentDefinition;
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.talend.components.api.component.ConnectorTopology;
-import org.talend.components.api.component.VirtualComponentDefinition;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.snowflake.SnowflakeDefinition;
 import org.talend.components.snowflake.SnowflakeTableProperties;
 import org.talend.components.snowflake.runtime.SnowflakeSink;
-import org.talend.components.snowflake.tsnowflakeoutputreject.TSnowflakeOutputRejectDefinition;
-import org.talend.components.snowflake.tsnowflakeoutputstart.TSnowflakeOutputStartDefinition;
-import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.runtime.RuntimeInfo;
-
-import java.util.EnumSet;
-import java.util.Set;
 
 /**
  * Component that can connect to a snowflake system and put some data into it.
  */
 
-public class TSnowflakeOutputDefinition extends SnowflakeDefinition implements VirtualComponentDefinition {
+public class TSnowflakeOutputStartDefinition extends SnowflakeDefinition {
 
-    public static final String COMPONENT_NAME = "tSnowflakeOutput"; //$NON-NLS-1$
+    public static final String COMPONENT_NAME = "tSnowflakeOutputStart"; //$NON-NLS-1$
 
-    public TSnowflakeOutputDefinition() {
+    public TSnowflakeOutputStartDefinition() {
         super(COMPONENT_NAME);
     }
 
@@ -57,7 +52,7 @@ public class TSnowflakeOutputDefinition extends SnowflakeDefinition implements V
 
     @Override
     public Class<? extends ComponentProperties> getPropertyClass() {
-        return TSnowflakeOutputProperties.class;
+        return TSnowflakeOutputStartProperties.class;
     }
 
     @SuppressWarnings("unchecked")
@@ -84,14 +79,6 @@ public class TSnowflakeOutputDefinition extends SnowflakeDefinition implements V
 
     @Override
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
-        return EnumSet.of(ConnectorTopology.INCOMING_AND_OUTGOING);
-    }
-
-    @Override public ComponentDefinition getInputComponentDefinition() {
-        return new TSnowflakeOutputStartDefinition();
-    }
-
-    @Override public ComponentDefinition getOutputComponentDefinition() {
-        return new TSnowflakeOutputRejectDefinition();
+        return EnumSet.of(ConnectorTopology.INCOMING, ConnectorTopology.INCOMING_AND_OUTGOING);
     }
 }

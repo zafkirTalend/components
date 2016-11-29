@@ -12,12 +12,47 @@
 // ============================================================================
 package org.talend.components.snowflake.test;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.talend.daikon.properties.presentation.Form.MAIN;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
 import org.hamcrest.Matchers;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,16 +66,26 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.components.api.service.ComponentService;
-import org.talend.components.api.service.common.DefinitionRegistry;
 import org.talend.components.api.service.common.ComponentServiceImpl;
+import org.talend.components.api.service.common.DefinitionRegistry;
 import org.talend.components.api.test.AbstractComponentTest;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.api.wizard.ComponentWizard;
 import org.talend.components.api.wizard.ComponentWizardDefinition;
 import org.talend.components.api.wizard.WizardNameComparator;
 import org.talend.components.common.CommonTestUtils;
-import org.talend.components.snowflake.*;
-import org.talend.components.snowflake.runtime.*;
+import org.talend.components.snowflake.SnowflakeConnectionProperties;
+import org.talend.components.snowflake.SnowflakeConnectionTableProperties;
+import org.talend.components.snowflake.SnowflakeConnectionWizard;
+import org.talend.components.snowflake.SnowflakeConnectionWizardDefinition;
+import org.talend.components.snowflake.SnowflakeFamilyDefinition;
+import org.talend.components.snowflake.SnowflakeTableListProperties;
+import org.talend.components.snowflake.SnowflakeTableProperties;
+import org.talend.components.snowflake.runtime.SnowflakeSink;
+import org.talend.components.snowflake.runtime.SnowflakeSource;
+import org.talend.components.snowflake.runtime.SnowflakeSourceOrSink;
+import org.talend.components.snowflake.runtime.SnowflakeWriteOperation;
+import org.talend.components.snowflake.runtime.SnowflakeWriter;
 import org.talend.components.snowflake.tsnowflakeconnection.TSnowflakeConnectionDefinition;
 import org.talend.components.snowflake.tsnowflakeinput.TSnowflakeInputDefinition;
 import org.talend.components.snowflake.tsnowflakeinput.TSnowflakeInputProperties;
@@ -54,59 +99,51 @@ import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.service.Repository;
 import org.talend.daikon.properties.test.PropertiesTestUtils;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.talend.daikon.properties.presentation.Form.MAIN;
-
-@SuppressWarnings("nls")
-public abstract class SnowflakeTestIT extends AbstractComponentTest {
+@SuppressWarnings("nls") public abstract class SnowflakeTestIT extends AbstractComponentTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SnowflakeTestIT.class);
 
     protected RuntimeContainer adaptor;
 
-    @Rule
-    public ErrorCollector errorCollector = new ErrorCollector();
+    @Rule public ErrorCollector errorCollector = new ErrorCollector();
 
     private static Connection testConnection;
 
     private ComponentServiceImpl componentService;
 
     private static String accountStr = System.getProperty("snowflake.account");
+
     private static String user = System.getProperty("snowflake.user");
+
     private static String password = System.getProperty("snowflake.password");
+
     private static String warehouse = System.getProperty("snowflake.warehouse");
+
     private static String schema = System.getProperty("snowflake.schema");
+
     private static String db = System.getProperty("snowflake.db");
 
     private static String TEST_TABLE = "LOADER_TEST_TABLE";
 
     // So that multiple tests can run at the same time
     private static String testNumber = Integer.toString(ThreadLocalRandom.current().nextInt(1, 100000));
+
     private static String testTable = TEST_TABLE + "_" + testNumber;
+
     private static String testSchema = schema + "_" + testNumber;
 
-
     private static Date testTimestamp = new Date();
+
     private static Date testTime;
+
     private static Date testDate;
 
     private static String testTimeString = "12:23";
 
     private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+
     private static SimpleDateFormat timeParser = new SimpleDateFormat("HH:mmZ");
+
     private static SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm");
 
     static {
@@ -127,14 +164,12 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         adaptor = new DefaultComponentRuntimeContainerImpl();
     }
 
-    @Before
-    public void initializeComponentRegistryAndService() {
+    @Before public void initializeComponentRegistryAndService() {
         // reset the component service
         componentService = null;
     }
 
-    @Override
-    public ComponentService getComponentService() {
+    @Override public ComponentService getComponentService() {
         if (componentService == null) {
             DefinitionRegistry testComponentRegistry = new DefinitionRegistry();
             // register component
@@ -159,7 +194,6 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         return SnowflakeSource.createReader(null);
     }
 
-
     public ComponentProperties setupProps(SnowflakeConnectionProperties props) {
         if (props == null) {
             props = (SnowflakeConnectionProperties) new SnowflakeConnectionProperties("foo").init();
@@ -173,85 +207,57 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         return props;
     }
 
-    @BeforeClass
-    public static void setupDatabase() throws Exception {
+    @BeforeClass public static void setupDatabase() throws Exception {
         Class.forName("com.snowflake.client.jdbc.SnowflakeDriver");
 
         if (accountStr == null) {
-            throw new Exception("This test expects snowflake.* system properties to be set. See the top of this class for the list of properties");
+            throw new Exception(
+                    "This test expects snowflake.* system properties to be set. See the top of this class for the list of properties");
         }
 
         try {
 
-            String connectionUrl = "jdbc:snowflake://" + accountStr +
-                    ".snowflakecomputing.com";
+            String connectionUrl = "jdbc:snowflake://" + accountStr + ".snowflakecomputing.com";
 
             connectionUrl +=
-                    "/?user=" +
-                            user + "&password=" +
-                            password + "&testSchema=" + testSchema +
-                            "&db=" + db + "&warehouse=" + warehouse;
+                    "/?user=" + user + "&password=" + password + "&testSchema=" + testSchema + "&db=" + db + "&warehouse="
+                            + warehouse;
 
             Properties properties = new Properties();
 
             testConnection = DriverManager.getConnection(connectionUrl, properties);
+            testConnection.createStatement().execute("CREATE OR REPLACE SCHEMA " + testSchema);
+            testConnection.createStatement().execute("USE SCHEMA " + testSchema);
+            testConnection.createStatement().execute("DROP TABLE IF EXISTS " + testSchema + "." + testTable + " CASCADE");
             testConnection.createStatement().execute(
-                    "CREATE OR REPLACE SCHEMA " + testSchema);
-            testConnection.createStatement().execute(
-                    "USE SCHEMA " + testSchema);
-            testConnection.createStatement().execute(
-                    "DROP TABLE IF EXISTS " + testSchema +
-                            "." + testTable +
-                            " CASCADE");
-            testConnection.createStatement().execute(
-                    "CREATE TABLE " + testSchema +
-                            "." + testTable +
-                            " ("
-                            + "ID int PRIMARY KEY, "
-                            + "C1 varchar(255), "
-                            + "C2 boolean, "
-                            + "C3 double, "
-                            + "C4 date, "
-                            + "C5 time, "
-                            + "C6 timestamp, "
-                            + "C7 variant)");
+                    "CREATE TABLE " + testSchema + "." + testTable + " (" + "ID int PRIMARY KEY, " + "C1 varchar(255), "
+                            + "C2 boolean, " + "C3 double, " + "C4 date, " + "C5 time, " + "C6 timestamp, " + "C7 variant)");
         } catch (Exception ex) {
             throw new Exception("Make sure the system properties are correctly set as they might have caused this error", ex);
         }
     }
 
-    @AfterClass
-    public static void teardownDatabase() throws SQLException {
+    @AfterClass public static void teardownDatabase() throws SQLException {
         if (!false) {
-            testConnection.createStatement().execute(
-                    "DROP TABLE IF EXISTS " + testSchema +
-                            "." + testTable);
-            testConnection.createStatement().execute(
-                    "DROP SCHEMA IF EXISTS " + testSchema);
+            testConnection.createStatement().execute("DROP TABLE IF EXISTS " + testSchema + "." + testTable);
+            testConnection.createStatement().execute("DROP SCHEMA IF EXISTS " + testSchema);
             testConnection.close();
         }
     }
 
-
     protected void resetUser() throws SQLException {
         // Make sure the user is unlocked if locked. Snowflake will lock the user if too many logins
         // So this unlocks it
-        testConnection.createStatement().execute(
-                "alter user " + user + " set mins_to_unlock=0");
+        testConnection.createStatement().execute("alter user " + user + " set mins_to_unlock=0");
     }
 
-
-    @Before
-    public void setUp() throws SQLException {
+    @Before public void setUp() throws SQLException {
         resetUser();
     }
 
-    @After
-    public void tearDown() throws SQLException {
+    @After public void tearDown() throws SQLException {
         if (!false) {
-            testConnection.createStatement().execute(
-                    "DELETE FROM " + testSchema +
-                            "." + testTable);
+            testConnection.createStatement().execute("DELETE FROM " + testSchema + "." + testTable);
         }
     }
 
@@ -273,8 +279,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
     }
 
     public static String makeJson(int i) {
-        return "{\"key\":" + (i * 1000) + ","
-                + "\"bar\":" + i + "}";
+        return "{\"key\":" + (i * 1000) + "," + "\"bar\":" + i + "}";
     }
 
     public IndexedRecord makeRow(int i, Random rnd) {
@@ -329,7 +334,9 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
             }
 
             if (false) {
-                LOGGER.debug("check - id: " + row.get(iId) + " C1: " + row.get(iC1) + " C2: " + row.get(iC2) + " C3: " + row.get(iC3) + " C4: " + row.get(iC4) + " C5: " + row.get(iC5));
+                LOGGER.debug(
+                        "check - id: " + row.get(iId) + " C1: " + row.get(iC1) + " C2: " + row.get(iC2) + " C3: " + row.get(iC3)
+                                + " C4: " + row.get(iC4) + " C5: " + row.get(iC5));
             }
             assertEquals(BigDecimal.valueOf(checkCount), row.get(iId));
             assertEquals("foo_" + checkCount, row.get(iC1));
@@ -372,7 +379,6 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
         return ids;
     }
-
 
     protected List<IndexedRecord> readRows(SnowflakeConnectionTableProperties props) throws IOException {
         TSnowflakeInputProperties inputProps = null;
@@ -437,7 +443,6 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         return result;
     }
 
-
     // Returns the rows written (having been re-read so they have their Ids)
     protected Writer<Result> makeWriter(SnowflakeConnectionTableProperties props) throws Exception {
         SnowflakeSink SnowflakeSink = new SnowflakeSink();
@@ -459,15 +464,16 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
     }
 
     // Returns the rows written (having been re-read so they have their Ids)
-    protected List<IndexedRecord> writeRows(SnowflakeConnectionTableProperties props,
-                                            List<IndexedRecord> outputRows) throws Exception {
+    protected List<IndexedRecord> writeRows(SnowflakeConnectionTableProperties props, List<IndexedRecord> outputRows)
+            throws Exception {
         TSnowflakeOutputProperties outputProps = getRightProperties(props);
         outputProps.outputAction.setValue(TSnowflakeOutputProperties.OutputAction.INSERT);
         writeRows(makeWriter(outputProps), outputRows);
         return readAndCheckRows(props, outputRows.size());
     }
 
-    protected Result handleRows(List<IndexedRecord> rows, SnowflakeConnectionTableProperties props, TSnowflakeOutputProperties.OutputAction action) throws Exception {
+    protected Result handleRows(List<IndexedRecord> rows, SnowflakeConnectionTableProperties props,
+            TSnowflakeOutputProperties.OutputAction action) throws Exception {
         TSnowflakeOutputProperties handleProperties = getRightProperties(props);
         handleProperties.outputAction.setValue(action);
         LOGGER.debug(action + ": " + rows.size() + " rows");
@@ -480,8 +486,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         SnowflakeTableProperties tableProps = (SnowflakeTableProperties) f.getProperties();
         assertTrue(f.getWidget(tableProps.tableName.getName()).isCallBeforeActivate());
 
-        tableProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndBeforeActivate(getComponentService(), f, tableProps.tableName.getName(),
-                tableProps);
+        tableProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndBeforeActivate(getComponentService(), f, tableProps.tableName.getName(), tableProps);
         Property prop = (Property) f.getWidget(tableProps.tableName.getName()).getContent();
         LOGGER.debug(prop.getPossibleValues().toString());
         LOGGER.debug(tableProps.getValidationResult().toString());
@@ -489,7 +495,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(1, prop.getPossibleValues().size());
 
         tableProps.tableName.setValue(testTable);
-        tableProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
+        tableProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
         Form schemaForm = tableProps.main.getForm(Form.REFERENCE);
         PropertiesTestUtils.checkAndAfter(getComponentService(), schemaForm, tableProps.main.schema.getName(), tableProps.main);
         Schema schema = tableProps.main.schema.getValue();
@@ -499,7 +506,6 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
         assertEquals(NUM_COLUMNS, schema.getFields().size());
     }
-
 
     protected SnowflakeConnectionTableProperties populateOutput(int count) throws Throwable {
         TSnowflakeOutputProperties props = (TSnowflakeOutputProperties) getComponentService()
@@ -519,8 +525,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         return props;
     }
 
-    @Test
-    public void testConnectionProps() throws Throwable {
+    @Test public void testConnectionProps() throws Throwable {
         SnowflakeConnectionProperties props = (SnowflakeConnectionProperties) new TSnowflakeConnectionDefinition()
                 .createProperties();
         assertTrue(props.userPassword.userId.isRequired());
@@ -530,8 +535,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertTrue(props.db.isRequired());
     }
 
-    @Test
-    public void testInputProps() throws Throwable {
+    @Test public void testInputProps() throws Throwable {
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) new TSnowflakeInputDefinition().createProperties();
         assertFalse(props.manualQuery.getValue());
         Property[] returns = new TSnowflakeInputDefinition().getReturnProperties();
@@ -539,20 +543,19 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
 
         Form f = props.getForm(MAIN);
         props.manualQuery.setValue(true);
-        props = (TSnowflakeInputProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, props.manualQuery.getName(),
-                props);
+        props = (TSnowflakeInputProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, props.manualQuery.getName(), props);
         assertFalse(f.getWidget(props.query.getName()).isHidden());
         assertTrue(f.getWidget(props.condition.getName()).isHidden());
 
         props.manualQuery.setValue(false);
-        props = (TSnowflakeInputProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, props.manualQuery.getName(),
-                props);
+        props = (TSnowflakeInputProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, props.manualQuery.getName(), props);
         assertTrue(f.getWidget(props.query.getName()).isHidden());
         assertFalse(f.getWidget(props.condition.getName()).isHidden());
     }
 
-    @Test
-    public void testOutputActionType() throws Throwable {
+    @Test public void testOutputActionType() throws Throwable {
         ComponentDefinition definition = getComponentService().getComponentDefinition(TSnowflakeOutputDefinition.COMPONENT_NAME);
         TSnowflakeOutputProperties outputProps = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
@@ -573,8 +576,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
     }
 
-    @Test
-    public void testOutputBadTable() throws Throwable {
+    @Test public void testOutputBadTable() throws Throwable {
         TSnowflakeOutputProperties outputProps = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
         setupProps(outputProps.connection);
@@ -584,14 +586,14 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         SnowflakeTableProperties tableProps = outputProps.table;
         Form f = tableProps.getForm(Form.REFERENCE);
         tableProps.tableName.setValue("BADONE");
-        tableProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
+        tableProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
         System.out.println(tableProps.getValidationResult());
         assertEquals(ValidationResult.Result.ERROR, tableProps.getValidationResult().getStatus());
         assertThat(tableProps.getValidationResult().getMessage(), containsString("BADONE"));
     }
 
-    @Test
-    public void testOutputBadConnection() throws Throwable {
+    @Test public void testOutputBadConnection() throws Throwable {
         TSnowflakeOutputProperties outputProps = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
 
@@ -599,7 +601,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         SnowflakeTableProperties tableProps = outputProps.table;
         Form f = tableProps.getForm(Form.REFERENCE);
         tableProps.tableName.setValue("BADONE");
-        tableProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
+        tableProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, tableProps.tableName.getName(), tableProps);
         System.out.println(tableProps.getValidationResult());
         assertEquals(ValidationResult.Result.ERROR, tableProps.getValidationResult().getStatus());
         assertThat(tableProps.getValidationResult().getMessage(), containsString("Missing user name"));
@@ -627,8 +630,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
             }
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
             return "RepoProps: " + repoLocation + "/" + name + " props: " + props;
         }
     }
@@ -647,8 +649,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
             this.repoProps = repoProps;
         }
 
-        @Override
-        public String storeProperties(org.talend.daikon.properties.Properties properties, String name, String repositoryLocation, String schemaPropertyName) {
+        @Override public String storeProperties(org.talend.daikon.properties.Properties properties, String name,
+                String repositoryLocation, String schemaPropertyName) {
             RepoProps rp = new RepoProps(properties, name, repositoryLocation, schemaPropertyName);
             repoProps.add(rp);
             LOGGER.debug(rp.toString());
@@ -657,17 +659,16 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
     }
 
     class TestRuntimeContainer extends DefaultComponentRuntimeContainerImpl {
+
     }
 
-    @Test
-    public void testFamily() {
+    @Test public void testFamily() {
         ComponentDefinition cd = getComponentService().getComponentDefinition("tSnowflakeConnection");
         assertEquals(1, cd.getFamilies().length);
         assertEquals("Cloud/Snowflake", cd.getFamilies()[0]);
     }
 
-    @Test
-    public void testWizard() throws Throwable {
+    @Test public void testWizard() throws Throwable {
         final List<RepoProps> repoProps = new ArrayList<>();
 
         Repository repo = new TestRepository(repoProps);
@@ -684,8 +685,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
         assertEquals(1, count);
         assertEquals("Create Snowflake Connection", wizardDef.getMenuItemName());
-        ComponentWizard wiz = getComponentService().getComponentWizard(SnowflakeConnectionWizardDefinition.COMPONENT_WIZARD_NAME,
-                "nodeSnowflake");
+        ComponentWizard wiz = getComponentService()
+                .getComponentWizard(SnowflakeConnectionWizardDefinition.COMPONENT_WIZARD_NAME, "nodeSnowflake");
         assertNotNull(wiz);
         assertEquals("nodeSnowflake", wiz.getRepositoryLocation());
         SnowflakeConnectionWizard swiz = (SnowflakeConnectionWizard) wiz;
@@ -715,8 +716,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals("Password", passwordSe.getDisplayName());
         NamedThing nameProp = connFormWizard.getWidget("name").getContent(); //$NON-NLS-1$
         assertEquals("Name", nameProp.getDisplayName());
-        PropertiesTestUtils.checkAndValidate(getComponentService(), connFormWizard,
-                "testConnection", connProps);
+        PropertiesTestUtils.checkAndValidate(getComponentService(), connFormWizard, "testConnection", connProps);
         assertTrue(connFormWizard.isAllowForward());
 
         Form modForm = forms.get(1);
@@ -732,8 +732,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertTrue(modForm.isAllowBack());
         assertFalse(modForm.isAllowForward());
         assertTrue(modForm.isAllowFinish());
-        @SuppressWarnings("unchecked")
-        List<NamedThing> all = mlProps.selectedTableNames.getValue();
+        @SuppressWarnings("unchecked") List<NamedThing> all = mlProps.selectedTableNames.getValue();
         assertNull(all);
         List<NamedThing> possibleValues = (List<NamedThing>) mlProps.selectedTableNames.getPossibleValues();
         System.out.println("possibleValues: " + possibleValues);
@@ -762,10 +761,9 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
     }
 
-    @Test
-    public void testModuleWizard() throws Throwable {
-        ComponentWizard wiz = getComponentService().getComponentWizard(SnowflakeConnectionWizardDefinition.COMPONENT_WIZARD_NAME,
-                "nodeSnowflake");
+    @Test public void testModuleWizard() throws Throwable {
+        ComponentWizard wiz = getComponentService()
+                .getComponentWizard(SnowflakeConnectionWizardDefinition.COMPONENT_WIZARD_NAME, "nodeSnowflake");
         List<Form> forms = wiz.getForms();
         Form connFormWizard = forms.get(0);
         SnowflakeConnectionProperties connProps = (SnowflakeConnectionProperties) connFormWizard.getProperties();
@@ -780,7 +778,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         // Add module wizard - we refer to the existing connection properties as we don't present the UI
         // for them.
         assertTrue(connProps == ((SnowflakeTableListProperties) subWizards[2].getForms().get(0).getProperties())
-                .getConnectionProps());
+                .getConnectionProperties());
         assertFalse(subWizards[1].getDefinition().isTopLevel());
         assertEquals("Edit Snowflake Connection", subWizards[1].getDefinition().getMenuItemName());
         assertTrue(subWizards[0].getDefinition().isTopLevel());
@@ -789,54 +787,49 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals("Add Snowflake Tables", subWizards[2].getDefinition().getMenuItemName());
     }
 
-
-    @Test
-    public void testLogin() throws Throwable {
+    @Test public void testLogin() throws Throwable {
         SnowflakeConnectionProperties props = (SnowflakeConnectionProperties) setupProps(null);
         System.out.println(props);
         Form f = props.getForm(SnowflakeConnectionProperties.FORM_WIZARD);
-        props = (SnowflakeConnectionProperties) PropertiesTestUtils.checkAndValidate(getComponentService(), f, "testConnection",
-                props);
+        props = (SnowflakeConnectionProperties) PropertiesTestUtils
+                .checkAndValidate(getComponentService(), f, "testConnection", props);
         LOGGER.debug(props.getValidationResult().toString());
         assertEquals(ValidationResult.Result.OK, props.getValidationResult().getStatus());
     }
 
-    @Test
-    public void testLoginFail() throws Throwable {
+    @Test public void testLoginFail() throws Throwable {
         SnowflakeConnectionProperties props = (SnowflakeConnectionProperties) setupProps(null);
         props.userPassword.userId.setValue("blah");
         Form f = props.getForm(SnowflakeConnectionProperties.FORM_WIZARD);
-        props = (SnowflakeConnectionProperties) PropertiesTestUtils.checkAndValidate(getComponentService(), f, "testConnection",
-                props);
+        props = (SnowflakeConnectionProperties) PropertiesTestUtils
+                .checkAndValidate(getComponentService(), f, "testConnection", props);
         LOGGER.debug(props.getValidationResult().toString());
         assertEquals(ValidationResult.Result.ERROR, props.getValidationResult().getStatus());
     }
 
-    @Test
-    public void testInputSchema() throws Throwable {
+    @Test public void testInputSchema() throws Throwable {
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeInputDefinition.COMPONENT_NAME);
         setupProps(props.connection);
 
         Form f = props.table.getForm(Form.REFERENCE);
         SnowflakeTableProperties moduleProps = (SnowflakeTableProperties) f.getProperties();
-        moduleProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndBeforeActivate(getComponentService(), f,
-                moduleProps.tableName.getName(), moduleProps);
+        moduleProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndBeforeActivate(getComponentService(), f, moduleProps.tableName.getName(), moduleProps);
         moduleProps.tableName.setValue(testTable);
-        moduleProps = (SnowflakeTableProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, moduleProps.tableName.getName(), moduleProps);
+        moduleProps = (SnowflakeTableProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, moduleProps.tableName.getName(), moduleProps);
         Schema schema = moduleProps.main.schema.getValue();
         LOGGER.debug(schema.toString());
         for (Schema.Field child : schema.getFields()) {
             LOGGER.debug(child.name());
         }
         assertEquals("ID", schema.getFields().get(0).name());
-        LOGGER.debug("Table \"" + testTable +
-                "\" column size:" + schema.getFields().size());
+        LOGGER.debug("Table \"" + testTable + "\" column size:" + schema.getFields().size());
         assertTrue(schema.getFields().size() == NUM_COLUMNS);
     }
 
-    @Test
-    public void testInputConnectionRef() throws Throwable {
+    @Test public void testInputConnectionRef() throws Throwable {
         ComponentDefinition definition = getComponentService().getComponentDefinition(TSnowflakeInputDefinition.COMPONENT_NAME);
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeInputDefinition.COMPONENT_NAME);
@@ -858,7 +851,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
                 .setValue(ComponentReferenceProperties.ReferenceType.COMPONENT_INSTANCE);
         props.connection.referencedComponent.componentInstanceId.setValue(compId);
         props.connection.referencedComponent.componentProperties = cProps;
-        PropertiesTestUtils.checkAndAfter(getComponentService(), props.connection.getForm(Form.REFERENCE), "referencedComponent", props.connection);
+        PropertiesTestUtils.checkAndAfter(getComponentService(), props.connection.getForm(Form.REFERENCE), "referencedComponent",
+                props.connection);
 
         resetUser();
 
@@ -877,7 +871,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         props.connection.referencedComponent.componentInstanceId.setValue(null);
         props.connection.referencedComponent.componentProperties = null;
         // Check that the null referenced component works.
-        PropertiesTestUtils.checkAndAfter(getComponentService(), props.connection.getForm(Form.REFERENCE), "referencedComponent", props.connection);
+        PropertiesTestUtils.checkAndAfter(getComponentService(), props.connection.getForm(Form.REFERENCE), "referencedComponent",
+                props.connection);
 
         resetUser();
 
@@ -888,8 +883,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(ValidationResult.Result.OK, result.getStatus());
     }
 
-    @Test
-    public void testUseExistingConnection() throws Throwable {
+    @Test public void testUseExistingConnection() throws Throwable {
         SnowflakeConnectionProperties connProps = (SnowflakeConnectionProperties) getComponentService()
                 .getComponentProperties(TSnowflakeConnectionDefinition.COMPONENT_NAME);
         setupProps(connProps);
@@ -897,8 +891,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         final String currentComponentName = TSnowflakeConnectionDefinition.COMPONENT_NAME + "_1";
         RuntimeContainer connContainer = new DefaultComponentRuntimeContainerImpl() {
 
-            @Override
-            public String getCurrentComponentId() {
+            @Override public String getCurrentComponentId() {
                 return currentComponentName;
             }
         };
@@ -919,8 +912,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(ValidationResult.Result.OK, SnowflakeInputSourceOrSink.validate(connContainer).getStatus());
     }
 
-    @Test
-    public void generateJavaNestedCompPropClassNames() {
+    @Test public void generateJavaNestedCompPropClassNames() {
         Set<ComponentDefinition> allComponents = getComponentService().getAllComponents();
         for (ComponentDefinition cd : allComponents) {
             ComponentProperties props = cd.createProperties();
@@ -929,13 +921,11 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
     }
 
-    @Test
-    public void checkConnectorsSchema() {
+    @Test public void checkConnectorsSchema() {
         CommonTestUtils.checkAllSchemaPathAreSchemaTypes(getComponentService(), errorCollector);
     }
 
-    @Test
-    public void testSchemaSerialized() throws Throwable {
+    @Test public void testSchemaSerialized() throws Throwable {
         TSnowflakeOutputProperties outputProps = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
 
@@ -956,8 +946,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
 
         String serialized = outputProps.toSerialized();
 
-        TSnowflakeOutputProperties afterSerialized = org.talend.daikon.properties.Properties.Helper.fromSerializedPersistent(serialized,
-                TSnowflakeOutputProperties.class).object;
+        TSnowflakeOutputProperties afterSerialized = org.talend.daikon.properties.Properties.Helper
+                .fromSerializedPersistent(serialized, TSnowflakeOutputProperties.class).object;
         assertEquals(1, afterSerialized.getAvailableConnectors(null, true).size());
         for (Connector connector : afterSerialized.getAvailableConnectors(null, true)) {
             if (connector.getName().equals(Connector.MAIN_NAME)) {
@@ -970,8 +960,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
     }
 
-    @Test
-    public void testSchemaSerialized2() throws Throwable {
+    @Test public void testSchemaSerialized2() throws Throwable {
         ComponentDefinition definition = getComponentService().getComponentDefinition(TSnowflakeOutputDefinition.COMPONENT_NAME);
         TSnowflakeOutputProperties outputProps = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
@@ -992,8 +981,8 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
 
         String serialized = outputProps.toSerialized();
 
-        TSnowflakeOutputProperties afterSerialized = org.talend.daikon.properties.Properties.Helper.fromSerializedPersistent(serialized,
-                TSnowflakeOutputProperties.class).object;
+        TSnowflakeOutputProperties afterSerialized = org.talend.daikon.properties.Properties.Helper
+                .fromSerializedPersistent(serialized, TSnowflakeOutputProperties.class).object;
 
         main2 = (Schema) afterSerialized.getValuedProperty("table.main.schema").getValue();
         reject2 = (Schema) afterSerialized.getValuedProperty("schemaReject.schema").getValue();
@@ -1001,9 +990,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(reject.toString(), reject2.toString());
     }
 
-
-    @Test
-    public void testTableNamesInput() throws Throwable {
+    @Test public void testTableNamesInput() throws Throwable {
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeInputDefinition.COMPONENT_NAME);
         setupProps(props.getConnectionProperties());
@@ -1011,8 +998,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         checkAndSetupTable(props);
     }
 
-    @Test
-    public void testTableNamesOutput() throws Throwable {
+    @Test public void testTableNamesOutput() throws Throwable {
         TSnowflakeOutputProperties props = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
         setupProps(props.getConnectionProperties());
@@ -1020,22 +1006,20 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         checkAndSetupTable(props);
     }
 
-    @Test
-    public void testGetSchema() throws IOException {
+    @Test public void testGetSchema() throws IOException {
         SnowflakeConnectionProperties scp = (SnowflakeConnectionProperties) setupProps(null);
         Schema schema = SnowflakeSourceOrSink.getSchema(null, scp, testTable);
         assertNotNull(schema);
         assertThat(schema.getFields(), Matchers.hasSize(NUM_COLUMNS));
     }
 
-    @Test
-    public void testInputManualError() throws Throwable {
+    @Test public void testInputManualError() throws Throwable {
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) new TSnowflakeInputDefinition().createProperties();
         setupProps(props.getConnectionProperties());
         Form f = props.getForm(MAIN);
         props.manualQuery.setValue(true);
-        props = (TSnowflakeInputProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, props.manualQuery.getName(),
-                props);
+        props = (TSnowflakeInputProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, props.manualQuery.getName(), props);
 
         props.query.setValue("bad query");
         try {
@@ -1046,16 +1030,15 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         }
     }
 
-    @Test
-    public void testInputManual() throws Throwable {
+    @Test public void testInputManual() throws Throwable {
         populateOutput(100);
 
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) new TSnowflakeInputDefinition().createProperties();
         setupProps(props.getConnectionProperties());
         Form f = props.getForm(MAIN);
         props.manualQuery.setValue(true);
-        props = (TSnowflakeInputProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, props.manualQuery.getName(),
-                props);
+        props = (TSnowflakeInputProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, props.manualQuery.getName(), props);
 
         props.query.setValue("select ID, C7 from " + testTable + " where ID > 80");
         checkAndSetupTable(props);
@@ -1067,16 +1050,15 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertThat((String) rows.get(0).get(1), containsString("\"bar\": 81"));
     }
 
-    @Test
-    public void testInputCondition() throws Throwable {
+    @Test public void testInputCondition() throws Throwable {
         populateOutput(100);
 
         TSnowflakeInputProperties props = (TSnowflakeInputProperties) new TSnowflakeInputDefinition().createProperties();
         setupProps(props.getConnectionProperties());
         Form f = props.getForm(MAIN);
         props.manualQuery.setValue(false);
-        props = (TSnowflakeInputProperties) PropertiesTestUtils.checkAndAfter(getComponentService(), f, props.manualQuery.getName(),
-                props);
+        props = (TSnowflakeInputProperties) PropertiesTestUtils
+                .checkAndAfter(getComponentService(), f, props.manualQuery.getName(), props);
 
         props.condition.setValue("ID > 80");
         checkAndSetupTable(props);
@@ -1086,21 +1068,18 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals("foo_81", rows.get(0).get(1));
     }
 
-    @Test
-    public void testOutputInsert() throws Throwable {
+    @Test public void testOutputInsert() throws Throwable {
         SnowflakeConnectionTableProperties props = populateOutput(100);
         readAndCheckRows(props, 100);
     }
 
-    @Test
-    public void testOutputDelete() throws Throwable {
+    @Test public void testOutputDelete() throws Throwable {
         SnowflakeConnectionTableProperties props = populateOutput(100);
         handleRows(makeRows(100), props, TSnowflakeOutputProperties.OutputAction.DELETE);
         assertEquals(0, readRows(props).size());
     }
 
-    @Test
-    public void testOutputModify() throws Throwable {
+    @Test public void testOutputModify() throws Throwable {
         SnowflakeConnectionTableProperties props = populateOutput(100);
         List<IndexedRecord> rows = makeRows(2);
         rows.get(0).put(1, "modified1");
@@ -1113,8 +1092,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(100, readRows.size());
     }
 
-    @Test
-    public void testOutputFeedback() throws Throwable {
+    @Test public void testOutputFeedback() throws Throwable {
         TSnowflakeOutputProperties props = (TSnowflakeOutputProperties) getComponentService()
                 .getComponentProperties(TSnowflakeOutputDefinition.COMPONENT_NAME);
         setupProps(props.getConnectionProperties());
@@ -1154,7 +1132,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         rej = it.next();
         assertEquals("1", rej.get(1)); // row
         assertEquals("1", rej.get(3)); // character
-        assertThat((String)rej.get(4), containsString("Numeric value 'badId'"));
+        assertThat((String) rej.get(4), containsString("Numeric value 'badId'"));
         assertEquals("0", rej.get(5)); // byte offset
         assertEquals("1", rej.get(6)); // line
         assertEquals("100038", rej.get(8)); // code
@@ -1162,7 +1140,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         rej = it.next();
         assertEquals("1", rej.get(1)); // row
         assertEquals("13", rej.get(3)); // character
-        assertThat((String)rej.get(4), containsString("Boolean value 'badBoolean'"));
+        assertThat((String) rej.get(4), containsString("Boolean value 'badBoolean'"));
         assertEquals("12", rej.get(5)); // byte offset
         assertEquals("1", rej.get(6)); // line
         assertEquals("100037", rej.get(8)); // code
@@ -1170,7 +1148,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         rej = it.next();
         assertEquals("1", rej.get(1)); // row
         assertEquals("32", rej.get(3)); // character
-        assertThat((String)rej.get(4), containsString("Date 'badDate'"));
+        assertThat((String) rej.get(4), containsString("Date 'badDate'"));
         assertEquals("31", rej.get(5)); // byte offset
         assertEquals("1", rej.get(6)); // line
         assertEquals("100040", rej.get(8)); // code
@@ -1178,7 +1156,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         rej = it.next();
         assertEquals("1", rej.get(1)); // row
         assertEquals("40", rej.get(3)); // character
-        assertThat((String)rej.get(4), containsString("Time 'badTime'"));
+        assertThat((String) rej.get(4), containsString("Time 'badTime'"));
         assertEquals("39", rej.get(5)); // byte offset
         assertEquals("1", rej.get(6)); // line
         assertEquals("100108", rej.get(8)); // code
@@ -1186,7 +1164,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         rej = it.next();
         assertEquals("1", rej.get(1)); // row
         assertEquals("48", rej.get(3)); // character
-        assertThat((String)rej.get(4), containsString("Timestamp 'badTimestamp'"));
+        assertThat((String) rej.get(4), containsString("Timestamp 'badTimestamp'"));
         assertEquals("47", rej.get(5)); // byte offset
         assertEquals("1", rej.get(6)); // line
         assertEquals("100035", rej.get(8)); // code
@@ -1199,15 +1177,14 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         sfWriteOp.finalize(Arrays.asList(wr1), container);
     }
 
-    @Test
-    public void testOutputUpsert() throws Throwable {
+    @Test public void testOutputUpsert() throws Throwable {
         TSnowflakeOutputProperties props = (TSnowflakeOutputProperties) populateOutput(100);
         handleRows(makeRows(50), props, TSnowflakeOutputProperties.OutputAction.DELETE);
         assertEquals(50, readRows(props).size());
 
         Form f = props.getForm(MAIN);
-        props = (TSnowflakeOutputProperties) PropertiesTestUtils.checkAndBeforePresent(getComponentService(), f, props.upsertKeyColumn.getName(),
-                props);
+        props = (TSnowflakeOutputProperties) PropertiesTestUtils
+                .checkAndBeforePresent(getComponentService(), f, props.upsertKeyColumn.getName(), props);
         LOGGER.debug(props.upsertKeyColumn.getPossibleValues().toString());
         assertEquals(NUM_COLUMNS, props.upsertKeyColumn.getPossibleValues().size());
         props.upsertKeyColumn.setStoredValue("ID");
@@ -1216,9 +1193,7 @@ public abstract class SnowflakeTestIT extends AbstractComponentTest {
         assertEquals(100, readRows(props).size());
     }
 
-    @Test
-    @Ignore
-    public void testOutputLoad() throws Throwable {
+    @Test @Ignore public void testOutputLoad() throws Throwable {
         populateOutput(5000000);
     }
 

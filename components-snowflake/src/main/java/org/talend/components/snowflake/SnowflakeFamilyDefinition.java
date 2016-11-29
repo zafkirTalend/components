@@ -19,12 +19,15 @@ import org.talend.components.api.Constants;
 import org.talend.components.snowflake.tsnowflakeconnection.TSnowflakeConnectionDefinition;
 import org.talend.components.snowflake.tsnowflakeinput.TSnowflakeInputDefinition;
 import org.talend.components.snowflake.tsnowflakeoutput.TSnowflakeOutputDefinition;
+import org.talend.components.snowflake.tsnowflakeoutputreject.TSnowflakeOutputRejectDefinition;
+import org.talend.components.snowflake.tsnowflakeoutputstart.TSnowflakeOutputStartDefinition;
 
 /**
  * Install all of the definitions provided for the Snowflake family of components.
  */
-@Component(name = Constants.COMPONENT_INSTALLER_PREFIX + SnowflakeFamilyDefinition.NAME, provide = ComponentInstaller.class)
-public class SnowflakeFamilyDefinition extends AbstractComponentFamilyDefinition implements ComponentInstaller {
+@Component(name = Constants.COMPONENT_INSTALLER_PREFIX
+        + SnowflakeFamilyDefinition.NAME, provide = ComponentInstaller.class) public class SnowflakeFamilyDefinition
+        extends AbstractComponentFamilyDefinition implements ComponentInstaller {
 
     public static final String NAME = "Snowflake";
 
@@ -32,12 +35,13 @@ public class SnowflakeFamilyDefinition extends AbstractComponentFamilyDefinition
         super(NAME,
                 // Components
                 new TSnowflakeConnectionDefinition(), new TSnowflakeInputDefinition(), new TSnowflakeOutputDefinition(),
+                new TSnowflakeOutputRejectDefinition(), new TSnowflakeOutputStartDefinition(),
                 // Component wizards
-                new SnowflakeConnectionWizardDefinition(), new SnowflakeConnectionEditWizardDefinition(), new SnowflakeTableWizardDefinition());
+                new SnowflakeConnectionWizardDefinition(), new SnowflakeConnectionEditWizardDefinition(),
+                new SnowflakeTableWizardDefinition());
     }
 
-    @Override
-    public void install(ComponentFrameworkContext ctx) {
+    @Override public void install(ComponentFrameworkContext ctx) {
         ctx.registerComponentFamilyDefinition(this);
     }
 

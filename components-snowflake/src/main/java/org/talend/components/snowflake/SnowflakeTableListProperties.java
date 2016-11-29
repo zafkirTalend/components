@@ -66,11 +66,6 @@ public class SnowflakeTableListProperties extends ComponentPropertiesImpl implem
         refreshLayout(tableForm);
     }
 
-    // For the tests
-    public SnowflakeConnectionProperties getConnectionProps() {
-        return connection;
-    }
-
     public void beforeFormPresentMain() throws Exception {
         tableNames = SnowflakeSourceOrSink.getSchemaNames(null, connection);
         selectedTableNames.setPossibleValues(tableNames);

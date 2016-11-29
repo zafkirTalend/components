@@ -32,8 +32,7 @@ public class SnowflakeSink extends SnowflakeSourceOrSink implements Sink {
     public SnowflakeSink() {
     }
 
-    @Override
-    public ValidationResult validate(RuntimeContainer container) {
+    @Override public ValidationResult validate(RuntimeContainer container) {
         ValidationResult validate = super.validate(container);
         // also check that the properties is the right type
         if (validate.getStatus() != Result.ERROR) {
@@ -45,8 +44,7 @@ public class SnowflakeSink extends SnowflakeSourceOrSink implements Sink {
         return validate;
     }
 
-    @Override
-    public SnowflakeWriteOperation createWriteOperation() {
+    @Override public SnowflakeWriteOperation createWriteOperation() {
         return new SnowflakeWriteOperation(this);
     }
 
