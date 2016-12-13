@@ -43,8 +43,7 @@ public class SimpleFileIoInputDefinition extends AbstractComponentDefinition {
     @Override
     public RuntimeInfo getRuntimeInfo(ExecutionEngine engine, ComponentProperties properties, ConnectorTopology ctx) {
         assertEngineCompatibility(engine);
-        return CompositeRuntimeInfo.of("mvn:org.talend.components/simplefileio-runtime", "org.talend.components",
-                "simplefileio-runtime", RUNTIME);
+        return CompositeRuntimeInfo.of("org.talend.components", "simplefileio-runtime", RUNTIME);
     }
 
     @Override

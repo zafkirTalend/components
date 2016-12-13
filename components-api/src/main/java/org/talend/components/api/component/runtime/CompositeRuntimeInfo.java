@@ -17,25 +17,33 @@ import java.net.URL;
 import java.util.List;
 
 import org.talend.components.api.exception.ComponentException;
-import org.talend.daikon.exception.TalendRuntimeException;
+import org.talend.components.api.exception.error.ComponentsApiErrorCode;
 import org.talend.daikon.runtime.RuntimeInfo;
 
+/**
+ * Implements a {@link RuntimeInfo} that delegates to several other runtime infos.
+ *
+ * The methods are invoked sequentially on the list and the first one that responds without an exception is used.
+ */
 public class CompositeRuntimeInfo implements RuntimeInfo {
 
-    private RuntimeInfo[] infos;
+    private final RuntimeInfo[] delegates;
 
-    public CompositeRuntimeInfo(RuntimeInfo... infos) {
-        this.infos = infos;
+    /** @param delegates The list of delegates, in the order they should be attempted. */
+    public CompositeRuntimeInfo(RuntimeInfo... delegates) {
+        this.delegates = delegates;
     }
 
     @Override
     public List<URL> getMavenUrlDependencies() {
         ComponentException lastException = null;
-        for (RuntimeInfo ri : infos) {
+        for (RuntimeInfo ri : delegates) {
             try {
                 return ri.getMavenUrlDependencies();
-            } catch (TalendRuntimeException e) {
-                lastException = null;
+            } catch (ComponentException e) {
+                if (e.getCode() != ComponentsApiErrorCode.COMPUTE_DEPENDENCIES_FAILED)
+                    throw e;
+                lastException = e;
             }
         }
         throw lastException;
@@ -44,26 +52,39 @@ public class CompositeRuntimeInfo implements RuntimeInfo {
     @Override
     public String getRuntimeClassName() {
         ComponentException lastException = null;
-        for (RuntimeInfo ri : infos) {
+        for (RuntimeInfo ri : delegates) {
             try {
                 return ri.getRuntimeClassName();
-            } catch (TalendRuntimeException e) {
-                lastException = null;
+            } catch (ComponentException e) {
+                if (e.getCode() != ComponentsApiErrorCode.COMPUTE_DEPENDENCIES_FAILED)
+                    throw e;
+                lastException = e;
             }
         }
         throw lastException;
     }
 
-    public static CompositeRuntimeInfo of(String mvnUrl, String mvnGroupId, String mvnArtifactId, String runtimeClassName) {
+    /**
+     * Create a CompositeRuntimeInfo of a {@link SimpleRuntimeInfo} using the system ClassLoader, followed by a
+     * {@link JarRuntimeInfo} using the same runtime class that fetches the dependencies from a maven repository.
+     *
+     * @param mvnGroupId The maven group id if fetching the artifact from maven, also used to compute the dependency
+     * file path when loading from the system ClassLoader.
+     * @param mvnGroupId The maven artifact id if fetching the artifact from maven, also used to compute the dependency
+     * file path when loading from the system ClassLoader.
+     * @param runtimeClassName The runtime class name to use in all cases.
+     * @return A CompositeRuntimeInfo that looks in the system classpath first, before attempting to download from the
+     * maven repository.
+     */
+    public static RuntimeInfo of(String mvnGroupId, String mvnArtifactId, String runtimeClassName) {
+        String filePath = DependenciesReader.computeDependenciesFilePath(mvnGroupId, mvnArtifactId);
         try {
-            String filePath = DependenciesReader.computeDependenciesFilePath(mvnGroupId, mvnArtifactId);
             return new CompositeRuntimeInfo(
-                    new SimpleRuntimeInfo(ClassLoader.getSystemClassLoader(), filePath, runtimeClassName), new JarRuntimeInfo(
-                            new URL(mvnUrl), filePath, runtimeClassName));
+                    new SimpleRuntimeInfo(ClassLoader.getSystemClassLoader(), filePath, runtimeClassName), //
+                    new JarRuntimeInfo(new URL("mvn:" + mvnGroupId + "/" + mvnArtifactId), filePath, runtimeClassName));
         } catch (MalformedURLException e) {
             throw new ComponentException(e);
         }
-
     }
 
 }

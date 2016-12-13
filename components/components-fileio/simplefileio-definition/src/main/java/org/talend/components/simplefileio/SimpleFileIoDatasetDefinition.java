@@ -13,13 +13,7 @@
 
 package org.talend.components.simplefileio;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.talend.components.api.component.runtime.CompositeRuntimeInfo;
-import org.talend.components.api.component.runtime.DependenciesReader;
-import org.talend.components.api.component.runtime.JarRuntimeInfo;
-import org.talend.components.api.exception.ComponentException;
 import org.talend.components.common.dataset.DatasetDefinition;
 import org.talend.daikon.definition.I18nDefinition;
 import org.talend.daikon.runtime.RuntimeInfo;
@@ -41,8 +35,7 @@ public class SimpleFileIoDatasetDefinition extends I18nDefinition implements Dat
 
     @Override
     public RuntimeInfo getRuntimeInfo(SimpleFileIoDatasetProperties properties) {
-        return CompositeRuntimeInfo.of("mvn:org.talend.components/simplefileio-runtime", "org.talend.components",
-                "simplefileio-runtime", RUNTIME);
+        return CompositeRuntimeInfo.of("org.talend.components", "simplefileio-runtime", RUNTIME);
     }
 
     @Override

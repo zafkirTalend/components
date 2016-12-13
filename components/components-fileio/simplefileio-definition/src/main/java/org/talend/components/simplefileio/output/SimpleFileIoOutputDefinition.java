@@ -13,18 +13,13 @@
 
 package org.talend.components.simplefileio.output;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.EnumSet;
 import java.util.Set;
 
 import org.talend.components.api.component.AbstractComponentDefinition;
 import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.api.component.runtime.CompositeRuntimeInfo;
-import org.talend.components.api.component.runtime.DependenciesReader;
 import org.talend.components.api.component.runtime.ExecutionEngine;
-import org.talend.components.api.component.runtime.JarRuntimeInfo;
-import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.simplefileio.SimpleFileIoComponentFamilyDefinition;
 import org.talend.daikon.properties.property.Property;
@@ -48,8 +43,7 @@ public class SimpleFileIoOutputDefinition extends AbstractComponentDefinition {
     @Override
     public RuntimeInfo getRuntimeInfo(ExecutionEngine engine, ComponentProperties properties, ConnectorTopology ctx) {
         assertEngineCompatibility(engine);
-        return CompositeRuntimeInfo.of("mvn:org.talend.components/simplefileio-runtime", "org.talend.components",
-                "simplefileio-runtime", RUNTIME);
+        return CompositeRuntimeInfo.of("org.talend.components", "simplefileio-runtime", RUNTIME);
     }
 
     @Override
