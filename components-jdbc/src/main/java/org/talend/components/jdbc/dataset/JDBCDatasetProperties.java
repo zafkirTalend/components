@@ -51,12 +51,12 @@ public class JDBCDatasetProperties extends PropertiesImpl
 
     };
 
-    public JDBCDatasetProperties(String name) {
-        super(name);
-    }
-
     public void afterSourceType() {
         refreshLayout(getForm(Form.MAIN));
+    }
+
+    public JDBCDatasetProperties(String name) {
+        super(name);
     }
 
     public void updateSchema() {
@@ -78,21 +78,25 @@ public class JDBCDatasetProperties extends PropertiesImpl
 
     @Override
     public void setupLayout() {
-        super.setupLayout();
-
         Form mainForm = CommonUtils.addForm(this, Form.MAIN);
         mainForm.addRow(sourceType);
         mainForm.addRow(tableName);
         mainForm.addRow(sql);
 
-        // mainForm.addRow(main.getForm(Form.REFERENCE));
+        Form citizenUserForm = CommonUtils.addForm(this, Form.CITIZEN_USER);
+        citizenUserForm.addRow(sql);
+
+        //citizenUserForm.addColumn(widget(main).setHidden(true));
     }
 
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
 
-        form.getWidget(tableName).setVisible(sourceType.getValue() == SourceType.TABLE_NAME);
+        if (form.getWidget(tableName) != null) {
+            form.getWidget(tableName).setVisible(sourceType.getValue() == SourceType.TABLE_NAME);
+        }
+
         form.getWidget(sql).setVisible(sourceType.getValue() == SourceType.QUERY);
     }
 
