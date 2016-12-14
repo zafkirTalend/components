@@ -16,6 +16,7 @@ import org.talend.components.api.AbstractComponentFamilyDefinition;
 import org.talend.components.api.ComponentInstaller;
 import org.talend.components.api.Constants;
 import org.talend.components.api.component.runtime.DependenciesReader;
+import org.talend.components.processing.definition.window.WindowDefinition;
 
 import aQute.bnd.annotation.component.Component;
 
@@ -23,8 +24,7 @@ import aQute.bnd.annotation.component.Component;
  * Install all of the definitions provided for the processing family of
  * components.
  */
-@Component(name = Constants.COMPONENT_INSTALLER_PREFIX
-        + ProcessingFamilyDefinition.NAME, provide = ComponentInstaller.class)
+@Component(name = Constants.COMPONENT_INSTALLER_PREFIX + ProcessingFamilyDefinition.NAME, provide = ComponentInstaller.class)
 public class ProcessingFamilyDefinition extends AbstractComponentFamilyDefinition implements ComponentInstaller {
 
     public static final String NAME = "Processing";
@@ -34,10 +34,10 @@ public class ProcessingFamilyDefinition extends AbstractComponentFamilyDefinitio
     public static final String MAVEN_ARTIFACT_ID = "components-processing";
 
     public ProcessingFamilyDefinition() {
-        super(NAME
+        super(NAME,
                 // Components
-
-                // Component wizards
+                new WindowDefinition()
+        // Component wizards
         );
     }
 
