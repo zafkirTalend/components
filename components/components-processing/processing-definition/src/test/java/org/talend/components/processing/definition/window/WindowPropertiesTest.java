@@ -9,6 +9,7 @@ import java.util.Collection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -22,6 +23,7 @@ public class WindowPropertiesTest {
         WindowProperties properties = new WindowProperties("test");
         assertNull(properties.windowDurationLength.getValue());
         assertNull(properties.windowSlideLength.getValue());
+        assertFalse(properties.windowSession.getValue());
     }
 
     /**
@@ -42,8 +44,8 @@ public class WindowPropertiesTest {
         assertThat(windowDuration, notNullValue());
         Widget slideWindow = main.getWidget("windowSlideLength");
         assertThat(slideWindow, notNullValue());
-        Widget windowType = main.getWidget("windowType");
-        assertThat(windowType, notNullValue());
+        Widget sessionWindow = main.getWidget("windowSession");
+        assertThat(sessionWindow, notNullValue());
     }
 
     /**
@@ -57,6 +59,6 @@ public class WindowPropertiesTest {
 
         assertTrue(properties.getForm(Form.MAIN).getWidget("windowDurationLength").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("windowSlideLength").isVisible());
-        assertTrue(properties.getForm(Form.MAIN).getWidget("windowType").isVisible());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("windowSession").isVisible());
     }
 }

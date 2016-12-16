@@ -19,8 +19,6 @@ import java.util.Set;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.common.FixedConnectorsComponentProperties;
-import org.talend.components.common.SchemaProperties;
-import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
@@ -31,7 +29,7 @@ public class WindowProperties extends FixedConnectorsComponentProperties impleme
 
     public Property<Integer> windowSlideLength = PropertyFactory.newInteger("windowSlideLength");
 
-    public Property<WindowType> windowType = PropertyFactory.newEnum("windowType", WindowType.class).setRequired();
+    public Property<Boolean> windowSession = PropertyFactory.newBoolean("windowSession");
 
     // main
     public transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "main");
@@ -59,17 +57,17 @@ public class WindowProperties extends FixedConnectorsComponentProperties impleme
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(windowType);
         mainForm.addRow(windowDurationLength);
         mainForm.addRow(windowSlideLength);
+        mainForm.addRow(windowSession);
     }
 
     @Override
     public void setupProperties() {
         super.setupProperties();
-        windowType.setValue(WindowType.TIME);
         windowDurationLength.setValue(-1);
         windowSlideLength.setValue(-1);
+        windowSession.setValue(false);
     }
 
     @Override

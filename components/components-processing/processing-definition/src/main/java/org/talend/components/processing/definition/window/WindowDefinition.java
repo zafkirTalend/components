@@ -23,7 +23,6 @@ import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.api.component.runtime.DependenciesReader;
 import org.talend.components.api.component.runtime.ExecutionEngine;
 import org.talend.components.api.component.runtime.JarRuntimeInfo;
-import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.processing.definition.ProcessingFamilyDefinition;
@@ -77,5 +76,4 @@ public class WindowDefinition extends AbstractComponentDefinition {
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
         return EnumSet.of(ConnectorTopology.INCOMING_AND_OUTGOING);
     }
-
 }

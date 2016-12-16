@@ -6,12 +6,14 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.talend.components.api.ComponentInstaller;
 import org.talend.components.api.component.ComponentImageType;
 import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.processing.definition.ProcessingFamilyDefinition;
+import org.talend.daikon.runtime.RuntimeInfo;
 
 import java.util.Set;
 
@@ -65,5 +67,15 @@ public class WindowDefinitionTest {
         Set<ConnectorTopology> connector = definition.getSupportedConnectorTopologies();
         assertEquals(1, connector.size());
         assertTrue(connector.contains(ConnectorTopology.INCOMING_AND_OUTGOING));
+    }
+
+    /**
+     * Checks the {@link RuntimeInfo} of the definition.
+     */
+    @Test
+    @Ignore("This can't work unless the runtime jar is already installed in maven!")
+    public void testRuntimeInfo() {
+        RuntimeInfo runtimeInfo = definition.getRuntimeInfo(null, null, null);
+        assertEquals("org.talend.components.processing.runtime.window.WindowRuntime", runtimeInfo.getRuntimeClassName());
     }
 }
