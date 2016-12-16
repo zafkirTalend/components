@@ -13,21 +13,20 @@
 
 package org.talend.components.service.rest;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.talend.components.service.rest.dto.DatasetConnectionInfo;
+import org.talend.components.service.rest.dto.PropertiesDto;
 import org.talend.components.service.rest.dto.ValidationResultsDto;
 import org.talend.daikon.annotation.Service;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Service(name = "RuntimesController")
 @RequestMapping(value = "runtimes")
@@ -48,28 +47,31 @@ public interface RuntimesController {
     /** Validate connection to datastore */
     @RequestMapping(value = "{dataStoreDefinitionName}", method = POST, consumes = APPLICATION_JSON_UTF8_VALUE)
     ResponseEntity<ValidationResultsDto> validateDataStoreConnection(
-            @PathVariable("dataStoreDefinitionName") String dataStoreDefinitionName, InputStream formData);
+            @PathVariable("dataStoreDefinitionName") String dataStoreDefinitionName,
+            @RequestBody PropertiesDto propertiesContainer);
 
     /** Validate connection to datastore. Should it be GET method? */
     @RequestMapping(value = "{datasetDefinitionName}/schema", method = POST, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
     String getDatasetSchema(@PathVariable("datasetDefinitionName") String datasetDefinitionName,
-                            @RequestBody DatasetConnectionInfo connectionInfo) throws IOException;
+                            @RequestBody PropertiesDto connectionInfo) throws IOException;
 
     /** Get dataset content. Should it be GET method? */
     @RequestMapping(value = "{datasetDefinitionName}/data", method = POST, consumes = APPLICATION_JSON_UTF8_VALUE, produces = {
             APPLICATION_JSON_UTF8_VALUE, AVRO_JSON_MIME_TYPE_OFFICIAL_INVALID, AVRO_JSON_MIME_TYPES_UNOFFICIAL_VALID,
             AVRO_JSON_MIME_TYPES_UNOFFICIAL_VALID_REGISTERED })
-    StreamingResponseBody getDatasetData(@PathVariable("datasetDefinitionName") String datasetDefinitionName,
-                                         @RequestBody DatasetConnectionInfo connectionInfo,
+    Void getDatasetData(@PathVariable("datasetDefinitionName") String datasetDefinitionName,
+                                         @RequestBody PropertiesDto connectionInfo,
                                          @RequestParam(value = "from", required = false) Integer from,
-                                         @RequestParam(value = "limit", required = false) Integer limit);
+                                         @RequestParam(value = "limit", required = false) Integer limit,
+                                         OutputStream response);
 
     @RequestMapping(value = "{datasetDefinitionName}/data", method = POST, consumes = APPLICATION_JSON_UTF8_VALUE, produces = {
             AVRO_BINARY_MIME_TYPE_OFFICIAL_INVALID, AVRO_BINARY_MIME_TYPES_UNOFFICIAL_VALID,
             AVRO_BINARY_MIME_TYPES_UNOFFICIAL_VALID_REGISTERED })
-    StreamingResponseBody getDatasetDataAsBinary(@PathVariable("datasetDefinitionName") String datasetDefinitionName,
-                                                 @RequestBody DatasetConnectionInfo connectionInfo,
+    Void getDatasetDataAsBinary(@PathVariable("datasetDefinitionName") String datasetDefinitionName,
+                                                 @RequestBody PropertiesDto connectionInfo,
                                                  @RequestParam(value = "from", required = false) Integer from,
-                                                 @RequestParam(value = "limit", required = false) Integer limit);
+                                                 @RequestParam(value = "limit", required = false) Integer limit,
+                                                 OutputStream response);
 
 }

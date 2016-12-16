@@ -13,8 +13,11 @@
 
 package org.talend.components.service.rest.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
+import static org.apache.commons.lang3.Validate.notNull;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.Function;
 
@@ -28,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.components.common.dataset.DatasetDefinition;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.dataset.runtime.DatasetRuntime;
@@ -36,22 +38,14 @@ import org.talend.components.common.datastore.DatastoreDefinition;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.components.common.datastore.runtime.DatastoreRuntime;
 import org.talend.components.service.rest.RuntimesController;
-import org.talend.components.service.rest.dto.DatasetConnectionInfo;
+import org.talend.components.service.rest.dto.PropertiesDto;
 import org.talend.components.service.rest.dto.ValidationResultsDto;
-import org.talend.components.service.rest.serialization.JsonSerializationHelper;
 import org.talend.daikon.annotation.ServiceImplementation;
-import org.talend.daikon.definition.service.DefinitionRegistryService;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.runtime.RuntimeUtil;
 import org.talend.daikon.sandbox.SandboxedInstance;
-
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.Integer.MAX_VALUE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.io.IOUtils.toInputStream;
-import static org.apache.commons.lang3.Validate.notNull;
 
 @ServiceImplementation
 @SuppressWarnings("unchecked")
@@ -60,22 +54,19 @@ public class RuntimeControllerImpl implements RuntimesController {
     private static final Logger log = LoggerFactory.getLogger(RuntimeControllerImpl.class);
 
     @Autowired
-    private JsonSerializationHelper jsonSerializationHelper;
-
-    @Autowired
-    private DefinitionRegistryService definitionServiceDelegate;
+    private PropertiesHelpers propertiesHelpers;
 
     @Override
     public ResponseEntity<ValidationResultsDto> validateDataStoreConnection(String dataStoreDefinitionName,
-                                                                            InputStream formData) {
-        final DatastoreDefinition<DatastoreProperties> definition = definitionServiceDelegate.getDefinitionsMapByType(
-                DatastoreDefinition.class).get(dataStoreDefinitionName);
+                                                                            PropertiesDto propertiesContainer) {
+        final DatastoreDefinition<DatastoreProperties> definition = propertiesHelpers.getDataStoreDefinition(
+                dataStoreDefinitionName);
         notNull(definition, "Could not find data store definition of name %s", dataStoreDefinitionName);
-        DatastoreProperties properties = (DatastoreProperties) jsonSerializationHelper.toProperties(formData);
+        DatastoreProperties properties = propertiesHelpers.propertiesFromDto(propertiesContainer);
 
         try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(definition.getRuntimeInfo(properties),
                 getClass().getClassLoader())) {
-            DatastoreRuntime datastoreRuntime = (DatastoreRuntime) instance.getInstance();
+            DatastoreRuntime<DatastoreProperties> datastoreRuntime = (DatastoreRuntime) instance.getInstance();
             datastoreRuntime.initialize(null, properties);
             Iterable<ValidationResult> healthChecks = datastoreRuntime.doHealthChecks(null);
 
@@ -87,74 +78,71 @@ public class RuntimeControllerImpl implements RuntimesController {
     }
 
     @Override
-    public String getDatasetSchema(String datasetDefinitionName, DatasetConnectionInfo connectionInfo) throws IOException {
+    public String getDatasetSchema(String datasetDefinitionName, PropertiesDto connectionInfo) throws IOException {
         return useDatasetRuntime(datasetDefinitionName, connectionInfo, runtime -> runtime.getSchema().toString(false));
     }
 
     @Override
-    public StreamingResponseBody getDatasetData(String datasetDefinitionName, DatasetConnectionInfo connectionInfo, Integer from,
-                                                Integer limit) {
-        return useDatasetRuntime(datasetDefinitionName, connectionInfo, new DatasetContentWriter(limit, true));
+    public Void getDatasetData(String datasetDefinitionName, //
+                               PropertiesDto connectionInfo, //
+                               Integer from, //
+                               Integer limit, //
+                               OutputStream response) {
+        return useDatasetRuntime(datasetDefinitionName, connectionInfo, new DatasetContentWriter(response, limit, true));
     }
 
     @Override
-    public StreamingResponseBody getDatasetDataAsBinary(String datasetDefinitionName, DatasetConnectionInfo connectionInfo,
-                                                        Integer from, Integer limit) {
-        return useDatasetRuntime(datasetDefinitionName, connectionInfo, new DatasetContentWriter(limit, false));
+    public Void getDatasetDataAsBinary(String datasetDefinitionName, //
+                                       PropertiesDto connectionInfo, //
+                                       Integer from,  //
+                                       Integer limit,  //
+                                        OutputStream response) {
+        return useDatasetRuntime(datasetDefinitionName, connectionInfo, new DatasetContentWriter(response, limit, false));
     }
 
-    private <T> T useDatasetRuntime(String datasetDefinitionName, DatasetConnectionInfo formData,
+    private <T> T useDatasetRuntime(String datasetDefinitionName, //
+                                    PropertiesDto formData, //
                                     Function<DatasetRuntime<DatasetProperties<DatastoreProperties>>, T> consumer) {
-        // 1) create data store properties from posted data
-        DatastoreProperties datastoreProperties = (DatastoreProperties) jsonSerializationHelper.toProperties(
-                toInputStream(formData.getDataStoreFormData().toString(), UTF_8));
 
-        // 2) create data set properties from with posted data
-        DatasetProperties datasetProperties = (DatasetProperties) jsonSerializationHelper.toProperties(
-                toInputStream(formData.getDataSetFormData().toString(), UTF_8));
+        // 1) get dataset properties from supplied data
+        DatasetProperties datasetProperties = propertiesHelpers.propertiesFromDto(formData);
 
-        // 3) enrich dataset properties with data store properties
-        datasetProperties.setDatastoreProperties(datastoreProperties);
+        // 2) Retrieve data set definition to be able to create the runtime
+        final DatasetDefinition<DatasetProperties<DatastoreProperties>> datasetDefinition = //
+                propertiesHelpers.getDataSetDefinition(datasetDefinitionName);
 
-        // 4) Retrieve data set definition to be able to create the runtime
-        final DatasetDefinition<DatasetProperties<DatastoreProperties>> datasetDefinition = definitionServiceDelegate.getDefinitionsMapByType(
-                DatasetDefinition.class).get(datasetDefinitionName);
-
-        // 5) create the runtime
-        try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(
-                datasetDefinition.getRuntimeInfo(datasetProperties), getClass().getClassLoader())) {
+        // 3) create the runtime
+        try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(datasetDefinition.getRuntimeInfo(datasetProperties),
+                getClass().getClassLoader())) {
             DatasetRuntime<DatasetProperties<DatastoreProperties>> datasetRuntimeInstance = (DatasetRuntime<DatasetProperties<DatastoreProperties>>) instance
                     .getInstance();
 
             datasetRuntimeInstance.initialize(null, datasetProperties);
 
-            // 6) Consume the data set runtime
+            // 4) Consume the data set runtime
             return consumer.apply(datasetRuntimeInstance);
         }
     }
 
-    private static class DatasetContentWriter
-            implements Function<DatasetRuntime<DatasetProperties<DatastoreProperties>>, StreamingResponseBody> {
+    private static class DatasetContentWriter implements Function<DatasetRuntime<DatasetProperties<DatastoreProperties>>, Void> {
 
         private final Integer limit;
 
         private final boolean json;
+        private final OutputStream output;
 
         /**
          * @param limit the number of records to write
          * @param json  true to write JSon, false for binary Avro
          */
-        public DatasetContentWriter(Integer limit, boolean json) {
+        DatasetContentWriter(OutputStream output, Integer limit, boolean json) {
+            this.output = output;
             this.limit = limit;
             this.json = json;
         }
 
         @Override
-        public StreamingResponseBody apply(DatasetRuntime<DatasetProperties<DatastoreProperties>> dr) {
-            return output -> writeContentInOutput(dr, output);
-        }
-
-        private void writeContentInOutput(DatasetRuntime<DatasetProperties<DatastoreProperties>> dr, OutputStream output) {
+        public Void apply(DatasetRuntime<DatasetProperties<DatastoreProperties>> dr) {
             Schema schema = dr.getSchema();
             GenericDatumWriter<IndexedRecord> writer = new GenericDatumWriter<>(schema);
             try {
@@ -170,6 +158,7 @@ public class RuntimeControllerImpl implements RuntimesController {
                 log.error("Couldn't create Avro records JSon encoder.", e);
                 throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
             }
+            return null;
         }
 
         private void writeIndexedRecord(GenericDatumWriter<IndexedRecord> writer, Encoder encoder, IndexedRecord indexedRecord) {
