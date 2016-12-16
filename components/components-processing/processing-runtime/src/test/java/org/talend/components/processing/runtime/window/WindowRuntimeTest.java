@@ -22,8 +22,11 @@ import org.talend.components.adapter.beam.LazyAvroCoder;
 import org.talend.components.processing.definition.window.WindowProperties;
 import org.talend.daikon.avro.GenericDataRecordHelper;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class WindowRuntimeTest {
-/*
+
     @Test
     public void testFixedWindow() {
 
@@ -37,31 +40,30 @@ public class WindowRuntimeTest {
         IndexedRecord irA = GenericDataRecordHelper.createRecord(oA);
         System.out.println("a: " + irA);
 
-        Object[] oB = new Object[] { new Object[] { "b" } };
-        Schema b = GenericDataRecordHelper.createSchemaFromObject("b", oB);
-        System.out.println(b);
-        IndexedRecord irB = GenericDataRecordHelper.createRecord(oB);
-        System.out.println("b: " + irB);
+        Object[] oB = new Object[] {"b"};
+        IndexedRecord irB = GenericDataRecordHelper.createRecord(oA);
 
-        Object[] oC = new Object[] { new Object[] { "c" } };
-        Schema c = GenericDataRecordHelper.createSchemaFromObject("c", oC);
-        System.out.println(c);
-        IndexedRecord irC = GenericDataRecordHelper.createRecord(oC);
-        System.out.println("c: " + irC);
+        Object[] oC = new Object[] {"c"};
+        IndexedRecord irC = GenericDataRecordHelper.createRecord(oA);
 
+        /*
         // creation of PCollection with different timestamp
-        PCollection<IndexedRecord> input = (PCollection<IndexedRecord>) p.apply(Create.timestamped(
-                // TimestampedValue.of(irA, new Instant(4)),
-                // TimestampedValue.of(irB, new Instant(4)),
+        PCollection<IndexedRecord> input = p.apply(Create.timestamped(
                 TimestampedValue.of(irA, new Instant(4)))
-                        .withCoder(LazyAvroCoder.<IndexedRecord> of("878"))
-        // .withCoder(InstantCoder.of())
-        // .withCoder(TimestampedValue.TimestampedValueCoder.of(LazyAvroCoder.of("689"), InstantCoder.of()))
-        //.withCoder(TimestampedValue.TimestampedValueCoder.of(LazyAvroCoder.of("33")))
-        //.withCoder(TimestampedValue.TimestampedValueCoder.of(AvroCoder.of(c)))
-        );
+                        .withCoder(AvroCoder.of(a))
+        );*/
 
-        WindowProperties windowProperties = new WindowProperties("window");
+
+        List<TimestampedValue<IndexedRecord>> data = Arrays.asList(
+                TimestampedValue.of(irA, new Instant(1L)),
+                TimestampedValue.of(irB, new Instant(2L)),
+                TimestampedValue.of(irC, new Instant(3L)));
+
+        PCollection<IndexedRecord> input = p.apply(Create.timestamped(data)
+        .withCoder());
+
+
+                WindowProperties windowProperties = new WindowProperties("window");
         windowProperties.setValue("windowDurationLength", 2);
         windowProperties.setValue("windowSlideLength", -1);
 
@@ -80,11 +82,11 @@ public class WindowRuntimeTest {
          * KV.of(irA, 1L),
          * KV.of(irB, 1L),
          * KV.of(irC, 1L)
-         *
+         */
         );
 
         p.run();
-    }*/
+    }
     /*
      * @Test
      * public void testSlidingWindow() {
