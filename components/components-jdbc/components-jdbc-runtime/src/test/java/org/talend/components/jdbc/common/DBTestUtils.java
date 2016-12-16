@@ -12,8 +12,11 @@
 // ============================================================================
 package org.talend.components.jdbc.common;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +25,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -95,6 +101,12 @@ public class DBTestUtils {
         }
     }
 
+    public static void createTestTableWithDateType(Connection conn) throws SQLException {
+        try (Statement statement = conn.createStatement()) {
+            statement.execute("create table TEST (ID int, NAME varchar(8), birth TIMESTAMP)");
+        }
+    }
+
     public static void dropTestTable(Connection conn) throws SQLException {
         try (Statement statement = conn.createStatement()) {
             statement.execute("drop table TEST");
@@ -130,6 +142,34 @@ public class DBTestUtils {
         }
     }
 
+    public static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public static void loadTestDataWithDateType(Connection conn) throws SQLException, ParseException {
+        try (PreparedStatement statement = conn.prepareStatement("insert into TEST values(?,?,?)")) {
+            statement.setInt(1, 1);
+            statement.setString(2, "wangwei");
+            statement.setTimestamp(3, new Timestamp(DATE_FORMATTER.parse("2012-11-12 12:12:12").getTime()));
+
+            statement.executeUpdate();
+
+            statement.setInt(1, 2);
+            statement.setString(2, "gaoyan");
+            statement.setTimestamp(3, new Timestamp(DATE_FORMATTER.parse("1911-11-12 12:12:12").getTime()));
+
+            statement.executeUpdate();
+
+            statement.setInt(1, 3);
+            statement.setString(2, "dabao");
+            statement.setTimestamp(3, new Timestamp(DATE_FORMATTER.parse("2010-11-12 11:11:11").getTime()));
+
+            statement.executeUpdate();
+        }
+
+        if (!conn.getAutoCommit()) {
+            conn.commit();
+        }
+    }
+
     public static Schema createTestSchema() {
         FieldAssembler<Schema> builder = SchemaBuilder.builder().record("TEST").fields();
 
@@ -150,10 +190,24 @@ public class DBTestUtils {
         }
     }
 
+    public static void createTableWithDateType(AllSetting allSetting) throws Exception {
+        try (Connection conn = JdbcRuntimeUtils.createConnection(allSetting)) {
+            createTestTableWithDateType(conn);
+        }
+    }
+
     public static void truncateTableAndLoadData(AllSetting allSetting) throws ClassNotFoundException, SQLException {
         try (Connection conn = JdbcRuntimeUtils.createConnection(allSetting)) {
             truncateTable(conn);
             loadTestData(conn);
+        }
+    }
+
+    public static void truncateTableAndLoadDataWithDateType(AllSetting allSetting)
+            throws ClassNotFoundException, SQLException, ParseException {
+        try (Connection conn = JdbcRuntimeUtils.createConnection(allSetting)) {
+            truncateTable(conn);
+            loadTestDataWithDateType(conn);
         }
     }
 
