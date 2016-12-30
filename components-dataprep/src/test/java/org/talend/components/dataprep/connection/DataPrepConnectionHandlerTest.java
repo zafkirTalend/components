@@ -131,6 +131,19 @@ public class DataPrepConnectionHandlerTest {
         Assert.assertEquals("Hello", dataPrepServerMock.getLastReceivedLiveDataSetContent());
     }
 
+    /**
+     * test the create mode when the data set already exists in the server
+     * expect : throw {@link IOException}
+     * 
+     * @throws IOException
+     */
+    @Test(expected = IOException.class)
+    public void testCreateModeWithExistedDataset() throws IOException {
+        connectionHandler = new DataPrepConnectionHandler(URL + serverPort, LOGIN, PASS, "anyId", "my_existed_dataset");
+        Assert.assertEquals(200, returnStatusCode(connectionHandler.connect()));
+        connectionHandler.write(DataPrepOutputModes.Create);
+    }
+
     @Test
     public void testCreate() throws IOException {
         Assert.assertEquals(200, returnStatusCode(connectionHandler.connect()));
@@ -168,6 +181,7 @@ public class DataPrepConnectionHandlerTest {
 
     @Test
     public void test_create_or_update_update() throws IOException {
+        connectionHandler = new DataPrepConnectionHandler(URL + serverPort, LOGIN, PASS, ID, "my_existed_dataset");
         Assert.assertEquals(200, returnStatusCode(connectionHandler.connect()));
         connectionHandler.write(DataPrepOutputModes.CreateOrUpdate).write("Hello".getBytes());
         Assert.assertEquals(200, returnStatusCode(connectionHandler.logout()));
