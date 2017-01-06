@@ -37,7 +37,6 @@ public class ProxyPropertiesRuntimeHelperTest {
         assertEquals("1080", proxyHelper1.getProxyPort());
         assertEquals("talend", proxyHelper1.getProxyUser());
         assertEquals("talend", proxyHelper1.getProxyPwd());
-        assertNotNull(proxyHelper1.getSocketProxy());
 
         proxyProperties.useProxy.setValue(false);
         final ProxyPropertiesRuntimeHelper proxyHelper2 = new ProxyPropertiesRuntimeHelper(proxyProperties);
