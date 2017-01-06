@@ -54,6 +54,9 @@ public class RuntimeControllerImpl implements RuntimesController {
 
     private static final Logger log = LoggerFactory.getLogger(RuntimeControllerImpl.class);
 
+    /** Cache for reuse. */
+    private static final ClassLoader classLoader = RuntimeControllerImpl.class.getClassLoader();
+
     @Autowired
     private PropertiesHelpers propertiesHelpers;
 
@@ -65,8 +68,7 @@ public class RuntimeControllerImpl implements RuntimesController {
         notNull(definition, "Could not find data store definition of name %s", dataStoreDefinitionName);
         DatastoreProperties properties = propertiesHelpers.propertiesFromDto(propertiesContainer);
 
-        try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(definition.getRuntimeInfo(properties), getClass()
-                .getClassLoader())) {
+        try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(definition.getRuntimeInfo(properties), classLoader)) {
             DatastoreRuntime<DatastoreProperties> datastoreRuntime = (DatastoreRuntime) instance.getInstance();
             datastoreRuntime.initialize(null, properties);
             Iterable<ValidationResult> healthChecks = datastoreRuntime.doHealthChecks(null);
@@ -115,7 +117,7 @@ public class RuntimeControllerImpl implements RuntimesController {
 
         // 3) create the runtime
         try (SandboxedInstance instance = RuntimeUtil.createRuntimeClass(datasetDefinition.getRuntimeInfo(datasetProperties),
-                getClass().getClassLoader())) {
+                classLoader)) {
             DatasetRuntime<DatasetProperties<DatastoreProperties>> datasetRuntimeInstance = (DatasetRuntime<DatasetProperties<DatastoreProperties>>) instance
                     .getInstance();
 
