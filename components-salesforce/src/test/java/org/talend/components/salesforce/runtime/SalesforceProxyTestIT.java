@@ -63,13 +63,10 @@ public class SalesforceProxyTestIT extends SalesforceTestBase {
         };
         server = DefaultHttpProxyServer.bootstrap().withPort(proxyPort).withProxyAuthenticator(auth).start();
 
-        setProxySettingForClient();
     }
 
     @AfterClass
     public static void closeProxy() {
-        removeProxySettingForClient();
-
         if (server != null) {
             server.stop();
         }
@@ -81,6 +78,7 @@ public class SalesforceProxyTestIT extends SalesforceTestBase {
         TSalesforceConnectionDefinition definition = (TSalesforceConnectionDefinition) getComponentService()
                 .getComponentDefinition(TSalesforceConnectionDefinition.COMPONENT_NAME);
         SalesforceConnectionProperties properties = (SalesforceConnectionProperties) definition.createRuntimeProperties();
+        setProxySettingForClient(properties);
 
         properties.bulkConnection.setValue(true);
         properties.userPassword.userId.setValue(userId);
@@ -98,6 +96,7 @@ public class SalesforceProxyTestIT extends SalesforceTestBase {
         TSalesforceInputDefinition definition = (TSalesforceInputDefinition) getComponentService()
                 .getComponentDefinition(TSalesforceInputDefinition.COMPONENT_NAME);
         TSalesforceInputProperties properties = (TSalesforceInputProperties) definition.createRuntimeProperties();
+        setProxySettingForClient(properties.getConnectionProperties());
 
         properties.connection.bulkConnection.setValue(true);
         properties.queryMode.setValue(QueryMode.Bulk);
@@ -130,29 +129,12 @@ public class SalesforceProxyTestIT extends SalesforceTestBase {
         }
     }
 
-    private static void setProxySettingForClient() {
-        System.setProperty("http.proxySet", "true");
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "" + proxyPort);
-        System.setProperty("http.proxyUser", proxyUsername);
-        System.setProperty("http.proxyPassword", proxyPassword);
-
-        Authenticator.setDefault(new Authenticator() {
-
-            @Override
-            public PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
-            }
-
-        });
-    }
-
-    private static void removeProxySettingForClient() {
-        System.clearProperty("http.proxySet");
-        System.clearProperty("http.proxyHost");
-        System.clearProperty("http.proxyPort");
-        System.clearProperty("http.proxyUser");
-        System.clearProperty("http.proxyPassword");
+    private static void setProxySettingForClient(SalesforceConnectionProperties properties) {
+        properties.proxy.useProxy.setStoredValue(Boolean.TRUE);
+        properties.proxy.host.setStoredValue("127.0.0.1");
+        properties.proxy.port.setStoredValue(proxyPort);
+        properties.proxy.userPassword.userId.setStoredValue(proxyUsername);
+        properties.proxy.userPassword.password.setStoredValue(proxyPassword);
     }
 
 }
