@@ -52,7 +52,11 @@ public class SalesforceBulkQueryInputReader extends SalesforceReader<IndexedReco
             executeSalesforceBulkQuery();
             bulkResultSet = bulkRuntime.getQueryResultSet(bulkRuntime.nextResultId());
             currentRecord = bulkResultSet.next();
-            return currentRecord != null;
+            boolean start = currentRecord != null;
+            if (start) {
+                dataCount++;
+            }
+            return start;
         } catch (ConnectionException | AsyncApiException e) {
             // Wrap the exception in an IOException.
             throw new IOException(e);
@@ -66,9 +70,15 @@ public class SalesforceBulkQueryInputReader extends SalesforceReader<IndexedReco
             String resultId = bulkRuntime.nextResultId();
             if (resultId != null) {
                 try {
+                    // Get a new result set
                     bulkResultSet = bulkRuntime.getQueryResultSet(resultId);
                     currentRecord = bulkResultSet.next();
-                    return bulkResultSet.hasNext();
+                    boolean advance = currentRecord != null;
+                    if (advance) {
+                        // New result set available to retrieve
+                        dataCount++;
+                    }
+                    return advance;
                 } catch (AsyncApiException | ConnectionException e) {
                     throw new IOException(e);
                 }
