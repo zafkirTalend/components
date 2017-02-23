@@ -38,6 +38,11 @@ import org.talend.components.file.FileProperties;
  */
 public class FileInputProperties extends FileProperties {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 185998948576322554L;
+
     public FileInputProperties(String name) {
         super(name);
     }

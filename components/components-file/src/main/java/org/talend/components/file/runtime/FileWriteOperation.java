@@ -29,7 +29,7 @@ public class FileWriteOperation implements WriteOperation<Result> {
 
     @Override
     public Writer<Result> createWriter(RuntimeContainer adaptor) {
-        return new FileOutputWriter(this, (String) properties.filename.getValue());
+        return new FileOutputWriter(this, (String) properties.filename.getValue(), (String) properties.fieldSeparator.getValue());
     }
 
     @Override

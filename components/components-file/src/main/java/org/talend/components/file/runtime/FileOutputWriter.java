@@ -26,7 +26,7 @@ import org.talend.components.api.component.runtime.Writer;
 import org.talend.components.file.fileoutputdefinition.FileOutputDefinition;
 
 /**
- * Simple implementation of a reader.
+ * Simple implementation of a writer.
  */
 public class FileOutputWriter implements Writer<Result> {
 
@@ -36,6 +36,8 @@ public class FileOutputWriter implements Writer<Result> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileOutputDefinition.class);
 
     private final String fileName;
+
+    private final String fieldSeparator;
 
     private String uId;
 
@@ -49,9 +51,10 @@ public class FileOutputWriter implements Writer<Result> {
 
     private final FileWriteOperation fileWriteOperation;
 
-    public FileOutputWriter(FileWriteOperation fileWriteOperation, String fileName) {
+    public FileOutputWriter(FileWriteOperation fileWriteOperation, String fileName, String fieldSeparator) {
         this.fileWriteOperation = fileWriteOperation;
         this.fileName = fileName;
+        this.fieldSeparator = fieldSeparator;
         totalCount = 0;
         successCount = 0;
         rejectCount = 0;
@@ -70,17 +73,16 @@ public class FileOutputWriter implements Writer<Result> {
             return;
         org.apache.avro.generic.GenericData.Record record = (org.apache.avro.generic.GenericData.Record) datum;
 
-        String line = ""; // class cast exception?
-        try {
-            for (Field f : record.getSchema().getFields()) {
-                if (!line.isEmpty()) {
-                    line += ";";
-                }
-                line += record.get(f.pos());
+        String line = "";
+        boolean first = true;
+        for (Field f : record.getSchema().getFields()) {
+            if (!first) {
+                line += fieldSeparator;
+            } else {
+                first = false;
             }
 
-        } catch (ClassCastException e) {
-            line = datum.toString();
+            line += record.get(f.pos());
 
         }
 

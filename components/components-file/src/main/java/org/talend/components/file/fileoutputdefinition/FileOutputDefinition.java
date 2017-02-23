@@ -28,10 +28,6 @@ import org.talend.daikon.definition.DefinitionImageType;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.runtime.RuntimeInfo;
 
-/**
- * The FileInputDefinition acts as an entry point for all of services that a component provides to integrate with the
- * Studio (at design-time) and other components (at run-time).
- */
 public class FileOutputDefinition extends AbstractComponentDefinition {
 
     public static final String COMPONENT_NAME = "SimpleFileOutputWriter"; //$NON-NLS-1$

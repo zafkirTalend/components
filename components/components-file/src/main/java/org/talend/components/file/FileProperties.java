@@ -10,6 +10,8 @@ import org.talend.daikon.properties.property.PropertyFactory;
 
 public abstract class FileProperties extends FixedConnectorsComponentProperties {
 
+    private static final long serialVersionUID = 1L;
+
     public Property<String> filename = PropertyFactory.newString("filename"); //$NON-NLS-1$
 
     public SchemaProperties schema = new SchemaProperties("schema"); //$NON-NLS-1$

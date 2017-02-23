@@ -33,13 +33,19 @@ import org.talend.daikon.properties.property.PropertyFactory;
  * <li>All of the UI information for laying out and presenting the properties to the user.</li>
  * </ol>
  * 
- * The FileInputProperties has two properties:
+ * The FileOutputProperties has three properties:
  * <ol>
  * <li>{code filename}, a simple property which is a String containing the file path that this component will read.</li>
  * <li>{code schema}, an embedded property referring to a Schema.</li>
+ * <li>{code fieldSeparator}, the separator-symbol between different fields. Default value is ";"</li>
  * </ol>
  */
 public class FileOutputProperties extends FileProperties {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 8029271715504678363L;
 
     public Property<String> fieldSeparator = PropertyFactory.newString("fieldSeparator");
 
