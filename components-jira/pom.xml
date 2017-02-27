@@ -24,7 +24,7 @@
 	<repositories>
 		<repository>
 			<id>snapshots</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
 		</repository>
 	</repositories>
 
