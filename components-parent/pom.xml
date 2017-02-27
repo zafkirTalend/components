@@ -21,11 +21,11 @@
 	<distributionManagement>
 		<snapshotRepository>
 			<id>talend_nexus_deployment</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
 		</snapshotRepository>
 		<repository>
 			<id>talend_nexus_deployment</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</repository>
 	</distributionManagement>
 
@@ -148,11 +148,11 @@
 		</repository>
 		<repository>
 			<id>releases</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</repository>
 		<repository>
 			<id>snapshots</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -162,7 +162,7 @@
 		</pluginRepository>
 		<pluginRepository>
 			<id>releases</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<build>
