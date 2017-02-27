@@ -20,7 +20,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<docker.removeVolumes>true</docker.removeVolumes>
-		<talend_snapshots>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</talend_snapshots>
+		<talend_snapshots>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</talend_snapshots>
 	</properties>
 
 	<scm>
@@ -34,7 +34,7 @@
 		</snapshotRepository>
 		<repository>
 			<id>talend_nexus_deployment</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</repository>
 	</distributionManagement>
 
@@ -169,7 +169,7 @@
 		</repository>
 		<repository>
 			<id>releases</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</repository>
 		<repository>
 			<id>talend_nexus</id>
@@ -184,7 +184,7 @@
 		</pluginRepository>
 		<pluginRepository>
 			<id>releases</id>
-			<url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+			<url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<build>
