@@ -22,12 +22,12 @@
         </repository>
         <repository>
             <id>releases</id>
-            <url>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/</url>
+            <url>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</url>
         </repository>
     </repositories>
 
     <properties>
-        <talend_snapshots>http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/</talend_snapshots>
+        <talend_snapshots>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</talend_snapshots>
     </properties>
 
     <dependencies>
