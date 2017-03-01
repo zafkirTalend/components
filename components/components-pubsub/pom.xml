@@ -22,5 +22,6 @@
     <modules>
         <module>pubsub-definition</module>
         <module>pubsub-runtime</module>
+        <module>pubsub-integration</module>
     </modules>
 </project>
