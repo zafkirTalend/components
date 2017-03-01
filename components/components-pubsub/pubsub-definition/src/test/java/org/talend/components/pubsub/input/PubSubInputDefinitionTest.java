@@ -29,10 +29,6 @@ import static org.junit.Assert.assertTrue;
 public class PubSubInputDefinitionTest {
     private final PubSubInputDefinition inputDefinition = new PubSubInputDefinition();
 
-    /**
-     * Check {@link PubSubInputDefinition#getRuntimeInfo(ComponentProperties, ConnectorTopology)} returns RuntimeInfo,
-     * which runtime class name is "org.talend.components.pubsub.runtime.PubSubInputRuntime"
-     */
     @Test
     @Ignore("This can't work unless the runtime jar is already installed in maven!")
     public void testRuntimeInfo() {

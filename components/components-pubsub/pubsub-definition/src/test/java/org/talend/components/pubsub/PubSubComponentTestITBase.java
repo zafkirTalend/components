@@ -6,24 +6,27 @@ import static org.junit.Assert.assertThat;
 import javax.inject.Inject;
 
 import org.junit.Test;
-import org.talend.components.api.service.ComponentService;
-import org.talend.components.api.test.AbstractComponentTest;
+import org.talend.components.api.test.AbstractComponentTest2;
 import org.talend.components.pubsub.input.PubSubInputDefinition;
 import org.talend.components.pubsub.output.PubSubOutputDefinition;
+import org.talend.daikon.definition.Definition;
+import org.talend.daikon.definition.service.DefinitionRegistryService;
 
-public abstract class PubSubComponentTestITBase extends AbstractComponentTest {
+public abstract class PubSubComponentTestITBase extends AbstractComponentTest2 {
 
     @Inject
-    ComponentService componentService;
+    DefinitionRegistryService defReg;
 
     @Override
-    public ComponentService getComponentService() {
-        return componentService;
+    public DefinitionRegistryService getDefinitionRegistry() {
+        return defReg;
     }
 
     @Test
     public void assertComponentsAreRegistered() {
-        assertThat(getComponentService().getComponentDefinition(PubSubInputDefinition.NAME), notNullValue());
-        assertThat(getComponentService().getComponentDefinition(PubSubOutputDefinition.NAME), notNullValue());
+        assertThat(getDefinitionRegistry().getDefinitionsMapByType(Definition.class).get(PubSubInputDefinition.NAME),
+                notNullValue());
+        assertThat(getDefinitionRegistry().getDefinitionsMapByType(Definition.class).get(PubSubOutputDefinition.NAME),
+                notNullValue());
     }
 }

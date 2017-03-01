@@ -13,6 +13,14 @@
 
 package org.talend.components.pubsub.output;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,14 +28,6 @@ import org.junit.rules.ErrorCollector;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-
-import java.util.Collection;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class PubSubOutputPropertiesTest {
 
@@ -47,31 +47,30 @@ public class PubSubOutputPropertiesTest {
         ComponentTestUtils.checkAllI18N(properties, errorCollector);
     }
 
-
     /**
-     * Checks {@link PubSubOutputProperties} sets correctly initial schema
-     * property
+     * Checks {@link PubSubOutputProperties} sets correctly initial schema property
      */
     @Test
     public void testDefaultProperties() {
     }
 
     /**
-     * Checks {@link PubSubOutputProperties} sets correctly initial layout
-     * properties
+     * Checks {@link PubSubOutputProperties} sets correctly initial layout properties
      */
     @Test
     public void testSetupLayout() {
         Form main = properties.getForm(Form.MAIN);
         Collection<Widget> mainWidgets = main.getWidgets();
+
+        List<String> ALL = Arrays.asList(properties.idLabel.getName(), properties.timestampLabel.getName());
+
+        Assert.assertThat(main, notNullValue());
+        Assert.assertThat(mainWidgets, hasSize(ALL.size()));
+
+        for (String field : ALL) {
+            Widget w = main.getWidget(field);
+            Assert.assertThat(w, notNullValue());
+        }
     }
 
-    /**
-     * Checks {@link PubSubDatastoreProperties} sets correctly layout after refresh
-     * properties
-     */
-    @Test
-    public void testRefreshLayout() {
-        properties.refreshLayout(properties.getForm(Form.MAIN));
-    }
 }

@@ -29,9 +29,6 @@ import static org.junit.Assert.assertTrue;
 public class PubSubOutputDefinitionTest {
     private final PubSubOutputDefinition outputDefinition = new PubSubOutputDefinition();
 
-    /**
-     * Check {@link PubSubOutputDefinition#getSupportedConnectorTopologies()} returns ConnectorTopology.INCOMING
-     */
     @Test
     @Ignore("This can't work unless the runtime jar is already installed in maven!")
     public void testRuntimeInfo() {

@@ -19,10 +19,12 @@ import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Sample;
+import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
 import org.talend.components.api.container.RuntimeContainer;
@@ -80,13 +82,12 @@ public class PubSubDatasetRuntime implements IPubSubDatasetRuntime {
         inputProperties.useMaxNumRecords.setValue(true);
         inputProperties.maxNumRecords.setValue(limit);
         inputProperties.useMaxReadTime.setValue(true);
-        inputProperties.maxReadTime.setValue(5000l);// 1s
+        // 10s, the value is better to depends on ack deadline for small dataset
+        inputProperties.maxReadTime.setValue(10000l);
         inputProperties.noACK.setValue(true);
         inputRuntime.initialize(null, inputProperties);
 
-        // Create a pipeline using the input component to get records.
-        PipelineOptions options = PipelineOptionsFactory.create();
-        // options.setRunner(DirectRunner.class);
+        DirectOptions options = BeamLocalRunnerOption.getOptions();
         final Pipeline p = Pipeline.create(options);
         LazyAvroCoder.registerAsFallback(p);
 
@@ -94,7 +95,7 @@ public class PubSubDatasetRuntime implements IPubSubDatasetRuntime {
             // Collect a sample of the input records.
             p.apply(inputRuntime) //
                     .apply(Sample.<IndexedRecord> any(limit)).apply(collector);
-            p.run();
+            p.run().waitUntilFinish();
         }
     }
 

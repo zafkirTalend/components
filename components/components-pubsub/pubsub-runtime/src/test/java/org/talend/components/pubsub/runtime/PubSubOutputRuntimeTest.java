@@ -17,13 +17,20 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.beam.runners.spark.SparkContextOptions;
+import org.apache.beam.runners.spark.SparkRunner;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
@@ -77,7 +84,29 @@ public class PubSubOutputRuntimeTest implements Serializable {
     }
 
     @Test
-    public void outputCsv() throws UnsupportedEncodingException {
+    public void outputCsv_Local() throws UnsupportedEncodingException {
+        outputCsv(pipeline);
+    }
+
+    // TODO extract this to utils
+    private Pipeline createSparkRunnerPipeline() {
+        JavaSparkContext jsc = new JavaSparkContext("local[2]", this.getClass().getName());
+        PipelineOptions o = PipelineOptionsFactory.create();
+        SparkContextOptions options = o.as(SparkContextOptions.class);
+        options.setProvidedSparkContext(jsc);
+        options.setUsesProvidedSparkContext(true);
+        options.setRunner(SparkRunner.class);
+
+        return Pipeline.create(options);
+    }
+
+    @Test
+    @Ignore
+    public void outputCsv_Spark() throws UnsupportedEncodingException {
+        outputCsv(createSparkRunnerPipeline());
+    }
+
+    private void outputCsv(Pipeline pipeline) throws UnsupportedEncodingException {
         String testID = "csvBasicTest" + new Random().nextInt();
         final String fieldDelimited = ";";
 
@@ -115,7 +144,18 @@ public class PubSubOutputRuntimeTest implements Serializable {
     }
 
     @Test
-    public void outputAvro() throws IOException {
+    public void outputAvro_Local() throws IOException {
+        outputAvro(pipeline);
+    }
+
+    @Test
+    @Ignore("Can not run together with outputCsv_Spark, JavaSparkContext can't modify in same jvm"
+            + " error, or PAssert check with wrong data issue")
+    public void outputAvro_Spark() throws IOException {
+        outputAvro(createSparkRunnerPipeline());
+    }
+
+    private void outputAvro(Pipeline pipeline) throws IOException {
         String testID = "avroBasicTest" + new Random().nextInt();
 
         List<Person> expectedPersons = Person.genRandomList(testID, maxRecords);

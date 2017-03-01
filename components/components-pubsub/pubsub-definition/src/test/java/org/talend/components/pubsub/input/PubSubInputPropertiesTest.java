@@ -13,22 +13,24 @@
 
 package org.talend.components.pubsub.input;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.talend.components.api.test.ComponentTestUtils;
+import org.talend.daikon.properties.PropertiesDynamicMethodHelper;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
-
-import java.util.Collection;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 
 public class PubSubInputPropertiesTest {
 
@@ -48,30 +50,64 @@ public class PubSubInputPropertiesTest {
         ComponentTestUtils.checkAllI18N(properties, errorCollector);
     }
 
-    /**
-     * Checks {@link PubSubInputProperties} sets correctly initial schema
-     * property
-     */
     @Test
-    public void testDefaultProperties() {
+    public void testVisible() throws Throwable {
+        Form main = properties.getForm(Form.MAIN);
+        assertTrue(main.getWidget(properties.useMaxReadTime).isVisible());
+        assertTrue(main.getWidget(properties.maxReadTime).isHidden());
+        assertTrue(main.getWidget(properties.useMaxNumRecords).isVisible());
+        assertTrue(main.getWidget(properties.maxNumRecords).isHidden());
+        assertTrue(main.getWidget(properties.idLabel).isVisible());
+        assertTrue(main.getWidget(properties.timestampLabel).isVisible());
+
+        properties.useMaxReadTime.setValue(true);
+        PropertiesDynamicMethodHelper.afterProperty(properties, properties.useMaxReadTime.getName());
+        assertTrue(main.getWidget(properties.useMaxReadTime).isVisible());
+        assertTrue(main.getWidget(properties.maxReadTime).isVisible());
+        assertTrue(main.getWidget(properties.useMaxNumRecords).isVisible());
+        assertTrue(main.getWidget(properties.maxNumRecords).isHidden());
+        assertTrue(main.getWidget(properties.idLabel).isVisible());
+        assertTrue(main.getWidget(properties.timestampLabel).isVisible());
+
+        properties.useMaxNumRecords.setValue(true);
+        PropertiesDynamicMethodHelper.afterProperty(properties, properties.useMaxNumRecords.getName());
+        assertTrue(main.getWidget(properties.useMaxReadTime).isVisible());
+        assertTrue(main.getWidget(properties.maxReadTime).isVisible());
+        assertTrue(main.getWidget(properties.useMaxNumRecords).isVisible());
+        assertTrue(main.getWidget(properties.maxNumRecords).isVisible());
+        assertTrue(main.getWidget(properties.idLabel).isVisible());
+        assertTrue(main.getWidget(properties.timestampLabel).isVisible());
+
     }
 
     /**
-     * Checks {@link PubSubInputProperties} sets correctly initial layout
-     * properties
+     * Checks {@link PubSubInputProperties} sets correctly initial schema property
+     */
+    @Test
+    public void testDefaultProperties() {
+        assertEquals(600000, properties.maxReadTime.getValue().intValue());
+        assertEquals(5000, properties.maxNumRecords.getValue().intValue());
+    }
+
+    /**
+     * Checks {@link PubSubInputProperties} sets correctly initial layout properties
      */
     @Test
     public void testSetupLayout() {
         Form main = properties.getForm(Form.MAIN);
         Collection<Widget> mainWidgets = main.getWidgets();
-    }
 
-    /**
-     * Checks {@link PubSubInputProperties} sets correctly layout after refresh
-     * properties
-     */
-    @Test
-    public void testRefreshLayout() {
-        properties.refreshLayout(properties.getForm(Form.MAIN));
+        List<String> ALL = Arrays.asList(properties.useMaxReadTime.getName(), properties.maxReadTime.getName(),
+                properties.useMaxNumRecords.getName(), properties.maxNumRecords.getName(), properties.idLabel.getName(),
+                properties.timestampLabel.getName());
+
+        Assert.assertThat(main, notNullValue());
+        Assert.assertThat(mainWidgets, hasSize(ALL.size()));
+
+        for (String field : ALL) {
+            Widget w = main.getWidget(field);
+            Assert.assertThat(w, notNullValue());
+        }
+        ;
     }
 }
