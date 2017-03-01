@@ -86,6 +86,7 @@ public class PubSubTestConstants {
         PubSubOutputProperties output = new PubSubOutputProperties("output");
         output.init();
         output.setDatasetProperties(dataset);
+        output.topicOperation.setValue(PubSubOutputProperties.TopicOperation.NONE);
         return output;
     }
 

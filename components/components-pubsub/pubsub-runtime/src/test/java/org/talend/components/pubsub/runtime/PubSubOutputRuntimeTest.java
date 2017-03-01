@@ -2,6 +2,7 @@ package org.talend.components.pubsub.runtime;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.talend.components.pubsub.runtime.PubSubTestConstants.addSubscriptionForDataset;
 import static org.talend.components.pubsub.runtime.PubSubTestConstants.createDataset;
 import static org.talend.components.pubsub.runtime.PubSubTestConstants.createDatasetFromAvro;
 import static org.talend.components.pubsub.runtime.PubSubTestConstants.createDatasetFromCSV;
@@ -38,6 +39,7 @@ import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.pubsub.PubSubDatasetProperties;
 import org.talend.components.pubsub.PubSubDatastoreProperties;
+import org.talend.components.pubsub.output.PubSubOutputProperties;
 
 import com.google.cloud.pubsub.PubSub;
 import com.google.cloud.pubsub.ReceivedMessage;
@@ -191,6 +193,65 @@ public class PubSubOutputRuntimeTest implements Serializable {
                 break;
             }
         }
+        assertThat(actual, containsInAnyOrder(expectedMessages.toArray()));
+    }
+
+    @Test
+    public void createTopicSub_Local(){
+        createTopicSub(pipeline);
+    }
+
+    @Test
+    @Ignore
+    public void createTopicSub_Spark() {
+        createTopicSub(createSparkRunnerPipeline());
+    }
+
+    private void createTopicSub(Pipeline pipeline) {
+        String testID = "createTopicSubTest" + new Random().nextInt();
+
+        final String newTopicName = "tcomp-pubsub-createTopicSub" + uuid;
+
+        final String newSubName = "tcomp-pubsub-createTopicSub-sub" + uuid;
+
+        final String fieldDelimited = ";";
+
+        List<Person> expectedPersons = Person.genRandomList(testID, maxRecords);
+        List<String> expectedMessages = new ArrayList<>();
+        List<String[]> sendMessages = new ArrayList<>();
+        for (Person person : expectedPersons) {
+            expectedMessages.add(person.toCSV(fieldDelimited));
+            sendMessages.add(person.toCSV(fieldDelimited).split(fieldDelimited));
+        }
+
+        PubSubOutputRuntime outputRuntime = new PubSubOutputRuntime();
+        PubSubOutputProperties outputProperties = createOutput(
+                addSubscriptionForDataset(createDatasetFromCSV(createDatastore(), newTopicName, fieldDelimited), newSubName));
+        outputProperties.topicOperation.setValue(PubSubOutputProperties.TopicOperation.CREATE_IF_NOT_EXISTS);
+        outputRuntime.initialize(null, outputProperties);
+
+        PCollection<IndexedRecord> records = (PCollection<IndexedRecord>) pipeline.apply(Create.of(sendMessages))
+                .apply((PTransform) ConvertToIndexedRecord.of());
+
+        records.setCoder(LazyAvroCoder.of()).apply(outputRuntime);
+
+        pipeline.run().waitUntilFinish();
+
+        List<String> actual = new ArrayList<>();
+        while (true) {
+            Iterator<ReceivedMessage> messageIterator = client.pull(newSubName, maxRecords);
+            while (messageIterator.hasNext()) {
+                ReceivedMessage next = messageIterator.next();
+                actual.add(next.getPayloadAsString());
+                next.ack();
+            }
+            if (actual.size() >= maxRecords) {
+                break;
+            }
+        }
+
+        client.deleteSubscription(newSubName);
+        client.deleteTopic(newTopicName);
         assertThat(actual, containsInAnyOrder(expectedMessages.toArray()));
     }
 }

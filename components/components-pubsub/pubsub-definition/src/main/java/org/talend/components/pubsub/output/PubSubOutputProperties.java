@@ -13,9 +13,12 @@
 
 package org.talend.components.pubsub.output;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.io.IOProperties;
@@ -26,14 +29,16 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 public class PubSubOutputProperties extends FixedConnectorsComponentProperties implements IOProperties {
 
     public ReferenceProperties<PubSubDatasetProperties> datasetRef = new ReferenceProperties<>("datasetRef",
             PubSubDatasetDefinition.NAME);
+
+    public Property<TopicOperation> topicOperation = PropertyFactory.newEnum("topicOperation", TopicOperation.class);
+
+    public Property<String> idLabel = PropertyFactory.newString("idLabel");
+
+    public Property<String> timestampLabel = PropertyFactory.newString("timestampLabel");
 
     protected transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "dataset.main");
 
@@ -41,16 +46,19 @@ public class PubSubOutputProperties extends FixedConnectorsComponentProperties i
         super(name);
     }
 
-    public Property<String> idLabel = PropertyFactory.newString("idLabel");
-
-    public Property<String> timestampLabel = PropertyFactory.newString("timestampLabel");
+    @Override
+    public void setupProperties() {
+        super.setupProperties();
+        topicOperation.setValue(TopicOperation.CREATE_IF_NOT_EXISTS);
+    }
 
     @Override
     public void setupLayout() {
-         super.setupLayout();
-         Form mainForm = new Form(this, Form.MAIN);
-         mainForm.addRow(idLabel);
-         mainForm.addRow(timestampLabel);
+        super.setupLayout();
+        Form mainForm = new Form(this, Form.MAIN);
+        mainForm.addRow(topicOperation);
+        mainForm.addRow(idLabel);
+        mainForm.addRow(timestampLabel);
     }
 
     @Override
@@ -72,5 +80,11 @@ public class PubSubOutputProperties extends FixedConnectorsComponentProperties i
             connectors.add(MAIN_CONNECTOR);
         }
         return connectors;
+    }
+
+    public enum TopicOperation {
+        NONE,
+        CREATE_IF_NOT_EXISTS,
+        DROP_IF_EXISTS_AND_CREATE,
     }
 }

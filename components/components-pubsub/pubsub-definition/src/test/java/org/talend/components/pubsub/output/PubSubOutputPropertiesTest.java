@@ -62,7 +62,8 @@ public class PubSubOutputPropertiesTest {
         Form main = properties.getForm(Form.MAIN);
         Collection<Widget> mainWidgets = main.getWidgets();
 
-        List<String> ALL = Arrays.asList(properties.idLabel.getName(), properties.timestampLabel.getName());
+        List<String> ALL = Arrays.asList(properties.topicOperation.getName(), properties.idLabel.getName(),
+                properties.timestampLabel.getName());
 
         Assert.assertThat(main, notNullValue());
         Assert.assertThat(mainWidgets, hasSize(ALL.size()));

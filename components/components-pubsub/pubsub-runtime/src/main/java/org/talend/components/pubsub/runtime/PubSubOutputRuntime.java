@@ -31,7 +31,14 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.pubsub.PubSubDatasetProperties;
 import org.talend.components.pubsub.PubSubDatastoreProperties;
 import org.talend.components.pubsub.output.PubSubOutputProperties;
+import org.talend.daikon.exception.TalendRuntimeException;
+import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.properties.ValidationResult;
+
+import com.google.cloud.pubsub.PubSub;
+import com.google.cloud.pubsub.PubSubException;
+import com.google.cloud.pubsub.SubscriptionInfo;
+import com.google.cloud.pubsub.TopicInfo;
 
 public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, PDone>
         implements RuntimableRuntime<PubSubOutputProperties> {
@@ -60,6 +67,8 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
             gcpOptions.setGcpCredential(PubSubConnection.createCredentials(datastore));
         }
 
+        createTopicSubscriptionIfNeeded(properties);
+
         PubsubIO.Write<byte[]> pubsubWrite = PubsubIO.<byte[]> write()
                 .topic(String.format("projects/%s/topics/%s", datastore.projectName.getValue(), dataset.topic.getValue()));
 
@@ -82,6 +91,48 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
             throw new RuntimeException("To be implemented: " + dataset.valueFormat.getValue());
         }
 
+    }
+
+    private void createTopicSubscriptionIfNeeded(PubSubOutputProperties properties) {
+        PubSubOutputProperties.TopicOperation topicOperation = properties.topicOperation.getValue();
+        if (topicOperation == PubSubOutputProperties.TopicOperation.NONE) {
+            return;
+        }
+        PubSubDatasetProperties dataset = properties.getDatasetProperties();
+
+        validateForCreateTopic(dataset);
+
+        PubSub client = PubSubConnection.createClient(dataset.getDatastoreProperties());
+
+        if (topicOperation == PubSubOutputProperties.TopicOperation.DROP_IF_EXISTS_AND_CREATE) {
+            dropTopic(client, dataset);
+        }
+
+        createTopic(client, dataset);
+    }
+
+    private void createTopic(PubSub client, PubSubDatasetProperties dataset) {
+        try {
+            client.create(TopicInfo.of(dataset.topic.getValue()));
+        } catch (PubSubException e) {
+            // ignore. no check before create, so the topic may exists
+        }
+        client.create(SubscriptionInfo.of(dataset.topic.getValue(), dataset.subscription.getValue()));
+    }
+
+    private void dropTopic(PubSub client, PubSubDatasetProperties dataset) {
+        client.deleteSubscription(dataset.subscription.getValue());
+        client.deleteTopic(dataset.topic.getValue());
+    }
+
+    private void validateForCreateTopic(PubSubDatasetProperties dataset) {
+        if (dataset.subscription.getValue() == null || "".equals(dataset.subscription.getValue())) {
+            TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_EXCEPTION)
+                    .setAndThrow("Subscription required when create topic");
+        }
+        if (dataset.topic.getValue() == null || "".equals(dataset.topic.getValue())) {
+            TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_EXCEPTION).setAndThrow("Topic required when create topic");
+        }
     }
 
     public static class FormatCsvFunction implements SerializableFunction<IndexedRecord, byte[]> {
