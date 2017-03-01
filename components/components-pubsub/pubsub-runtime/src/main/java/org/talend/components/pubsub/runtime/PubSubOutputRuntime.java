@@ -17,7 +17,6 @@ import java.nio.charset.Charset;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.coders.ByteArrayCoder;
 import org.apache.beam.sdk.io.PubsubIO;
-import org.apache.beam.sdk.options.GcpOptions;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.SerializableFunction;
@@ -25,6 +24,8 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
+import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.pubsub.PubSubDatasetProperties;
@@ -51,9 +52,11 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
         PubSubDatasetProperties dataset = properties.getDatasetProperties();
         PubSubDatastoreProperties datastore = dataset.getDatastoreProperties();
 
-        GcpOptions gcpOptions = in.getPipeline().getOptions().as(GcpOptions.class);
+        GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
         gcpOptions.setProject(datastore.projectName.getValue());
         if (datastore.serviceAccountFile.getValue() != null) {
+            gcpOptions.setCredentialFactoryClass(ServiceAccountCredentialFactory.class);
+            gcpOptions.setServiceAccountFile(datastore.serviceAccountFile.getValue());
             gcpOptions.setGcpCredential(PubSubConnection.createCredentials(datastore));
         }
 

@@ -13,9 +13,15 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.beam.runners.spark.SparkContextOptions;
+import org.apache.beam.runners.spark.SparkRunner;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -71,6 +77,10 @@ public class PubSubInputRuntimeTest {
 
     @Test
     public void inputCsv() {
+        csvTest(pipeline);
+    }
+
+    private void csvTest(Pipeline pipeline) {
         String testID = "csvBasicTest" + new Random().nextInt();
         final String fieldDelimited = ";";
 
@@ -95,7 +105,19 @@ public class PubSubInputRuntimeTest {
         PAssert.that(readMessages).containsInAnyOrder(expected);
 
         pipeline.run().waitUntilFinish();
+    }
 
+    @Test
+    public void inputCsvSpark() {
+        JavaSparkContext jsc = new JavaSparkContext("local[2]", "PubSubInputCsv");
+        PipelineOptions o = PipelineOptionsFactory.create();
+        SparkContextOptions options = o.as(SparkContextOptions.class);
+        options.setProvidedSparkContext(jsc);
+        options.setUsesProvidedSparkContext(true);
+        options.setRunner(SparkRunner.class);
+
+        Pipeline pipeline = Pipeline.create(options);
+        csvTest(pipeline);
     }
 
     @Test

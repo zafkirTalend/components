@@ -14,7 +14,6 @@ package org.talend.components.pubsub.runtime;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
@@ -26,7 +25,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.beam.sdk.coders.ByteArrayCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.PubsubIO;
-import org.apache.beam.sdk.options.GcpOptions;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -36,6 +34,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
+import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
@@ -71,9 +71,11 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
         if (properties.noACK.getValue()) {// getSample
             pubsubMessages = in.apply(Create.of(dataset.subscription.getValue())).apply(ParDo.of(new SampleFn(properties)));
         } else {// normal
-            GcpOptions gcpOptions = in.getPipeline().getOptions().as(GcpOptions.class);
+            GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
             gcpOptions.setProject(datastore.projectName.getValue());
             if (datastore.serviceAccountFile.getValue() != null) {
+                gcpOptions.setCredentialFactoryClass(ServiceAccountCredentialFactory.class);
+                gcpOptions.setServiceAccountFile(datastore.serviceAccountFile.getValue());
                 gcpOptions.setGcpCredential(PubSubConnection.createCredentials(datastore));
             }
 
