@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
@@ -34,21 +35,23 @@ import com.google.cloud.pubsub.TopicInfo;
 
 public class PubSubDatasetRuntimeTest {
 
-    final static List<String> topics = Arrays.asList("tcomp-pubsub-datasettest1", "tcomp-pubsub-datasettest2",
-            "tcomp-pubsub-datasettest3");
+    final static String uuid = UUID.randomUUID().toString();
 
-    final static List<String> subscriptionsForTP1 = Arrays.asList("tcomp-pubsub-datasettest1-sub1",
-            "tcomp-pubsub-datasettest1-sub2", "tcomp-pubsub-datasettest1-sub3");
+    final static List<String> topics = Arrays.asList("tcomp-pubsub-datasettest1" + uuid, "tcomp-pubsub-datasettest2" + uuid,
+            "tcomp-pubsub-datasettest3" + uuid);
 
-    final static String subForTP2 = "tcomp-pubsub-datasettest2-sub";
+    final static List<String> subscriptionsForTP1 = Arrays.asList("tcomp-pubsub-datasettest1-sub1" + uuid,
+            "tcomp-pubsub-datasettest1-sub2" + uuid, "tcomp-pubsub-datasettest1-sub3" + uuid);
+
+    final static String subForTP2 = "tcomp-pubsub-datasettest2-sub" + uuid;
 
     // Have to create subscription for schema only, else it will make the getSample failed,
     // should caused by the deadline time of all message are not align.
-    final static String sub2ForTP2 = "tcomp-pubsub-datasettest2-subschema";
+    final static String sub2ForTP2 = "tcomp-pubsub-datasettest2-subschema" + uuid;
 
-    final static String subForTP3 = "tcomp-pubsub-datasettest3-sub";
+    final static String subForTP3 = "tcomp-pubsub-datasettest3-sub" + uuid;
 
-    final static String sub2ForTP3 = "tcomp-pubsub-datasettest3-subschema";
+    final static String sub2ForTP3 = "tcomp-pubsub-datasettest3-subschema" + uuid;
 
     final static String fieldDelimited = ";";
 

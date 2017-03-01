@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.spark.SparkContextOptions;
@@ -40,9 +41,11 @@ import com.google.cloud.pubsub.TopicInfo;
 
 public class PubSubInputRuntimeTest {
 
-    final static String topicName = "tcomp-pubsub-inputtest";
+    final static String uuid = UUID.randomUUID().toString();
 
-    final static String subscriptionName = "tcomp-pubsub-inputtest-sub1";
+    final static String topicName = "tcomp-pubsub-inputtest" + uuid;
+
+    final static String subscriptionName = "tcomp-pubsub-inputtest-sub1" + uuid;
 
     static PubSub client = PubSubConnection.createClient(createDatastore());
     static Pipeline sparkPipeline;

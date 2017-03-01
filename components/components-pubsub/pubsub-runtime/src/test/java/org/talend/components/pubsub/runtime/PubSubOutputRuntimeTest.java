@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.spark.SparkContextOptions;
@@ -45,9 +46,11 @@ import com.google.cloud.pubsub.TopicInfo;
 
 public class PubSubOutputRuntimeTest implements Serializable {
 
-    final static String topicName = "tcomp-pubsub-outputtest";
+    final static String uuid = UUID.randomUUID().toString();
 
-    final static String subscriptionName = "tcomp-pubsub-outputtest-sub1";
+    final static String topicName = "tcomp-pubsub-outputtest" + uuid;
+
+    final static String subscriptionName = "tcomp-pubsub-outputtest-sub1" + uuid;
 
     static PubSub client = PubSubConnection.createClient(createDatastore());
 
