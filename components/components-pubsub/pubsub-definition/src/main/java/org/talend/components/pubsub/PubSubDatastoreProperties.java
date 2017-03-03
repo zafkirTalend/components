@@ -16,7 +16,6 @@ package org.talend.components.pubsub;
 import org.talend.components.common.datastore.DatastoreProperties;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
@@ -39,7 +38,10 @@ public class PubSubDatastoreProperties extends PropertiesImpl implements Datasto
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(projectName);
-        mainForm.addRow(Widget.widget(serviceAccountFile).setWidgetType(Widget.FILE_WIDGET_TYPE));
+        // Temporarily disable file widgets since their JSON Schema representation is the contents,
+        // not the path
+        // mainForm.addRow(Widget.widget(serviceAccountFile).setWidgetType(Widget.FILE_WIDGET_TYPE));
+        mainForm.addRow(serviceAccountFile);
     }
 
 }
