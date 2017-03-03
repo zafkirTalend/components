@@ -58,6 +58,7 @@ public class PubSubDatasetPropertiesTest {
         assertTrue(main.getWidget(properties.valueFormat).isVisible());
         assertTrue(main.getWidget(properties.fieldDelimiter).isVisible());
         assertTrue(main.getWidget(properties.avroSchema).isHidden());
+        assertTrue(main.getWidget(properties.attributes).isVisible());
 
         properties.valueFormat.setValue(PubSubDatasetProperties.ValueFormat.AVRO);
         PropertiesDynamicMethodHelper.afterProperty(properties, properties.valueFormat.getName());
@@ -66,6 +67,7 @@ public class PubSubDatasetPropertiesTest {
         assertTrue(main.getWidget(properties.valueFormat).isVisible());
         assertTrue(main.getWidget(properties.fieldDelimiter).isHidden());
         assertTrue(main.getWidget(properties.avroSchema).isVisible());
+        assertTrue(main.getWidget(properties.attributes).isVisible());
 
     }
 
@@ -86,7 +88,8 @@ public class PubSubDatasetPropertiesTest {
         Collection<Widget> mainWidgets = main.getWidgets();
 
         List<String> ALL = Arrays.asList(properties.topic.getName(), properties.subscription.getName(),
-                properties.valueFormat.getName(), properties.fieldDelimiter.getName(), properties.avroSchema.getName());
+                properties.valueFormat.getName(), properties.fieldDelimiter.getName(), properties.avroSchema.getName(),
+                properties.attributes.getName());
 
         Assert.assertThat(main, notNullValue());
         Assert.assertThat(mainWidgets, hasSize(ALL.size()));
