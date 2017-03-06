@@ -43,6 +43,6 @@ public class PubSubAttributesTableProperties extends PropertiesImpl {
     }
 
     public boolean isEmpty() {
-        return attributeName.getValue().isEmpty();
+        return attributeName.getValue() == null || attributeName.getValue().isEmpty();
     }
 }

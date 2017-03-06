@@ -13,7 +13,10 @@
 package org.talend.components.pubsub.runtime;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
@@ -22,13 +25,13 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.beam.sdk.coders.ByteArrayCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.time.Duration;
@@ -66,10 +69,11 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
         PubSubDatasetProperties dataset = properties.getDatasetProperties();
         PubSubDatastoreProperties datastore = dataset.getDatastoreProperties();
 
-        PCollection<byte[]> pubsubMessages = null;
+        PCollection<PubsubIO.PubsubMessage> pubsubMessages = null;
 
         if (properties.noACK.getValue()) {// getSample
-            pubsubMessages = in.apply(Create.of(dataset.subscription.getValue())).apply(ParDo.of(new SampleFn(properties)));
+            pubsubMessages = in.apply(Create.of(dataset.subscription.getValue())).apply(ParDo.of(new SampleFn(properties)))
+                    .setCoder(PubSubMessageCoder.of());
         } else {// normal
             GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
             gcpOptions.setProject(datastore.projectName.getValue());
@@ -79,8 +83,8 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 gcpOptions.setGcpCredential(PubSubConnection.createCredentials(datastore));
             }
 
-            PubsubIO.Read<byte[]> pubsubRead = PubsubIO.<byte[]> read().subscription(String.format("projects/%s/subscriptions/%s",
-                    datastore.projectName.getValue(), dataset.subscription.getValue()));
+            PubsubIO.Read<PubsubIO.PubsubMessage> pubsubRead = PubsubIO.<PubsubIO.PubsubMessage> read().subscription(String
+                    .format("projects/%s/subscriptions/%s", datastore.projectName.getValue(), dataset.subscription.getValue()));
             if (properties.useMaxReadTime.getValue()) {
                 pubsubRead = pubsubRead.maxReadTime(new Duration(properties.maxReadTime.getValue()));
             }
@@ -95,7 +99,8 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 pubsubRead.timestampLabel(properties.timestampLabel.getValue());
             }
 
-            pubsubMessages = in.apply(pubsubRead.withCoder(ByteArrayCoder.of()));
+            pubsubMessages = in
+                    .apply(pubsubRead.withAttributes(new ExtractAttributes(properties)).withCoder(PubSubMessageCoder.of()));
         }
 
         switch (dataset.valueFormat.getValue()) {
@@ -110,7 +115,6 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
         }
         default:
             throw new RuntimeException("To be implemented: " + dataset.valueFormat.getValue());
-
         }
     }
 
@@ -119,7 +123,30 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
         return LazyAvroCoder.of();
     }
 
-    public static class ConvertToAvro extends DoFn<byte[], IndexedRecord> {
+    public static class ExtractAttributes extends SimpleFunction<PubsubIO.PubsubMessage, PubsubIO.PubsubMessage> {
+
+        private PubSubInputProperties spec;
+
+        public ExtractAttributes(PubSubInputProperties properties) {
+            spec = properties;
+        }
+
+        @Override
+        public PubsubIO.PubsubMessage apply(PubsubIO.PubsubMessage pubsubMessage) {
+            Map<String, String> attributes = new HashMap<>();
+            if (!spec.getDatasetProperties().attributes.isEmpty()) {
+                // only need the attributes which user defined
+                for (String attrKey : pubsubMessage.getAttributeMap().keySet()) {
+                    if (spec.getDatasetProperties().attributes.attributeName.getValue().contains(attrKey)) {
+                        attributes.put(attrKey, pubsubMessage.getAttributeMap().get(attrKey));
+                    }
+                }
+            }
+            return new PubsubIO.PubsubMessage(pubsubMessage.getMessage(), attributes);
+        }
+    }
+
+    public static class ConvertToAvro extends DoFn<PubsubIO.PubsubMessage, IndexedRecord> {
 
         private final String schemaStr;
 
@@ -139,13 +166,13 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 schema = new Schema.Parser().parse(schemaStr);
                 datumReader = new GenericDatumReader<GenericRecord>(schema);
             }
-            decoder = DecoderFactory.get().binaryDecoder(c.element(), decoder);
+            decoder = DecoderFactory.get().binaryDecoder(c.element().getMessage(), decoder);
             GenericRecord record = datumReader.read(null, decoder);
             c.output(record);
         }
     }
 
-    static class SampleFn extends DoFn<String, byte[]> {
+    static class SampleFn extends DoFn<String, PubsubIO.PubsubMessage> {
 
         private PubSubInputProperties spec;
 
@@ -178,7 +205,18 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 Iterator<ReceivedMessage> messageIterator = client.pull(context.element(), maxNum);
                 while (messageIterator.hasNext()) {
                     ReceivedMessage next = messageIterator.next();
-                    context.output(next.getPayload().toByteArray());
+
+                    Map<String, String> attributes = new HashMap<>();
+                    if (!spec.getDatasetProperties().attributes.isEmpty()) {
+                        // only need the attributes which user defined
+                        for (String attrKey : next.getAttributes().keySet()) {
+                            if (spec.getDatasetProperties().attributes.attributeName.getValue().contains(attrKey)) {
+                                attributes.put(attrKey, next.getAttributes().get(attrKey));
+                            }
+                        }
+                    }
+
+                    context.output(new PubsubIO.PubsubMessage(next.getPayload().toByteArray(), attributes));
                     // no next.ack() for getSample, if call ack then the message will be removed
                     num++;
                     if (num >= maxNum) {
