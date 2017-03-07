@@ -13,8 +13,12 @@
 
 package org.talend.components.pubsub;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.presentation.Form;
@@ -44,5 +48,27 @@ public class PubSubAttributesTableProperties extends PropertiesImpl {
 
     public boolean isEmpty() {
         return attributeName.getValue() == null || attributeName.getValue().isEmpty();
+    }
+
+    public Map<String, String> genAttributesMap() {
+        if (isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> attrsMap = new HashMap<>();
+        // Attributes table is the mapping between attribute of Pub/Sub message and
+        // IndexedRecord, if attribute set but columnName not, use the value of
+        // attribute as columnName.
+        List<String> attrsName = attributeName.getValue();
+        List<String> columnsName = columnName.getValue();
+        int i = 0;
+        for (String attrName : attrsName) {
+            String columnName = columnsName.get(i);
+            if (StringUtils.isEmpty(columnName)) {
+                columnName = attrName;
+            }
+            attrsMap.put(attrName, columnName);
+            i++;
+        }
+        return attrsMap;
     }
 }

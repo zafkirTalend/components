@@ -9,10 +9,16 @@ import static org.talend.components.pubsub.runtime.PubSubTestConstants.createInp
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.spark.SparkContextOptions;
 import org.apache.beam.runners.spark.SparkRunner;
@@ -32,6 +38,7 @@ import org.junit.Test;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.pubsub.PubSubDatasetProperties;
 import org.talend.components.pubsub.PubSubDatastoreProperties;
+import org.talend.daikon.avro.AvroUtils;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.pubsub.Message;
@@ -48,22 +55,14 @@ public class PubSubInputRuntimeTest {
     final static String subscriptionName = "tcomp-pubsub-inputtest-sub1" + uuid;
 
     static PubSub client = PubSubConnection.createClient(createDatastore());
-    static Pipeline sparkPipeline;
-
-    static {
-        JavaSparkContext jsc = new JavaSparkContext("local[2]", "PubSubInput");
-        PipelineOptions o = PipelineOptionsFactory.create();
-        SparkContextOptions options = o.as(SparkContextOptions.class);
-        options.setProvidedSparkContext(jsc);
-        options.setUsesProvidedSparkContext(true);
-        options.setRunner(SparkRunner.class);
-        sparkPipeline = Pipeline.create(options);
-    }
 
     @Rule
     public final TestPipeline pipeline = TestPipeline.create();
+
     Integer maxRecords = 10;
+
     PubSubDatastoreProperties datastoreProperties;
+
     PubSubDatasetProperties datasetProperties;
 
     @BeforeClass
@@ -77,6 +76,18 @@ public class PubSubInputRuntimeTest {
         client.deleteTopic(topicName);
         client.deleteSubscription(subscriptionName);
         client.close();
+    }
+
+    // TODO extract this to utils
+    private Pipeline createSparkRunnerPipeline() {
+        JavaSparkContext jsc = new JavaSparkContext("local[2]", this.getClass().getName());
+        PipelineOptions o = PipelineOptionsFactory.create();
+        SparkContextOptions options = o.as(SparkContextOptions.class);
+        options.setProvidedSparkContext(jsc);
+        options.setUsesProvidedSparkContext(true);
+        options.setRunner(SparkRunner.class);
+
+        return Pipeline.create(options);
     }
 
     @Before
@@ -121,7 +132,7 @@ public class PubSubInputRuntimeTest {
     @Ignore("Can not run together with inputAvro_Spark, JavaSparkContext can't modify in same jvm"
             + " error, or PAssert check with wrong data issue")
     public void inputCsv_Spark() {
-        inputCsv(sparkPipeline);
+        inputCsv(createSparkRunnerPipeline());
     }
 
     @Test
@@ -131,7 +142,7 @@ public class PubSubInputRuntimeTest {
 
     @Test
     public void inputAvro_Spark() throws IOException {
-        inputAvro(sparkPipeline);
+        inputAvro(createSparkRunnerPipeline());
     }
 
     private void inputAvro(Pipeline pipeline) throws IOException {
@@ -156,6 +167,59 @@ public class PubSubInputRuntimeTest {
         List<IndexedRecord> expected = new ArrayList<>();
         for (Person person : expectedPersons) {
             expected.add(person.toAvroRecord());
+        }
+        PAssert.that(readMessages).containsInAnyOrder(expected);
+
+        pipeline.run().waitUntilFinish();
+    }
+
+    @Test
+    public void inputAvroWithAttrs_Local() throws IOException {
+        inputAvroWithAttrs(pipeline);
+    }
+
+    private void inputAvroWithAttrs(Pipeline pipeline) throws IOException {
+        String testID = "avroWithAttrsTest" + new Random().nextInt();
+
+        Map<String, String> attrMapping = new HashMap<>();
+        attrMapping.put("attr_name", "name");
+        attrMapping.put("attr_group", "group");
+        attrMapping.put("attr_age", "age");
+
+        List<Person> expectedPersons = Person.genRandomList(testID, maxRecords);
+        List<Message> messages = new ArrayList<>();
+        for (Person person : expectedPersons) {
+            messages.add(Message.newBuilder(ByteArray.copyFrom(person.serToAvroBytes())).addAttribute("attr_name", person.name)
+                    .addAttribute("attr_group", person.group).addAttribute("attr_age", person.age.toString()).build());
+        }
+        client.publish(topicName, messages);
+
+        PubSubInputRuntime inputRuntime = new PubSubInputRuntime();
+        PubSubDatasetProperties dataset = addSubscriptionForDataset(
+                createDatasetFromAvro(createDatastore(), topicName, Person.schema.toString()), subscriptionName);
+        dataset.attributes.attributeName.setValue(Arrays.asList("attr_name", "attr_age"));
+        dataset.attributes.columnName.setValue(Arrays.asList("", "attrAge"));
+        inputRuntime.initialize(null, createInput(dataset, null, maxRecords));
+
+        PCollection<IndexedRecord> readMessages = pipeline.apply(inputRuntime);
+
+        List<IndexedRecord> expected = new ArrayList<>();
+        Map<String, String> attrsMap = dataset.attributes.genAttributesMap();
+        List<Schema.Field> fields = new ArrayList<>();
+        for (String attrName : attrsMap.keySet()) {
+            fields.add(new Schema.Field(attrsMap.get(attrName), SchemaBuilder.builder().stringBuilder().endString(), null, null));
+        }
+        Schema schemaWithAttrs = AvroUtils.addFields(Person.schema, fields.toArray(new Schema.Field[] {}));
+        for (Person person : expectedPersons) {
+            GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
+            for (String attrName : attrsMap.keySet()) {
+                recordWithAttrs.put(attrsMap.get(attrName), person.toAvroRecord().get(attrMapping.get(attrName)).toString());
+            }
+            for (Schema.Field field : Person.schema.getFields()) {
+                recordWithAttrs.put(field.name(), person.toAvroRecord().get(field.name()));
+            }
+
+            expected.add(recordWithAttrs);
         }
         PAssert.that(readMessages).containsInAnyOrder(expected);
 

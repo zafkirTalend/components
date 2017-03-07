@@ -13,12 +13,15 @@
 package org.talend.components.pubsub.runtime;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
@@ -45,6 +48,7 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.pubsub.PubSubDatasetProperties;
 import org.talend.components.pubsub.PubSubDatastoreProperties;
 import org.talend.components.pubsub.input.PubSubInputProperties;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.properties.ValidationResult;
 
 import com.google.cloud.pubsub.PubSub;
@@ -105,8 +109,9 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
 
         switch (dataset.valueFormat.getValue()) {
         case AVRO: {
-            Schema schema = new Schema.Parser().parse(dataset.avroSchema.getValue());
-            return pubsubMessages.apply(ParDo.of(new ConvertToAvro(schema.toString()))).setCoder(getDefaultOutputCoder());
+            return pubsubMessages
+                    .apply(ParDo.of(new ConvertToAvro(dataset.avroSchema.getValue(), dataset.attributes.genAttributesMap())))
+                    .setCoder(getDefaultOutputCoder());
         }
         case CSV: {
             return (PCollection<IndexedRecord>) pubsubMessages
@@ -152,12 +157,17 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
 
         private transient Schema schema;
 
+        private transient Schema schemaWithAttrs;
+
         private transient DatumReader<GenericRecord> datumReader;
 
         private transient BinaryDecoder decoder;
 
-        ConvertToAvro(String schemaStr) {
+        private Map<String, String> attrsMap;
+
+        ConvertToAvro(String schemaStr, Map<String, String> attrsMap) {
             this.schemaStr = schemaStr;
+            this.attrsMap = attrsMap;
         }
 
         @DoFn.ProcessElement
@@ -167,8 +177,30 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 datumReader = new GenericDatumReader<GenericRecord>(schema);
             }
             decoder = DecoderFactory.get().binaryDecoder(c.element().getMessage(), decoder);
-            GenericRecord record = datumReader.read(null, decoder);
-            c.output(record);
+
+            if (!attrsMap.isEmpty()) {
+                if (schemaWithAttrs == null) {
+                    List<Schema.Field> fields = new ArrayList<>();
+                    for (String attrName : attrsMap.keySet()) {
+                        fields.add(new Schema.Field(attrsMap.get(attrName), SchemaBuilder.builder().stringBuilder().endString(),
+                                null, null));
+                    }
+                    schemaWithAttrs = AvroUtils.addFields(schema, fields.toArray(new Schema.Field[] {}));
+                }
+                GenericRecord record = datumReader.read(null, decoder);
+
+                GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
+                for (String attrName : attrsMap.keySet()) {
+                    recordWithAttrs.put(attrsMap.get(attrName), c.element().getAttribute(attrName));
+                }
+                for (Schema.Field field : schema.getFields()) {
+                    recordWithAttrs.put(field.name(), record.get(field.name()));
+                }
+                c.output(recordWithAttrs);
+            } else {
+                GenericRecord record = datumReader.read(null, decoder);
+                c.output(record);
+            }
         }
     }
 
