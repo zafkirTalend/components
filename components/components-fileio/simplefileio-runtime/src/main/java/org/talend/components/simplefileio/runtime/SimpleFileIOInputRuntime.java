@@ -32,9 +32,12 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
+import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
 import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
 import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
 import org.talend.components.simplefileio.runtime.sources.AvroHdfsFileSource;
 import org.talend.components.simplefileio.runtime.sources.CsvHdfsFileSource;
@@ -44,8 +47,8 @@ import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.properties.ValidationResult;
 
-public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<IndexedRecord>> implements
-        RuntimableRuntime<SimpleFileIOInputProperties> {
+public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<IndexedRecord>>
+        implements RuntimableRuntime<SimpleFileIOInputProperties> {
 
     static {
         // Ensure that the singleton for the SimpleFileIOAvroRegistry is created.
@@ -94,10 +97,25 @@ public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<Ind
 
             PCollection<?> pc2;
             if (path.startsWith("gs://")) {
+                GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
+                SimpleFileIODatastoreProperties datastore = properties.getDatasetProperties().getDatastoreProperties();
+                if (!"DataflowRunner".equals(gcpOptions.getRunner().getSimpleName())
+                        && datastore.useGCPServiceAccount.getValue()) {
+                    // when using Dataflow runner, these properties has been set on pipeline level
+                    gcpOptions.setProject(datastore.projectName.getValue());
+                    gcpOptions.setCredentialFactoryClass(ServiceAccountCredentialFactory.class);
+                    gcpOptions.setServiceAccountFile(datastore.serviceAccountFile.getValue());
+                    try {
+                        gcpOptions.setGcpCredential(ServiceAccountCredentialFactory.fromOptions(gcpOptions).getCredential());
+                    } catch (Exception e) {
+                        TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_EXCEPTION).setAndThrow(e.getMessage());
+                    }
+                }
+
                 pc2 = in.apply(TextIO.Read.from(path));
             } else {
-                CsvHdfsFileSource source = CsvHdfsFileSource.of(doAs, path, properties.getDatasetProperties()
-                        .getRecordDelimiter());
+                CsvHdfsFileSource source = CsvHdfsFileSource.of(doAs, path,
+                        properties.getDatasetProperties().getRecordDelimiter());
                 source.setLimit(properties.limit.getValue());
 
                 PCollection<KV<org.apache.hadoop.io.LongWritable, Text>> pc1 = in.apply(Read.from(source));
@@ -110,8 +128,8 @@ public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<Ind
                 fieldDelimiter = fieldDelimiter.trim();
             }
             if (fieldDelimiter.isEmpty())
-                TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_ARGUMENT).setAndThrow(
-                        "single character field delimiter", fieldDelimiter);
+                TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_ARGUMENT).setAndThrow("single character field delimiter",
+                        fieldDelimiter);
             PCollection<CSVRecord> pc3 = pc2.apply(ParDo.of(new ExtractCsvRecord<>(fieldDelimiter.charAt(0))));
             PCollection pc4 = pc3.apply(ConvertToIndexedRecord.<CSVRecord, IndexedRecord> of());
             return pc4;

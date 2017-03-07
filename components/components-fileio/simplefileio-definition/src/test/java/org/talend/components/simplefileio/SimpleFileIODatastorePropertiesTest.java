@@ -62,7 +62,7 @@ public class SimpleFileIODatastorePropertiesTest {
 
         Form main = properties.getForm(Form.MAIN);
         assertThat(main, notNullValue());
-        assertThat(main.getWidgets(), hasSize(4));
+        assertThat(main.getWidgets(), hasSize(7));
 
         for (String field : ALL) {
             Widget w = main.getWidget(field);

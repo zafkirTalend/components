@@ -29,6 +29,16 @@ public class SimpleFileIODatastoreProperties extends PropertiesImpl implements D
 
     public Property<String> kerberosKeytab = PropertyFactory.newString("kerberosKeytab", "/home/username/username.keytab");
 
+    public Property<Boolean> useGCPServiceAccount = PropertyFactory.newBoolean("useGCPServiceAccount", false);
+
+    public Property<String> projectName = PropertyFactory.newString("projectName");
+
+    /**
+     * service account need to set on pipeline options, so it's kind of global setting refer to:
+     * https://developers.google.com/identity/protocols/OAuth2ServiceAccount
+     */
+    public Property<String> serviceAccountFile = PropertyFactory.newString("serviceAccountFile");
+
     public SimpleFileIODatastoreProperties(String name) {
         super(name);
     }
@@ -41,6 +51,9 @@ public class SimpleFileIODatastoreProperties extends PropertiesImpl implements D
         mainForm.addRow(kerberosPrincipal);
         mainForm.addRow(kerberosKeytab);
         mainForm.addRow(userName);
+        mainForm.addRow(useGCPServiceAccount);
+        mainForm.addRow(projectName);
+        mainForm.addRow(serviceAccountFile);
     }
 
     @Override
@@ -51,10 +64,16 @@ public class SimpleFileIODatastoreProperties extends PropertiesImpl implements D
             form.getWidget(kerberosPrincipal.getName()).setVisible(useKerberos);
             form.getWidget(kerberosKeytab.getName()).setVisible(useKerberos);
             form.getWidget(userName.getName()).setHidden(useKerberos);
+            form.getWidget(projectName.getName()).setVisible(useGCPServiceAccount);
+            form.getWidget(serviceAccountFile.getName()).setVisible(useGCPServiceAccount);
         }
     }
 
     public void afterUseKerberos() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void afterUseGCPServiceAccount() {
         refreshLayout(getForm(Form.MAIN));
     }
 }

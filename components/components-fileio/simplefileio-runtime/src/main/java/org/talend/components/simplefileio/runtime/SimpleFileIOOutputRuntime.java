@@ -44,8 +44,11 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
+import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
 import org.talend.components.simplefileio.output.SimpleFileIOOutputProperties;
 import org.talend.components.simplefileio.runtime.coders.LazyAvroKeyWrapper;
 import org.talend.components.simplefileio.runtime.sinks.AvroHdfsFileSink;
@@ -106,6 +109,22 @@ public class SimpleFileIOOutputRuntime extends PTransform<PCollection<IndexedRec
                 }
 
                 PCollection<String> pc1 = in.apply(ParDo.of(new FormatCsvRecord2(fieldDelimiter.charAt(0))));
+
+                GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
+                SimpleFileIODatastoreProperties datastore = properties.getDatasetProperties().getDatastoreProperties();
+                if (!"DataflowRunner".equals(gcpOptions.getRunner().getSimpleName())
+                        && datastore.useGCPServiceAccount.getValue()) {
+                    // when using Dataflow runner, these properties has been set on pipeline level
+                    gcpOptions.setProject(datastore.projectName.getValue());
+                    gcpOptions.setCredentialFactoryClass(ServiceAccountCredentialFactory.class);
+                    gcpOptions.setServiceAccountFile(datastore.serviceAccountFile.getValue());
+                    try {
+                        gcpOptions.setGcpCredential(ServiceAccountCredentialFactory.fromOptions(gcpOptions).getCredential());
+                    } catch (Exception e) {
+                        TalendRuntimeException.build(CommonErrorCodes.UNEXPECTED_EXCEPTION).setAndThrow(e.getMessage());
+                    }
+                }
+
                 return pc1.apply(b);
 
             } else {
