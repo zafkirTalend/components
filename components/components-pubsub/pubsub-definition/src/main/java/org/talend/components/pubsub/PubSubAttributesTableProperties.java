@@ -50,6 +50,10 @@ public class PubSubAttributesTableProperties extends PropertiesImpl {
         return attributeName.getValue() == null || attributeName.getValue().isEmpty();
     }
 
+    /**
+     * Generate a mapping between attribute name and avro column name
+     * @return
+     */
     public Map<String, String> genAttributesMap() {
         if (isEmpty()) {
             return Collections.emptyMap();

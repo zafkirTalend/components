@@ -32,6 +32,7 @@ import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.SimpleFunction;
@@ -42,7 +43,6 @@ import org.joda.time.Instant;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
 import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
-import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.pubsub.PubSubDatasetProperties;
@@ -77,7 +77,8 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
 
         if (properties.noACK.getValue()) {// getSample
             pubsubMessages = in.apply(Create.of(dataset.subscription.getValue())).apply(ParDo.of(new SampleFn(properties)))
-                    .setCoder(PubSubMessageCoder.of());
+                    .setCoder(PubSubMessageCoder.of())
+                    .apply(MapElements.via(new ExtractAttributes(dataset.attributes.genAttributesMap())));
         } else {// normal
             GcpServiceAccountOptions gcpOptions = in.getPipeline().getOptions().as(GcpServiceAccountOptions.class);
             gcpOptions.setProject(datastore.projectName.getValue());
@@ -103,20 +104,18 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 pubsubRead.timestampLabel(properties.timestampLabel.getValue());
             }
 
-            pubsubMessages = in
-                    .apply(pubsubRead.withAttributes(new ExtractAttributes(properties)).withCoder(PubSubMessageCoder.of()));
+            pubsubMessages = in.apply(pubsubRead.withAttributes(new ExtractAttributes(dataset.attributes.genAttributesMap()))
+                    .withCoder(PubSubMessageCoder.of()));
         }
 
         switch (dataset.valueFormat.getValue()) {
         case AVRO: {
-            return pubsubMessages
-                    .apply(ParDo.of(new ConvertToAvro(dataset.avroSchema.getValue(), dataset.attributes.genAttributesMap())))
+            return pubsubMessages.apply(ParDo.of(new ConvertToAvro(dataset.avroSchema.getValue())))
                     .setCoder(getDefaultOutputCoder());
         }
         case CSV: {
             return (PCollection<IndexedRecord>) pubsubMessages
-                    .apply(ParDo.of(new ExtractCsvSplit(dataset.fieldDelimiter.getValue())))
-                    .apply((PTransform) ConvertToIndexedRecord.of());
+                    .apply(ParDo.of(new ExtractCsvSplit(dataset.fieldDelimiter.getValue())));
         }
         default:
             throw new RuntimeException("To be implemented: " + dataset.valueFormat.getValue());
@@ -128,23 +127,28 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
         return LazyAvroCoder.of();
     }
 
+    /**
+     * Generate new PubsubMessage which only contains the attributes user defined.
+     *
+     * If there is no key provided, set it with null value.
+     *
+     * And the key of attributes be changed to avro column name, which helpfully for following function.
+     */
     public static class ExtractAttributes extends SimpleFunction<PubsubIO.PubsubMessage, PubsubIO.PubsubMessage> {
 
-        private PubSubInputProperties spec;
+        private Map<String, String> attrsMap;
 
-        public ExtractAttributes(PubSubInputProperties properties) {
-            spec = properties;
+        public ExtractAttributes(Map<String, String> attrsMap) {
+            this.attrsMap = attrsMap;
         }
 
         @Override
         public PubsubIO.PubsubMessage apply(PubsubIO.PubsubMessage pubsubMessage) {
             Map<String, String> attributes = new HashMap<>();
-            if (!spec.getDatasetProperties().attributes.isEmpty()) {
+            if (!attrsMap.isEmpty()) {
                 // only need the attributes which user defined
-                for (String attrKey : pubsubMessage.getAttributeMap().keySet()) {
-                    if (spec.getDatasetProperties().attributes.attributeName.getValue().contains(attrKey)) {
-                        attributes.put(attrKey, pubsubMessage.getAttributeMap().get(attrKey));
-                    }
+                for (String attrKey : attrsMap.keySet()) {
+                    attributes.put(attrsMap.get(attrKey), pubsubMessage.getAttributeMap().get(attrKey));
                 }
             }
             return new PubsubIO.PubsubMessage(pubsubMessage.getMessage(), attributes);
@@ -163,11 +167,8 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
 
         private transient BinaryDecoder decoder;
 
-        private Map<String, String> attrsMap;
-
-        ConvertToAvro(String schemaStr, Map<String, String> attrsMap) {
+        ConvertToAvro(String schemaStr) {
             this.schemaStr = schemaStr;
-            this.attrsMap = attrsMap;
         }
 
         @DoFn.ProcessElement
@@ -176,22 +177,23 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 schema = new Schema.Parser().parse(schemaStr);
                 datumReader = new GenericDatumReader<GenericRecord>(schema);
             }
-            decoder = DecoderFactory.get().binaryDecoder(c.element().getMessage(), decoder);
+            PubsubIO.PubsubMessage element = c.element();
+            Map<String, String> attributeMap = element.getAttributeMap();
+            decoder = DecoderFactory.get().binaryDecoder(element.getMessage(), decoder);
 
-            if (!attrsMap.isEmpty()) {
+            if (!attributeMap.isEmpty()) {
                 if (schemaWithAttrs == null) {
                     List<Schema.Field> fields = new ArrayList<>();
-                    for (String attrName : attrsMap.keySet()) {
-                        fields.add(new Schema.Field(attrsMap.get(attrName), SchemaBuilder.builder().stringBuilder().endString(),
-                                null, null));
+                    for (String attrName : attributeMap.keySet()) {
+                        fields.add(new Schema.Field(attrName, SchemaBuilder.builder().stringBuilder().endString(), null, null));
                     }
                     schemaWithAttrs = AvroUtils.addFields(schema, fields.toArray(new Schema.Field[] {}));
                 }
                 GenericRecord record = datumReader.read(null, decoder);
 
                 GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
-                for (String attrName : attrsMap.keySet()) {
-                    recordWithAttrs.put(attrsMap.get(attrName), c.element().getAttribute(attrName));
+                for (String attrName : attributeMap.keySet()) {
+                    recordWithAttrs.put(attrName, attributeMap.get(attrName));
                 }
                 for (Schema.Field field : schema.getFields()) {
                     recordWithAttrs.put(field.name(), record.get(field.name()));
@@ -237,18 +239,7 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                 Iterator<ReceivedMessage> messageIterator = client.pull(context.element(), maxNum);
                 while (messageIterator.hasNext()) {
                     ReceivedMessage next = messageIterator.next();
-
-                    Map<String, String> attributes = new HashMap<>();
-                    if (!spec.getDatasetProperties().attributes.isEmpty()) {
-                        // only need the attributes which user defined
-                        for (String attrKey : next.getAttributes().keySet()) {
-                            if (spec.getDatasetProperties().attributes.attributeName.getValue().contains(attrKey)) {
-                                attributes.put(attrKey, next.getAttributes().get(attrKey));
-                            }
-                        }
-                    }
-
-                    context.output(new PubsubIO.PubsubMessage(next.getPayload().toByteArray(), attributes));
+                    context.output(new PubsubIO.PubsubMessage(next.getPayload().toByteArray(), next.getAttributes()));
                     // no next.ack() for getSample, if call ack then the message will be removed
                     num++;
                     if (num >= maxNum) {

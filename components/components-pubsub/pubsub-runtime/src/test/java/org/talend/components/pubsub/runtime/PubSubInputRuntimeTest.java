@@ -56,6 +56,10 @@ public class PubSubInputRuntimeTest {
 
     static PubSub client = PubSubConnection.createClient(createDatastore());
 
+    static {
+        PubSubAvroRegistry.get();
+    }
+
     @Rule
     public final TestPipeline pipeline = TestPipeline.create();
 
@@ -174,6 +178,64 @@ public class PubSubInputRuntimeTest {
     }
 
     @Test
+    public void inputCsvWithAttrs_Local() throws IOException {
+        inputCsvWithAttrs(pipeline);
+    }
+
+    private void inputCsvWithAttrs(Pipeline pipeline) throws IOException {
+        String testID = "csvWithAttrsTest" + new Random().nextInt();
+        final String fieldDelimited = ";";
+
+        Map<String, String> attrMapping = new HashMap<>();
+        attrMapping.put("attr_name", "name");
+        attrMapping.put("attr_group", "group");
+        attrMapping.put("attr_age", "age");
+
+        List<Person> expectedPersons = Person.genRandomList(testID, maxRecords);
+        List<Message> messages = new ArrayList<>();
+        for (Person person : expectedPersons) {
+            messages.add(Message.newBuilder(person.toCSV(fieldDelimited)).addAttribute("attr_name", person.name)
+                    .addAttribute("attr_group", person.group).addAttribute("attr_age", person.age.toString()).build());
+        }
+        client.publish(topicName, messages);
+
+        PubSubInputRuntime inputRuntime = new PubSubInputRuntime();
+        PubSubDatasetProperties dataset = addSubscriptionForDataset(
+                createDatasetFromCSV(createDatastore(), topicName, fieldDelimited), subscriptionName);
+        dataset.attributes.attributeName.setValue(Arrays.asList("attr_name", "attr_age"));
+        dataset.attributes.columnName.setValue(Arrays.asList("", "attrAge"));
+        inputRuntime.initialize(null, createInput(dataset, null, maxRecords));
+
+        PCollection<IndexedRecord> readMessages = pipeline.apply(inputRuntime);
+
+        List<IndexedRecord> expected = new ArrayList<>();
+
+        Map<String, String> attrsMap = dataset.attributes.genAttributesMap();
+        List<Schema.Field> fields = new ArrayList<>();
+        // for (String attrName : attrsMap.keySet()) {
+        fields.add(new Schema.Field("attrAge", SchemaBuilder.builder().stringBuilder().endString(), null, null));
+        fields.add(new Schema.Field("attr_name", SchemaBuilder.builder().stringBuilder().endString(), null, null));
+        // }
+        Schema schemaWithAttrs = AvroUtils.addFields(ConvertToIndexedRecord
+                .convertToAvro(expectedPersons.get(0).toCSV(fieldDelimited).split(fieldDelimited)).getSchema(),
+                fields.toArray(new Schema.Field[] {}));
+        for (Person person : expectedPersons) {
+            GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
+            for (String attrName : attrsMap.keySet()) {
+                recordWithAttrs.put(attrsMap.get(attrName), person.toAvroRecord().get(attrMapping.get(attrName)).toString());
+            }
+            for (Schema.Field field : Person.schema.getFields()) {
+                recordWithAttrs.put(field.pos(), person.toAvroRecord().get(field.name()).toString());
+            }
+
+            expected.add(recordWithAttrs);
+        }
+        PAssert.that(readMessages).containsInAnyOrder(expected);
+
+        pipeline.run().waitUntilFinish();
+    }
+
+    @Test
     public void inputAvroWithAttrs_Local() throws IOException {
         inputAvroWithAttrs(pipeline);
     }
@@ -206,9 +268,10 @@ public class PubSubInputRuntimeTest {
         List<IndexedRecord> expected = new ArrayList<>();
         Map<String, String> attrsMap = dataset.attributes.genAttributesMap();
         List<Schema.Field> fields = new ArrayList<>();
-        for (String attrName : attrsMap.keySet()) {
-            fields.add(new Schema.Field(attrsMap.get(attrName), SchemaBuilder.builder().stringBuilder().endString(), null, null));
-        }
+        // for (String attrName : attrsMap.keySet()) {
+        fields.add(new Schema.Field("attrAge", SchemaBuilder.builder().stringBuilder().endString(), null, null));
+        fields.add(new Schema.Field("attr_name", SchemaBuilder.builder().stringBuilder().endString(), null, null));
+        // }
         Schema schemaWithAttrs = AvroUtils.addFields(Person.schema, fields.toArray(new Schema.Field[] {}));
         for (Person person : expectedPersons) {
             GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
