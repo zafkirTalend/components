@@ -13,17 +13,26 @@
 package org.talend.components.pubsub.runtime;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.beam.sdk.coders.ByteArrayCoder;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.io.PubsubIO;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.util.CoderUtils;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
-import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.apache.commons.collections.MapUtils;
 import org.talend.components.adapter.beam.gcp.GcpServiceAccountOptions;
 import org.talend.components.adapter.beam.gcp.ServiceAccountCredentialFactory;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
@@ -31,6 +40,7 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.pubsub.PubSubDatasetProperties;
 import org.talend.components.pubsub.PubSubDatastoreProperties;
 import org.talend.components.pubsub.output.PubSubOutputProperties;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.properties.ValidationResult;
@@ -69,7 +79,7 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
 
         createTopicSubscriptionIfNeeded(properties);
 
-        PubsubIO.Write<byte[]> pubsubWrite = PubsubIO.<byte[]> write()
+        PubsubIO.Write<PubsubIO.PubsubMessage> pubsubWrite = PubsubIO.<PubsubIO.PubsubMessage> write()
                 .topic(String.format("projects/%s/topics/%s", datastore.projectName.getValue(), dataset.topic.getValue()));
 
         if (properties.idLabel.getValue() != null && !"".equals(properties.idLabel.getValue())) {
@@ -79,13 +89,24 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
             pubsubWrite.timestampLabel(properties.timestampLabel.getValue());
         }
 
+        pubsubWrite = pubsubWrite.withAttributes(new SimpleFunction<PubsubIO.PubsubMessage, PubsubIO.PubsubMessage>() {
+
+            @Override
+            public PubsubIO.PubsubMessage apply(PubsubIO.PubsubMessage message) {
+                return message;
+            }
+        });
+
         switch (dataset.valueFormat.getValue()) {
         case CSV: {
-            return (PDone) in.apply(MapElements.via(new FormatCsv(dataset.fieldDelimiter.getValue())))
-                    .apply(pubsubWrite.withCoder(ByteArrayCoder.of()));
+            return (PDone) in
+                    .apply(MapElements
+                            .via(new FormatCsv(dataset.fieldDelimiter.getValue(), dataset.attributes.genAttributesMap())))
+                    .setCoder(PubSubMessageCoder.of()).apply(pubsubWrite);
         }
         case AVRO: {
-            return (PDone) in.apply(pubsubWrite.withCoder(LazyAvroCoder.of()));
+            return in.apply(MapElements.via(new SplitAvro(dataset.attributes.genAttributesMap())))
+                    .setCoder(PubSubMessageCoder.of()).apply(pubsubWrite);
         }
         default:
             throw new RuntimeException("To be implemented: " + dataset.valueFormat.getValue());
@@ -135,41 +156,110 @@ public class PubSubOutputRuntime extends PTransform<PCollection<IndexedRecord>, 
         }
     }
 
-    public static class FormatCsvFunction implements SerializableFunction<IndexedRecord, byte[]> {
+    public static class FormatCsvFunction implements SerializableFunction<IndexedRecord, PubsubIO.PubsubMessage> {
 
         public final String fieldDelimiter;
 
+        private final Map<String, String> attrsMap; // key is avro column name, value is attr name
+
         private StringBuilder sb = new StringBuilder();
 
-        public FormatCsvFunction(String fieldDelimiter) {
+        public FormatCsvFunction(String fieldDelimiter, Map<String, String> attrsMap) {
             this.fieldDelimiter = fieldDelimiter;
+            this.attrsMap = MapUtils.invertMap(attrsMap);
         }
 
         @Override
-        public byte[] apply(IndexedRecord input) {
-            int size = input.getSchema().getFields().size();
-            for (int i = 0; i < size; i++) {
-                if (sb.length() != 0)
-                    sb.append(fieldDelimiter);
-                sb.append(input.get(i));
+        public PubsubIO.PubsubMessage apply(IndexedRecord input) {
+            List<Schema.Field> fields = input.getSchema().getFields();
+            Map<String, String> attrs = new HashMap<>();
+            for (int i = 0; i < fields.size(); i++) {
+                String attrName = attrsMap.get(fields.get(i).name());
+                if (attrName != null) {
+                    attrs.put(attrName, input.get(i) == null ? null : String.valueOf(input.get(i)));
+                } else {
+                    if (sb.length() != 0)
+                        sb.append(fieldDelimiter);
+                    sb.append(input.get(i));
+                }
             }
             byte[] bytes = sb.toString().getBytes(Charset.forName("UTF-8"));
             sb.setLength(0);
-            return bytes;
+            return new PubsubIO.PubsubMessage(bytes, attrs);
         }
     }
 
-    public static class FormatCsv extends SimpleFunction<IndexedRecord, byte[]> {
+    public static class FormatCsv extends SimpleFunction<IndexedRecord, PubsubIO.PubsubMessage> {
 
         public final FormatCsvFunction function;
 
-        public FormatCsv(String fieldDelimiter) {
-            function = new FormatCsvFunction(fieldDelimiter);
+        public FormatCsv(String fieldDelimiter, Map<String, String> attrsMap) {
+            function = new FormatCsvFunction(fieldDelimiter, attrsMap);
         }
 
         @Override
-        public byte[] apply(IndexedRecord input) {
+        public PubsubIO.PubsubMessage apply(IndexedRecord input) {
             return function.apply(input);
         }
     }
+
+    public static class SplitAvroFunction implements SerializableFunction<IndexedRecord, PubsubIO.PubsubMessage> {
+
+        private final Map<String, String> attrsMap; // key is avro column name, value is attr name
+
+        private transient Schema schemaWithoutAttrs;
+
+        public SplitAvroFunction(Map<String, String> attrsMap) {
+            this.attrsMap = MapUtils.invertMap(attrsMap);
+        }
+
+        @Override
+        public PubsubIO.PubsubMessage apply(IndexedRecord indexedRecord) {
+            if (attrsMap.isEmpty()) {
+                // All the indexedRecord should be GenericRecord after coder stage of pipeline
+                try {
+                    return new PubsubIO.PubsubMessage(
+                            CoderUtils.encodeToByteArray(AvroCoder.of(indexedRecord.getSchema()), (GenericRecord) indexedRecord),
+                            Collections.<String, String> emptyMap());
+                } catch (CoderException e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+            } else {
+                Map<String, String> attrs = new HashMap<>();
+                if (schemaWithoutAttrs == null) {
+                    schemaWithoutAttrs = AvroUtils.removeFields(indexedRecord.getSchema(), attrsMap.keySet());
+                }
+                GenericData.Record recordWithoutAttrs = new GenericData.Record(schemaWithoutAttrs);
+                for (Schema.Field field : indexedRecord.getSchema().getFields()) {
+                    if (attrsMap.keySet().contains(field.name())) {
+                        Object value = indexedRecord.get(field.pos());
+                        attrs.put(field.name(), value == null ? null : String.valueOf(value));
+                        continue;
+                    }
+                    recordWithoutAttrs.put(field.name(), indexedRecord.get(field.pos()));
+                }
+                try {
+                    return new PubsubIO.PubsubMessage(
+                            CoderUtils.encodeToByteArray(AvroCoder.of(schemaWithoutAttrs), recordWithoutAttrs), attrs);
+                } catch (CoderException e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+            }
+        }
+    }
+
+    public static class SplitAvro extends SimpleFunction<IndexedRecord, PubsubIO.PubsubMessage> {
+
+        public final SplitAvroFunction function; // key is avro column name, value is attr name
+
+        public SplitAvro(Map<String, String> attrsMap) {
+            function = new SplitAvroFunction(attrsMap);
+        }
+
+        @Override
+        public PubsubIO.PubsubMessage apply(IndexedRecord input) {
+            return function.apply(input);
+        }
+    }
+
 }

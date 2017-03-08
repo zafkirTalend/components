@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -149,6 +150,52 @@ public class PubSubOutputRuntimeTest implements Serializable {
     }
 
     @Test
+    @Ignore("after BEAM-1673 fixed")
+    public void outputCsvWithAttrs_Local() throws UnsupportedEncodingException {
+        outputCsvWithAttrs(pipeline);
+    }
+
+    private void outputCsvWithAttrs(Pipeline pipeline) throws UnsupportedEncodingException {
+        String testID = "csvWithAttrsTest" + new Random().nextInt();
+        final String fieldDelimited = ";";
+
+        List<Person> expectedPersons = Person.genRandomList(testID, maxRecords);
+        List<String> expectedMessages = new ArrayList<>();
+        List<IndexedRecord> sendMessages = new ArrayList<>();
+        for (Person person : expectedPersons) {
+            expectedMessages.add(person.toCSV(fieldDelimited));
+            sendMessages.add(person.toAvroRecord());
+        }
+
+        PubSubOutputRuntime outputRuntime = new PubSubOutputRuntime();
+        PubSubDatasetProperties dataset = createDatasetFromCSV(createDatastore(), topicName, fieldDelimited);
+        dataset.attributes.attributeName.setValue(Arrays.asList("attr_age", "attr_gender"));
+        dataset.attributes.columnName.setValue(Arrays.asList("age", "gender"));
+        outputRuntime.initialize(null, createOutput(dataset));
+
+        PCollection<IndexedRecord> output = (PCollection<IndexedRecord>) pipeline
+                .apply(Create.of(sendMessages).withCoder(LazyAvroCoder.of()));
+        output.apply(outputRuntime);
+
+        pipeline.run().waitUntilFinish();
+
+        List<String> actual = new ArrayList<>();
+        while (true) {
+            Iterator<ReceivedMessage> messageIterator = client.pull(subscriptionName, maxRecords);
+            while (messageIterator.hasNext()) {
+                ReceivedMessage next = messageIterator.next();
+                actual.add(next.getPayloadAsString() + fieldDelimited + next.getAttributes().get("attr_age") + fieldDelimited
+                        + next.getAttributes().get("attr_gender"));
+                next.ack();
+            }
+            if (actual.size() >= maxRecords) {
+                break;
+            }
+        }
+        assertThat(actual, containsInAnyOrder(expectedMessages.toArray()));
+    }
+
+    @Test
     public void outputAvro_Local() throws IOException {
         outputAvro(pipeline);
     }
@@ -197,7 +244,7 @@ public class PubSubOutputRuntimeTest implements Serializable {
     }
 
     @Test
-    public void createTopicSub_Local(){
+    public void createTopicSub_Local() {
         createTopicSub(pipeline);
     }
 

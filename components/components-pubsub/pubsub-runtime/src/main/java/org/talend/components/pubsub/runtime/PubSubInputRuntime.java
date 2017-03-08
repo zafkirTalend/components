@@ -187,7 +187,7 @@ public class PubSubInputRuntime extends PTransform<PBegin, PCollection<IndexedRe
                     for (String attrName : attributeMap.keySet()) {
                         fields.add(new Schema.Field(attrName, SchemaBuilder.builder().stringBuilder().endString(), null, null));
                     }
-                    schemaWithAttrs = AvroUtils.addFields(schema, fields.toArray(new Schema.Field[] {}));
+                    schemaWithAttrs = AvroUtils.appendFields(schema, fields.toArray(new Schema.Field[] {}));
                 }
                 GenericRecord record = datumReader.read(null, decoder);
 

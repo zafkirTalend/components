@@ -55,6 +55,8 @@ public class PubSubAttributesTableProperties extends PropertiesImpl {
      * @return
      */
     public Map<String, String> genAttributesMap() {
+        //TODO how about one attr name mapping to two different column name?
+        //of course forbidden to support two different column name mapping to one attr name.
         if (isEmpty()) {
             return Collections.emptyMap();
         }

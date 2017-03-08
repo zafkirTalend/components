@@ -49,7 +49,7 @@ public class ExtractCsvSplit extends DoFn<PubsubIO.PubsubMessage, IndexedRecord>
                 for (String attrName : attributeMap.keySet()) {
                     fields.add(new Schema.Field(attrName, SchemaBuilder.builder().stringBuilder().endString(), null, null));
                 }
-                schema = AvroUtils.addFields(schema, fields.toArray(new Schema.Field[] {}));
+                schema = AvroUtils.appendFields(schema, fields.toArray(new Schema.Field[] {}));
             }
         }
 

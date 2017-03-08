@@ -216,7 +216,7 @@ public class PubSubInputRuntimeTest {
         fields.add(new Schema.Field("attrAge", SchemaBuilder.builder().stringBuilder().endString(), null, null));
         fields.add(new Schema.Field("attr_name", SchemaBuilder.builder().stringBuilder().endString(), null, null));
         // }
-        Schema schemaWithAttrs = AvroUtils.addFields(ConvertToIndexedRecord
+        Schema schemaWithAttrs = AvroUtils.appendFields(ConvertToIndexedRecord
                 .convertToAvro(expectedPersons.get(0).toCSV(fieldDelimited).split(fieldDelimited)).getSchema(),
                 fields.toArray(new Schema.Field[] {}));
         for (Person person : expectedPersons) {
@@ -272,7 +272,7 @@ public class PubSubInputRuntimeTest {
         fields.add(new Schema.Field("attrAge", SchemaBuilder.builder().stringBuilder().endString(), null, null));
         fields.add(new Schema.Field("attr_name", SchemaBuilder.builder().stringBuilder().endString(), null, null));
         // }
-        Schema schemaWithAttrs = AvroUtils.addFields(Person.schema, fields.toArray(new Schema.Field[] {}));
+        Schema schemaWithAttrs = AvroUtils.appendFields(Person.schema, fields.toArray(new Schema.Field[] {}));
         for (Person person : expectedPersons) {
             GenericData.Record recordWithAttrs = new GenericData.Record(schemaWithAttrs);
             for (String attrName : attrsMap.keySet()) {
