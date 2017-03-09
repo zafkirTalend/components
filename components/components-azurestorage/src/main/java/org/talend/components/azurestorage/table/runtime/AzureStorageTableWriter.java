@@ -38,10 +38,13 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.azurestorage.table.AzureStorageTableProperties;
 import org.talend.components.azurestorage.table.tazurestorageoutputtable.TAzureStorageOutputTableProperties;
+import org.talend.components.azurestorage.table.tazurestorageoutputtable.TAzureStorageOutputTableProperties.ActionOnTable;
 import org.talend.components.common.runtime.GenericIndexedRecordConverter;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
+import org.talend.daikon.i18n.GlobalI18N;
+import org.talend.daikon.i18n.I18nMessages;
 
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
@@ -100,6 +103,9 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
     private Boolean useNameMappings = Boolean.FALSE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureStorageTableWriter.class);
+    
+    private static final I18nMessages i18nMessages = GlobalI18N.getI18nMessageProvider()
+            .getI18nMessages(AzureStorageTableWriter.class);
 
     public AzureStorageTableWriter(WriteOperation<Result> writeOperation, RuntimeContainer adaptor) {
         runtime = adaptor;
@@ -125,40 +131,71 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
                 writeSchema = null;
             }
         }
+
         try {
             client = sink.getStorageTableClient(runtime);
             table = client.getTableReference(tableName);
-            // FIXME How does this will behave in a distributed runtime ? See where to place correctly this
-            // instruction...
-            switch (actionTable) {
-                case Drop_and_create_table :
-                case Drop_table_if_exist_and_create :
-                    table.deleteIfExists();
-                    break;
-                default :
-            }
-            //
-            try {
-                table.createIfNotExists();
-            } catch (TableServiceException e) {
-                if (!e.getErrorCode().equals(StorageErrorCodeStrings.TABLE_BEING_DELETED)) {
-                    throw e;
-                }
-                LOGGER.error("Table '{}' is currently being deleted. We'll retry in a few moments...", tableName);
-                // wait 50 seconds (min is 40s) before retrying.
-                // See https://docs.microsoft.com/en-us/rest/api/storageservices/fileservices/Delete-Table#Remarks
-                try {
-                    Thread.sleep(50000);
-                } catch (InterruptedException eint) {
-                    throw new IOException("Wait process for recreating table interrupted.");
-                }
-                table.createIfNotExists();
-                LOGGER.debug("Table {} created.", tableName);
-            }
+            handleActionOnTable(properties.actionOnTable.getValue());
 
         } catch (InvalidKeyException | URISyntaxException | StorageException e) {
             LOGGER.error(e.getLocalizedMessage());
             throw new ComponentException(e);
+        }
+    }
+
+    private void handleActionOnTable(ActionOnTable actionTable) throws IOException, StorageException {
+        // FIXME How does this will behave in a distributed runtime ? See where to place correctly this
+        // instruction...
+        switch (actionTable) {
+        case Create_table:
+            table.create();
+            break;
+        case Create_table_if_does_not_exist:
+            table.createIfNotExists();
+            break;
+        case Drop_and_create_table:
+            table.delete();
+            createTableAfterDeletion();
+            break;
+        case Drop_table_if_exist_and_create:
+            table.deleteIfExists();
+            createTableAfterDeletion();
+            break;
+        case Default:
+        default:
+            return;
+        }
+
+    }
+
+    /**
+     * This method create a table after it's deletion.<br/>
+     * the table deletion take about 40 seconds to be effective on azure CF.
+     * https://docs.microsoft.com/en-us/rest/api/storageservices/fileservices/Delete-Table#Remarks <br/>
+     * So we try to wait 50 seconds if the first table creation return an
+     * {@link StorageErrorCodeStrings.TABLE_BEING_DELETED } exception code
+     * 
+     * @throws StorageException
+     * @throws IOException
+     * 
+     */
+    private void createTableAfterDeletion() throws StorageException, IOException {
+        try {
+            table.create();
+        } catch (TableServiceException e) {
+            if (!e.getErrorCode().equals(StorageErrorCodeStrings.TABLE_BEING_DELETED)) {
+                throw e;
+            }
+            LOGGER.warn("Table '{}' is currently being deleted. We'll retry in a few moments...", tableName);
+            // wait 50 seconds (min is 40s) before retrying.
+            // See https://docs.microsoft.com/en-us/rest/api/storageservices/fileservices/Delete-Table#Remarks
+            try {
+                Thread.sleep(50000);
+            } catch (InterruptedException eint) {
+                throw new IOException("Wait process for recreating table interrupted.");
+            }
+            table.create();
+            LOGGER.debug("Table {} created.", tableName);
         }
     }
 
@@ -219,7 +256,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
                                     .parse(inputRecord.get(f.pos()).toString());
                             entityProps.put(mName, new EntityProperty(dt));
                         } catch (ParseException e) {
-                            LOGGER.error("Error while parsing date : {}", e);
+                            LOGGER.error(i18nMessages.getMessage("error.ParseError",e));
                             if (properties.dieOnError.getValue()) {
                                 throw new ComponentException(e);
                             }
@@ -250,7 +287,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
     @Override
     public Result close() throws IOException {
         if (batchOperationsCount > 0) {
-            LOGGER.debug("{} operation(s) remaining in batch queue, executing batch.", batchOperationsCount);
+            LOGGER.debug(i18nMessages.getMessage("debug.ExecutingBrtch",batchOperationsCount));
             processBatch();
         }
         table = null;
@@ -284,26 +321,26 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
     private TableOperation getTableOperation(DynamicTableEntity entity) {
         TableOperation tableOpe = null;
         switch (actionData) {
-            case Insert :
-                tableOpe = TableOperation.insert(entity);
-                break;
-            case Insert_Or_Merge :
-                tableOpe = TableOperation.insertOrMerge(entity);
-                break;
-            case Insert_Or_Replace :
-                tableOpe = TableOperation.insertOrReplace(entity);
-                break;
-            case Merge :
-                tableOpe = TableOperation.merge(entity);
-                break;
-            case Replace :
-                tableOpe = TableOperation.replace(entity);
-                break;
-            case Delete :
-                tableOpe = TableOperation.delete(entity);
-                break;
-            default :
-                LOGGER.error("No specified operation for table");
+        case Insert:
+            tableOpe = TableOperation.insert(entity);
+            break;
+        case Insert_Or_Merge:
+            tableOpe = TableOperation.insertOrMerge(entity);
+            break;
+        case Insert_Or_Replace:
+            tableOpe = TableOperation.insertOrReplace(entity);
+            break;
+        case Merge:
+            tableOpe = TableOperation.merge(entity);
+            break;
+        case Replace:
+            tableOpe = TableOperation.replace(entity);
+            break;
+        case Delete:
+            tableOpe = TableOperation.delete(entity);
+            break;
+        default:
+            LOGGER.error("No specified operation for table");
         }
 
         return tableOpe;
@@ -315,7 +352,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
             table.execute(ope);
             handleSuccess(inputRecord, 1);
         } catch (StorageException e) {
-            LOGGER.error("processSingleOperation::" + actionData + " : " + e.getLocalizedMessage());
+            LOGGER.error(i18nMessages.getMessage("error.ProcessSingleOperation",actionData,e.getLocalizedMessage()));
 
             if (properties.dieOnError.getValue()) {
                 throw new ComponentException(e);
@@ -350,7 +387,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
             handleSuccess(null, batchOperationsCount);
 
         } catch (StorageException e) {
-            LOGGER.error("processBatch::" + actionData + " : " + e.getLocalizedMessage());
+            LOGGER.error(i18nMessages.getMessage("error.ProcessBatch",actionData,e.getLocalizedMessage()));
 
             handleReject(null, e, batchOperationsCount);
 
@@ -380,7 +417,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
         result.rejectCount = result.rejectCount + counted;
         Schema rejectSchema = properties.schemaReject.schema.getValue();
         if (rejectSchema == null || rejectSchema.getFields().isEmpty()) {
-            LOGGER.warn("handleReject: Not reject schema defined!");
+            LOGGER.warn(i18nMessages.getMessage("warn.NoRejectSchema"));
             return;
         }
         if (record != null && record.getSchema().equals(rejectSchema)) {
@@ -390,7 +427,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
                 for (IndexedRecord r : batchRecords) {
                     IndexedRecord reject = new GenericData.Record(rejectSchema);
                     reject.put(rejectSchema.getField("errorCode").pos(), e.getErrorCode());
-                    reject.put(rejectSchema.getField("errorMessage").pos(), e.getMessage());
+                    reject.put(rejectSchema.getField("errorMessage").pos(), e.getLocalizedMessage());
                     for (Schema.Field outField : reject.getSchema().getFields()) {
                         Object outValue;
                         Schema.Field inField = r.getSchema().getField(outField.name());
@@ -405,7 +442,7 @@ public class AzureStorageTableWriter implements WriterWithFeedback<Result, Index
             } else {
                 IndexedRecord reject = new GenericData.Record(rejectSchema);
                 reject.put(rejectSchema.getField("errorCode").pos(), e.getErrorCode());
-                reject.put(rejectSchema.getField("errorMessage").pos(), e.getMessage());
+                reject.put(rejectSchema.getField("errorMessage").pos(), e.getLocalizedMessage());
                 for (Schema.Field outField : reject.getSchema().getFields()) {
                     Object outValue;
                     Schema.Field inField = record.getSchema().getField(outField.name());
