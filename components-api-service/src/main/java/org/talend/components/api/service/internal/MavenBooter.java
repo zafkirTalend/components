@@ -217,9 +217,9 @@ public class MavenBooter {
     protected List<RemoteRepository> newTalendRepositories() {
         List<RemoteRepository> talendRepos = new ArrayList<>();
         talendRepos.add(new RemoteRepository.Builder("talend-opensource-release", "default",
-                "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceRelease/").build());
+                "http://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/").build());
         talendRepos.add(new RemoteRepository.Builder("talend-opensource-snapshot", "default",
-                "http://newbuild.talend.com:8081/nexus/content/repositories/TalendOpenSourceSnapshot/").build());
+                "http://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/").build());
         String extraRepoId = System.getProperty(TALEND_MAVEN_REMOTE_REPOSITORY_ID_SYS_PROP);
         String extraRepoUrl = System.getProperty(TALEND_MAVEN_REMOTE_REPOSITORY_URL_SYS_PROP);
         if (extraRepoId != null && extraRepoUrl != null) {
