@@ -82,7 +82,6 @@ public class SalesforceDatasetRuntimeTestIT {
         CommonTestUtils.setValueForDatastoreProperties(datastore);
 
         SalesforceDatasetProperties dataset = (SalesforceDatasetProperties) def.createDatasetProperties(datastore);
-        dataset.sourceType.setValue(SalesforceDatasetProperties.SourceType.SOQL_QUERY);
         dataset.query.setValue("SELECT Id, Name FROM Account");
 
         return dataset;
