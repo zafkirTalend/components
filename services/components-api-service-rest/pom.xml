@@ -192,13 +192,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.webcohesion.enunciate</groupId>
-                <artifactId>enunciate-maven-plugin</artifactId>
-                <configuration>
-                    <skipEnunciate>true</skipEnunciate>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
