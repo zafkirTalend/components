@@ -40,11 +40,6 @@ import org.talend.components.snowflake.SnowflakeConnectionProperties;
 import org.talend.components.snowflake.SnowflakeProvideConnectionProperties;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
-<<<<<<< HEAD
-import org.talend.daikon.avro.AvroUtils;
-import org.talend.daikon.avro.SchemaConstants;
-=======
->>>>>>> e787a3f... fix(TDI-37655): TCOMP JDBC component tests mostly don't actual JDBC
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
 
@@ -241,17 +236,10 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
 
         SnowflakeConnectionProperties connProps = getEffectiveConnectionProperties(container);
         try {
-<<<<<<< HEAD
-            DatabaseMetaData metaData = connection.getMetaData();
-
-            ResultSet resultSet = metaData.getColumns(getCatalog(connProps), getDbSchema(connProps), tableName, null);
-            tableSchema = getSnowflakeAvroRegistry().inferSchema(resultSet);
-=======
             JDBCTableMetadata tableMetadata = new JDBCTableMetadata();
             tableMetadata.setDatabaseMetaData(connection.getMetaData()).setCatalog(getCatalog(connProps))
                     .setDbSchema(getDbSchema(connProps)).setTablename(tableName);
-            tableSchema = SnowflakeAvroRegistry.get().inferSchema(tableMetadata);
->>>>>>> e787a3f... fix(TDI-37655): TCOMP JDBC component tests mostly don't actual JDBC
+            tableSchema = getSnowflakeAvroRegistry().inferSchema(tableMetadata);
             // FIXME - I18N for this message
             if (tableSchema == null)
                 throw new IOException("Table: " + tableName + " not found");
