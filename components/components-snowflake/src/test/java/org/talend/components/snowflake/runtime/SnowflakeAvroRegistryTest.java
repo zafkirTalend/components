@@ -52,7 +52,7 @@ public class SnowflakeAvroRegistryTest {
         final int dbtype = java.sql.Types.DATE;
 
         Schema.Field field = snowflakeAvroRegistry
-                .sqlType2Avro(size, scale, dbtype, nullable, fieldName, dbColumnName, defaultValue);
+                .sqlType2Avro(size, scale, dbtype, nullable, fieldName, dbColumnName, defaultValue, false);
 
         LOGGER.debug("field: " + field.toString());
 
@@ -76,7 +76,7 @@ public class SnowflakeAvroRegistryTest {
         final int dbtype = java.sql.Types.TIMESTAMP;
 
         Schema.Field field = snowflakeAvroRegistry
-                .sqlType2Avro(size, scale, dbtype, nullable, fieldName, dbColumnName, defaultValue);
+                .sqlType2Avro(size, scale, dbtype, nullable, fieldName, dbColumnName, defaultValue, false);
 
         LOGGER.debug("field: " + field.toString());
 
