@@ -20,9 +20,6 @@ import org.talend.daikon.properties.presentation.Form;
 
 public class ProxyPropertiesTest {
 
-    public ProxyPropertiesTest() {
-    }
-
     @Test
     public void testProxyProperties() throws Throwable {
         ProxyProperties props = (ProxyProperties) new ProxyProperties("proxy").init();

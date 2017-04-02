@@ -1,16 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.talend.components</groupId>
 		<artifactId>sdk-bom</artifactId>
 		<version>0.18.0-SNAPSHOT</version>
 		<relativePath>../sdk-bom</relativePath>
 	</parent>
-	
+
 	<artifactId>sdk-parent</artifactId>
-	
+
 	<packaging>pom</packaging>
 	<name>Components SDK BOM</name>
 
@@ -18,9 +18,30 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<talend-artifacts-repository>https://artifacts-oss.talend.com/nexus/content/repositories</talend-artifacts-repository>
 	</properties>
-	
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>talend_nexus_deployment</id>
+			<url>${talend-artifacts-repository}/TalendOpenSourceSnapshot/</url>
+		</snapshotRepository>
+		<repository>
+			<id>talend_nexus_deployment</id>
+			<url>${talend-artifacts-repository}/TalendOpenSourceRelease/</url>
+		</repository>
+	</distributionManagement>
+
 	<dependencies>
+		<!-- Third party compile -->
+		<dependency>
+			<groupId>org.apache.avro</groupId>
+			<artifactId>avro</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
 		<!-- Talend test -->
 		<dependency>
 			<groupId>org.talend.daikon</groupId>
@@ -30,10 +51,27 @@
 		</dependency>
 		<!-- Third party test -->
 		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-library</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>releases</id>
+			<url>${talend-artifacts-repository}/TalendOpenSourceRelease/</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 </project>

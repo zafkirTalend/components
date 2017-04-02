@@ -27,11 +27,11 @@ import org.talend.components.common.ProxyPropertiesTest;
 @ExamReactorStrategy(PerClass.class)
 public class ComponentCommonTestIT extends ProxyPropertiesTest {
 
-    @Configuration
-    public Option[] config() {
+	@Configuration
+	public Option[] config() {
 
-        return options(composite(ComponentsPaxExamOptions.getOptions()), //
-                linkBundle("org.talend.components-components-common"));
-    }
+		return options(composite(ComponentsPaxExamOptions.getOptions()), //
+				linkBundle("org.talend.components-components-common"));
+	}
 
 }

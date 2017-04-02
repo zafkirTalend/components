@@ -12,8 +12,12 @@
 // ============================================================================
 package org.talend.components.common;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,7 +41,7 @@ import org.talend.components.api.test.SimpleComponentDefinition;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
 
-public class TestFixedConnectorComponentProperties {
+public class FixedConnectorComponentPropertiesTest {
 
     static public class TestProperties extends FixedConnectorsComponentProperties {
 
@@ -47,7 +51,7 @@ public class TestFixedConnectorComponentProperties {
 
         public SchemaProperties main = new SchemaProperties("main");
 
-        public Property reject = PropertyFactory.newSchema("reject"); //$NON-NLS-1$
+        public Property<Schema> reject = PropertyFactory.newSchema("reject"); //$NON-NLS-1$
 
         /**
          * 
