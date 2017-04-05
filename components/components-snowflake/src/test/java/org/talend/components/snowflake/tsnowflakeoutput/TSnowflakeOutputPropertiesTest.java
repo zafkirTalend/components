@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -90,19 +91,25 @@ public class TSnowflakeOutputPropertiesTest {
 		schemaPropertyForOutputConnection = outputProperties.getAllSchemaPropertiesConnectors(false);
 		schemaPropertyForInputConnection = outputProperties.getAllSchemaPropertiesConnectors(true);
 		
+		assertTrue(schemaPropertyForOutputConnection.size() == 1);
+		assertTrue(schemaPropertyForInputConnection.size() == 1);
 		
 		//BUG THERE??? Method sets MAIN_CONNECTOR instead of FLOW_CONNECTOR
 		assertTrue(schemaPropertyForOutputConnection.contains(outputProperties.FLOW_CONNECTOR));  
 		assertTrue(schemaPropertyForInputConnection.contains(outputProperties.REJECT_CONNECTOR));
 		
-		assertTrue(schemaPropertyForInputConnection.size() == 1);
-		assertTrue(schemaPropertyForOutputConnection.size() == 1);
-		//TODO
 	}
 	
 	@Test
 	public void testGetFieldNames() {
 		Schema runtimeSchema;
+		Property<Schema> schemaProperty;
+		List<String> propertyFieldNames;
+		List<String> expectedPropertyFieldNames;
+		
+		Schema emptySchema;
+		Property<Schema> emptySchemaProperty;
+		List<String> emptyPropertyFieldNames;
 		
 	    runtimeSchema = SchemaBuilder.builder().record("Record").fields() //
                 .name("logicalTime").type(AvroUtils._logicalTime()).noDefault() //
@@ -119,11 +126,38 @@ public class TSnowflakeOutputPropertiesTest {
                 .noDefault() //
                 .endRecord(); //
 	
-	    Property schema = new SchemaProperty("schema");
-	    schema.setValue(runtimeSchema);
+	    emptySchema = SchemaBuilder.builder().record("EmptyRecord").fields().endRecord();
 	    
-	    List<String> test = outputProperties.getFieldNames(schema);
-	    System.out.println(test);
-		//TODO make schema, test fields names;
+	    
+	    schemaProperty = new SchemaProperty("schema");
+	    schemaProperty.setValue(runtimeSchema);
+	    
+	    emptySchemaProperty = new SchemaProperty("Empty schema");
+	    emptySchemaProperty.setValue(emptySchema);
+	    
+	    expectedPropertyFieldNames = new ArrayList<>();
+	    expectedPropertyFieldNames.add("logicalTime");
+	    expectedPropertyFieldNames.add("logicalDate");
+	    expectedPropertyFieldNames.add("logicalTimestamp");
+	    expectedPropertyFieldNames.add("id");
+	    expectedPropertyFieldNames.add("name");
+	    expectedPropertyFieldNames.add("age");
+	    expectedPropertyFieldNames.add("valid");
+	    expectedPropertyFieldNames.add("address");
+	    expectedPropertyFieldNames.add("comment");
+	    expectedPropertyFieldNames.add("createdDate");
+	    
+	    
+	    
+	    
+	    propertyFieldNames = outputProperties.getFieldNames(schemaProperty);
+	    emptyPropertyFieldNames = outputProperties.getFieldNames(emptySchemaProperty);
+	    
+	    
+	
+	    assertTrue(propertyFieldNames.size() == expectedPropertyFieldNames.size());
+	    assertEquals(propertyFieldNames, expectedPropertyFieldNames);
+	    
+	    assertTrue(emptyPropertyFieldNames.isEmpty());
 	}
 }
