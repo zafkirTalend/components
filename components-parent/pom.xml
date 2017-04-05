@@ -157,6 +157,11 @@
 			<!-- Components modules -->
 			<dependency>
 				<groupId>org.talend.components</groupId>
+				<artifactId>components-adapter-beam</artifactId>
+				<version>${components.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
 				<artifactId>components-api</artifactId>
 				<version>${components.version}</version>
 			</dependency>
@@ -244,12 +249,24 @@
 				<groupId>org.talend.components</groupId>
 				<artifactId>components-common</artifactId>
 				<version>${components.version}</version>
+				<classifier>bundle</classifier>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
+				<artifactId>components-common</artifactId>
+				<version>${components.version}</version>
 				<classifier>tests</classifier>
 			</dependency>
 			<dependency>
 				<groupId>org.talend.components</groupId>
 				<artifactId>components-common-oauth</artifactId>
 				<version>${components.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
+				<artifactId>components-common-oauth</artifactId>
+				<version>${components.version}</version>
+				<classifier>bundle</classifier>
 			</dependency>
 			<dependency>
 				<groupId>org.talend.components</groupId>
