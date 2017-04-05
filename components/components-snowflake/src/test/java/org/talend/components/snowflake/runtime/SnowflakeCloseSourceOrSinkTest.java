@@ -46,7 +46,7 @@ public class SnowflakeCloseSourceOrSinkTest {
 
         result = closeSourceOrSink.validate(null);
 
-        assertEquals(result, ValidationResult.OK);
+        assertEquals(result.getStatus(), ValidationResult.OK.getStatus());
     }
 
 }
