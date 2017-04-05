@@ -42,12 +42,12 @@ public class TSnowflakeInputPropertiesTest {
 	@Test
 	public void testGetAllSchemaPropertiesConnectors() {
 		Set<PropertyPathConnector> allSchemaPropertiesConnectorsForOutputConnection;
-		Set<PropertyPathConnector> allSchemaPropertiesConnectorsForNotOutputConnection;
+		Set<PropertyPathConnector> allSchemaPropertiesConnectorsForInputConnection;
 		
 		allSchemaPropertiesConnectorsForOutputConnection = inputProperties.getAllSchemaPropertiesConnectors(true);
-		allSchemaPropertiesConnectorsForNotOutputConnection = inputProperties.getAllSchemaPropertiesConnectors(false);
+		allSchemaPropertiesConnectorsForInputConnection = inputProperties.getAllSchemaPropertiesConnectors(false);
 		
-		assertEquals(allSchemaPropertiesConnectorsForNotOutputConnection, Collections.EMPTY_SET);
+		assertEquals(allSchemaPropertiesConnectorsForInputConnection, Collections.EMPTY_SET);
 		assertEquals(allSchemaPropertiesConnectorsForOutputConnection, 
 				Collections.singleton(new PropertyPathConnector(Connector.MAIN_NAME, "table.main")));
 	}

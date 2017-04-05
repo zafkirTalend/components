@@ -25,93 +25,92 @@ import org.talend.daikon.properties.property.SchemaProperty;
 
 public class TSnowflakeOutputPropertiesTest {
 
-	TSnowflakeOutputProperties outputProperties;
-	
-	@Rule
+    TSnowflakeOutputProperties outputProperties;
+
+    @Rule
     public ErrorCollector errorCollector = new ErrorCollector();
-	
-	@Before
-	public void reset() {
-		outputProperties = new TSnowflakeOutputProperties("output");
-		outputProperties.init();
-	}
-	
-	@Test
-	public void testI18N() {
+
+    @Before
+    public void reset() {
+        outputProperties = new TSnowflakeOutputProperties("output");
+        outputProperties.init();
+    }
+
+    @Test
+    public void testI18N() {
         ComponentTestUtils.checkAllI18N(outputProperties, errorCollector);
     }
-	
-	@Test
-	public void testVisible() {
-		Form main;
-		boolean isOutputActionPropertyVisible;
-		boolean isUpsertKeyColumnVisible;
-		boolean isUpsertKeyColumnVisibleWhenOutputActionIsUpsert;
-		
-		main = outputProperties.getForm(Form.MAIN);
-		isOutputActionPropertyVisible = main.getWidget(outputProperties.outputAction).isVisible();
-		isUpsertKeyColumnVisible = main.getWidget(outputProperties.upsertKeyColumn).isVisible();
-		
-		outputProperties.outputAction.setValue(OutputAction.UPSERT);
-		outputProperties.refreshLayout(main);
-		
-		isUpsertKeyColumnVisibleWhenOutputActionIsUpsert = main.getWidget(outputProperties.upsertKeyColumn).isVisible();
-		
-		assertTrue(isOutputActionPropertyVisible);
-		assertFalse(isUpsertKeyColumnVisible);
-		assertTrue(isUpsertKeyColumnVisibleWhenOutputActionIsUpsert);
-	}
-	
-	@Test
-	public void testDefaultValue() {
-		OutputAction defaultValueOutputAction;
-		
-		defaultValueOutputAction = outputProperties.outputAction.getValue();
-		
-		assertEquals(defaultValueOutputAction, OutputAction.INSERT);
-	}
-	
-	@Test
-	public void testTriggers() {
-		Form main;
-		boolean isOutputActionCalledAfter;
-		
-		main = outputProperties.getForm(Form.MAIN);
-		isOutputActionCalledAfter = main.getWidget(outputProperties.outputAction).isCallAfter();
-		
-		
-		assertTrue(isOutputActionCalledAfter);
-	}
-	
-	@Test
-	public void testGetAllSchemaPropertiesConnectors() {
-		Set<PropertyPathConnector> schemaPropertyForOutputConnection;
-		Set<PropertyPathConnector> schemaPropertyForInputConnection;
-		
-		schemaPropertyForOutputConnection = outputProperties.getAllSchemaPropertiesConnectors(false);
-		schemaPropertyForInputConnection = outputProperties.getAllSchemaPropertiesConnectors(true);
-		
-		assertTrue(schemaPropertyForOutputConnection.size() == 1);
-		assertTrue(schemaPropertyForInputConnection.size() == 1);
-		
-		//BUG THERE??? Method sets MAIN_CONNECTOR instead of FLOW_CONNECTOR
-		assertTrue(schemaPropertyForOutputConnection.contains(outputProperties.FLOW_CONNECTOR));  
-		assertTrue(schemaPropertyForInputConnection.contains(outputProperties.REJECT_CONNECTOR));
-		
-	}
-	
-	@Test
-	public void testGetFieldNames() {
-		Schema runtimeSchema;
-		Property<Schema> schemaProperty;
-		List<String> propertyFieldNames;
-		List<String> expectedPropertyFieldNames;
-		
-		Schema emptySchema;
-		Property<Schema> emptySchemaProperty;
-		List<String> emptyPropertyFieldNames;
-		
-	    runtimeSchema = SchemaBuilder.builder().record("Record").fields() //
+
+    @Test
+    public void testVisible() {
+        Form main;
+        boolean isOutputActionPropertyVisible;
+        boolean isUpsertKeyColumnVisible;
+        boolean isUpsertKeyColumnVisibleWhenOutputActionIsUpsert;
+
+        main = outputProperties.getForm(Form.MAIN);
+        isOutputActionPropertyVisible = main.getWidget(outputProperties.outputAction).isVisible();
+        isUpsertKeyColumnVisible = main.getWidget(outputProperties.upsertKeyColumn).isVisible();
+
+        outputProperties.outputAction.setValue(OutputAction.UPSERT);
+        outputProperties.refreshLayout(main);
+
+        isUpsertKeyColumnVisibleWhenOutputActionIsUpsert = main.getWidget(outputProperties.upsertKeyColumn).isVisible();
+
+        assertTrue(isOutputActionPropertyVisible);
+        assertFalse(isUpsertKeyColumnVisible);
+        assertTrue(isUpsertKeyColumnVisibleWhenOutputActionIsUpsert);
+    }
+
+    @Test
+    public void testDefaultValue() {
+        OutputAction defaultValueOutputAction;
+
+        defaultValueOutputAction = outputProperties.outputAction.getValue();
+
+        assertEquals(defaultValueOutputAction, OutputAction.INSERT);
+    }
+
+    @Test
+    public void testTriggers() {
+        Form main;
+        boolean isOutputActionCalledAfter;
+
+        main = outputProperties.getForm(Form.MAIN);
+        isOutputActionCalledAfter = main.getWidget(outputProperties.outputAction).isCallAfter();
+
+        assertTrue(isOutputActionCalledAfter);
+    }
+
+    @Test
+    public void testGetAllSchemaPropertiesConnectors() {
+        Set<PropertyPathConnector> schemaPropertyForOutputConnection;
+        Set<PropertyPathConnector> schemaPropertyForInputConnection;
+
+        schemaPropertyForOutputConnection = outputProperties.getAllSchemaPropertiesConnectors(false);
+        schemaPropertyForInputConnection = outputProperties.getAllSchemaPropertiesConnectors(true);
+
+        assertTrue(schemaPropertyForOutputConnection.size() == 1);
+        assertTrue(schemaPropertyForInputConnection.size() == 1);
+
+        // BUG THERE??? Method sets MAIN_CONNECTOR instead of FLOW_CONNECTOR
+        assertTrue(schemaPropertyForOutputConnection.contains(outputProperties.FLOW_CONNECTOR));
+        assertTrue(schemaPropertyForInputConnection.contains(outputProperties.REJECT_CONNECTOR));
+
+    }
+
+    @Test
+    public void testGetFieldNames() {
+        Schema runtimeSchema;
+        Property<Schema> schemaProperty;
+        List<String> propertyFieldNames;
+        List<String> expectedPropertyFieldNames;
+
+        Schema emptySchema;
+        Property<Schema> emptySchemaProperty;
+        List<String> emptyPropertyFieldNames;
+
+        runtimeSchema = SchemaBuilder.builder().record("Record").fields() //
                 .name("logicalTime").type(AvroUtils._logicalTime()).noDefault() //
                 .name("logicalDate").type(AvroUtils._logicalDate()).noDefault() //
                 .name("logicalTimestamp").type(AvroUtils._logicalTimestamp()).noDefault() //
@@ -125,39 +124,32 @@ public class TSnowflakeOutputPropertiesTest {
                 .prop(DiSchemaConstants.TALEND6_COLUMN_PATTERN, "yyyy-MM-dd'T'HH:mm:ss'000Z'").type().nullable().longType() //
                 .noDefault() //
                 .endRecord(); //
-	
-	    emptySchema = SchemaBuilder.builder().record("EmptyRecord").fields().endRecord();
-	    
-	    
-	    schemaProperty = new SchemaProperty("schema");
-	    schemaProperty.setValue(runtimeSchema);
-	    
-	    emptySchemaProperty = new SchemaProperty("Empty schema");
-	    emptySchemaProperty.setValue(emptySchema);
-	    
-	    expectedPropertyFieldNames = new ArrayList<>();
-	    expectedPropertyFieldNames.add("logicalTime");
-	    expectedPropertyFieldNames.add("logicalDate");
-	    expectedPropertyFieldNames.add("logicalTimestamp");
-	    expectedPropertyFieldNames.add("id");
-	    expectedPropertyFieldNames.add("name");
-	    expectedPropertyFieldNames.add("age");
-	    expectedPropertyFieldNames.add("valid");
-	    expectedPropertyFieldNames.add("address");
-	    expectedPropertyFieldNames.add("comment");
-	    expectedPropertyFieldNames.add("createdDate");
-	    
-	    
-	    
-	    
-	    propertyFieldNames = outputProperties.getFieldNames(schemaProperty);
-	    emptyPropertyFieldNames = outputProperties.getFieldNames(emptySchemaProperty);
-	    
-	    
-	
-	    assertTrue(propertyFieldNames.size() == expectedPropertyFieldNames.size());
-	    assertEquals(propertyFieldNames, expectedPropertyFieldNames);
-	    
-	    assertTrue(emptyPropertyFieldNames.isEmpty());
-	}
+
+        emptySchema = SchemaBuilder.builder().record("EmptyRecord").fields().endRecord();
+
+        schemaProperty = new SchemaProperty("schema");
+        schemaProperty.setValue(runtimeSchema);
+
+        emptySchemaProperty = new SchemaProperty("Empty schema");
+        emptySchemaProperty.setValue(emptySchema);
+
+        expectedPropertyFieldNames = new ArrayList<>();
+        expectedPropertyFieldNames.add("logicalTime");
+        expectedPropertyFieldNames.add("logicalDate");
+        expectedPropertyFieldNames.add("logicalTimestamp");
+        expectedPropertyFieldNames.add("id");
+        expectedPropertyFieldNames.add("name");
+        expectedPropertyFieldNames.add("age");
+        expectedPropertyFieldNames.add("valid");
+        expectedPropertyFieldNames.add("address");
+        expectedPropertyFieldNames.add("comment");
+        expectedPropertyFieldNames.add("createdDate");
+
+        propertyFieldNames = outputProperties.getFieldNames(schemaProperty);
+        emptyPropertyFieldNames = outputProperties.getFieldNames(emptySchemaProperty);
+
+        assertEquals(propertyFieldNames, expectedPropertyFieldNames);
+
+        assertTrue(emptyPropertyFieldNames.isEmpty());
+    }
 }

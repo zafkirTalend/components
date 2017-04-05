@@ -21,106 +21,107 @@ import org.talend.daikon.runtime.RuntimeInfo;
 
 public class TSnowflakeOutputDefinitionTest {
 
-	TSnowflakeOutputDefinition outputDefinition;
-	
-	@Before
-	public void reset() {
-		outputDefinition = new TSnowflakeOutputDefinition();
-	}
-	
-	@Test
-	public void testIsSchemaAutoPropagate() {
-		boolean isSchemaAutoPropagate;
-		
-		isSchemaAutoPropagate = outputDefinition.isSchemaAutoPropagate();
-		
-		assertFalse(isSchemaAutoPropagate);
-	}
+    TSnowflakeOutputDefinition outputDefinition;
+
+    @Before
+    public void reset() {
+        outputDefinition = new TSnowflakeOutputDefinition();
+    }
+
+    @Test
+    public void testIsSchemaAutoPropagate() {
+        boolean isSchemaAutoPropagate;
+
+        isSchemaAutoPropagate = outputDefinition.isSchemaAutoPropagate();
+
+        assertFalse(isSchemaAutoPropagate);
+    }
 
     @Test
     public void testIsConditionalInputs() {
         boolean isConditionalInputs;
-        
+
         isConditionalInputs = outputDefinition.isConditionalInputs();
-        
+
         assertTrue(isConditionalInputs);
     }
 
-	@Test
-	public void testIsRejectAfterClose() {
-	    boolean isRejectAfterClose;
-	    
-	    isRejectAfterClose = outputDefinition.isRejectAfterClose();
-	    
-	    assertTrue(isRejectAfterClose);
-	}
+    @Test
+    public void testIsRejectAfterClose() {
+        boolean isRejectAfterClose;
 
-	@Test
+        isRejectAfterClose = outputDefinition.isRejectAfterClose();
+
+        assertTrue(isRejectAfterClose);
+    }
+
+    @Test
     public void testGetPartitioning() {
-    	String partitioning;
-    	
+        String partitioning;
+
         partitioning = outputDefinition.getPartitioning();
-    	
+
         assertEquals(partitioning, outputDefinition.AUTO);
     }
 
     @Test
     public void testGetPropertyClass() {
-    	Class<? extends ComponentProperties> propertyClass;
-    	
-    	propertyClass = outputDefinition.getPropertyClass();
-        
-    	assertEquals(propertyClass, TSnowflakeOutputProperties.class);
-        
+        Class<? extends ComponentProperties> propertyClass;
+
+        propertyClass = outputDefinition.getPropertyClass();
+
+        assertEquals(propertyClass, TSnowflakeOutputProperties.class);
+
     }
 
     @Test
     public void testGetNestedCompatibleComponentPropertiesClass() {
-    	Class<? extends ComponentProperties>[] nestedCompatibleComponentPropertiesClass;
-    	
-    	nestedCompatibleComponentPropertiesClass = outputDefinition.getNestedCompatibleComponentPropertiesClass();
-    	assertTrue(nestedCompatibleComponentPropertiesClass.length == 2);
-		assertArrayEquals(nestedCompatibleComponentPropertiesClass, new Class[] {SnowflakeConnectionProperties.class, SnowflakeTableProperties.class});
-	
+        Class<? extends ComponentProperties>[] nestedCompatibleComponentPropertiesClass;
+
+        nestedCompatibleComponentPropertiesClass = outputDefinition.getNestedCompatibleComponentPropertiesClass();
+        assertTrue(nestedCompatibleComponentPropertiesClass.length == 2);
+        assertArrayEquals(nestedCompatibleComponentPropertiesClass,
+                new Class[] { SnowflakeConnectionProperties.class, SnowflakeTableProperties.class });
+
     }
 
     @Test
     public void testGetReturnProperties() {
-    	Property<?>[] properties;
-    	
-    	properties = outputDefinition.getReturnProperties();
-    	
-    	assertArrayEquals(properties,  new Property<?>[]{outputDefinition.RETURN_ERROR_MESSAGE_PROP, 
-    											outputDefinition.RETURN_TOTAL_RECORD_COUNT_PROP, 
-    											outputDefinition.RETURN_SUCCESS_RECORD_COUNT_PROP,                
-    											outputDefinition.RETURN_REJECT_RECORD_COUNT_PROP});
-     
+        Property<?>[] properties;
+
+        properties = outputDefinition.getReturnProperties();
+
+        assertArrayEquals(properties,
+                new Property<?>[] { outputDefinition.RETURN_ERROR_MESSAGE_PROP, outputDefinition.RETURN_TOTAL_RECORD_COUNT_PROP,
+                        outputDefinition.RETURN_SUCCESS_RECORD_COUNT_PROP, outputDefinition.RETURN_REJECT_RECORD_COUNT_PROP });
+
     }
 
     @Test
     public void testGetRuntimeInfo() {
-    	
-    	RuntimeInfo runtimeInfoForIncomingTopology;
-    	RuntimeInfo runtimeInfoForIncomingAndOutgoingTopology;
-		 
-		runtimeInfoForIncomingTopology = outputDefinition.getRuntimeInfo(ExecutionEngine.DI, null, ConnectorTopology.INCOMING);
-		runtimeInfoForIncomingAndOutgoingTopology =  outputDefinition.getRuntimeInfo(ExecutionEngine.DI, null, ConnectorTopology.INCOMING_AND_OUTGOING);
-		
-		assertNotNull(runtimeInfoForIncomingTopology);
-		assertNotNull(runtimeInfoForIncomingAndOutgoingTopology);
-		
+
+        RuntimeInfo runtimeInfoForIncomingTopology;
+        RuntimeInfo runtimeInfoForIncomingAndOutgoingTopology;
+
+        runtimeInfoForIncomingTopology = outputDefinition.getRuntimeInfo(ExecutionEngine.DI, null, ConnectorTopology.INCOMING);
+        runtimeInfoForIncomingAndOutgoingTopology = outputDefinition.getRuntimeInfo(ExecutionEngine.DI, null,
+                ConnectorTopology.INCOMING_AND_OUTGOING);
+
+        assertNotNull(runtimeInfoForIncomingTopology);
+        assertNotNull(runtimeInfoForIncomingAndOutgoingTopology);
+
     }
 
     @Test
-	 public void testGetSupportedConnectorTopologies() {
-		 Set<ConnectorTopology> supportedConnectorTopologies;
-		 Set <ConnectorTopology> requiredConnectorTopologies;
-		 
-		 requiredConnectorTopologies = EnumSet.of(ConnectorTopology.INCOMING, ConnectorTopology.INCOMING_AND_OUTGOING);
-		 supportedConnectorTopologies = outputDefinition.getSupportedConnectorTopologies();
-		 
-		 assertEquals(requiredConnectorTopologies, supportedConnectorTopologies);
-	 }
-//	
-	
+    public void testGetSupportedConnectorTopologies() {
+        Set<ConnectorTopology> supportedConnectorTopologies;
+        Set<ConnectorTopology> requiredConnectorTopologies;
+
+        requiredConnectorTopologies = EnumSet.of(ConnectorTopology.INCOMING, ConnectorTopology.INCOMING_AND_OUTGOING);
+        supportedConnectorTopologies = outputDefinition.getSupportedConnectorTopologies();
+
+        assertEquals(requiredConnectorTopologies, supportedConnectorTopologies);
+    }
+    //
+
 }
