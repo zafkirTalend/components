@@ -1,57 +1,80 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>org.talend.components</groupId>
-		<artifactId>components-parent</artifactId>
+		<artifactId>sdk-parent</artifactId>
 		<version>0.18.0-SNAPSHOT</version>
-		<relativePath>../../components-parent/pom.xml</relativePath>
+		<relativePath>../../sdk-parent/pom.xml</relativePath>
 	</parent>
 
 	<name>Components - OAuth</name>
 	<artifactId>components-common-oauth</artifactId>
 	<packaging>bundle</packaging>
 
+	<properties>
+		<oltu-oauth2.version>1.0.0</oltu-oauth2.version>
+		<rest-assured.version>3.0.1</rest-assured.version>
+	</properties>
+
 	<dependencies>
+		<!-- Talend compile -->
 		<dependency>
-			<groupId>org.apache.oltu.oauth2</groupId>
-			<artifactId>org.apache.oltu.oauth2.client</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>9.2.19.v20160908</version>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.talend.components</groupId>
 			<artifactId>components-api</artifactId>
 		</dependency>
+		<!-- Third party compile -->
 		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-common</artifactId>
-			<scope>test</scope>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-common</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
+			<groupId>org.apache.oltu.oauth2</groupId>
+			<artifactId>org.apache.oltu.oauth2.client</artifactId>
+			<version>${oltu-oauth2.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.oltu.oauth2</groupId>
+			<artifactId>org.apache.oltu.oauth2.common</artifactId>
+			<version>${oltu-oauth2.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-util</artifactId>
+		</dependency>
+		<!-- Talend test -->
 		<dependency>
 			<groupId>org.talend.components</groupId>
 			<artifactId>components-api</artifactId>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
+		<!-- Third party test -->
 		<dependency>
 			<groupId>io.rest-assured</groupId>
 			<artifactId>rest-assured</artifactId>
-			<version>3.0.1</version>
+			<version>${rest-assured.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
 
 	<build>
 		<plugins>
@@ -82,7 +105,7 @@
 							<classifier>bundle</classifier>
 							<instructions>
 								<Bundle-SymbolicName>org.talend.components.common-oauth</Bundle-SymbolicName>
-								<Import-Package>org.talend*,javax.net.ssl*</Import-Package>
+								<Import-Package>org.talend*</Import-Package>
 								<Service-Component>*</Service-Component>
 								<Embed-Transitive>true</Embed-Transitive><!-- We need to embed oauth.common 
 									this is why we set this to true -->
