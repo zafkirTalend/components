@@ -1,68 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.talend.components</groupId>
-        <artifactId>components-parent</artifactId>
-        <version>0.18.0-SNAPSHOT</version>
-        <relativePath>../../components-parent/pom.xml</relativePath>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.talend.components</groupId>
+		<artifactId>sdk-parent</artifactId>
+		<version>0.18.0-SNAPSHOT</version>
+		<relativePath>../../sdk-parent/pom.xml</relativePath>
+	</parent>
 
-    <name>Component Command Line Property Tester</name>
-    <artifactId>components-api-proptester</artifactId>
+	<name>Component Command Line Property Tester</name>
+	<artifactId>components-api-proptester</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>annotation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <version>1.4.1.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.talend.daikon</groupId>
-            <artifactId>daikon-spring-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.talend.components</groupId>
-            <artifactId>components-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.talend.components</groupId>
-            <artifactId>components-api-service-common</artifactId>
-        </dependency>
+	<properties>
+		<jline.version>2.12</jline.version>
+	</properties>
 
-        <dependency>
-            <groupId>jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>2.12</version>
-        </dependency>
+	<dependencies>
+		<!-- Talend compile -->
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api-service-common</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon-spring-utils</artifactId>
+		</dependency>
+		<!-- Third party compile -->
+		<dependency>
+			<groupId>biz.aQute.bnd</groupId>
+			<artifactId>annotation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jline</groupId>
+			<artifactId>jline</artifactId>
+			<version>${jline.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot</artifactId>
+		</dependency>
+	</dependencies>
 
-    </dependencies>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.4.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <mainClass>org.talend.components.proptester.PropertiesTester</mainClass>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.4.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<mainClass>org.talend.components.proptester.PropertiesTester</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
