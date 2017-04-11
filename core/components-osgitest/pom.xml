@@ -4,133 +4,155 @@
 
 	<parent>
 		<groupId>org.talend.components</groupId>
-		<artifactId>components-parent</artifactId>
+		<artifactId>sdk-parent</artifactId>
 		<version>0.18.0-SNAPSHOT</version>
-		<relativePath>../../components-parent/pom.xml</relativePath>
+		<relativePath>../../sdk-parent/pom.xml</relativePath>
 	</parent>
 
 	<properties>
-		<paxexamversion>4.9.1</paxexamversion>
+		<apache-felix.version>5.2.0</apache-felix.version>
+		<bundles-hamcrest.version>1.3_1</bundles-hamcrest.version>
+		<jetty-orbit-servlet.version>3.0.0.v201112011016</jetty-orbit-servlet.version>
+		<osgi-core.version>5.0.0</osgi-core.version>
+		<pax-exam.version>4.9.1</pax-exam.version>
 	</properties>
 
 	<name>Component API OSGI tests</name>
 	<artifactId>components-osgitest</artifactId>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-osgi</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-osgi</artifactId>
-			<classifier>tests</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-common</artifactId>
-			<classifier>tests</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api</artifactId>
-			<classifier>bundle</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api</artifactId>
-			<classifier>tests</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.daikon</groupId>
-			<artifactId>daikon</artifactId>
-			<classifier>bundle</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.daikon</groupId>
-			<artifactId>daikon</artifactId>
-			<classifier>tests</classifier>
-			<scope>test</scope>
-		</dependency>
+		<!-- Third party compile -->
 		<dependency>
 			<groupId>org.ops4j.pax.exam</groupId>
-			<artifactId>pax-exam-junit4</artifactId>
-			<version>${paxexamversion}</version>
+			<artifactId>pax-exam</artifactId>
+			<version>${pax-exam.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.ops4j.pax.exam</groupId>
-			<artifactId>pax-exam-link-mvn</artifactId>
-			<version>${paxexamversion}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.ops4j.pax.url</groupId>
-			<artifactId>pax-url-aether</artifactId>
-			<version>2.5.0</version>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.12</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>javax.inject</groupId>
-			<artifactId>javax.inject</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.framework</artifactId>
-			<version>5.2.0</version>
-		</dependency>
-		<dependency>
+		<dependency> <!-- provides container implementation -->
 			<groupId>org.ops4j.pax.exam</groupId>
 			<artifactId>pax-exam-container-forked</artifactId>
-			<version>${paxexamversion}</version>
+			<version>${pax-exam.version}</version>
 		</dependency>
 		<!-- use this to debug some issues with osgi dependencies -->
 		<!-- <dependency> -->
 		<!-- <groupId>org.ops4j.pax.exam</groupId> -->
 		<!-- <artifactId>pax-exam-container-native</artifactId> -->
-		<!-- <version>${paxexamversion}</version> -->
+		<!-- <version>${pax-exam.version}</version> -->
 		<!-- </dependency> -->
+		<dependency> <!-- provides link: protocol handler -->
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-link-mvn</artifactId>
+			<version>${pax-exam.version}</version>
+		</dependency>
+		<!-- Talend test -->
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<!-- Third party test -->
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-junit4</artifactId>
+			<version>${pax-exam.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.ops4j.pax.exam</groupId>
+			<artifactId>pax-exam-spi</artifactId>
+			<version>${pax-exam.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId> org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>${osgi-core.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Test runtime dependencies -->
+		<!-- Following dependencies are bundles, which are started in OSGi container 
+			during pax-exam tests -->
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.framework</artifactId>
+			<version>${apache-felix.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.servicemix.bundles</groupId>
 			<artifactId>org.apache.servicemix.bundles.hamcrest</artifactId>
-			<version>1.3_1</version>
+			<version>${bundles-hamcrest.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty.orbit</groupId>
 			<artifactId>javax.servlet</artifactId>
-			<version>3.0.0.v201112011016</version>
+			<version>${jetty-orbit-servlet.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<!-- added because Avro bundle has an import package for com.google.common.collect 
-				and it's pom does not import this bundle. -->
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>15.0</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api</artifactId>
+			<classifier>bundle</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api-service-osgi</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-api-service-osgi</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon</artifactId>
+			<classifier>bundle</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Not sure it is used -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.commons</groupId> -->
+<!-- 			<artifactId>commons-lang3</artifactId> -->
+<!-- 			<version>3.4</version> -->
+<!-- 		</dependency> -->
+		<!-- added because Avro bundle has an import package for com.google.common.collect 
+			and it's pom does not import this bundle. -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.google.guava</groupId> -->
+<!-- 			<artifactId>guava</artifactId> -->
+<!-- 			<version>15.0</version> -->
+<!-- 		</dependency> -->
 	</dependencies>
 
 	<build>
