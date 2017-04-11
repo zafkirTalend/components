@@ -4,18 +4,18 @@
 
     <parent>
         <groupId>org.talend.components</groupId>
-        <artifactId>components-parent</artifactId>
+        <artifactId>sdk-parent</artifactId>
         <version>0.18.0-SNAPSHOT</version>
-        <relativePath>../../components-parent/pom.xml</relativePath>
+        <relativePath>../../sdk-parent/pom.xml</relativePath>
     </parent>
 
-    <groupId>org.talend.components</groupId>
     <artifactId>components-adapter-beam-parent</artifactId>
     <packaging>pom</packaging>
 
     <name>Component API - Beam Parent POM</name>
 
     <properties>
+    	<auto-value.version>1.1</auto-value.version>
         <beam.version>0.6.0-tlnd</beam.version>
     </properties>
 
@@ -45,7 +45,7 @@
             <dependency>
                 <groupId>com.google.auto.value</groupId>
                 <artifactId>auto-value</artifactId>
-                <version>1.1</version>
+                <version>${auto-value.version}</version>
             </dependency>
 
             <!-- extensions -->
