@@ -73,6 +73,9 @@ public class KafkaConnection {
         String groupID = input.groupID.getValue();
         if (groupID != null && !"".equals(groupID)) {
             props.put(ConsumerConfig.GROUP_ID_CONFIG, groupID);
+        } else {
+            // If there is no consumer group specified, then never commit offsets.
+            props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         }
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, input.autoOffsetReset.getValue().toString().toLowerCase());
 
