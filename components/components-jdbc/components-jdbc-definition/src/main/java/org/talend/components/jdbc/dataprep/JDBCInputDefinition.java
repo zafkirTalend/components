@@ -76,4 +76,9 @@ public class JDBCInputDefinition extends AbstractComponentDefinition {
     public Property[] getReturnProperties() {
         return new Property[0];
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

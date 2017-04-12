@@ -56,4 +56,9 @@ public class JmsInputDefinition extends AbstractComponentDefinition {
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
         return EnumSet.of(ConnectorTopology.OUTGOING);
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

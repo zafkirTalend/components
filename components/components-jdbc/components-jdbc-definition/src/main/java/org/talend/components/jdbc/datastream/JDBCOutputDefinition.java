@@ -55,4 +55,9 @@ public class JDBCOutputDefinition extends AbstractComponentDefinition {
     public Class<? extends ComponentProperties> getPropertyClass() {
         return JDBCOutputProperties.class;
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

@@ -22,7 +22,6 @@ import org.talend.components.api.component.runtime.DependenciesReader;
 import org.talend.components.api.component.runtime.ExecutionEngine;
 import org.talend.components.api.component.runtime.SimpleRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.runtime.RuntimeInfo;
 
@@ -54,5 +53,10 @@ public class JmsOutputDefinition extends AbstractComponentDefinition {
 
     public Set<ConnectorTopology> getSupportedConnectorTopologies() {
         return EnumSet.of(ConnectorTopology.INCOMING);
+    }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
     }
 }

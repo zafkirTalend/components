@@ -74,4 +74,9 @@ public class ElasticsearchInputDefinition extends AbstractComponentDefinition {
     public String getIconKey() {
         return "elastic";
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

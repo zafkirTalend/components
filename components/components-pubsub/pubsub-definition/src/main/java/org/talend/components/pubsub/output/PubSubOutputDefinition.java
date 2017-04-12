@@ -68,4 +68,9 @@ public class PubSubOutputDefinition extends AbstractComponentDefinition {
     public String getIconKey() {
         return "pubsub";
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

@@ -85,4 +85,9 @@ public class HadoopClusterConfigurationInputDefinition extends AbstractComponent
     public Class<? extends ComponentProperties> getPropertyClass() {
         return HadoopClusterConfigurationInputProperties.class;
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

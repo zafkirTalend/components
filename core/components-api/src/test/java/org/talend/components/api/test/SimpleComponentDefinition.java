@@ -102,4 +102,9 @@ public class SimpleComponentDefinition extends AbstractComponentDefinition {
         return null;
     }
 
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
+
 }

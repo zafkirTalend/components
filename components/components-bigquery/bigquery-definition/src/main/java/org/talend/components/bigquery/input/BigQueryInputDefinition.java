@@ -68,4 +68,9 @@ public class BigQueryInputDefinition extends AbstractComponentDefinition {
     public String getIconKey() {
         return "bigquery";
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }

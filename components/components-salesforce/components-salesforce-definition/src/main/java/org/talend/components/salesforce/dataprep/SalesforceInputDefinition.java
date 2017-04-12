@@ -66,4 +66,9 @@ public class SalesforceInputDefinition extends AbstractComponentDefinition {
     public List<String> getSupportedProducts() {
         return Arrays.asList(SupportedProduct.DATAPREP);
     }
+
+    @Override
+    public String[] getFamilies() {
+        return new String[] {};
+    }
 }
