@@ -18,7 +18,6 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<talend-artifacts-repository>https://artifacts-oss.talend.com/nexus/content/repositories</talend-artifacts-repository>
 		<talend_snapshots_deployment>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/</talend_snapshots_deployment>
 		<talend_releases_deployment>https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/</talend_releases_deployment>
 	</properties>
@@ -96,7 +95,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>releases</id>
-			<url>${talend-artifacts-repository}/TalendOpenSourceRelease/</url>
+			<url>${talend_releases_deployment}</url>
 		</pluginRepository>
 	</pluginRepositories>
 

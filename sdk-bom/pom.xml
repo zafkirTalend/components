@@ -83,6 +83,29 @@
 			</dependency>
 			<dependency>
 				<groupId>org.talend.components</groupId>
+				<artifactId>components-api-service-rest</artifactId>
+				<version>${components-sdk.version}</version>
+				<type>test-jar</type>
+				<exclusions>
+					<exclusion>
+						<groupId>ch.qos.logback</groupId>
+						<artifactId>logback-classic</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
+				<artifactId>components-api-service-rest</artifactId>
+				<version>${components-sdk.version}</version>
+				<classifier>lib</classifier>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
+				<artifactId>components-common</artifactId>
+				<version>${components-sdk.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.talend.components</groupId>
 				<artifactId>components-osgitest</artifactId>
 				<version>${components-sdk.version}</version>
 			</dependency>
