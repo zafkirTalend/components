@@ -13,12 +13,15 @@
 package org.talend.components.salesforce.runtime.dataprep;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.junit.Assert;
 import org.junit.Test;
+import org.talend.components.api.component.SupportedProduct;
 import org.talend.components.api.component.runtime.Reader;
 import org.talend.components.salesforce.dataprep.SalesforceInputDefinition;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
@@ -36,6 +39,7 @@ public class SalesforceInputTestIT {
 
             SalesforceDataprepSource source = new SalesforceDataprepSource();
             source.initialize(null, properties);
+            source.validate(null);
             reader = source.createReader(null);
 
             reader.start();
@@ -71,6 +75,7 @@ public class SalesforceInputTestIT {
 
         SalesforceDataprepSource source = new SalesforceDataprepSource();
         source.initialize(null, properties);
+        source.validate(null);
         Reader reader = source.createReader(null);
 
         try {
@@ -100,6 +105,7 @@ public class SalesforceInputTestIT {
 
             SalesforceDataprepSource source = new SalesforceDataprepSource();
             source.initialize(null, properties);
+            source.validate(null);
             reader = source.createReader(null);
 
             reader.start();
@@ -136,6 +142,7 @@ public class SalesforceInputTestIT {
 
         SalesforceDataprepSource source = new SalesforceDataprepSource();
         source.initialize(null, properties);
+        source.validate(null);
         Reader reader = source.createReader(null);
 
         try {
@@ -170,6 +177,10 @@ public class SalesforceInputTestIT {
         SalesforceInputDefinition input_def = new SalesforceInputDefinition();
         SalesforceInputProperties input_props = (SalesforceInputProperties) input_def.createRuntimeProperties();
         input_props.setDatasetProperties(dataset);
+        List<String> products = input_def.getSupportedProducts();
+        assertNotNull(products);
+        assertEquals(1, products.size());
+        assertEquals(SupportedProduct.DATAPREP, products.get(0));
 
         return input_props;
     }
