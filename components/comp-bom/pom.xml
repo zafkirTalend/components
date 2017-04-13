@@ -1,0 +1,72 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.talend.components</groupId>
+	<artifactId>comp-bom</artifactId>
+	<version>0.18.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>Component BOM</name>
+	<!-- Versions should go in alphabetic order -->
+	<properties>
+		<!-- Dependency versions -->
+		<commons-io.version>2.5</commons-io.version>
+		<components-sdk.version>0.18.0-SNAPSHOT</components-sdk.version>
+		<spring.version>4.3.6.RELEASE</spring.version>
+		<spring-boot.version>1.5.1.RELEASE</spring-boot.version>
+		<!-- Plugin versions -->
+		<maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
+	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<!-- SDK bom import -->
+			<dependency>
+				<groupId>org.talend.components</groupId>
+				<artifactId>sdk-bom</artifactId>
+				<version>${components-sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- Components SDK -->
+			<!-- Talend/Daikon -->
+			<!-- Third party -->
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-test</artifactId>
+				<version>${spring-boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-test</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>${maven-bundle-plugin.version}</version>
+					<extensions>true</extensions>
+					<configuration>
+						<instructions>
+							<DynamicImport-Package>org.talend.daikon.*</DynamicImport-Package>
+						</instructions>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+		</plugins>
+	</build>
+
+</project>
