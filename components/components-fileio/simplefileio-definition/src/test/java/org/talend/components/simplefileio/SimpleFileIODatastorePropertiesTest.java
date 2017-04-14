@@ -13,7 +13,10 @@
 
 package org.talend.components.simplefileio;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
@@ -32,7 +35,13 @@ public class SimpleFileIODatastorePropertiesTest {
     /**
      * Useful constant listing all of the fields in the properties.
      */
-    public static final Iterable<String> ALL = Arrays.asList("userName");
+    public static final Iterable<String> ALL = Arrays.asList("fileSystemType", "useKerberos", "kerberosPrincipal",
+            "kerberosKeytab", "userName", "accessKey", "secretKey", "region");
+
+    public static final Iterable<String> HDFS = Arrays.asList("useKerberos", "kerberosPrincipal",
+            "kerberosKeytab", "userName");
+
+    public static final Iterable<String> S3 = Arrays.asList("accessKey", "secretKey", "region");
 
     /**
      * Instance to test. A new instance is created for each test.
@@ -62,7 +71,7 @@ public class SimpleFileIODatastorePropertiesTest {
 
         Form main = properties.getForm(Form.MAIN);
         assertThat(main, notNullValue());
-        assertThat(main.getWidgets(), hasSize(4));
+        assertThat(main.getWidgets(), hasSize(8));
 
         for (String field : ALL) {
             Widget w = main.getWidget(field);
@@ -79,9 +88,34 @@ public class SimpleFileIODatastorePropertiesTest {
         properties.useKerberos.setValue(false);
         properties.refreshLayout(main);
 
+        for (String field : HDFS) {
+            // true for everything but kerberosPrincipal or kerberosKeytab
+            assertThat(main.getWidget(field).isVisible(), is(field != "kerberosPrincipal" && field != "kerberosKeytab"));
+        }
+        for (String field : S3) {
+            assertThat(main.getWidget(field).isVisible(), is(false));
+        }
+
+        properties.useKerberos.setValue(true);
+        properties.refreshLayout(main);
+
         // All of the fields are visible.
-        for (String field : ALL) {
+        for (String field : HDFS) {
+            // true for everything but username
+            assertThat(main.getWidget(field).isVisible(), is(field != "userName"));
+        }
+        for (String field : S3) {
+            assertThat(main.getWidget(field).isVisible(), is(false));
+        }
+        properties.fileSystemType.setValue(FileSystemType.S3);
+        properties.refreshLayout(main);
+
+        // All of the fields are visible.
+        for (String field : S3) {
             assertThat(main.getWidget(field).isVisible(), is(true));
+        }
+        for (String field : HDFS) {
+            assertThat(main.getWidget(field).isVisible(), is(false));
         }
     }
 }

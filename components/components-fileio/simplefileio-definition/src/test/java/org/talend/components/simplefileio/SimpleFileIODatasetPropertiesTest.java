@@ -13,8 +13,10 @@
 
 package org.talend.components.simplefileio;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 
@@ -74,7 +76,7 @@ public class SimpleFileIODatasetPropertiesTest {
 
         Form main = properties.getForm(Form.MAIN);
         assertThat(main, notNullValue());
-        assertThat(main.getWidgets(), hasSize(6));
+        assertThat(main.getWidgets(), hasSize(12));
 
         for (String field : ALL) {
             Widget w = main.getWidget(field);
@@ -121,6 +123,26 @@ public class SimpleFileIODatasetPropertiesTest {
             }
 
         }
+
+        properties.getDatastoreProperties().fileSystemType.setValue(FileSystemType.S3);
+        properties.refreshLayout(main);
+        assertThat(main.getWidget("bucket").isVisible(), is(true));
+        assertThat(main.getWidget("object").isVisible(), is(true));
+        assertThat(main.getWidget("encryptDataInMotion").isVisible(), is(true));
+        assertThat(main.getWidget("kmsForDataInMotion").isVisible(), is(false));
+        assertThat(main.getWidget("encryptDataAtRest").isVisible(), is(true));
+        assertThat(main.getWidget("kmsForDataAtRest").isVisible(), is(false));
+
+        properties.encryptDataInMotion.setValue(true);
+        properties.encryptDataAtRest.setValue(true);
+        properties.refreshLayout(main);
+
+        assertThat(main.getWidget("bucket").isVisible(), is(true));
+        assertThat(main.getWidget("object").isVisible(), is(true));
+        assertThat(main.getWidget("encryptDataInMotion").isVisible(), is(true));
+        assertThat(main.getWidget("kmsForDataInMotion").isVisible(), is(true));
+        assertThat(main.getWidget("encryptDataAtRest").isVisible(), is(true));
+        assertThat(main.getWidget("kmsForDataAtRest").isVisible(), is(true));
     }
 
     /**

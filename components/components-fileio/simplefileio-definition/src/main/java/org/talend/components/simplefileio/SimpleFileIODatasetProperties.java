@@ -22,6 +22,7 @@ import org.talend.daikon.properties.property.PropertyFactory;
 
 public class SimpleFileIODatasetProperties extends PropertiesImpl implements DatasetProperties<SimpleFileIODatastoreProperties> {
 
+    // HDFS
     public Property<SimpleFileIOFormat> format = PropertyFactory.newEnum("format", SimpleFileIOFormat.class).setRequired();
 
     public Property<String> path = PropertyFactory.newString("path", "").setRequired();
@@ -35,6 +36,19 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
             .setValue(FieldDelimiterType.SEMICOLON);
 
     public Property<String> specificFieldDelimiter = PropertyFactory.newString("specificFieldDelimiter", ";");
+
+    // S3
+    public Property<String> bucket = PropertyFactory.newString("bucket");
+
+    public Property<String> object = PropertyFactory.newString("object");
+
+    public Property<Boolean> encryptDataInMotion = PropertyFactory.newBoolean("encryptDataInMotion", false);
+
+    public Property<String> kmsForDataInMotion = PropertyFactory.newString("kmsForDataInMotion");
+
+    public Property<Boolean> encryptDataAtRest = PropertyFactory.newBoolean("encryptDataAtRest", false);
+
+    public Property<String> kmsForDataAtRest = PropertyFactory.newString("kmsForDataAtRest");
 
     public final transient ReferenceProperties<SimpleFileIODatastoreProperties> datastoreRef = new ReferenceProperties<>(
             "datastoreRef", SimpleFileIODatastoreDefinition.NAME);
@@ -63,12 +77,22 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
+
+        // HDFS
         mainForm.addRow(format);
         mainForm.addRow(path);
         mainForm.addRow(recordDelimiter);
         mainForm.addRow(specificRecordDelimiter);
         mainForm.addRow(fieldDelimiter);
         mainForm.addRow(specificFieldDelimiter);
+
+        // S3
+        mainForm.addRow(bucket);
+        mainForm.addRow(object);
+        mainForm.addRow(encryptDataInMotion);
+        mainForm.addRow(kmsForDataInMotion);
+        mainForm.addRow(encryptDataAtRest);
+        mainForm.addRow(kmsForDataAtRest);
     }
 
     @Override
@@ -76,14 +100,33 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
         super.refreshLayout(form);
         // Main properties
         if (form.getName().equals(Form.MAIN)) {
-            form.getWidget(recordDelimiter).setVisible(format.getValue() == SimpleFileIOFormat.CSV);
-            form.getWidget(specificRecordDelimiter).setVisible(
-                    format.getValue() == SimpleFileIOFormat.CSV && recordDelimiter.getValue().equals(RecordDelimiterType.OTHER));
+            // HDFS
+            boolean useHDFS = FileSystemType.HDFS.equals(getDatastoreProperties().fileSystemType.getValue());
 
-            form.getWidget(fieldDelimiter).setVisible(format.getValue() == SimpleFileIOFormat.CSV);
-            form.getWidget(specificFieldDelimiter).setVisible(
-                    format.getValue() == SimpleFileIOFormat.CSV && fieldDelimiter.getValue().equals(FieldDelimiterType.OTHER));
+            form.getWidget(format).setVisible(useHDFS);
+            form.getWidget(path).setVisible(useHDFS);
 
+            boolean isCSV = format.getValue() == SimpleFileIOFormat.CSV;
+            form.getWidget(recordDelimiter).setVisible(useHDFS && isCSV);
+            form.getWidget(specificRecordDelimiter)
+                    .setVisible(useHDFS && isCSV && recordDelimiter.getValue().equals(RecordDelimiterType.OTHER));
+
+            form.getWidget(fieldDelimiter).setVisible(useHDFS && isCSV);
+            form.getWidget(specificFieldDelimiter)
+                    .setVisible(useHDFS && isCSV && fieldDelimiter.getValue().equals(FieldDelimiterType.OTHER));
+
+            // S3
+            boolean useS3 = FileSystemType.S3.equals(getDatastoreProperties().fileSystemType.getValue());
+            form.getWidget(bucket.getName()).setVisible(useS3);
+            form.getWidget(object.getName()).setVisible(useS3);
+            form.getWidget(encryptDataInMotion.getName()).setVisible(useS3);
+            boolean isVisibleEncryptDataInMotion = form.getWidget(encryptDataInMotion).isVisible()
+                    && encryptDataInMotion.getValue();
+            form.getWidget(kmsForDataInMotion.getName()).setVisible(isVisibleEncryptDataInMotion);
+            form.getWidget(encryptDataAtRest.getName()).setVisible(useS3);
+            boolean isVisibleEncryptDataAtRest = form.getWidget(encryptDataInMotion).isVisible()
+                    && encryptDataInMotion.getValue();
+            form.getWidget(kmsForDataAtRest.getName()).setVisible(isVisibleEncryptDataAtRest);
         }
     }
 
