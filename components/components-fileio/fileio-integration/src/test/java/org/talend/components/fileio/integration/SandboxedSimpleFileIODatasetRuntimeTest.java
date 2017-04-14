@@ -58,8 +58,8 @@ public class SandboxedSimpleFileIODatasetRuntimeTest {
         SimpleFileIODatastoreProperties datastoreProps = new SimpleFileIODatastoreProperties(null);
         datastoreProps.init();
         SimpleFileIODatasetProperties datasetProps = new SimpleFileIODatasetProperties(null);
-        datasetProps.init();
         datasetProps.setDatastoreProperties(datastoreProps);
+        datasetProps.init();
         return datasetProps;
     }
 
