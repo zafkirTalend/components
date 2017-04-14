@@ -10,7 +10,6 @@
 		<relativePath></relativePath>
 	</parent>
 
-
 	<groupId>org.talend.components</groupId>
 	<artifactId>components-api-service-rest</artifactId>
 	<version>0.18.0-SNAPSHOT</version>
@@ -129,6 +128,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-jdbc-runtime-beam</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.talend.libraries</groupId>
 			<artifactId>mysql-connector-java-5.1.30-bin</artifactId>
 			<version>6.0.0</version>
@@ -162,6 +168,7 @@
 		</dependency>
 
 	</dependencies>
+	<!-- dependencyManagement block may be added here and components bom may be included to manage versions -->
 	<build>
 		<plugins>
 			<plugin>
