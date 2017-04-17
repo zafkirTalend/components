@@ -42,15 +42,11 @@
         </dependency>
 
         <!-- includes s3 -->
+        <!-- use this low version to avoid jackson-databind conflict issue on spark -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.119</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.6.6</version>
+            <version>1.11.0</version>
         </dependency>
 
         <!-- includes avro -->
