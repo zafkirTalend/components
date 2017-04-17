@@ -9,6 +9,8 @@ import static org.talend.components.test.SimpleFileIOTestConstants.S3SecretKey;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.talend.components.simplefileio.FileSystemType;
+import org.talend.components.simplefileio.S3Region;
 import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -23,22 +25,22 @@ public class SimpleFileIODatastoreRuntimeTestIT {
 
     public static SimpleFileIODatastoreProperties createS3DatastoreProperties() {
         SimpleFileIODatastoreProperties properties = createDatastoreProperties();
-        properties.useS3.setValue(true);
-        properties.s3AccessKey.setValue(S3AccessKey);
-        properties.s3SecretKey.setValue(S3SecretKey);
-        properties.s3Region.setValue(S3Region);
+        properties.fileSystemType.setValue(FileSystemType.S3);
+        properties.accessKey.setValue(S3AccessKey);
+        properties.secretKey.setValue(S3SecretKey);
+        properties.region.setValue(org.talend.components.simplefileio.S3Region.valueOf(S3Region));
         return properties;
     }
 
     private static SimpleFileIODatastoreProperties createS3DatastoreProperties_wrongAccess() {
         SimpleFileIODatastoreProperties properties = createS3DatastoreProperties();
-        properties.s3AccessKey.setValue("wrong");
+        properties.accessKey.setValue("wrong");
         return properties;
     }
 
     private static SimpleFileIODatastoreProperties createS3DatastoreProperties_wrongSecret() {
         SimpleFileIODatastoreProperties properties = createS3DatastoreProperties();
-        properties.s3SecretKey.setValue("wrong");
+        properties.secretKey.setValue("wrong");
         return properties;
     }
 

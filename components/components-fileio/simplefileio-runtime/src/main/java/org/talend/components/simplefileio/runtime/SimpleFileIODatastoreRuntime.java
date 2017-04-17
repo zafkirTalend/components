@@ -15,11 +15,7 @@ package org.talend.components.simplefileio.runtime;
 import static java.util.Collections.emptyList;
 
 import java.util.Arrays;
-import java.util.UUID;
 
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.s3.AmazonS3Client;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.datastore.runtime.DatastoreRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
@@ -29,8 +25,10 @@ import org.talend.daikon.properties.ValidationResult;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Constants;
 import com.amazonaws.services.s3.model.HeadBucketRequest;
 
@@ -64,14 +62,17 @@ public class SimpleFileIODatastoreRuntime implements DatastoreRuntime<SimpleFile
 
     @Override
     public Iterable<ValidationResult> doHealthChecks(RuntimeContainer container) {
-        if (properties.useS3.getValue()) {
+        switch (properties.fileSystemType.getValue()) {
+        case S3: {
             try {
+                // To check the credentials and network, have to call some real function,
+                // connect successful when there is no exception.
                 AWSCredentialsProvider basicCredentials = new StaticCredentialsProvider(
-                        new BasicAWSCredentials(properties.s3AccessKey.getValue(), properties.s3SecretKey.getValue()));
+                        new BasicAWSCredentials(properties.accessKey.getValue(), properties.secretKey.getValue()));
                 AmazonS3 conn = new AmazonS3Client(basicCredentials);
-                conn.setRegion(RegionUtils.getRegion(properties.s3Region.getValue()));
+                conn.setRegion(RegionUtils.getRegion(properties.region.getValue().getValue()));
                 try {
-                    conn.headBucket(new HeadBucketRequest(UUID.randomUUID().toString()));
+                    conn.headBucket(new HeadBucketRequest("JUST_FOR_CHECK_CONNECTION"));
                 } catch (AmazonServiceException ase) {
                     // it means access successfully, so ignore
                     if (ase.getStatusCode() != Constants.NO_SUCH_BUCKET_STATUS_CODE) {
@@ -85,6 +86,9 @@ public class SimpleFileIODatastoreRuntime implements DatastoreRuntime<SimpleFile
                 vr.setStatus(ValidationResult.Result.ERROR);
                 return Arrays.asList(vr);
             }
+        }
+        case HDFS:
+        default:
         }
         return emptyList();
     }
