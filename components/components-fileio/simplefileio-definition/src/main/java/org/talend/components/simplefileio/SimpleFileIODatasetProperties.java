@@ -17,10 +17,8 @@ import org.talend.components.api.exception.error.ComponentsErrorCode;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.simplefileio.runtime.ISimpleFileIODatasetRuntime;
 import org.talend.daikon.exception.TalendRuntimeException;
-import org.talend.daikon.exception.error.ErrorCode;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.ReferenceProperties;
-import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
@@ -82,7 +80,6 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
     public void setupProperties() {
         super.setupProperties();
         format.setValue(SimpleFileIOFormat.CSV);
-        setDatastoreProperties(new SimpleFileIODatastoreProperties("init"));
     }
 
     @Override
