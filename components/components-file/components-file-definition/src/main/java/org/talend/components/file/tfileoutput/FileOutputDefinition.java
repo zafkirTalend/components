@@ -41,11 +41,21 @@ public class FileOutputDefinition extends AbstractComponentDefinition {
     }
 
     @Override
+    public boolean isSchemaAutoPropagate() {
+        return true;
+    }
+
+    @Override
+    public boolean isDataAutoPropagate() {
+        return true;
+    }
+
+    @Override
     public RuntimeInfo getRuntimeInfo(ExecutionEngine engine, ComponentProperties properties,
             ConnectorTopology connectorTopology) {
         assertEngineCompatibility(engine);
         assertConnectorTopologyCompatibility(connectorTopology);
-        return RuntimeInfoProvider.provideRuntimeInfo(connectorTopology);
+        return RuntimeInfoProvider.provideOutputRuntimeInfo(connectorTopology);
     }
 
     @Override

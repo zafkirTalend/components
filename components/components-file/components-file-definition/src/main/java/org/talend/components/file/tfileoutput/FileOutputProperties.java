@@ -35,8 +35,7 @@ public class FileOutputProperties extends FixedConnectorsComponentProperties{
 
     public SchemaProperties schema = new SchemaProperties("schema");
 
-    protected final transient PropertyPathConnector mainConnector =
-            new PropertyPathConnector(Connector.MAIN_NAME, "schema");
+    protected final transient PropertyPathConnector mainConnector = new PropertyPathConnector(Connector.MAIN_NAME, "schema");
 
     public final EnumProperty<StringDelimiter> delimiter =
             PropertyFactory.newEnum("delimiter", StringDelimiter.class);

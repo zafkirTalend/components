@@ -29,7 +29,7 @@ public final class RuntimeInfoProvider {
     public static final String MAVEN_RUNTIME_URI = "mvn:" + MAVEN_GROUP_ID + "/" + MAVEN_RUNTIME_ARTIFACT_ID;
 
     public static final String INPUT_RUNTIME_CLASS_NAME = "org.talend.components.file.runtime.reader.FileInputSource"; //$NON-NLS-1$
-    
+
     public static final String OUTPUT_RUNTIME_CLASS_NAME = "org.talend.components.file.runtime.writer.FileOutputSink";
 
     private RuntimeInfoProvider() {
@@ -39,15 +39,24 @@ public final class RuntimeInfoProvider {
     /**
      * Returns instance of {@link RuntimeInfo} for File component with runtime class name FileInputSource
      * or FileSink
-     * 
+     *
      * @return {@link RuntimeInfo} for File component
      */
-    public static RuntimeInfo provideRuntimeInfo(ConnectorTopology connectorTopology) {
-        
-        String implementationClass = 
-                connectorTopology == ConnectorTopology.OUTGOING ? INPUT_RUNTIME_CLASS_NAME 
-                        : OUTPUT_RUNTIME_CLASS_NAME;
+    public static RuntimeInfo provideRuntimeInfo(ConnectorTopology connector) {
+        if (connector == ConnectorTopology.OUTGOING) {
+            return new JarRuntimeInfo(MAVEN_RUNTIME_URI,
+                    DependenciesReader.computeDependenciesFilePath(MAVEN_GROUP_ID, MAVEN_RUNTIME_ARTIFACT_ID),
+                    INPUT_RUNTIME_CLASS_NAME);
+        }
+        return null;
+    }
+
+    public static RuntimeInfo provideOutputRuntimeInfo(ConnectorTopology connector) {
+        if (connector == ConnectorTopology.INCOMING) {
         return new JarRuntimeInfo(MAVEN_RUNTIME_URI,
-                DependenciesReader.computeDependenciesFilePath(MAVEN_GROUP_ID, MAVEN_RUNTIME_ARTIFACT_ID), implementationClass);
+                    DependenciesReader.computeDependenciesFilePath(MAVEN_GROUP_ID, MAVEN_RUNTIME_ARTIFACT_ID),
+                    OUTPUT_RUNTIME_CLASS_NAME);
+        }
+        return null;
     }
 }
