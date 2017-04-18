@@ -48,6 +48,8 @@ public class SimpleFileIOComponentFamilyDefinitionTest {
         assertThat(def.getDefinitions(), (Matcher) hasItem(hasProperty("name", is("SimpleFileIoDataset"))));
         assertThat(def.getDefinitions(), (Matcher) hasItem(hasProperty("name", is("SimpleFileIoInput"))));
         assertThat(def.getDefinitions(), (Matcher) hasItem(hasProperty("name", is("SimpleFileIoOutput"))));
+        assertThat(def.getDefinitions(), (Matcher) hasItem(hasProperty("name", is("S3Datastore"))));
+        assertThat(def.getDefinitions(), (Matcher) hasItem(hasProperty("name", is("S3Dataset"))));
     }
 
     /**
