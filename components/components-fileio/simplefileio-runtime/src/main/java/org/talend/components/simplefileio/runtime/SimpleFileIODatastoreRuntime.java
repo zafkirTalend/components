@@ -19,6 +19,7 @@ import java.util.Arrays;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.datastore.runtime.DatastoreRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
+import org.talend.components.simplefileio.runtime.s3.S3Connection;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
 import org.talend.daikon.properties.ValidationResult;
 
@@ -67,10 +68,7 @@ public class SimpleFileIODatastoreRuntime implements DatastoreRuntime<SimpleFile
             try {
                 // To check the credentials and network, have to call some real function,
                 // connect successful when there is no exception.
-                AWSCredentialsProvider basicCredentials = new StaticCredentialsProvider(
-                        new BasicAWSCredentials(properties.accessKey.getValue(), properties.secretKey.getValue()));
-                AmazonS3 conn = new AmazonS3Client(basicCredentials);
-                conn.setRegion(RegionUtils.getRegion(properties.region.getValue().getValue()));
+                AmazonS3 conn = S3Connection.createClient(properties);
                 try {
                     conn.headBucket(new HeadBucketRequest("JUST_FOR_CHECK_CONNECTION"));
                 } catch (AmazonServiceException ase) {

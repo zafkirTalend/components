@@ -12,22 +12,34 @@
 // ============================================================================
 package org.talend.components.simplefileio.runtime;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Sample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.common.dataset.runtime.DatasetRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
+import org.talend.components.simplefileio.runtime.s3.S3Connection;
 import org.talend.daikon.java8.Consumer;
 import org.talend.daikon.properties.ValidationResult;
 
-public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODatasetProperties> {
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.Region;
+
+public class SimpleFileIODatasetRuntime implements ISimpleFileIODatasetRuntime {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleFileIODatasetRuntime.class);
 
     /**
      * The dataset instance that this runtime is configured for.
@@ -79,4 +91,26 @@ public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODa
             p.run().waitUntilFinish();
         }
     }
+
+    @Override
+    public Set<String> listBuckets() {
+        AmazonS3 conn = S3Connection.createClient(properties.getDatastoreProperties());
+        List<Bucket> buckets = conn.listBuckets();
+        Set<String> bucketsName = new HashSet<>();
+        for (Bucket bucket : buckets) {
+            String bucketName = bucket.getName();
+            try {
+                String bucketLocation = conn.getBucketLocation(bucketName);
+                if (Region.fromValue(bucketLocation).toAWSRegion().getName()
+                        .equals(properties.getDatastoreProperties().region.getValue().getValue())) {
+                    bucketsName.add(bucketName);
+                }
+            } catch (Exception e) {
+                // Ignore any exception when calling getBucketLocation, try next
+                LOG.debug("Exception when check bucket location: {}", e.getMessage());
+            }
+        }
+        return bucketsName;
+    }
+
 }
