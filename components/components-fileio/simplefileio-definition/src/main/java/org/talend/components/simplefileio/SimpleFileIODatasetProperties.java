@@ -67,6 +67,9 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
 
     @Override
     public SimpleFileIODatastoreProperties getDatastoreProperties() {
+        if (datastoreRef.getReference() == null) {
+            setDatastoreProperties(new SimpleFileIODatastoreProperties("init"));
+        }
         return datastoreRef.getReference();
     }
 
