@@ -1,39 +1,23 @@
 package org.talend.components.simplefileio.runtime.s3;
 
 import static org.junit.Assert.assertEquals;
-import static org.talend.components.test.SimpleFileIOTestConstants.S3AccessKey;
-import static org.talend.components.test.SimpleFileIOTestConstants.S3Region;
-import static org.talend.components.test.SimpleFileIOTestConstants.S3SecretKey;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 import org.talend.daikon.properties.ValidationResult;
 
+/**
+ * Unit tests for {@link S3DatastoreRuntime}.
+ */
 public class S3DatastoreRuntimeTestIT {
 
+    /** Set up credentials for integration tests. */
+    @Rule
+    public S3TestResource s3 = S3TestResource.of();
+
     S3DatastoreRuntime runtime;
-
-    public static S3DatastoreProperties createS3DatastoreProperties() {
-        S3DatastoreProperties properties = new S3DatastoreProperties(null);
-        properties.init();
-        properties.accessKey.setValue(S3AccessKey);
-        properties.secretKey.setValue(S3SecretKey);
-        properties.region.setValue(org.talend.components.simplefileio.s3.S3Region.valueOf(S3Region));
-        return properties;
-    }
-
-    private static S3DatastoreProperties createS3DatastoreProperties_wrongAccess() {
-        S3DatastoreProperties properties = createS3DatastoreProperties();
-        properties.accessKey.setValue("wrong");
-        return properties;
-    }
-
-    private static S3DatastoreProperties createS3DatastoreProperties_wrongSecret() {
-        S3DatastoreProperties properties = createS3DatastoreProperties();
-        properties.secretKey.setValue("wrong");
-        return properties;
-    }
 
     @Before
     public void reset() {
@@ -42,16 +26,26 @@ public class S3DatastoreRuntimeTestIT {
 
     @Test
     public void doHealthChecksTest_s3() {
-        runtime.initialize(null, createS3DatastoreProperties());
+        runtime.initialize(null, s3.createS3DatastoreProperties());
         Iterable<ValidationResult> validationResults = runtime.doHealthChecks(null);
         assertEquals(ValidationResult.OK, validationResults.iterator().next());
 
-        runtime.initialize(null, createS3DatastoreProperties_wrongAccess());
-        validationResults = runtime.doHealthChecks(null);
-        assertEquals(ValidationResult.Result.ERROR, validationResults.iterator().next().getStatus());
+        // Wrong access key
+        {
+            S3DatastoreProperties wrongAccess = s3.createS3DatastoreProperties();
+            wrongAccess.accessKey.setValue("wrong");
+            runtime.initialize(null, wrongAccess);
+            validationResults = runtime.doHealthChecks(null);
+            assertEquals(ValidationResult.Result.ERROR, validationResults.iterator().next().getStatus());
+        }
 
-        runtime.initialize(null, createS3DatastoreProperties_wrongSecret());
-        validationResults = runtime.doHealthChecks(null);
-        assertEquals(ValidationResult.Result.ERROR, validationResults.iterator().next().getStatus());
+        // Wrong secret key
+        {
+            S3DatastoreProperties wrongSecret = s3.createS3DatastoreProperties();
+            wrongSecret.secretKey.setValue("wrong");
+            runtime.initialize(null, wrongSecret);
+            validationResults = runtime.doHealthChecks(null);
+            assertEquals(ValidationResult.Result.ERROR, validationResults.iterator().next().getStatus());
+        }
     }
 }

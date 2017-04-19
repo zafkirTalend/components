@@ -13,10 +13,12 @@
 package org.talend.components.simplefileio.runtime.sources;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.talend.components.simplefileio.runtime.ExtraHadoopConfiguration;
 import org.talend.components.simplefileio.runtime.SimpleFileIOAvroRegistry;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
 
@@ -32,11 +34,14 @@ public class CsvHdfsFileSource extends FileSourceBase<LongWritable, Text, CsvHdf
         SimpleFileIOAvroRegistry.get();
     }
 
-    private final String recordDelimiter;
-
     private CsvHdfsFileSource(UgiDoAs doAs, String filepattern, String recordDelimiter, SerializableSplit serializableSplit) {
         super(doAs, filepattern, TextInputFormat.class, LongWritable.class, Text.class, serializableSplit);
-        this.recordDelimiter = recordDelimiter;
+        getExtraHadoopConfiguration().set("textinputformat.record.delimiter", recordDelimiter);
+    }
+
+    private CsvHdfsFileSource(UgiDoAs doAs, String filepattern, ExtraHadoopConfiguration extraConfig,
+            SerializableSplit serializableSplit) {
+        super(doAs, filepattern, TextInputFormat.class, LongWritable.class, Text.class, extraConfig, serializableSplit);
     }
 
     public static CsvHdfsFileSource of(UgiDoAs doAs, String filepattern, String recordDelimiter) {
@@ -45,22 +50,13 @@ public class CsvHdfsFileSource extends FileSourceBase<LongWritable, Text, CsvHdf
 
     @Override
     protected CsvHdfsFileSource createSourceForSplit(SerializableSplit serializableSplit) {
-        CsvHdfsFileSource source = new CsvHdfsFileSource(doAs, filepattern, recordDelimiter, serializableSplit);
+        CsvHdfsFileSource source = new CsvHdfsFileSource(doAs, filepattern, getExtraHadoopConfiguration(), serializableSplit);
         source.setLimit(getLimit());
         return source;
     }
 
     @Override
-    protected CsvHdfsFileReader createReaderForSplit(SerializableSplit serializableSplit) throws IOException {
-        return new CsvHdfsFileReader(this, filepattern, serializableSplit);
-    }
-
-    private static class CsvHdfsFileReader extends UgiFileReader<LongWritable, Text> {
-
-        public CsvHdfsFileReader(CsvHdfsFileSource source, String filepattern, SerializableSplit serializableSplit)
-                throws IOException {
-            super(source);
-            job.getConfiguration().set("textinputformat.record.delimiter", source.recordDelimiter);
-        }
+    protected UgiFileReader createReaderForSplit(SerializableSplit serializableSplit) throws IOException {
+        return new UgiFileReader(this);
     }
 }

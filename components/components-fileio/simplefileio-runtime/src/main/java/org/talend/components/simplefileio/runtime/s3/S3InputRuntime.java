@@ -10,7 +10,7 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.simplefileio.runtime;
+package org.talend.components.simplefileio.runtime.s3;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -18,12 +18,17 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
+import org.talend.components.simplefileio.runtime.SimpleFileIOAvroRegistry;
+import org.talend.components.simplefileio.runtime.SimpleRecordFormatAvroIO;
+import org.talend.components.simplefileio.runtime.SimpleRecordFormatBase;
+import org.talend.components.simplefileio.runtime.SimpleRecordFormatCsvIO;
+import org.talend.components.simplefileio.runtime.SimpleRecordFormatParquetIO;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
+import org.talend.components.simplefileio.s3.input.S3InputProperties;
 import org.talend.daikon.properties.ValidationResult;
 
-public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<IndexedRecord>> implements
-        RuntimableRuntime<SimpleFileIOInputProperties> {
+public class S3InputRuntime extends PTransform<PBegin, PCollection<IndexedRecord>> implements
+        RuntimableRuntime<S3InputProperties> {
 
     static {
         // Ensure that the singleton for the SimpleFileIOAvroRegistry is created.
@@ -33,22 +38,22 @@ public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<Ind
     /**
      * The component instance that this runtime is configured for.
      */
-    private SimpleFileIOInputProperties properties = null;
+    private S3InputProperties properties = null;
 
     @Override
-    public ValidationResult initialize(RuntimeContainer container, SimpleFileIOInputProperties properties) {
+    public ValidationResult initialize(RuntimeContainer container, S3InputProperties properties) {
         this.properties = properties;
         return ValidationResult.OK;
     }
 
     @Override
     public PCollection<IndexedRecord> expand(PBegin in) {
-        // Controls the access security on the cluster.
-        UgiDoAs doAs = SimpleFileIODatastoreRuntime.getUgiDoAs(properties.getDatasetProperties().getDatastoreProperties());
-        String path = properties.getDatasetProperties().path.getValue();
+        // The UGI does not control security for S3.
+        UgiDoAs doAs = UgiDoAs.ofNone();
+        String path = S3Connection.getUriPath(properties.getDatasetProperties());
         int limit = properties.limit.getValue();
 
-        SimpleRecordFormat rf = null;
+        SimpleRecordFormatBase rf = null;
         switch (properties.getDatasetProperties().format.getValue()) {
 
         case AVRO:
@@ -56,8 +61,8 @@ public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<Ind
             break;
 
         case CSV:
-            rf = new SimpleRecordFormatCsvIO(doAs, path, limit, properties.getDatasetProperties().getRecordDelimiter(), properties
-                    .getDatasetProperties().getFieldDelimiter());
+            rf = new SimpleRecordFormatCsvIO(doAs, path, limit, properties.getDatasetProperties().getRecordDelimiter(),
+                    properties.getDatasetProperties().getFieldDelimiter());
             break;
 
         case PARQUET:
@@ -69,6 +74,7 @@ public class SimpleFileIOInputRuntime extends PTransform<PBegin, PCollection<Ind
             throw new RuntimeException("To be implemented: " + properties.getDatasetProperties().format.getValue());
         }
 
+        S3Connection.setS3Configuration(rf.getExtraHadoopConfiguration(), properties.getDatasetProperties());
         return rf.read(in);
     }
 }

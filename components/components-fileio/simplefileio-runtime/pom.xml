@@ -17,6 +17,9 @@
 
     <properties>
         <hadoop.version>2.7.0</hadoop.version>
+		<!-- TODO: Missing headBucket...
+		     use this low version to avoid jackson-databind conflict issue on spark -->
+        <!-- aws-java-sdk-s3 1.11.0-->
         <parquet.version>1.9.0</parquet.version>
         <spark.version>1.6.0</spark.version>
     </properties>
@@ -42,11 +45,11 @@
         </dependency>
 
         <!-- includes s3 -->
-        <!-- use this low version to avoid jackson-databind conflict issue on spark -->
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.11.0</version>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- includes avro -->
@@ -179,6 +182,9 @@
                         <s3.accesskey>${s3.accesskey}</s3.accesskey>
                         <s3.secretkey>${s3.secretkey}</s3.secretkey>
                         <s3.region>${s3.region}</s3.region>
+                        <s3.bucket>${s3.bucket}</s3.bucket>
+                        <s3.ssekmskey>${s3.ssekmskey}</s3.ssekmskey>
+                        <s3.csekmskey>${s3.csekmskey}</s3.csekmskey>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

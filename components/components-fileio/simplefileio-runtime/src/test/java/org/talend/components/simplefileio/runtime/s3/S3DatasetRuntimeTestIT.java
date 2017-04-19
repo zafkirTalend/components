@@ -14,16 +14,23 @@
 package org.talend.components.simplefileio.runtime.s3;
 
 import static org.junit.Assert.assertTrue;
-import static org.talend.components.simplefileio.runtime.s3.S3DatastoreRuntimeTestIT.createS3DatastoreProperties;
 
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.simplefileio.s3.S3DatasetProperties;
 import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 
+/**
+ * Unit tests for {@link S3DatasetRuntime}.
+ */
 public class S3DatasetRuntimeTestIT {
+
+    /** Set up credentials for integration tests. */
+    @Rule
+    public S3TestResource s3 = S3TestResource.of();
 
     S3DatasetRuntime runtime;
 
@@ -41,7 +48,7 @@ public class S3DatasetRuntimeTestIT {
 
     @Test
     public void listBuckets() {
-        runtime.initialize(null, createS3DatasetProperties(createS3DatastoreProperties()));
+        runtime.initialize(null, s3.createS3DatasetProperties());
         Set<String> bucketNames = runtime.listBuckets();
         assertTrue(bucketNames.size() > 0);
     }

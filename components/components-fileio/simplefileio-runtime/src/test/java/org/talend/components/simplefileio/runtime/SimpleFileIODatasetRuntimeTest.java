@@ -60,8 +60,8 @@ public class SimpleFileIODatasetRuntimeTest {
     public static SimpleFileIODatasetProperties createDatasetProperties() {
         // Configure the dataset.
         SimpleFileIODatasetProperties datasetProps = new SimpleFileIODatasetProperties(null);
-        datasetProps.setDatastoreProperties(SimpleFileIODatastoreRuntimeTest.createDatastoreProperties());
         datasetProps.init();
+        datasetProps.setDatastoreProperties(SimpleFileIODatastoreRuntimeTest.createDatastoreProperties());
         return datasetProps;
     }
 

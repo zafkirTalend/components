@@ -12,17 +12,11 @@
 // ============================================================================
 package org.talend.components.simplefileio.runtime;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Sample;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
@@ -30,14 +24,8 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.dataset.runtime.DatasetRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
-import org.talend.components.simplefileio.runtime.s3.S3Connection;
-import org.talend.components.simplefileio.s3.runtime.IS3DatasetRuntime;
 import org.talend.daikon.java8.Consumer;
 import org.talend.daikon.properties.ValidationResult;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.Region;
 
 public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODatasetProperties> {
 
@@ -91,5 +79,4 @@ public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODa
             p.run().waitUntilFinish();
         }
     }
-
 }

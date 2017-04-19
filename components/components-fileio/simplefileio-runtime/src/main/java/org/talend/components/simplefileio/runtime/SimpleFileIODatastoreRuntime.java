@@ -14,24 +14,11 @@ package org.talend.components.simplefileio.runtime;
 
 import static java.util.Collections.emptyList;
 
-import java.util.Arrays;
-
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.datastore.runtime.DatastoreRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
-import org.talend.components.simplefileio.runtime.s3.S3Connection;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
 import org.talend.daikon.properties.ValidationResult;
-
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.internal.Constants;
-import com.amazonaws.services.s3.model.HeadBucketRequest;
 
 public class SimpleFileIODatastoreRuntime implements DatastoreRuntime<SimpleFileIODatastoreProperties> {
 

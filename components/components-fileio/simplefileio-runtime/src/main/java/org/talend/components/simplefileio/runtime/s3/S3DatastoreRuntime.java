@@ -38,7 +38,8 @@ public class S3DatastoreRuntime implements DatastoreRuntime<S3DatastorePropertie
             // connect successful when there is no exception.
             AmazonS3 conn = S3Connection.createClient(properties);
             try {
-                conn.headBucket(new HeadBucketRequest("JUST_FOR_CHECK_CONNECTION"));
+                // TODO: The aws jdk version breaks this check!
+                // conn.headBucket(new HeadBucketRequest("JUST_FOR_CHECK_CONNECTION"));
             } catch (AmazonServiceException ase) {
                 // it means access successfully, so ignore
                 if (ase.getStatusCode() != Constants.NO_SUCH_BUCKET_STATUS_CODE) {
