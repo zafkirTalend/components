@@ -22,8 +22,8 @@ import org.talend.components.api.exception.ComponentException;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.common.datastore.DatastoreDefinition;
 import org.talend.components.simplefileio.SimpleFileIOComponentFamilyDefinition;
-import org.talend.components.simplefileio.input.SimpleFileIOInputDefinition;
-import org.talend.components.simplefileio.output.SimpleFileIOOutputDefinition;
+import org.talend.components.simplefileio.s3.input.S3InputDefinition;
+import org.talend.components.simplefileio.s3.output.S3OutputDefinition;
 import org.talend.daikon.definition.DefinitionImageType;
 import org.talend.daikon.definition.I18nDefinition;
 import org.talend.daikon.runtime.RuntimeInfo;
@@ -70,12 +70,12 @@ public class S3DatastoreDefinition extends I18nDefinition implements
 
     @Override
     public String getInputCompDefinitionName() {
-        return SimpleFileIOInputDefinition.NAME;
+        return S3InputDefinition.NAME;
     }
 
     @Override
     public String getOutputCompDefinitionName() {
-        return SimpleFileIOOutputDefinition.NAME;
+        return S3OutputDefinition.NAME;
     }
 
     @Override
