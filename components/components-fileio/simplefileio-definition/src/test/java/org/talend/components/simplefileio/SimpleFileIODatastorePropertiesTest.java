@@ -35,7 +35,9 @@ public class SimpleFileIODatastorePropertiesTest {
     /**
      * Useful constant listing all of the fields in the properties.
      */
-    public static final Iterable<String> ALL = Arrays.asList("userName");
+    public static final Iterable<String> ALL = Arrays.asList("useKerberos", "kerberosPrincipal",
+            "kerberosKeytab", "userName");
+
 
     /**
      * Instance to test. A new instance is created for each test.
@@ -82,9 +84,18 @@ public class SimpleFileIODatastorePropertiesTest {
         properties.useKerberos.setValue(false);
         properties.refreshLayout(main);
 
+        for (String field : ALL) {
+            // true for everything but kerberosPrincipal or kerberosKeytab
+            assertThat(main.getWidget(field).isVisible(), is(field != "kerberosPrincipal" && field != "kerberosKeytab"));
+        }
+
+        properties.useKerberos.setValue(true);
+        properties.refreshLayout(main);
+
         // All of the fields are visible.
         for (String field : ALL) {
-            assertThat(main.getWidget(field).isVisible(), is(true));
+            // true for everything but username
+            assertThat(main.getWidget(field).isVisible(), is(field != "userName"));
         }
     }
 }
