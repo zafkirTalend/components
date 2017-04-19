@@ -18,7 +18,7 @@ import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties.FieldDelimiterType;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties.RecordDelimiterType;
 import org.talend.components.simplefileio.SimpleFileIOFormat;
-import org.talend.components.simplefileio.runtime.ISimpleFileIODatasetRuntime;
+import org.talend.components.simplefileio.s3.runtime.IS3DatasetRuntime;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.ReferenceProperties;
@@ -136,9 +136,8 @@ public class S3DatasetProperties extends PropertiesImpl implements DatasetProper
         S3DatasetDefinition definition = new S3DatasetDefinition();
         RuntimeInfo runtimeInfo = definition.getRuntimeInfo(this);
         try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo, getClass().getClassLoader())) {
-            ISimpleFileIODatasetRuntime runtime = (ISimpleFileIODatasetRuntime) sandboxedInstance.getInstance();
-            // TODO
-            // runtime.initialize(null, this);
+            IS3DatasetRuntime runtime = (IS3DatasetRuntime) sandboxedInstance.getInstance();
+//             runtime.initialize(null, this);
             this.bucket.setPossibleValues(runtime.listBuckets());
         } catch (Exception e) {
             TalendRuntimeException.build(ComponentsErrorCode.IO_EXCEPTION, e).throwIt();

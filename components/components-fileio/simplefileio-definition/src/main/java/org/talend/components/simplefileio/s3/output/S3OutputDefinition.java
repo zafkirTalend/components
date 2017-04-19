@@ -46,7 +46,7 @@ public class S3OutputDefinition extends AbstractComponentDefinition {
 
     @Override
     public String getIconKey() {
-        return "file-hdfs-o";
+        return "file-s3-o";
     }
 
     @Override

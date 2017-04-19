@@ -27,7 +27,7 @@ import org.talend.daikon.runtime.RuntimeInfo;
 
 public class S3DatasetDefinition extends I18nDefinition implements DatasetDefinition<S3DatasetProperties> {
 
-    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.SimpleFileIODatasetRuntime";
+    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.s3.S3DatasetRuntime";
 
     public static final String NAME = "S3Dataset";
 

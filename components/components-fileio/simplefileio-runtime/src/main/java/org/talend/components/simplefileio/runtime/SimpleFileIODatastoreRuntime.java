@@ -63,31 +63,6 @@ public class SimpleFileIODatastoreRuntime implements DatastoreRuntime<SimpleFile
 
     @Override
     public Iterable<ValidationResult> doHealthChecks(RuntimeContainer container) {
-        switch (properties.fileSystemType.getValue()) {
-        case S3: {
-            try {
-                // To check the credentials and network, have to call some real function,
-                // connect successful when there is no exception.
-                AmazonS3 conn = S3Connection.createClient(properties);
-                try {
-                    conn.headBucket(new HeadBucketRequest("JUST_FOR_CHECK_CONNECTION"));
-                } catch (AmazonServiceException ase) {
-                    // it means access successfully, so ignore
-                    if (ase.getStatusCode() != Constants.NO_SUCH_BUCKET_STATUS_CODE) {
-                        throw ase;
-                    }
-                }
-                return Arrays.asList(ValidationResult.OK);
-            } catch (Exception e) {
-                ValidationResult vr = new ValidationResult();
-                vr.setMessage(e.getMessage());
-                vr.setStatus(ValidationResult.Result.ERROR);
-                return Arrays.asList(vr);
-            }
-        }
-        case HDFS:
-        default:
-        }
         return emptyList();
     }
 }

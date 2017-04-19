@@ -21,10 +21,11 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 
 public class S3Connection {
 
-    public static AmazonS3 createClient(SimpleFileIODatastoreProperties properties) {
+    public static AmazonS3 createClient(S3DatastoreProperties properties) {
         AWSCredentialsProvider basicCredentials = new StaticCredentialsProvider(
                 new BasicAWSCredentials(properties.accessKey.getValue(), properties.secretKey.getValue()));
         AmazonS3 conn = new AmazonS3Client(basicCredentials);

@@ -10,7 +10,8 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.components.simplefileio.runtime;
+
+package org.talend.components.simplefileio.runtime.s3;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +28,9 @@ import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.common.dataset.runtime.DatasetRuntime;
-import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
-import org.talend.components.simplefileio.runtime.s3.S3Connection;
+import org.talend.components.simplefileio.runtime.SimpleFileIOInputRuntime;
+import org.talend.components.simplefileio.s3.S3DatasetProperties;
 import org.talend.components.simplefileio.s3.runtime.IS3DatasetRuntime;
 import org.talend.daikon.java8.Consumer;
 import org.talend.daikon.properties.ValidationResult;
@@ -39,17 +39,34 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.Region;
 
-public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODatasetProperties> {
+public class S3DatasetRuntime implements IS3DatasetRuntime {
+
+    private static final Logger LOG = LoggerFactory.getLogger(S3DatasetRuntime.class);
 
     /**
      * The dataset instance that this runtime is configured for.
      */
-    private SimpleFileIODatasetProperties properties = null;
+    private S3DatasetProperties properties = null;
 
     @Override
-    public ValidationResult initialize(RuntimeContainer container, SimpleFileIODatasetProperties properties) {
-        this.properties = properties;
-        return ValidationResult.OK;
+    public Set<String> listBuckets() {
+        AmazonS3 conn = S3Connection.createClient(properties.getDatastoreProperties());
+        List<Bucket> buckets = conn.listBuckets();
+        Set<String> bucketsName = new HashSet<>();
+        for (Bucket bucket : buckets) {
+            String bucketName = bucket.getName();
+            try {
+                String bucketLocation = conn.getBucketLocation(bucketName);
+                if (Region.fromValue(bucketLocation).toAWSRegion().getName()
+                        .equals(properties.getDatastoreProperties().region.getValue().getValue())) {
+                    bucketsName.add(bucketName);
+                }
+            } catch (Exception e) {
+                // Ignore any exception when calling getBucketLocation, try next
+                LOG.debug("Exception when check bucket location: {}", e.getMessage());
+            }
+        }
+        return bucketsName;
     }
 
     @Override
@@ -92,4 +109,9 @@ public class SimpleFileIODatasetRuntime implements DatasetRuntime<SimpleFileIODa
         }
     }
 
+    @Override
+    public ValidationResult initialize(RuntimeContainer container, S3DatasetProperties properties) {
+        this.properties = properties;
+        return ValidationResult.OK;
+    }
 }

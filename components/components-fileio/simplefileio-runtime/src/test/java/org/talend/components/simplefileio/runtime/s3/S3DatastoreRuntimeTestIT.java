@@ -1,47 +1,43 @@
-package org.talend.components.simplefileio.runtime;
+package org.talend.components.simplefileio.runtime.s3;
 
-import static org.junit.Assert.*;
-import static org.talend.components.simplefileio.runtime.SimpleFileIODatastoreRuntimeTest
-        .createDatastoreProperties;
+import static org.junit.Assert.assertEquals;
 import static org.talend.components.test.SimpleFileIOTestConstants.S3AccessKey;
 import static org.talend.components.test.SimpleFileIOTestConstants.S3Region;
 import static org.talend.components.test.SimpleFileIOTestConstants.S3SecretKey;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.talend.components.simplefileio.FileSystemType;
-import org.talend.components.simplefileio.S3Region;
-import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
+import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 import org.talend.daikon.properties.ValidationResult;
 
-public class SimpleFileIODatastoreRuntimeTestIT {
+public class S3DatastoreRuntimeTestIT {
 
-    SimpleFileIODatastoreRuntime runtime;
+    S3DatastoreRuntime runtime;
 
-    @Before
-    public void reset() {
-        runtime = new SimpleFileIODatastoreRuntime();
-    }
-
-    public static SimpleFileIODatastoreProperties createS3DatastoreProperties() {
-        SimpleFileIODatastoreProperties properties = createDatastoreProperties();
-        properties.fileSystemType.setValue(FileSystemType.S3);
+    public static S3DatastoreProperties createS3DatastoreProperties() {
+        S3DatastoreProperties properties = new S3DatastoreProperties(null);
+        properties.init();
         properties.accessKey.setValue(S3AccessKey);
         properties.secretKey.setValue(S3SecretKey);
-        properties.region.setValue(org.talend.components.simplefileio.S3Region.valueOf(S3Region));
+        properties.region.setValue(org.talend.components.simplefileio.s3.S3Region.valueOf(S3Region));
         return properties;
     }
 
-    private static SimpleFileIODatastoreProperties createS3DatastoreProperties_wrongAccess() {
-        SimpleFileIODatastoreProperties properties = createS3DatastoreProperties();
+    private static S3DatastoreProperties createS3DatastoreProperties_wrongAccess() {
+        S3DatastoreProperties properties = createS3DatastoreProperties();
         properties.accessKey.setValue("wrong");
         return properties;
     }
 
-    private static SimpleFileIODatastoreProperties createS3DatastoreProperties_wrongSecret() {
-        SimpleFileIODatastoreProperties properties = createS3DatastoreProperties();
+    private static S3DatastoreProperties createS3DatastoreProperties_wrongSecret() {
+        S3DatastoreProperties properties = createS3DatastoreProperties();
         properties.secretKey.setValue("wrong");
         return properties;
+    }
+
+    @Before
+    public void reset() {
+        runtime = new S3DatastoreRuntime();
     }
 
     @Test

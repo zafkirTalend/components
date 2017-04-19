@@ -13,18 +13,12 @@
 
 package org.talend.components.simplefileio;
 
-import org.talend.components.api.exception.error.ComponentsErrorCode;
 import org.talend.components.common.dataset.DatasetProperties;
-import org.talend.components.simplefileio.runtime.ISimpleFileIODatasetRuntime;
-import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.ReferenceProperties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
-import org.talend.daikon.runtime.RuntimeInfo;
-import org.talend.daikon.runtime.RuntimeUtil;
-import org.talend.daikon.sandbox.SandboxedInstance;
 
 public class SimpleFileIODatasetProperties extends PropertiesImpl implements DatasetProperties<SimpleFileIODatastoreProperties> {
 
@@ -165,18 +159,6 @@ public class SimpleFileIODatasetProperties extends PropertiesImpl implements Dat
 
     public void afterFormat() {
         refreshLayout(getForm(Form.MAIN));
-    }
-
-    public void beforeBucket() {
-        SimpleFileIODatasetDefinition definition = new SimpleFileIODatasetDefinition();
-        RuntimeInfo runtimeInfo = definition.getRuntimeInfo(this);
-        try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo, getClass().getClassLoader())) {
-            ISimpleFileIODatasetRuntime runtime = (ISimpleFileIODatasetRuntime) sandboxedInstance.getInstance();
-            runtime.initialize(null, this);
-            this.bucket.setPossibleValues(runtime.listBuckets());
-        } catch (Exception e) {
-            TalendRuntimeException.build(ComponentsErrorCode.IO_EXCEPTION, e).throwIt();
-        }
     }
 
     public enum RecordDelimiterType {

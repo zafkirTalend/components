@@ -11,14 +11,15 @@
 //
 // ============================================================================
 
-package org.talend.components.simplefileio.runtime;
+package org.talend.components.simplefileio.s3.runtime;
 
 import org.talend.components.common.dataset.runtime.DatasetRuntime;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
+import org.talend.components.simplefileio.s3.S3DatasetProperties;
 
 import java.util.Set;
 
-public interface ISimpleFileIODatasetRuntime extends DatasetRuntime<SimpleFileIODatasetProperties> {
+public interface IS3DatasetRuntime extends DatasetRuntime<S3DatasetProperties> {
 
     public Set<String> listBuckets();
 }

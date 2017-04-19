@@ -46,7 +46,7 @@ public class S3DatastoreDefinitionTest {
     @Test
     public void testRuntimeInfo() {
         RuntimeInfo runtimeInfo = def.getRuntimeInfo(null);
-        assertThat(runtimeInfo.getRuntimeClassName(), is("org.talend.components.simplefileio.runtime.SimpleFileIODatastoreRuntime"));
+        assertThat(runtimeInfo.getRuntimeClassName(), is("org.talend.components.simplefileio.runtime.s3.S3DatastoreRuntime"));
         // The integration module tests things that aren't available in the RuntimeInfo module until after it is
         // installed in the local maven repository.
     }

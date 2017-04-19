@@ -11,37 +11,32 @@
 //
 // ============================================================================
 
-package org.talend.components.simplefileio.runtime;
+package org.talend.components.simplefileio.runtime.s3;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.talend.components.simplefileio.runtime.SimpleFileIODatasetRuntimeTest.createDatasetProperties;
-
-
-import static org.talend.components.simplefileio.runtime.SimpleFileIODatastoreRuntimeTestIT
-        .createS3DatastoreProperties;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
-import org.talend.components.simplefileio.SimpleFileIODatastoreProperties;
+import static org.talend.components.simplefileio.runtime.s3.S3DatastoreRuntimeTestIT.createS3DatastoreProperties;
 
 import java.util.Set;
 
-public class SimpleFileIODatasetRuntimeTestIT {
+import org.junit.Before;
+import org.junit.Test;
+import org.talend.components.simplefileio.s3.S3DatasetProperties;
+import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 
-    SimpleFileIODatasetRuntime runtime;
+public class S3DatasetRuntimeTestIT {
 
-    public static SimpleFileIODatasetProperties createS3DatasetProperties(SimpleFileIODatastoreProperties datastore) {
-        SimpleFileIODatasetProperties properties = createDatasetProperties();
+    S3DatasetRuntime runtime;
+
+    public static S3DatasetProperties createS3DatasetProperties(S3DatastoreProperties datastore) {
+        S3DatasetProperties properties = new S3DatasetProperties(null);
+        properties.init();
         properties.setDatastoreProperties(datastore);
         return properties;
     }
 
     @Before
     public void reset() {
-        runtime = new SimpleFileIODatasetRuntime();
+        runtime = new S3DatasetRuntime();
     }
 
     @Test

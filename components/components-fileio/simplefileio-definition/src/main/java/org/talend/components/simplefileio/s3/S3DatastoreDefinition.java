@@ -31,7 +31,7 @@ import org.talend.daikon.runtime.RuntimeInfo;
 public class S3DatastoreDefinition extends I18nDefinition implements
         DatastoreDefinition<S3DatastoreProperties> {
 
-    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.SimpleFileIODatastoreRuntime";
+    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.s3.S3DatastoreRuntime";
 
     public static final String NAME = "S3Datastore";
 
