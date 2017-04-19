@@ -76,7 +76,7 @@ public class SimpleFileIODatasetPropertiesTest {
 
         Form main = properties.getForm(Form.MAIN);
         assertThat(main, notNullValue());
-        assertThat(main.getWidgets(), hasSize(12));
+        assertThat(main.getWidgets(), hasSize(6));
 
         for (String field : ALL) {
             Widget w = main.getWidget(field);
@@ -123,26 +123,6 @@ public class SimpleFileIODatasetPropertiesTest {
             }
 
         }
-
-        properties.getDatastoreProperties().fileSystemType.setValue(FileSystemType.S3);
-        properties.refreshLayout(main);
-        assertThat(main.getWidget("bucket").isVisible(), is(true));
-        assertThat(main.getWidget("object").isVisible(), is(true));
-        assertThat(main.getWidget("encryptDataInMotion").isVisible(), is(true));
-        assertThat(main.getWidget("kmsForDataInMotion").isVisible(), is(false));
-        assertThat(main.getWidget("encryptDataAtRest").isVisible(), is(true));
-        assertThat(main.getWidget("kmsForDataAtRest").isVisible(), is(false));
-
-        properties.encryptDataInMotion.setValue(true);
-        properties.encryptDataAtRest.setValue(true);
-        properties.refreshLayout(main);
-
-        assertThat(main.getWidget("bucket").isVisible(), is(true));
-        assertThat(main.getWidget("object").isVisible(), is(true));
-        assertThat(main.getWidget("encryptDataInMotion").isVisible(), is(true));
-        assertThat(main.getWidget("kmsForDataInMotion").isVisible(), is(true));
-        assertThat(main.getWidget("encryptDataAtRest").isVisible(), is(true));
-        assertThat(main.getWidget("kmsForDataAtRest").isVisible(), is(true));
     }
 
     /**
