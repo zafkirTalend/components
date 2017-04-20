@@ -46,11 +46,18 @@ public class S3TestResource extends ExternalResource {
     /** The currently running test. */
     protected String name = null;
 
+    private String bucketName;
+
     private S3TestResource() {
+        bucketName = System.getProperty("s3.bucket");
     }
 
     public static S3TestResource of() {
         return new S3TestResource();
+    }
+
+    public String getBucketName() {
+        return bucketName;
     }
 
     /**
@@ -85,7 +92,7 @@ public class S3TestResource extends ExternalResource {
     public S3DatasetProperties createS3DatasetProperties(boolean sseKms, boolean cseKms) {
         S3DatasetProperties properties = new S3DatasetProperties(null);
         properties.init();
-        properties.bucket.setValue(System.getProperty("s3.bucket"));
+        properties.bucket.setValue(bucketName);
         properties.object.setValue("output/" + getName() + "_" + UUID.randomUUID());
         properties.setDatastoreProperties(createS3DatastoreProperties());
         if (sseKms) {

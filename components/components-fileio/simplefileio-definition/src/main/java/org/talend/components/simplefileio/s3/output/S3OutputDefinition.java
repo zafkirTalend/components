@@ -33,7 +33,7 @@ public class S3OutputDefinition extends AbstractComponentDefinition {
 
     public static final String NAME = "S3Output";
 
-    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.SimpleFileIOOutputRuntime";
+    public static final String RUNTIME = "org.talend.components.simplefileio.runtime.s3.S3OutputRuntime";
 
     public S3OutputDefinition() {
         super(NAME, ExecutionEngine.BEAM);

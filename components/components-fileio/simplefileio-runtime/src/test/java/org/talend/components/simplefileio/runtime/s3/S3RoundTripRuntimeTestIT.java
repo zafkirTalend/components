@@ -13,25 +13,29 @@
 package org.talend.components.simplefileio.runtime.s3;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.talend.components.test.RecordSetUtil.getSimpleTestData;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.runners.direct.DirectRunner;
-import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectCollector;
+import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.components.simplefileio.SimpleFileIOFormat;
 import org.talend.components.simplefileio.runtime.SimpleFileIOInputRuntime;
 import org.talend.components.simplefileio.runtime.SimpleFileIOOutputRuntime;
@@ -39,6 +43,7 @@ import org.talend.components.simplefileio.s3.S3DatasetProperties;
 import org.talend.components.simplefileio.s3.input.S3InputProperties;
 import org.talend.components.simplefileio.s3.output.S3OutputProperties;
 import org.talend.components.test.RecordSet;
+import org.talend.daikon.java8.Consumer;
 
 /**
  * Unit tests for {@link SimpleFileIOInputRuntime} and {@link SimpleFileIOOutputRuntime}, focusing on the use cases
@@ -103,16 +108,28 @@ public class S3RoundTripRuntimeTestIT {
         }
     }
 
-    /**
-     * Basic Avro test.
-     */
-    @Test
-    public void testAvro_noEncryption() throws IOException {
+    protected List<IndexedRecord> getSample(S3DatasetProperties datasetProperties) {
+        S3DatasetRuntime datasetRuntime = new S3DatasetRuntime();
+        datasetRuntime.initialize(null, datasetProperties);
+        final List<IndexedRecord> samples = new ArrayList<>();
+        datasetRuntime.getSample(10, new Consumer<IndexedRecord>() {
+            @Override
+            public void accept(IndexedRecord indexedRecord) {
+                samples.add(indexedRecord);
+            }
+        });
+        return samples;
+    }
+
+    protected Schema getSchema(S3DatasetProperties datasetProperties) {
+        S3DatasetRuntime datasetRuntime = new S3DatasetRuntime();
+        datasetRuntime.initialize(null, datasetProperties);
+        return datasetRuntime.getSchema();
+    }
+
+    public void test_noEncryption(S3DatasetProperties datasetProps) throws IOException {
         // The file that we will be creating.
         RecordSet rs = getSimpleTestData(0);
-
-        S3DatasetProperties datasetProps = s3.createS3DatasetProperties();
-        datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
 
         // Configure the components.
         S3OutputProperties outputProps = new S3OutputProperties("out");
@@ -124,5 +141,44 @@ public class S3RoundTripRuntimeTestIT {
 
         List<IndexedRecord> expected = rs.getAllData();
         assertThat(actual, containsInAnyOrder(expected.toArray()));
+
+        List<IndexedRecord> samples = getSample(datasetProps);
+        assertThat(samples, containsInAnyOrder(expected.toArray()));
+
+        Schema schema = getSchema(datasetProps);
+        assertEquals(expected.get(0).getSchema(), schema);
+    }
+
+    /**
+     * Basic Avro test.
+     */
+    @Test
+    public void testAvro_noEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties();
+        datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
+        test_noEncryption(datasetProps);
+    }
+
+    /**
+     * Basic Csv test.
+     */
+    @Test
+    @Ignore("columns name different, can't editable")
+    public void testCsv_noEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties();
+        datasetProps.format.setValue(SimpleFileIOFormat.CSV);
+        datasetProps.recordDelimiter.setValue(SimpleFileIODatasetProperties.RecordDelimiterType.LF);
+        datasetProps.fieldDelimiter.setValue(SimpleFileIODatasetProperties.FieldDelimiterType.SEMICOLON);
+        test_noEncryption(datasetProps);
+    }
+
+    /**
+     * Basic Parquet test.
+     */
+    @Test
+    public void testParquet_noEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties();
+        datasetProps.format.setValue(SimpleFileIOFormat.PARQUET);
+        test_noEncryption(datasetProps);
     }
 }

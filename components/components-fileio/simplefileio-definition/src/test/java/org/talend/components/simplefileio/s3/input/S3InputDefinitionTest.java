@@ -55,7 +55,7 @@ public class S3InputDefinitionTest {
     @Test
     public void testRuntimeInfo() {
         RuntimeInfo runtimeInfo = def.getRuntimeInfo(ExecutionEngine.BEAM, null, ConnectorTopology.OUTGOING);
-        assertThat(runtimeInfo.getRuntimeClassName(), is("org.talend.components.simplefileio.runtime.SimpleFileIOInputRuntime"));
+        assertThat(runtimeInfo.getRuntimeClassName(), is("org.talend.components.simplefileio.runtime.s3.S3InputRuntime"));
         // The integration module tests things that aren't available in the RuntimeInfo module until after it is
         // installed in the local maven repository.
     }

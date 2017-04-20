@@ -28,9 +28,8 @@ import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.simplefileio.input.SimpleFileIOInputProperties;
-import org.talend.components.simplefileio.runtime.SimpleFileIOInputRuntime;
 import org.talend.components.simplefileio.s3.S3DatasetProperties;
+import org.talend.components.simplefileio.s3.input.S3InputProperties;
 import org.talend.components.simplefileio.s3.runtime.IS3DatasetRuntime;
 import org.talend.daikon.java8.Consumer;
 import org.talend.daikon.properties.ValidationResult;
@@ -88,8 +87,8 @@ public class S3DatasetRuntime implements IS3DatasetRuntime {
     @Override
     public void getSample(int limit, Consumer<IndexedRecord> consumer) {
         // Create an input runtime based on the properties.
-        SimpleFileIOInputRuntime inputRuntime = new SimpleFileIOInputRuntime();
-        SimpleFileIOInputProperties inputProperties = new SimpleFileIOInputProperties(null);
+        S3InputRuntime inputRuntime = new S3InputRuntime();
+        S3InputProperties inputProperties = new S3InputProperties(null);
         inputProperties.limit.setValue(limit);
         inputProperties.init();
         inputProperties.setDatasetProperties(properties);

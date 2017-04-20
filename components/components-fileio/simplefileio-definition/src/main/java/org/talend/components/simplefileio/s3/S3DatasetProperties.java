@@ -137,7 +137,7 @@ public class S3DatasetProperties extends PropertiesImpl implements DatasetProper
         RuntimeInfo runtimeInfo = definition.getRuntimeInfo(this);
         try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(runtimeInfo, getClass().getClassLoader())) {
             IS3DatasetRuntime runtime = (IS3DatasetRuntime) sandboxedInstance.getInstance();
-//             runtime.initialize(null, this);
+            runtime.initialize(null, this);
             this.bucket.setPossibleValues(runtime.listBuckets());
         } catch (Exception e) {
             TalendRuntimeException.build(ComponentsErrorCode.IO_EXCEPTION, e).throwIt();
