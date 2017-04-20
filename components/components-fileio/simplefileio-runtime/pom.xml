@@ -16,13 +16,18 @@
     <packaging>jar</packaging>
 
     <properties>
+        <hadoop-aws.version>2.6.0-cdh5.11.0</hadoop-aws.version>
         <hadoop.version>2.7.0</hadoop.version>
-		<!-- TODO: Missing headBucket...
-		     use this low version to avoid jackson-databind conflict issue on spark -->
-        <!-- aws-java-sdk-s3 1.11.0-->
         <parquet.version>1.9.0</parquet.version>
         <spark.version>1.6.0</spark.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
 
@@ -48,8 +53,8 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
-            <version>${hadoop.version}</version>
-            <scope>provided</scope>
+            <version>${hadoop-aws.version}</version>
+            <!-- Must be included on the classpath: <scope>provided</scope> -->
         </dependency>
 
         <!-- includes avro -->

@@ -12,14 +12,24 @@
 // ============================================================================
 package org.talend.components.simplefileio.runtime.s3;
 
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertThat;
+
+import java.io.IOException;
 import java.util.UUID;
 
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.talend.components.simplefileio.s3.S3DatasetProperties;
 import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 import org.talend.components.simplefileio.s3.S3Region;
+
+import com.cloudera.com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
  * Reusable for creating S3 properties preconfigured from environment variables for integration tests.
@@ -45,6 +55,9 @@ public class S3TestResource extends ExternalResource {
 
     /** The currently running test. */
     protected String name = null;
+
+    /** The output path used for the currently running test. */
+    protected String path = null;
 
     private String bucketName;
 
@@ -93,17 +106,30 @@ public class S3TestResource extends ExternalResource {
         S3DatasetProperties properties = new S3DatasetProperties(null);
         properties.init();
         properties.bucket.setValue(bucketName);
-        properties.object.setValue("output/" + getName() + "_" + UUID.randomUUID());
+        properties.object.setValue(getPath());
         properties.setDatastoreProperties(createS3DatastoreProperties());
         if (sseKms) {
             properties.encryptDataAtRest.setValue(true);
-            properties.kmsForDataAtRest.setValue("s3.ssekmskey");
+            properties.kmsForDataAtRest.setValue(System.getProperty("s3.ssekmskey"));
         }
         if (cseKms) {
             properties.encryptDataInMotion.setValue(true);
-            properties.kmsForDataInMotion.setValue("s3.csekmskey");
+            properties.kmsForDataInMotion.setValue(System.getProperty("s3.csekmskey"));
         }
         return properties;
+    }
+
+    /**
+     * Get the ObjectMetadata from S3 for the first file found on the path specified by the S3DatasetProperties.
+     */
+    public ObjectMetadata getObjectMetadata(S3DatasetProperties datasetProps) throws IOException {
+        S3AFileSystem fs = S3Connection.createFileSystem(datasetProps);
+
+        // The current path is a directory, so get a file to check the encryption.
+        Path path = new Path(S3Connection.getUriPath(datasetProps));
+        FileStatus[] files = fs.listStatus(path);
+        assertThat(files, arrayWithSize(greaterThan(0)));
+        return fs.getObjectMetadata(files[0].getPath());
     }
 
     /**
@@ -115,9 +141,36 @@ public class S3TestResource extends ExternalResource {
         return name;
     }
 
+    /**
+     * Return the output path for the currently executing test.
+     *
+     * @return the output path for the currently executing test.
+     */
+    public String getPath() {
+        return path;
+    }
+
     @Override
     public Statement apply(Statement base, Description desc) {
         name = desc.getMethodName();
+        path = "integration-test/" + getName() + "_" + UUID.randomUUID();
         return super.apply(base, desc);
+    }
+
+    /**
+     * Remove any resources created on the S3 bucket.
+     */
+    @Override
+    protected void after() {
+        try {
+            S3DatasetProperties datasetProps = createS3DatasetProperties();
+            S3AFileSystem fs = S3Connection.createFileSystem(datasetProps);
+            Path path = new Path(S3Connection.getUriPath(datasetProps));
+            if (fs.exists(path)) {
+                fs.delete(path, true);
+            }
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
     }
 }

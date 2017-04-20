@@ -12,7 +12,10 @@
 // ============================================================================
 package org.talend.components.simplefileio.runtime.s3;
 
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.talend.components.test.RecordSetUtil.getSimpleTestData;
@@ -29,6 +32,11 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -37,6 +45,7 @@ import org.talend.components.adapter.beam.coders.LazyAvroCoder;
 import org.talend.components.adapter.beam.transform.DirectCollector;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.components.simplefileio.SimpleFileIOFormat;
+import org.talend.components.simplefileio.runtime.ExtraHadoopConfiguration;
 import org.talend.components.simplefileio.runtime.SimpleFileIOInputRuntime;
 import org.talend.components.simplefileio.runtime.SimpleFileIOOutputRuntime;
 import org.talend.components.simplefileio.s3.S3DatasetProperties;
@@ -44,6 +53,8 @@ import org.talend.components.simplefileio.s3.input.S3InputProperties;
 import org.talend.components.simplefileio.s3.output.S3OutputProperties;
 import org.talend.components.test.RecordSet;
 import org.talend.daikon.java8.Consumer;
+
+import com.cloudera.com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
  * Unit tests for {@link SimpleFileIOInputRuntime} and {@link SimpleFileIOOutputRuntime}, focusing on the use cases
@@ -78,8 +89,8 @@ public class S3RoundTripRuntimeTestIT {
      * @param inputProps The properties used to create the input runtime.
      * @return The data returned from the round-trip.
      */
-    protected List<IndexedRecord> runRoundTripPipelines( List<IndexedRecord> initialData,
-            S3OutputProperties outputProps, S3InputProperties inputProps) {
+    protected List<IndexedRecord> runRoundTripPipelines(List<IndexedRecord> initialData, S3OutputProperties outputProps,
+            S3InputProperties inputProps) {
         // Create the runtimes.
         S3OutputRuntime outputRuntime = new S3OutputRuntime();
         outputRuntime.initialize(null, outputProps);
@@ -113,6 +124,7 @@ public class S3RoundTripRuntimeTestIT {
         datasetRuntime.initialize(null, datasetProperties);
         final List<IndexedRecord> samples = new ArrayList<>();
         datasetRuntime.getSample(10, new Consumer<IndexedRecord>() {
+
             @Override
             public void accept(IndexedRecord indexedRecord) {
                 samples.add(indexedRecord);
@@ -155,6 +167,43 @@ public class S3RoundTripRuntimeTestIT {
     @Test
     public void testAvro_noEncryption() throws IOException {
         S3DatasetProperties datasetProps = s3.createS3DatasetProperties();
+        datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
+        test_noEncryption(datasetProps);
+    }
+
+    /**
+     * Basic Avro test with sseKmsEncryption.
+     */
+    @Test
+    public void testAvro_sseKmsEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties(true, false);
+        datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
+        test_noEncryption(datasetProps);
+
+        // Get some object metadata from the results.
+        ObjectMetadata md = s3.getObjectMetadata(datasetProps);
+        assertThat(md.getSSEAlgorithm(), is("aws:kms"));
+        assertThat(md.getSSEAwsKmsKeyId(), is(datasetProps.kmsForDataAtRest.getValue()));
+    }
+
+    /**
+     * Basic Avro test with cseKmsEncryption.
+     */
+    @Ignore("cse not yet supported.")
+    @Test
+    public void testAvro_cseKmsEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties(false, true);
+        datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
+        test_noEncryption(datasetProps);
+    }
+
+    /**
+     * Basic Avro test with sseKmsEncryption.
+     */
+    @Ignore("cse not yet supported.")
+    @Test
+    public void testAvro_sseAndCseKmsEncryption() throws IOException {
+        S3DatasetProperties datasetProps = s3.createS3DatasetProperties(true, true);
         datasetProps.format.setValue(SimpleFileIOFormat.AVRO);
         test_noEncryption(datasetProps);
     }
