@@ -54,6 +54,8 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
 
     public Property<String> query = newProperty("query"); //$NON-NLS-1$
 
+    public static final String DEFAULT_QUERY = "\"SELECT Id, Name, IsDeleted FROM Account\"";
+
     public transient PresentationItem guessSchema = new PresentationItem("guessSchema", "Guess schema");
 
     public transient PresentationItem guessQuery = new PresentationItem("guessQuery", "Guess query");
@@ -81,7 +83,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         normalizeDelimiter.setValue(";");
         columnNameDelimiter.setValue("_");
         query.setTaggedValue(ComponentConstants.LINE_SEPARATOR_REPLACED_TO, " ");
-        query.setValue("\"SELECT Id, Name, IsDeleted FROM Account\"");
+        query.setValue(DEFAULT_QUERY);
     }
 
     @Override
@@ -172,7 +174,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
             form.getWidget(includeDeleted.getName())
-                    .setHidden(!(queryMode.getValue() != null && queryMode.getValue().equals(QueryMode.Query)));
+                    .setHidden(!((queryMode.getValue() != null) && queryMode.getValue().equals(QueryMode.Query)));
 
             form.getWidget(query.getName()).setHidden(!manualQuery.getValue());
             form.getWidget(condition.getName()).setHidden(manualQuery.getValue());
