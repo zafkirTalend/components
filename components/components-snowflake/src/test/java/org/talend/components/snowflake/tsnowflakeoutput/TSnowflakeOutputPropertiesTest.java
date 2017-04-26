@@ -77,19 +77,25 @@ public class TSnowflakeOutputPropertiesTest {
 
     @Test
     public void testGetAllSchemaPropertiesConnectors() {
-        Set<PropertyPathConnector> schemaPropertyForOutputConnection;
         Set<PropertyPathConnector> schemaPropertyForInputConnection;
 
-        schemaPropertyForOutputConnection = outputProperties.getAllSchemaPropertiesConnectors(false);
         schemaPropertyForInputConnection = outputProperties.getAllSchemaPropertiesConnectors(true);
 
-        assertTrue(schemaPropertyForOutputConnection.size() == 1);
-        assertTrue(schemaPropertyForInputConnection.size() == 1);
+        assertEquals(1, schemaPropertyForInputConnection.size());
+
+        assertTrue(schemaPropertyForInputConnection.contains(outputProperties.REJECT_CONNECTOR));
+    }
+
+    @Test
+    public void testGetAllSchemaPropertiesConnectorsForOutputConnection() {
+        Set<PropertyPathConnector> schemaPropertyForOutputConnection;
+
+        schemaPropertyForOutputConnection = outputProperties.getAllSchemaPropertiesConnectors(false);
+
+        assertEquals(1, schemaPropertyForOutputConnection.size());
 
         // BUG THERE??? Method sets MAIN_CONNECTOR instead of FLOW_CONNECTOR
         assertTrue(schemaPropertyForOutputConnection.contains(outputProperties.FLOW_CONNECTOR));
-        assertTrue(schemaPropertyForInputConnection.contains(outputProperties.REJECT_CONNECTOR));
-
     }
 
     @Test
@@ -98,10 +104,6 @@ public class TSnowflakeOutputPropertiesTest {
         Property<Schema> schemaProperty;
         List<String> propertyFieldNames;
         List<String> expectedPropertyFieldNames;
-
-        Schema emptySchema;
-        Property<Schema> emptySchemaProperty;
-        List<String> emptyPropertyFieldNames;
 
         runtimeSchema = SchemaBuilder.builder().record("Record").fields() //
                 .name("logicalTime").type(AvroUtils._logicalTime()).noDefault() //
@@ -118,13 +120,8 @@ public class TSnowflakeOutputPropertiesTest {
                 .noDefault() //
                 .endRecord(); //
 
-        emptySchema = SchemaBuilder.builder().record("EmptyRecord").fields().endRecord();
-
         schemaProperty = new SchemaProperty("schema");
         schemaProperty.setValue(runtimeSchema);
-
-        emptySchemaProperty = new SchemaProperty("Empty schema");
-        emptySchemaProperty.setValue(emptySchema);
 
         expectedPropertyFieldNames = new ArrayList<>();
         expectedPropertyFieldNames.add("logicalTime");
@@ -139,9 +136,21 @@ public class TSnowflakeOutputPropertiesTest {
         expectedPropertyFieldNames.add("createdDate");
 
         propertyFieldNames = outputProperties.getFieldNames(schemaProperty);
-        emptyPropertyFieldNames = outputProperties.getFieldNames(emptySchemaProperty);
 
         assertEquals(propertyFieldNames, expectedPropertyFieldNames);
+    }
+
+    @Test
+    public void testGetFieldsOfEmptySchema() {
+        Schema emptySchema;
+        Property<Schema> emptySchemaProperty;
+        List<String> emptyPropertyFieldNames;
+
+
+        emptySchema = SchemaBuilder.builder().record("EmptyRecord").fields().endRecord();
+        emptySchemaProperty = new SchemaProperty("Empty schema");
+        emptySchemaProperty.setValue(emptySchema);
+        emptyPropertyFieldNames = outputProperties.getFieldNames(emptySchemaProperty);
 
         assertTrue(emptyPropertyFieldNames.isEmpty());
     }

@@ -79,7 +79,7 @@ public class TSnowflakeOutputDefinitionTest {
         Class<? extends ComponentProperties>[] nestedCompatibleComponentPropertiesClass;
 
         nestedCompatibleComponentPropertiesClass = outputDefinition.getNestedCompatibleComponentPropertiesClass();
-        assertTrue(nestedCompatibleComponentPropertiesClass.length == 2);
+        assertEquals(2, nestedCompatibleComponentPropertiesClass.length);
         assertArrayEquals(nestedCompatibleComponentPropertiesClass,
                 new Class[] { SnowflakeConnectionProperties.class, SnowflakeTableProperties.class });
 
