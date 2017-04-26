@@ -22,22 +22,11 @@ public class TSnowflakeInputPropertiesTest {
 
 	TSnowflakeInputProperties inputProperties;
 	
-	@Rule
-    public ErrorCollector errorCollector = new ErrorCollector();
-	
 	@Before
 	public void reset() {
 		inputProperties = new TSnowflakeInputProperties("input");
 		inputProperties.init();
 	}
-	
-	
-	@Test
-	public void testI18N() {
-        ComponentTestUtils.checkAllI18N(inputProperties, errorCollector);
-    }
-	
-
 	
 	@Test
 	public void testGetAllSchemaPropertiesConnectors() {

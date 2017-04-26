@@ -27,18 +27,11 @@ public class TSnowflakeOutputPropertiesTest {
 
     TSnowflakeOutputProperties outputProperties;
 
-    @Rule
-    public ErrorCollector errorCollector = new ErrorCollector();
 
     @Before
     public void reset() {
         outputProperties = new TSnowflakeOutputProperties("output");
         outputProperties.init();
-    }
-
-    @Test
-    public void testI18N() {
-        ComponentTestUtils.checkAllI18N(outputProperties, errorCollector);
     }
 
     @Test
