@@ -35,7 +35,7 @@ public class TSnowflakeOutputPropertiesTest {
     }
 
     @Test
-    public void testVisible() {
+    public void testLayoutOnOutputActionChange() {
         Form main;
         boolean isOutputActionPropertyVisible;
         boolean isUpsertKeyColumnVisible;
