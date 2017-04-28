@@ -12,7 +12,6 @@ import org.talend.daikon.properties.ValidationResult;
 /**
  * Unit tests for {@link S3DatastoreRuntime}.
  */
-@Ignore("DEVOPS-2382")
 public class S3DatastoreRuntimeTestIT {
 
     /** Set up credentials for integration tests. */

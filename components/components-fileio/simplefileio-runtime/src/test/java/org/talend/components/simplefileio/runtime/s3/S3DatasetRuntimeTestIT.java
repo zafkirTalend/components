@@ -27,7 +27,6 @@ import org.junit.Test;
 /**
  * Unit tests for {@link S3DatasetRuntime}.
  */
-@Ignore("DEVOPS-2382")
 public class S3DatasetRuntimeTestIT {
 
     /** Set up credentials for integration tests. */
