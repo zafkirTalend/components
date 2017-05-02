@@ -1,11 +1,13 @@
 package org.talend.components.s3.runtime;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.simplefileio.s3.S3DatastoreProperties;
 import org.talend.components.simplefileio.s3.output.S3OutputProperties;
 import org.talend.daikon.properties.ValidationResult;
 
+@Ignore("DEVOPS-2382")
 public class S3SourceOrSinkTestIT {
 
     S3SourceOrSink runtime;

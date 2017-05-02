@@ -7,11 +7,13 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.talend.components.simplefileio.s3.output.S3OutputProperties;
 
 import com.amazonaws.services.s3.AmazonS3;
 
+@Ignore("DEVOPS-2382")
 public class S3SinkTestIT {
 
     S3Sink runtime;
