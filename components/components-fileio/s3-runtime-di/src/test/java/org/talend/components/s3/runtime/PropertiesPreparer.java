@@ -36,16 +36,7 @@ public class PropertiesPreparer {
 
         datastore.accessKey.setValue(accessKey);
         datastore.secretKey.setValue(secretkey);
-
-        S3Region s3_region = S3Region.DEFAULT;
-        for (S3Region sr : S3Region.values()) {
-            if (sr.getValue().equals(region)) {
-                s3_region = sr;
-                break;
-            }
-        }
-
-        dataset.region.setValue(s3_region);
+        dataset.region.setValue(S3Region.valueOf(region));
         dataset.bucket.setValue(bucket);
         dataset.kmsForDataInMotion.setValue(ssekmskey);
         dataset.kmsForDataAtRest.setValue(csekmskey);
