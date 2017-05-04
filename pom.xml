@@ -42,7 +42,7 @@
 				<version>2.5.3</version>
 				<configuration>
 					<!-- Only unit-tests are launched because for the moment release prepared on local machine. Should be replaced to clean install, when we setup Jenkins for release process -->
-					<preparationGoals>clean test</preparationGoals>
+					<preparationGoals>clean -DskipTests</preparationGoals>
 					<pushChanges>false</pushChanges>
 					<scmCommentPrefix xml:space="preserve">release: </scmCommentPrefix>
 					<tagNameFormat>@{project.artifactId}-@{project.version}</tagNameFormat>
