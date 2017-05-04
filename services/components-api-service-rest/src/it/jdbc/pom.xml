@@ -16,8 +16,8 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.boot.version>1.5.1.RELEASE</spring.boot.version>
-		<daikon.version>0.16.0</daikon.version>
-		<components.version>0.18.0</components.version>
+		<daikon.version>0.16.1-SNAPSHOT</daikon.version>
+		<components.version>0.18.1-SNAPSHOT</components.version>
 	</properties>
 
 	<dependencies>

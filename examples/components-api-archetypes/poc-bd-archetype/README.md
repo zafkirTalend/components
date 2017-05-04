@@ -27,7 +27,7 @@ Run:
 mvn archetype:generate \
 -DarchetypeGroupId=org.talend.components \
 -DarchetypeArtifactId=tcomp-bd-archetype \
--DarchetypeVersion=0.18.0 \
+-DarchetypeVersion=0.18.1-SNAPSHOT \
 -DarchetypeCatalog=local \
 -DgroupId=org.talend.components \
 -DartifactId=Elasticsearch \
