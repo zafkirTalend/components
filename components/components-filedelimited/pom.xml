@@ -133,7 +133,7 @@
                                 <Fragment-Host>org.talend.components.filedelimited</Fragment-Host>
                                 <Bundle-ActivationPolicy>lazy</Bundle-ActivationPolicy>
                                 <DynamicImport-Package>*</DynamicImport-Package>
-                                <Embed-Dependency></Embed-Dependency>
+                                <Embed-Dependency />
                                 <Export-Package>*</Export-Package>
                                 <Include-Resource>=target/test-classes/</Include-Resource>
                             </instructions>

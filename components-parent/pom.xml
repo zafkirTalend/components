@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.talend.components</groupId>
@@ -31,7 +30,8 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/Talend/components.git</connection>
-	</scm>
+	  <tag>maintenance/0.18</tag>
+  </scm>
 
 	<modules>
 		<module>components-p2update-assembly</module>
@@ -400,10 +400,7 @@
 						<phase>process-resources</phase>
 						<configuration>
 							<tasks>
-								<echo
-									file="target/classes/META-INF/maven/${project.groupId}/${project.artifactId}/dependencies.txt"
-									message="${project.groupId}:${project.artifactId}:jar:${project.version}:runtime"
-									append="true" encoding="UTF-8" />
+								<echo file="target/classes/META-INF/maven/${project.groupId}/${project.artifactId}/dependencies.txt" message="${project.groupId}:${project.artifactId}:jar:${project.version}:runtime" append="true" encoding="UTF-8" />
 							</tasks>
 						</configuration>
 						<goals>
