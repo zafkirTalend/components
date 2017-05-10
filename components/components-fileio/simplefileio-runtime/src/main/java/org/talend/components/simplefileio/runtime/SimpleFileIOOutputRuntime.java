@@ -18,6 +18,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.simplefileio.SimpleFileIOErrorCode;
 import org.talend.components.simplefileio.output.SimpleFileIOOutputProperties;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
 import org.talend.daikon.properties.ValidationResult;
@@ -69,6 +70,15 @@ public class SimpleFileIOOutputRuntime extends PTransform<PCollection<IndexedRec
             throw new RuntimeException("To be implemented: " + properties.getDatasetProperties().format.getValue());
         }
 
-        return rf.write(in);
+        try {
+            return rf.write(in);
+        } catch (IllegalStateException rte) {
+            // Unable to overwrite exceptions are handled here.
+            if (rte.getMessage().startsWith("Output path") && rte.getMessage().endsWith("already exists")) {
+                throw SimpleFileIOErrorCode.createOutputAlreadyExistsException(rte, properties.getDatasetProperties().path.getValue());
+            } else {
+                throw rte;
+            }
+        }
     }
 }
