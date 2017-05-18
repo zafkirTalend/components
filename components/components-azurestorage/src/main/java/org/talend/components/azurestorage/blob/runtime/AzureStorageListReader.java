@@ -90,7 +90,7 @@ public class AzureStorageListReader extends AzureStorageReader<IndexedRecord> {
 
             IndexedRecord dataRecord = new GenericData.Record(properties.schema.schema.getValue());
             dataRecord.put(0, blobs.get(blobIndex).getName());
-            Schema rootSchema = RootSchemaUtils.createRootSchema(properties.schema.schema.getValue(), properties.outOfBandSchema);
+            Schema rootSchema = RootSchemaUtils.createRootSchema(properties.schema.schema.getValue(), properties.OUT_OF_BAND_SCHEMA);
             currentRecord = new GenericData.Record(rootSchema);
             currentRecord.put(0, dataRecord);
             currentRecord.put(1, dataRecord);

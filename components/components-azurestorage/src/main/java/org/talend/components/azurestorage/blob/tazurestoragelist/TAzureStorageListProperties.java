@@ -34,15 +34,15 @@ public class TAzureStorageListProperties extends AzureStorageBlobProperties {
 
     protected transient PropertyPathConnector MAIN_NAME = new PropertyPathConnector(Connector.MAIN_NAME, "schema");
 
-	public static final Schema outOfBandSchema;
+	public static final Schema OUT_OF_BAND_SCHEMA;
     
 	/**
      * Sets Out of band schema. This schema is not supposed to be changed by user
      */
     static {       
         Field currentBlobField = new Field("CURRENT_BLOB", Schema.create(Schema.Type.STRING), null, (Object) null);
-        outOfBandSchema = Schema.createRecord("OutOfBand", null, null, false);
-        outOfBandSchema.setFields(Collections.singletonList(currentBlobField));
+        OUT_OF_BAND_SCHEMA = Schema.createRecord("OutOfBand", null, null, false);
+        OUT_OF_BAND_SCHEMA.setFields(Collections.singletonList(currentBlobField));
     }
 
     public TAzureStorageListProperties(String name) {
