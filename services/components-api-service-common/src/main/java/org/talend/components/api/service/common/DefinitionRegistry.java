@@ -12,14 +12,18 @@
 // ============================================================================
 package org.talend.components.api.service.common;
 
-import static org.slf4j.LoggerFactory.*;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.talend.components.api.ComponentFamilyDefinition;
@@ -45,8 +49,7 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
     private static final Logger LOGGER = getLogger(DefinitionRegistry.class);
 
     /**
-     * All of the {@link Definition}s that have been added to the framework, including
-     * {@link ComponentDefinition}s.
+     * All of the {@link Definition}s that have been added to the framework, including {@link ComponentDefinition}s.
      */
     private Map<String, Definition> definitions;
 
@@ -65,7 +68,7 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
 
     /**
      * @return a map of all the extended {@link Definition} that have been added to the framework keyed with their
-     *         unique name.
+     * unique name.
      */
     public Map<String, Definition> getDefinitions() {
         return definitions;
@@ -171,7 +174,52 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
     @Override
     public <P extends Properties> P createProperties(Definition<P> definition, String name) {
         P newInstance = PropertiesImpl.createNewInstance(definition.getPropertiesClass(), name);
+        injectDefinitionRegistry(newInstance, this);
         newInstance.init();
         return newInstance;
+    }
+
+    public <P extends Properties> void postDeserialize(P props) {
+        injectDefinitionRegistry(props, this);
+    }
+
+    public <P extends Properties, V> void injectDefinitionRegistry(P props) {
+        injectDefinitionRegistry(props, this);
+    }
+
+    public <P extends Properties, V> void injectDefinitionRegistry(P props, V injectable) {
+        if (props == null) {
+            return;
+        }
+        Class<?> cls = props.getClass();
+        while (cls != Object.class) {
+            Field[] fields = cls.getDeclaredFields();
+            for (Field field : fields) {
+                Annotation ann = field.getAnnotation(Inject.class);
+                injectField(ann, field, props, injectable);
+            }
+            cls = cls.getSuperclass();
+        }
+    }
+
+    private <P extends Properties, V> void injectField(Annotation ann, Field field, P props, V injectable) {
+        if (!field.isAccessible()) {
+            field.setAccessible(true);
+        }
+        if (ann != null && field.getType().isAssignableFrom(injectable.getClass())) {
+            try {
+                if (field.get(props) == null) {
+                    field.set(props, this);
+                }
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw TalendRuntimeException.createUnexpectedException(e);
+            }
+        } else if (Properties.class.isAssignableFrom(field.getType())) {
+            try {
+                injectDefinitionRegistry((Properties) field.get(props), injectable);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw TalendRuntimeException.createUnexpectedException(e);
+            }
+        }
     }
 }
