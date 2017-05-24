@@ -20,8 +20,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -174,20 +176,23 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
     @Override
     public <P extends Properties> P createProperties(Definition<P> definition, String name) {
         P newInstance = PropertiesImpl.createNewInstance(definition.getPropertiesClass(), name);
-        injectDefinitionRegistry(newInstance, this);
+        injectDefinitionRegistry(newInstance, this, new HashSet<>());
         newInstance.init();
         return newInstance;
     }
 
     public <P extends Properties> void postDeserialize(P props) {
-        injectDefinitionRegistry(props, this);
+        injectDefinitionRegistry(props, this, new HashSet<>());
     }
 
     public <P extends Properties, V> void injectDefinitionRegistry(P props) {
-        injectDefinitionRegistry(props, this);
+        injectDefinitionRegistry(props, this, new HashSet<>());
     }
 
-    public <P extends Properties, V> void injectDefinitionRegistry(P props, V injectable) {
+    public <P extends Properties, V> void injectDefinitionRegistry(P props, V injectable, Set<Object> alreadyUpdated) {
+        if (!alreadyUpdated.add(props)) {
+            return;
+        }
         if (props == null) {
             return;
         }
@@ -196,13 +201,14 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
             Field[] fields = cls.getDeclaredFields();
             for (Field field : fields) {
                 Annotation ann = field.getAnnotation(Inject.class);
-                injectField(ann, field, props, injectable);
+                injectField(ann, field, props, injectable, alreadyUpdated);
             }
             cls = cls.getSuperclass();
         }
     }
 
-    private <P extends Properties, V> void injectField(Annotation ann, Field field, P props, V injectable) {
+    private <P extends Properties, V> void injectField(Annotation ann, Field field, P props, V injectable,
+            Set<Object> alreadyUpdated) {
         if (!field.isAccessible()) {
             field.setAccessible(true);
         }
@@ -216,7 +222,7 @@ public class DefinitionRegistry implements ComponentInstaller.ComponentFramework
             }
         } else if (Properties.class.isAssignableFrom(field.getType())) {
             try {
-                injectDefinitionRegistry((Properties) field.get(props), injectable);
+                injectDefinitionRegistry((Properties) field.get(props), injectable, alreadyUpdated);
             } catch (IllegalArgumentException | IllegalAccessException e) {
                 throw TalendRuntimeException.createUnexpectedException(e);
             }
