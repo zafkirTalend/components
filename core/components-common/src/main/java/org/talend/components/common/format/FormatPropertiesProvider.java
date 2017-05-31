@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.common.format;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,11 +40,11 @@ public abstract class FormatPropertiesProvider<V extends Properties> extends Pro
 
     public final Property<String> format = PropertyFactory.newString("format");
 
-    public Properties formatProperties;
+    public V formatProperties;
 
     private final Class<? extends Definition<V>> definitionClass;
 
-    private String previousFormatValue = "";
+    private transient String previousFormatValue = "";
 
     private transient Map<String, ? extends Definition<V>> allFormatDefs = new HashMap<>();
 
@@ -78,7 +79,6 @@ public abstract class FormatPropertiesProvider<V extends Properties> extends Pro
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
         if (form.getName().equals(Form.MAIN)) {
-            allFormatDefs = getPossibleFormatValues();
             createFormatValues();
             Widget w = form.getWidget(FORMAT_PROPERTIES_NAME);
             if (!allFormatDefs.isEmpty() && w != null) {
@@ -128,10 +128,6 @@ public abstract class FormatPropertiesProvider<V extends Properties> extends Pro
                 && StringUtils.equals(previousFormatValue, selectedFileFormatDefinitionStr)) {
             // After deserialization we already have formatProperties, but we need to put them to referenceMemento
             referenceMemento.put(selectedFileFormatDefinitionStr, (V) formatProperties);
-        } else {
-            // We can not leave properties field null, otherwise we will get an exception during properties
-            // initialization. If no definitions were found, we don't need any properties.
-            formatProperties = PropertiesImpl.createNewInstance(PropertiesImpl.class, FORMAT_PROPERTIES_NAME);
         }
         previousFormatValue = selectedFileFormatDefinitionStr;
     }
@@ -152,6 +148,15 @@ public abstract class FormatPropertiesProvider<V extends Properties> extends Pro
         if (format.getValue() == null || format.getValue().isEmpty())
             return null;
         return (V) formatProperties;
+    }
+
+    @Override
+    protected boolean acceptUninitializedField(Field f) {
+        if (super.acceptUninitializedField(f)) {
+            return true;
+        }
+        // we accept that return field is not initialized after setupProperties.
+        return "formatProperties".equals(f.getName());
     }
 
 }

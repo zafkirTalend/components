@@ -15,9 +15,9 @@ package org.talend.components.api.service.common;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -33,11 +33,14 @@ import org.talend.components.api.service.common.testcomponent.TestComponentFamil
 import org.talend.components.api.service.common.testcomponent.TestComponentWizardDefinition;
 import org.talend.components.api.service.common.testcomponent.inject.TestInjectComponentDefinition;
 import org.talend.components.api.service.common.testcomponent.inject.TestInjectComponentProperties;
+import org.talend.components.api.service.common.testcomponent.inject.TestNestedInjectComponentDefinition;
+import org.talend.components.api.service.common.testcomponent.inject.TestNestedInjectComponentProperties;
 import org.talend.components.api.service.common.testcomponent.nestedprop.NestedComponentProperties;
 import org.talend.components.api.service.common.testcomponent.nestedprop.inherited.InheritedComponentProperties;
 import org.talend.components.api.test.SimpleComponentDefinition;
 import org.talend.components.api.wizard.ComponentWizardDefinition;
 import org.talend.daikon.definition.Definition;
+import org.talend.daikon.definition.service.DefinitionRegistryService;
 
 public class DefintitionRegistryTest {
 
@@ -120,15 +123,24 @@ public class DefintitionRegistryTest {
         TestInjectComponentProperties properties = new TestInjectComponentProperties("props");
         registry.injectDefinitionRegistry(properties);
 
-        assertThat(properties.getDefinitionRegistry(), notNullValue());
+        assertThat((DefinitionRegistry) properties.getDefinitionRegistry(), equalTo(registry));
     }
 
     @Test
     public void testCreateNewPropertiesWithInjected() {
-        DefinitionRegistry registry = new DefinitionRegistry();
+        DefinitionRegistryService registry = new DefinitionRegistry();
         TestInjectComponentDefinition def = new TestInjectComponentDefinition();
         TestInjectComponentProperties testProps = (TestInjectComponentProperties) registry.createProperties(def, "testProps");
-        assertThat(testProps.getDefinitionRegistry(), notNullValue());
+        assertThat(testProps.getDefinitionRegistry(), equalTo(registry));
+    }
+
+    @Test
+    public void testCreateNewPropertiesWithNestedInjected() {
+        DefinitionRegistryService registry = new DefinitionRegistry();
+        TestNestedInjectComponentDefinition def = new TestNestedInjectComponentDefinition();
+        TestNestedInjectComponentProperties testProps = (TestNestedInjectComponentProperties) registry.createProperties(def,
+                "testProps");
+        assertThat(testProps.getNestedProperties().getDefinitionRegistry(), equalTo(registry));
     }
 
 }
