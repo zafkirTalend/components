@@ -246,7 +246,6 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
 
             ResultSet resultSet = metaData.getColumns(getCatalog(connProps), getDbSchema(connProps), tableName, null);
             tableSchema = getSnowflakeAvroRegistry().inferSchema(resultSet);
-            // FIXME - I18N for this message
             if (tableSchema == null)
                 throw new IOException(i18nMessages.getMessage("error.tableNotFound", tableName));
 
@@ -261,7 +260,7 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
 
             for (Field f : tableSchema.getFields()) {
                 if (pkColumns.contains(f.name())) {
-                    f.schema().addProp(SchemaConstants.TALEND_COLUMN_IS_KEY, "true");
+                    f.addProp(SchemaConstants.TALEND_COLUMN_IS_KEY, "true");
                 }
             }
 
