@@ -87,7 +87,7 @@ public class SnowflakeSourceOrSinkTest {
         Connection connectionMock = Mockito.mock(Connection.class);
 
         Mockito.when(runtimeContainerMock.getComponentData(Matchers.anyString(), Matchers.anyString()))
-                .thenReturn((SnowflakeConnectionProperties) snowflakeSourceOrSink.properties);
+                .thenReturn(snowflakeSourceOrSink.properties);
 
         DatabaseMetaData databaseMetaDataMock = Mockito.mock(DatabaseMetaData.class);
         ResultSet resultSetMock = Mockito.mock(ResultSet.class);
