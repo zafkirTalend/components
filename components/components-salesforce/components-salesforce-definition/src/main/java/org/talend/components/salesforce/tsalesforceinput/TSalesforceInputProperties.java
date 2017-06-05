@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceinput;
 
+
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 import static org.talend.daikon.properties.property.PropertyFactory.newInteger;
@@ -32,6 +33,7 @@ import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
@@ -72,6 +74,19 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
 
     public Property<String> columnNameDelimiter = newProperty("columnNameDelimiter"); //$NON-NLS-1$
 
+    // chunk size must be less than 250000.
+    public static final int MAX_CHUNK_SIZE = 250_000;
+
+    public static final int DEFAULT_CHUNK_SIZE = 100_000;
+
+    public static final int DEFAULT_CHUNK_SLEEP_TIME = 15;
+
+    public Property<Boolean> pkChunking = newBoolean("pkChunking", false);
+
+    public Property<Integer> chunkSize = newInteger("chunkSize", DEFAULT_CHUNK_SIZE);
+
+    public Property<Integer> chunkSleepTime = newInteger("chunkSleepTime", DEFAULT_CHUNK_SLEEP_TIME);
+
     public TSalesforceInputProperties(@JsonProperty("name") String name) {
         super(name);
     }
@@ -102,13 +117,16 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         mainForm.addRow(includeDeleted);
 
         Form advancedForm = getForm(Form.ADVANCED);
+        advancedForm.addRow(pkChunking);
+        advancedForm.addRow(chunkSize);
+        advancedForm.addRow(chunkSleepTime);
         advancedForm.addRow(batchSize);
         advancedForm.addRow(normalizeDelimiter);
         advancedForm.addRow(columnNameDelimiter);
     }
 
     public ValidationResult validateGuessSchema() {
-        ValidationResult validationResult = new ValidationResult();
+        ValidationResultMutable validationResult = new ValidationResultMutable();
 
         try (SandboxedInstance sandboxISalesforceSourceOrSink = RuntimeUtil
                 .createRuntimeClass(
@@ -140,7 +158,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     }
 
     public ValidationResult validateGuessQuery() {
-        ValidationResult validationResult = new ValidationResult();
+        ValidationResultMutable validationResult = new ValidationResultMutable();
 
         try (SandboxedInstance sandboxISalesforceSourceOrSink = RuntimeUtil
                 .createRuntimeClass(
@@ -192,6 +210,14 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         refreshLayout(getForm(Form.MAIN));
     }
 
+    public void afterPkChunking() {
+        refreshLayout(getForm(Form.ADVANCED));
+    }
+
+    public void afterPkChunkingSleepTime() {
+        refreshLayout(getForm(Form.ADVANCED));
+    }
+
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
@@ -206,6 +232,9 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         }
         if (Form.ADVANCED.equals(form.getName())) {
             boolean isBulkQuery = queryMode.getValue().equals(QueryMode.Bulk);
+            form.getWidget(pkChunking.getName()).setVisible(isBulkQuery);
+            form.getWidget(chunkSize.getName()).setVisible(isBulkQuery && pkChunking.getValue());
+            form.getWidget(chunkSleepTime.getName()).setVisible(isBulkQuery && pkChunking.getValue());
             form.getWidget(normalizeDelimiter.getName()).setHidden(isBulkQuery);
             form.getWidget(columnNameDelimiter.getName()).setHidden(isBulkQuery);
             form.getWidget(batchSize.getName()).setHidden(isBulkQuery);

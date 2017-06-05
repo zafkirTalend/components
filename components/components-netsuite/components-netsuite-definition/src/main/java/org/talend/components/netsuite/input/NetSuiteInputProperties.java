@@ -26,7 +26,7 @@ import org.talend.daikon.properties.presentation.Form;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- *
+ * Root properties of NetSuite Input component.
  */
 public class NetSuiteInputProperties extends FixedConnectorsComponentProperties
         implements NetSuiteProvideConnectionProperties {
@@ -35,7 +35,7 @@ public class NetSuiteInputProperties extends FixedConnectorsComponentProperties
 
     public final NetSuiteInputModuleProperties module;
 
-    protected transient PropertyPathConnector MAIN_CONNECTOR =
+    protected transient final PropertyPathConnector mainConnector =
             new PropertyPathConnector(Connector.MAIN_NAME, "module.main");
 
     public NetSuiteInputProperties(@JsonProperty("name") String name) {
@@ -59,6 +59,15 @@ public class NetSuiteInputProperties extends FixedConnectorsComponentProperties
     }
 
     @Override
+    public void refreshLayout(Form form) {
+        super.refreshLayout(form);
+
+        for (Form childForm : connection.getForms()) {
+            connection.refreshLayout(childForm);
+        }
+    }
+
+    @Override
     public NetSuiteConnectionProperties getConnectionProperties() {
         return connection.getEffectiveConnectionProperties();
     }
@@ -66,7 +75,7 @@ public class NetSuiteInputProperties extends FixedConnectorsComponentProperties
     @Override
     protected Set<PropertyPathConnector> getAllSchemaPropertiesConnectors(boolean isOutputConnection) {
         if (isOutputConnection) {
-            return Collections.singleton(MAIN_CONNECTOR);
+            return Collections.singleton(mainConnector);
         }
         return Collections.emptySet();
     }

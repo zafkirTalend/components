@@ -68,16 +68,10 @@ public class AzureStorageTableSourceOrSink extends AzureStorageSourceOrSink impl
         AzureStorageTableProperties p = (AzureStorageTableProperties) properties;
         String tn = p.tableName.getValue();
         if (tn.isEmpty()) {
-            vr = new ValidationResult();
-            vr.setStatus(ValidationResult.Result.ERROR);
-            vr.setMessage(i18nMessages.getMessage("message.VacantName"));
-            return vr;
+            return new ValidationResult(ValidationResult.Result.ERROR, i18nMessages.getMessage("message.VacantName"));
         }
         if (!tableCheckNamePattern.matcher(tn).matches()) {
-            vr = new ValidationResult();
-            vr.setStatus(ValidationResult.Result.ERROR);
-            vr.setMessage(i18nMessages.getMessage("message.IncorrectName"));
-            return vr;
+            return new ValidationResult(ValidationResult.Result.ERROR, i18nMessages.getMessage("message.IncorrectName"));
         }
 
         return ValidationResult.OK;
@@ -120,8 +114,13 @@ public class AzureStorageTableSourceOrSink extends AzureStorageSourceOrSink impl
             TableQuery<DynamicTableEntity> partitionQuery;
             partitionQuery = TableQuery.from(DynamicTableEntity.class).take(1);
             Iterable<DynamicTableEntity> entities = table.execute(partitionQuery);
-            DynamicTableEntity result = entities.iterator().next();
-            return AzureStorageAvroRegistry.get().inferSchema(result);
+            if(entities.iterator().hasNext()){
+                DynamicTableEntity result = entities.iterator().next();
+                return AzureStorageAvroRegistry.get().inferSchema(result);
+            }else{
+                return null;
+            }
+            
         } catch (InvalidKeyException | URISyntaxException | StorageException e) {
             LOGGER.error(e.getLocalizedMessage());
             throw new ComponentException(e);

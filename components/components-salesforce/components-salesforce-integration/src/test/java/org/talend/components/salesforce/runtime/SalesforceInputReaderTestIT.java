@@ -28,6 +28,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,6 +48,12 @@ import org.talend.daikon.avro.SchemaConstants;
 public class SalesforceInputReaderTestIT extends SalesforceTestBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SalesforceInputReaderTestIT.class);
+
+    @Before
+    public void setup() throws Throwable {
+        deleteAllAccountTestRows();
+    }
+
 
     public static Schema SCHEMA_QUERY_ACCOUNT = SchemaBuilder.builder().record("Schema").fields() //
             .name("Id").type().stringType().noDefault() //
@@ -95,10 +103,54 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
         runInputTest(false, true);
     }
 
-    @Ignore("Bulk query doesn't support")
     @Test
     public void testInputBulkQueryDynamic() throws Throwable {
         runInputTest(true, true);
+    }
+
+    @Ignore("Our Salesforce credentials were used too many time in ITs they may create huge amount of data and this test can execute too long")
+    @Test
+    public void testBulkApiWithPkChunking() throws Throwable {
+        TSalesforceInputProperties properties = createTSalesforceInputProperties(false, true);
+        properties.manualQuery.setValue(false);
+
+        // Some records can't be erased by deleteAllAccountTestRows(),
+        // they have relations to other tables, we need to extract them(count) from main test.
+        List<IndexedRecord> readRows = readRows(properties);
+        int defaultRecordsInSalesforce = readRows.size();
+
+        properties.pkChunking.setValue(true);
+        // This all test were run to many times and created/deleted huge amount of data,
+        // to avoid Error: TotalRequests Limit exceeded lets get data with chunk size 100_000(default on Salesforce)
+        properties.chunkSize.setValue(TSalesforceInputProperties.DEFAULT_CHUNK_SIZE);
+        int count = 1500;
+        String random = createNewRandom();
+        List<IndexedRecord> outputRows = makeRows(random, count, true);
+        outputRows = writeRows(random, properties, outputRows);
+        try {
+            readRows = readRows(properties);
+            LOGGER.info("Read rows count - {}", readRows.size());
+            Assert.assertEquals((readRows.size() - defaultRecordsInSalesforce), outputRows.size());
+        } finally {
+            deleteRows(outputRows, properties);
+        }
+    }
+
+    @Test
+    public void testClosingAlreadyClosedJob() {
+        try {
+            TSalesforceInputProperties properties = createTSalesforceInputProperties(false, true);
+            properties.manualQuery.setValue(false);
+            SalesforceBulkQueryInputReader reader = (SalesforceBulkQueryInputReader) this.<IndexedRecord>createBoundedReader(properties);
+            reader.start();
+            reader.close();
+            // Job could be closed on Salesforce side and previously we tried to close it again, we shouldn't do that.
+            // We can emulate this like calling close the job second time.
+            reader.close();
+        } catch(Throwable t) {
+            Assert.fail("This test shouldn't throw any errors, since we're closing already closed job");
+        }
+
     }
 
     protected TSalesforceInputProperties createTSalesforceInputProperties(boolean emptySchema, boolean isBulkQury)
@@ -238,7 +290,6 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
     /**
      * This for basic connection manual query with dynamic
      */
-    @Ignore("Should be activated after TDI-38263")
     @Test
     public void testBulkManualQueryDynamic() throws Throwable {
         testManualQueryDynamic(true);
@@ -260,54 +311,36 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
     }
 
     /*
-     * Test nested query of SOQL
+     * Test nested query of SOQL. Checking if data was placed correctly by guessed schema method.
      */
     @Test
     public void testComplexSOQLQuery() throws Throwable {
         TSalesforceInputProperties props = createTSalesforceInputProperties(false, false);
         props.manualQuery.setValue(true);
         // Manual query with foreign key
-        props.module.main.schema.setValue(SchemaBuilder.builder().record("MakeRowRecord").fields().name("Id").type().nullable()
-                .stringType().noDefault().name("Account_Id").type().nullable().stringType().noDefault().name("Name").type()
-                .nullable().stringType().noDefault().name("Account_Name").type().nullable().stringType().noDefault()
-                .name("Contacts_records_Id").type().nullable().stringType().noDefault().name("Account_Contacts_records_Id").type()
-                .nullable().stringType().noDefault().name("Contacts_records_Name").type().nullable().stringType().noDefault()
-                .name("Account_Contacts_records_Name").type().nullable().stringType().noDefault().endRecord());
-        props.query.setValue("Select Id, Name,(Select Id,Contact.Name from Contacts Limit 1) from Account Limit 10");
+        // Need to specify where clause to be sure that this record exists and has parent-to-child relation.
+        props.query.setValue("Select Id, Name,(Select Contact.Id,Contact.Name from Account.Contacts) from Account Limit 1");
+        props.validateGuessSchema();
         List<IndexedRecord> rows = readRows(props);
 
         if (rows.size() > 0) {
-            boolean isSubQueryResultEmpty = true;
             for (IndexedRecord row : rows) {
                 Schema schema = row.getSchema();
                 assertNotNull(schema.getField("Id"));
-                assertNotNull(schema.getField("Account_Id"));
                 assertNotNull(schema.getField("Name"));
-                assertNotNull(schema.getField("Account_Name"));
-                assertNotNull(schema.getField("Contacts_records_Id"));
-                assertNotNull(schema.getField("Account_Contacts_records_Id"));
-                assertNotNull(schema.getField("Contacts_records_Name"));
-                assertNotNull(schema.getField("Account_Contacts_records_Name"));
+                assertNotNull(schema.getField("Account_Contacts_records_Contact_Id"));
+                assertNotNull(schema.getField("Account_Contacts_records_Contact_Name"));
 
-                assertEquals(row.get(schema.getField("Id").pos()), row.get(schema.getField("Account_Id").pos()));
-                assertEquals(row.get(schema.getField("Name").pos()), row.get(schema.getField("Account_Name").pos()));
-                assertEquals(row.get(schema.getField("Contacts_records_Id").pos()),
-                        row.get(schema.getField("Account_Contacts_records_Id").pos()));
-                assertEquals(row.get(schema.getField("Contacts_records_Name").pos()),
-                        row.get(schema.getField("Account_Contacts_records_Name").pos()));
-                if (row.get(schema.getField("Contacts_records_Id").pos()) != null
-                        || row.get(schema.getField("Contacts_records_Name").pos()) != null) {
-                    isSubQueryResultEmpty = false;
-                }
+                assertNotNull(row.get(schema.getField("Id").pos()));
+                assertNotNull(row.get(schema.getField("Name").pos()));
+                assertNotNull(row.get(schema.getField("Account_Contacts_records_Contact_Id").pos()));
+                assertNotNull(row.get(schema.getField("Account_Contacts_records_Contact_Name").pos()));
 
                 LOGGER.debug("check: [Name && Account_Name]:" + row.get(schema.getField("Name").pos()) + " [Id && Account_Id]: "
                         + row.get(schema.getField("Id").pos()) + " [Contacts_records_Id && Contacts_records_Id]: "
-                        + row.get(schema.getField("Contacts_records_Id").pos())
+                        + row.get(schema.getField("Account_Contacts_records_Contact_Id").pos())
                         + " [Account_Contacts_records_Name && Contacts_records_Name]: "
-                        + row.get(schema.getField("Account_Contacts_records_Name").pos()));
-            }
-            if (isSubQueryResultEmpty) {
-                LOGGER.warn("Nested query result is empty!");
+                        + row.get(schema.getField("Account_Contacts_records_Contact_Name").pos()));
             }
         } else {
             LOGGER.warn("Query result is empty!");
@@ -348,6 +381,30 @@ public class SalesforceInputReaderTestIT extends SalesforceTestBase {
                 deleteRows(returnRecords, outputProps);
             }
         }
+
+    }
+
+    /*
+     * Test salesforce input manual query with dynamic return fields order same with SOQL fields order
+     */
+    @Test
+    public void testDynamicFieldsOrder() throws Throwable {
+        TSalesforceInputProperties props = createTSalesforceInputProperties(true, false);
+        LOGGER.debug(props.module.main.schema.getStringValue());
+        props.manualQuery.setValue(true);
+        props.query.setValue(
+                "Select Name,IsDeleted,Id, Type,ParentId,MasterRecordId ,CreatedDate from Account order by CreatedDate limit 1 ");
+        List<IndexedRecord> rows = readRows(props);
+        assertEquals("No record returned!", 1, rows.size());
+        List<Schema.Field> fields = rows.get(0).getSchema().getFields();
+        assertEquals(7, fields.size());
+        assertEquals("Name", fields.get(0).name());
+        assertEquals("IsDeleted", fields.get(1).name());
+        assertEquals("Id", fields.get(2).name());
+        assertEquals("Type", fields.get(3).name());
+        assertEquals("ParentId", fields.get(4).name());
+        assertEquals("MasterRecordId", fields.get(5).name());
+        assertEquals("CreatedDate", fields.get(6).name());
 
     }
 

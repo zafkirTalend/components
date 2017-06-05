@@ -68,18 +68,15 @@ public class AzureStorageGetRuntime extends AzureStorageContainerRuntime
         this.dieOnError = componentProperties.dieOnError.getValue();
 
         String errorMessage = "";
-        if (remoteBlobsGet.prefix.getValue().isEmpty()) {
+        if (remoteBlobsGet.prefix.getValue()==null||remoteBlobsGet.prefix.getValue().isEmpty()) {
 
             errorMessage = messages.getMessage("error.EmptyBlobs"); //$NON-NLS-1$
-        } else if (!new File(localFolder).exists()) {
-
-            errorMessage = messages.getMessage("error.NonentityLocal"); //$NON-NLS-1$
         }
 
         if (errorMessage.isEmpty()) { // everything is OK.
             return ValidationResult.OK;
         } else {
-            return createValidationResult(ValidationResult.Result.ERROR, errorMessage);
+            return new ValidationResult(ValidationResult.Result.ERROR, errorMessage);
         }
     }
 
@@ -91,6 +88,7 @@ public class AzureStorageGetRuntime extends AzureStorageContainerRuntime
     }
 
     private void download(RuntimeContainer runtimeContainer) {
+        FileOutputStream fos = null ;
 
         try {
             CloudBlobContainer blobContainer = getAzureStorageBlobContainerReference(runtimeContainer, containerName);
@@ -102,7 +100,8 @@ public class AzureStorageGetRuntime extends AzureStorageContainerRuntime
                         if (rmtb.create) {
                             new File(localFolder + "/" + ((CloudBlob) blob).getName()).getParentFile().mkdirs();
                         }
-                        ((CloudBlob) blob).download(new FileOutputStream(localFolder + "/" + ((CloudBlob) blob).getName()));
+                        fos = new FileOutputStream(localFolder + "/" + ((CloudBlob) blob).getName());
+                        ((CloudBlob) blob).download(fos);
 
                     }
                 }
@@ -111,6 +110,12 @@ public class AzureStorageGetRuntime extends AzureStorageContainerRuntime
             LOGGER.error(e.getLocalizedMessage());
             if (dieOnError) {
                 throw new ComponentException(e);
+            }
+        }finally{
+            try {
+                fos.close();
+            } catch (Exception e) {
+                //ignore
             }
         }
 

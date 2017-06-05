@@ -14,8 +14,8 @@ package org.talend.components.marketo.tmarketoinput;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.InputOperation.CustomObject;
 import static org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.InputOperation.getLead;
 import static org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.InputOperation.getLeadActivity;
 import static org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.InputOperation.getLeadChanges;
@@ -36,7 +36,6 @@ import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadK
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadKeyTypeSOAP;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadSelector;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.ListParam;
-import org.talend.daikon.properties.PropertiesDynamicMethodHelper;
 import org.talend.daikon.properties.ValidationResult.Result;
 import org.talend.daikon.properties.presentation.Form;
 
@@ -67,7 +66,8 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         String tl_leadKeyValue = props.leadKeyValue.getName();
         String tl_leadKeyValues = props.leadKeyValues.getName();
         String tl_listParam = props.listParam.getName();
-        String tl_listParamValue = props.listParamValue.getName();
+        String tl_listParamValue = props.listParamListName.getName();
+        String tl_listParamListId = props.listParamListId.getName();
         String tl_oldestUpdateDate = props.oldestUpdateDate.getName();
         String tl_latestUpdateDate = props.latestUpdateDate.getName();
         String tl_setIncludeTypes = props.setIncludeTypes.getName();
@@ -138,14 +138,23 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         // REST API Mode - getMultipleLeads - StaticList
         props.inputOperation.setValue(getMultipleLeads);
         props.leadSelectorREST.setValue(LeadSelector.StaticListSelector);
+        props.listParam.setValue(ListParam.STATIC_LIST_NAME);
         props.refreshLayout(props.getForm(Form.MAIN));
         assertTrue(f.getWidget(tl_operation).isVisible());
         assertTrue(f.getWidget(tl_mappingInput).isVisible());
         assertTrue(f.getWidget(tl_dieOnError).isVisible());
-        //
         assertTrue(f.getWidget(tl_leadSelectorREST).isVisible());
         assertTrue(f.getWidget(tl_listParam).isVisible());
         assertTrue(f.getWidget(tl_listParamValue).isVisible());
+        assertFalse(f.getWidget(tl_listParamListId).isVisible());
+        //
+        props.leadSelectorREST.setValue(LeadSelector.StaticListSelector);
+        props.listParam.setValue(ListParam.STATIC_LIST_ID);
+        props.refreshLayout(props.getForm(Form.MAIN));
+        assertTrue(f.getWidget(tl_leadSelectorREST).isVisible());
+        assertTrue(f.getWidget(tl_listParam).isVisible());
+        assertFalse(f.getWidget(tl_listParamValue).isVisible());
+        assertTrue(f.getWidget(tl_listParamListId).isVisible());
         //
         assertFalse(f.getWidget(tl_leadKeyTypeREST).isVisible());
         assertFalse(f.getWidget(tl_leadSelectorSOAP).isVisible());
@@ -278,6 +287,7 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         // SOAP API Mode - getMultipleLeads - StaticList
         props.inputOperation.setValue(getMultipleLeads);
         props.leadSelectorSOAP.setValue(LeadSelector.StaticListSelector);
+        props.listParam.setValue(ListParam.STATIC_LIST_NAME);
         props.refreshLayout(props.getForm(Form.MAIN));
         assertTrue(f.getWidget(tl_operation).isVisible());
         assertTrue(f.getWidget(tl_mappingInput).isVisible());
@@ -286,6 +296,14 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         assertTrue(f.getWidget(tl_leadSelectorSOAP).isVisible());
         assertTrue(f.getWidget(tl_listParam).isVisible());
         assertTrue(f.getWidget(tl_listParamValue).isVisible());
+        assertFalse(f.getWidget(tl_listParamListId).isVisible());
+        //
+        props.listParam.setValue(ListParam.STATIC_LIST_ID);
+        props.refreshLayout(props.getForm(Form.MAIN));
+        assertTrue(f.getWidget(tl_leadSelectorSOAP).isVisible());
+        assertTrue(f.getWidget(tl_listParam).isVisible());
+        assertFalse(f.getWidget(tl_listParamValue).isVisible());
+        assertTrue(f.getWidget(tl_listParamListId).isVisible());
         //
         assertFalse(f.getWidget(tl_leadKeyTypeREST).isVisible());
         assertFalse(f.getWidget(tl_leadSelectorREST).isVisible());
@@ -818,6 +836,7 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
     public void testTDI38475() throws Exception {
         assertEquals(MarketoConstants.getRESTSchemaForGetLeadOrGetMultipleLeads(), props.schemaInput.schema.getValue());
         props.connection.apiMode.setValue(APIMode.SOAP);
+        props.afterInputOperation();
         props.refreshLayout(props.getForm(Form.ADVANCED));
         assertEquals(MarketoConstants.getSOAPSchemaForGetLeadOrGetMultipleLeads(), props.schemaInput.schema.getValue());
         props.refreshLayout(props.getForm(Form.MAIN));
@@ -831,16 +850,44 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
     }
 
     @Test
-    public void testAPIModeRefresh() throws Throwable {
-        TMarketoInputProperties props = (TMarketoInputProperties) new TMarketoInputProperties("test").init();
-        assertTrue(props.isApiREST());
-        assertEquals("getLeadOrGetMultipleLeadsREST", props.schemaInput.schema.getValue().getName());
-        // change api mode to SOAP
-        props.connection.apiMode.setValue(APIMode.SOAP);
-        PropertiesDynamicMethodHelper.afterProperty(props.connection, props.connection.apiMode.getName());
-        assertNotEquals("getLeadOrGetMultipleLeadsSOAP", props.schemaInput.schema.getValue().getName());
-        props.refreshLayout(props.getForm(Form.ADVANCED));
-        assertTrue(props.isApiSOAP());
-        assertEquals("getLeadOrGetMultipleLeadsSOAP", props.schemaInput.schema.getValue().getName());
+    public void testCompoundKey() throws Exception {
+        props.refreshLayout(props.getForm(Form.MAIN));
+        Form f = props.getForm(Form.MAIN);
+        assertFalse(f.getWidget(props.customObjectAction).isVisible());
+        assertFalse(f.getWidget(props.customObjectName).isVisible());
+        assertFalse(f.getWidget(props.customObjectNames).isVisible());
+        assertFalse(f.getWidget(props.customObjectFilterType).isVisible());
+        assertFalse(f.getWidget(props.customObjectFilterValues).isVisible());
+        assertFalse(f.getWidget(props.useCompoundKey).isVisible());
+        assertFalse(f.getWidget(props.compoundKey).isVisible());
+        assertFalse(f.getWidget(props.fetchCustomObjectSchema).isVisible());
+        assertFalse(f.getWidget(props.fetchCompoundKey).isVisible());
+
+        props.inputOperation.setValue(CustomObject);
+        props.customObjectAction.setValue(CustomObjectAction.get);
+        props.afterInputOperation();
+        props.refreshLayout(props.getForm(Form.MAIN));
+        assertEquals(MarketoConstants.getCustomObjectRecordSchema(), props.schemaInput.schema.getValue());
+        assertTrue(f.getWidget(props.customObjectAction).isVisible());
+        assertTrue(f.getWidget(props.customObjectName).isVisible());
+        assertFalse(f.getWidget(props.customObjectNames).isVisible());
+        assertTrue(f.getWidget(props.customObjectFilterType).isVisible());
+        assertTrue(f.getWidget(props.customObjectFilterValues).isVisible());
+        assertTrue(f.getWidget(props.useCompoundKey).isVisible());
+        assertFalse(f.getWidget(props.compoundKey).isVisible());
+        assertTrue(f.getWidget(props.fetchCustomObjectSchema).isVisible());
+        assertFalse(f.getWidget(props.fetchCompoundKey).isVisible());
+
+        props.useCompoundKey.setValue(true);
+        props.refreshLayout(props.getForm(Form.MAIN));
+        assertTrue(f.getWidget(props.customObjectAction).isVisible());
+        assertTrue(f.getWidget(props.customObjectName).isVisible());
+        assertFalse(f.getWidget(props.customObjectNames).isVisible());
+        assertFalse(f.getWidget(props.customObjectFilterType).isVisible());
+        assertFalse(f.getWidget(props.customObjectFilterValues).isVisible());
+        assertTrue(f.getWidget(props.useCompoundKey).isVisible());
+        assertTrue(f.getWidget(props.compoundKey).isVisible());
+        assertTrue(f.getWidget(props.fetchCustomObjectSchema).isVisible());
+        assertTrue(f.getWidget(props.fetchCompoundKey).isVisible());
     }
 }

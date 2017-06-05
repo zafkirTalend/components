@@ -44,6 +44,7 @@ import org.talend.daikon.i18n.GlobalI18N;
 import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.ValidationResultMutable;
 
 public class SnowflakeSourceOrSink implements SourceOrSink {
 
@@ -71,21 +72,21 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
         try {
             connect(container);
         } catch (IllegalArgumentException e) {
-            ValidationResult vr = new ValidationResult();
+            ValidationResultMutable vr = new ValidationResultMutable();
             vr.setMessage(e.getMessage().concat(SnowflakeConstants.INCORRECT_SNOWFLAKE_ACCOUNT_MESSAGE));
             vr.setStatus(ValidationResult.Result.ERROR);
             return vr;
         } catch (Exception ex) {
             return exceptionToValidationResult(ex);
         }
-        ValidationResult vr = new ValidationResult();
+        ValidationResultMutable vr = new ValidationResultMutable();
         vr.setStatus(Result.OK);
         vr.setMessage(SnowflakeConstants.CONNECTION_SUCCESSFUL_MESSAGE);
         return vr;
     }
 
     public static ValidationResult exceptionToValidationResult(Exception ex) {
-        ValidationResult vr = new ValidationResult();
+        ValidationResultMutable vr = new ValidationResultMutable();
         vr.setMessage(ex.getMessage());
         vr.setStatus(ValidationResult.Result.ERROR);
         return vr;
@@ -101,7 +102,7 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
         } catch (Exception ex) {
             return exceptionToValidationResult(ex);
         }
-        ValidationResult vr = new ValidationResult();
+        ValidationResultMutable vr = new ValidationResultMutable();
         vr.setStatus(Result.OK);
         vr.setMessage(SnowflakeConstants.CONNECTION_SUCCESSFUL_MESSAGE);
         return vr;
@@ -245,7 +246,6 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
 
             ResultSet resultSet = metaData.getColumns(getCatalog(connProps), getDbSchema(connProps), tableName, null);
             tableSchema = getSnowflakeAvroRegistry().inferSchema(resultSet);
-            // FIXME - I18N for this message
             if (tableSchema == null)
                 throw new IOException(i18nMessages.getMessage("error.tableNotFound", tableName));
 
@@ -260,7 +260,7 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
 
             for (Field f : tableSchema.getFields()) {
                 if (pkColumns.contains(f.name())) {
-                    f.schema().addProp(SchemaConstants.TALEND_COLUMN_IS_KEY, "true");
+                    f.addProp(SchemaConstants.TALEND_COLUMN_IS_KEY, "true");
                 }
             }
 
@@ -280,26 +280,32 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
             this.driver = d;
         }
 
+        @Override
         public boolean acceptsURL(String u) throws SQLException {
             return this.driver.acceptsURL(u);
         }
 
+        @Override
         public Connection connect(String u, Properties p) throws SQLException {
             return this.driver.connect(u, p);
         }
 
+        @Override
         public int getMajorVersion() {
             return this.driver.getMajorVersion();
         }
 
+        @Override
         public int getMinorVersion() {
             return this.driver.getMinorVersion();
         }
 
+        @Override
         public DriverPropertyInfo[] getPropertyInfo(String u, Properties p) throws SQLException {
             return this.driver.getPropertyInfo(u, p);
         }
 
+        @Override
         public boolean jdbcCompliant() {
             return this.driver.jdbcCompliant();
         }

@@ -14,17 +14,15 @@
 package org.talend.components.netsuite.client.model.search;
 
 import static org.talend.components.netsuite.client.model.beans.Beans.getSimpleProperty;
-import static org.talend.components.netsuite.client.model.beans.Beans.setProperty;
 import static org.talend.components.netsuite.client.model.beans.Beans.setSimpleProperty;
 
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.talend.components.netsuite.client.model.BasicMetaData;
-import org.talend.components.netsuite.client.model.TypeUtils;
 
 /**
- *
+ * Search field adapter for {@code SearchMultiSelectField} and {@code SearchMultiSelectCustomField}.
  */
 public class SearchMultiSelectFieldAdapter<T> extends SearchFieldAdapter<T> {
 
@@ -39,10 +37,16 @@ public class SearchMultiSelectFieldAdapter<T> extends SearchFieldAdapter<T> {
         List<Object> searchValue = (List<Object>) getSimpleProperty(nsObject, "searchValue");
         for (int i = 0; i < values.size(); i++) {
             if (StringUtils.isNotEmpty(values.get(i))) {
-                Object item = metaData.createInstance("ListOrRecordRef");
-                setSimpleProperty(item, "name", values.get(i));
-                setSimpleProperty(item, "internalId", values.get(i));
-                searchValue.add(item);
+                if (SearchFieldType.MULTI_SELECT == fieldType) {
+                    Object item = metaData.createInstance("RecordRef");
+                    setSimpleProperty(item, "internalId", values.get(i));
+                    searchValue.add(item);
+                } else if (SearchFieldType.CUSTOM_MULTI_SELECT == fieldType) {
+                    Object item = metaData.createInstance("ListOrRecordRef");
+                    setSimpleProperty(item, "name", values.get(i));
+                    setSimpleProperty(item, "internalId", values.get(i));
+                    searchValue.add(item);
+                }
             }
         }
 

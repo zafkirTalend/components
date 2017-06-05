@@ -92,7 +92,7 @@ public class MarketoListOperationWriter extends MarketoWriter {
         }
         //
         // isMemberOf don't have to manage many prospects. Just once at a time..
-        if (operation.equals(ListOperation.isMemberOf)) {
+        if (operation.equals(isMemberOf)) {
             listOpeParms = buildListOperationParameters((IndexedRecord) object);
             processResult(client.isMemberOfList(listOpeParms));
             return;
@@ -157,6 +157,7 @@ public class MarketoListOperationWriter extends MarketoWriter {
         listOpeParms = new ListOperationParameters();
         listOpeParms.setApiMode(api);
         listOpeParms.setOperation(operation.name());
+        listOpeParms.setStrict(dieOnError);
         if (use_soap_api) {
             listOpeParms.setListKeyType(record.get(inputSchema.getField(FIELD_LIST_KEY_TYPE).pos()).toString());
             listOpeParms.setListKeyValue(record.get(inputSchema.getField(FIELD_LIST_KEY_VALUE).pos()).toString());
@@ -217,10 +218,14 @@ public class MarketoListOperationWriter extends MarketoWriter {
     public void processResult(MarketoSyncResult mktoResult) throws IOException {
         result.apiCalls++;
         if (!mktoResult.isSuccess()) {
-            throw new IOException(mktoResult.getErrorsString());
+            if (dieOnError) {
+                throw new IOException(mktoResult.getErrorsString());
+            }
+            LOG.error(mktoResult.getErrorsString());
         }
         for (SyncStatus status : mktoResult.getRecords()) {
-            if (Arrays.asList("true", "added", "removed", "notmemberof", "memberof").contains(status.getStatus().toLowerCase())) {
+            if (Arrays.asList("true", "added", "removed", "notmemberof", "memberof").contains(status.getStatus().toLowerCase())
+                    || (properties.isApiSOAP() && !addTo.equals(operation))) {
                 handleSuccess(fillRecord(status, flowSchema));
             } else {
                 if (dieOnError) {

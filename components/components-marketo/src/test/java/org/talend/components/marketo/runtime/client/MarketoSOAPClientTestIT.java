@@ -77,11 +77,11 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.connection.endpoint.setValue(ENDPOINT_SOAP);
         inputProperties.connection.clientAccessId.setValue(USERID_SOAP);
         inputProperties.connection.secretKey.setValue(SECRETKEY_SOAP);
-        inputProperties.connection.apiMode.setValue(SOAP);
         inputProperties.schemaInput.setupProperties();
         inputProperties.mappingInput.setupProperties();
         inputProperties.includeTypes.setupProperties();
         inputProperties.setupProperties();
+        inputProperties.connection.apiMode.setValue(SOAP);
         inputProperties.includeTypes.type.setValue(new ArrayList<String>());
         inputProperties.excludeTypes.setupProperties();
         inputProperties.excludeTypes.type.setValue(new ArrayList<String>());
@@ -91,24 +91,24 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         //
         listProperties = new TMarketoListOperationProperties("test");
         listProperties.connection.setupProperties();
-        listProperties.connection.apiMode.setValue(SOAP);
         listProperties.connection.endpoint.setValue(ENDPOINT_SOAP);
         listProperties.connection.clientAccessId.setValue(USERID_SOAP);
         listProperties.connection.secretKey.setValue(SECRETKEY_SOAP);
         listProperties.schemaInput.setupProperties();
         listProperties.setupProperties();
+        listProperties.connection.apiMode.setValue(SOAP);
         listProperties.connection.setupLayout();
         listProperties.schemaInput.setupLayout();
         listProperties.setupLayout();
         //
         outProperties = new TMarketoOutputProperties("test");
         outProperties.connection.setupProperties();
-        outProperties.connection.apiMode.setValue(SOAP);
         outProperties.connection.endpoint.setValue(ENDPOINT_SOAP);
         outProperties.connection.clientAccessId.setValue(USERID_SOAP);
         outProperties.connection.secretKey.setValue(SECRETKEY_SOAP);
         outProperties.schemaInput.setupProperties();
         outProperties.setupProperties();
+        outProperties.connection.apiMode.setValue(SOAP);
         outProperties.connection.setupLayout();
         outProperties.schemaInput.setupLayout();
         outProperties.setupLayout();
@@ -262,7 +262,7 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.updateSchemaRelated();
         inputProperties.batchSize.setValue(4);
         inputProperties.listParam.setValue(STATIC_LIST_NAME);
-        inputProperties.listParamValue.setValue(UNDX_TEST_LIST_SMALL);
+        inputProperties.listParamListName.setValue(UNDX_TEST_LIST_SMALL);
         MarketoSource source = new MarketoSource();
         source.initialize(null, inputProperties);
         MarketoClientService client = source.getClientService(null);
@@ -282,7 +282,7 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.afterInputOperation();
         inputProperties.batchSize.setValue(4);
         inputProperties.listParam.setValue(STATIC_LIST_NAME);
-        inputProperties.listParamValue.setValue(UNDX_TEST_LIST_SMALL);
+        inputProperties.listParamListName.setValue(UNDX_TEST_LIST_SMALL);
         MarketoSource source = new MarketoSource();
         source.initialize(null, inputProperties);
         MarketoClientService client = source.getClientService(null);
@@ -309,7 +309,7 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.batchSize.setValue(200);
         //
         inputProperties.listParam.setValue(STATIC_LIST_NAME);
-        inputProperties.listParamValue.setValue("undx_test_list******");
+        inputProperties.listParamListName.setValue("undx_test_list******");
         MarketoSource source = new MarketoSource();
         source.initialize(null, inputProperties);
         MarketoClientService client = source.getClientService(null);
@@ -331,7 +331,7 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.batchSize.setValue(10);
         //
         inputProperties.listParam.setValue(STATIC_LIST_ID);
-        inputProperties.listParamValue.setValue(UNDX_TEST_LIST_SMALL_ID.toString());
+        inputProperties.listParamListId.setValue(UNDX_TEST_LIST_SMALL_ID);
         MarketoSource source = new MarketoSource();
         source.initialize(null, inputProperties);
         MarketoClientService client = source.getClientService(null);
@@ -353,7 +353,7 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.batchSize.setValue(200);
         //
         inputProperties.listParam.setValue(STATIC_LIST_ID);
-        inputProperties.listParamValue.setValue("-666");
+        inputProperties.listParamListName.setValue("-666");
         MarketoSource source = new MarketoSource();
         source.initialize(null, inputProperties);
         MarketoClientService client = source.getClientService(null);
@@ -389,7 +389,8 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         inputProperties.inputOperation.setValue(getLeadActivity);
         inputProperties.leadKeyTypeSOAP.setValue(EMAIL);
         inputProperties.leadSelectorSOAP.setValue(LeadKeySelector);
-        inputProperties.updateSchemaRelated();
+        inputProperties.afterInputOperation();
+        inputProperties.beforeMappingInput();
         inputProperties.batchSize.setValue(11);
         //
         inputProperties.leadKeyValue.setValue(EMAIL_LEAD_MANY_INFOS);
@@ -401,7 +402,12 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         MarketoRecordResult result = client.getLeadActivity(inputProperties, null);
         LOG.debug("{}", result);
         assertTrue(result.isSuccess());
-        assertTrue(result.getRecordCount() > 0);
+        List<IndexedRecord> records = result.getRecords();
+        assertTrue(records.size() > 0);
+        for (IndexedRecord r : records) {
+            assertNotNull(r.get(0));
+            assertTrue(r.get(0) instanceof Long);
+        }
     }
 
     @Test
@@ -481,7 +487,8 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
     @Test
     public void testGetLeadsChanges() throws Exception {
         inputProperties.inputOperation.setValue(getLeadChanges);
-        inputProperties.updateSchemaRelated();
+        inputProperties.afterInputOperation();
+        inputProperties.beforeMappingInput();
         inputProperties.batchSize.setValue(1000);
         //
         inputProperties.oldestCreateDate.setValue(DATE_OLDEST_CREATE);
@@ -494,6 +501,12 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         List<IndexedRecord> changes = result.getRecords();
         assertTrue(changes.size() > 0);
         assertTrue(result.getRemainCount() > 0);
+        List<IndexedRecord> records = result.getRecords();
+        assertTrue(records.size() > 0);
+        for (IndexedRecord r : records) {
+            assertNotNull(r.get(0));
+            assertTrue(r.get(0) instanceof Long);
+        }
     }
 
     @Test
@@ -647,8 +660,9 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         ListOperationParameters parms = new ListOperationParameters();
         parms.setApiMode(SOAP.name());
         parms.setListKeyValue(UNDX_TEST_LIST_SMALL);
-        parms.setLeadKeyValue(
-                new String[] { createdLeads.get(0).toString(), createdLeads.get(1).toString(), createdLeads.get(2).toString() });
+        parms.setStrict(true);
+        parms.setLeadKeyValue(new String[] { createdLeads.get(0).toString(), createdLeads.get(1).toString(),
+                createdLeads.get(2).toString(), "12345" });
         //
         MarketoSyncResult result = client.isMemberOfList(parms);
         LOG.debug("result = {}.", result);
@@ -703,9 +717,10 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
 
     @Test
     public void testConvertToLeadRecord() throws Exception {
-        MarketoSource source = new MarketoSource();
         outProperties.outputOperation.setValue(OutputOperation.syncLead);
         outProperties.updateSchemaRelated();
+        outProperties.afterOutputOperation();
+        outProperties.beforeMappingInput();
         MarketoSOAPClient client = new MarketoSOAPClient(outProperties.connection);
         IndexedRecord record = new GenericData.Record(outProperties.schemaInput.schema.getValue());
         record.put(0, 10);
@@ -726,8 +741,8 @@ public class MarketoSOAPClientTestIT extends MarketoClientTestIT {
         record.put(1, "undx@undx.net");
         record.put(2, "ForeignPersonSysId");
         record.put(3, "SFDC");// CUSTOM, SFDC, NETSUITE;
-        record.put(4, "My firstName");
-        record.put(5, "My lastName");
+        record.put(5, "My firstName");
+        record.put(6, "My lastName");
         outProperties.schemaInput.schema.setValue(s);
         outProperties.beforeMappingInput();
         lr = client.convertToLeadRecord(record, outProperties.mappingInput.getNameMappingsForMarketo());

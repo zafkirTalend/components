@@ -14,6 +14,7 @@ import org.talend.daikon.i18n.GlobalI18N;
 import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.ValidationResultMutable;
 
 public class MarketoSink extends MarketoSourceOrSink implements Sink {
 
@@ -26,7 +27,7 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
 
     @Override
     public ValidationResult validate(RuntimeContainer container) {
-        ValidationResult vr = super.validate(container);
+        ValidationResultMutable vr = new ValidationResultMutable(super.validate(container));
         if (vr.getStatus().equals(Result.ERROR)) {
             return vr;
         }
@@ -36,6 +37,8 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
             case syncLead:
                 break;
             case syncMultipleLeads:
+                break;
+            case deleteLeads:
                 break;
             case syncCustomObjects:
                 if (StringUtils.isEmpty(((TMarketoOutputProperties) properties).customObjectName.getValue())) {
@@ -70,7 +73,7 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
             }
             // lead selector must be LeadKeySelector
             LeadSelector selector;
-            if (((TMarketoInputProperties) properties).connection.apiMode.equals(APIMode.SOAP)) {
+            if (APIMode.SOAP.equals(properties.getConnectionProperties().apiMode.getValue())) {
                 selector = ((TMarketoInputProperties) properties).leadSelectorSOAP.getValue();
             } else {
                 selector = ((TMarketoInputProperties) properties).leadSelectorREST.getValue();
@@ -87,6 +90,7 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
                 return vr;
             }
         }
+
         return ValidationResult.OK;
     }
 

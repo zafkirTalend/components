@@ -28,6 +28,7 @@ import static org.talend.daikon.properties.property.PropertyFactory.newString;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.marketo.MarketoComponentProperties;
 import org.talend.components.marketo.MarketoConstants;
+import org.talend.components.marketo.helpers.CompoundKeyTable;
 import org.talend.components.marketo.helpers.IncludeExcludeTypesTable;
 import org.talend.components.marketo.helpers.MarketoColumnMappingsTable;
 import org.talend.components.marketo.runtime.MarketoSourceOrSink;
@@ -48,11 +50,14 @@ import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.serialize.PostDeserializeSetup;
+import org.talend.daikon.serialize.migration.SerializeSetVersion;
 
-public class TMarketoInputProperties extends MarketoComponentProperties {
+public class TMarketoInputProperties extends MarketoComponentProperties implements SerializeSetVersion {
 
     private static final Logger LOG = getLogger(TMarketoInputProperties.class);
 
@@ -262,7 +267,9 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
 
     public Property<ListParam> listParam = newEnum("listParam", ListParam.class);
 
-    public Property<String> listParamValue = newString("listParamValue");
+    public Property<String> listParamListName = newString("listParamListName");
+
+    public Property<Integer> listParamListId = newInteger("listParamListId");
 
     public Property<String> fieldList = newString("fieldList");
 
@@ -304,6 +311,21 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
     public Property<String> customObjectFilterValues = newString("customObjectFilterValues");
 
     public transient PresentationItem fetchCustomObjectSchema = new PresentationItem("fetchCustomObjectSchema", "Fetch schema");
+
+    public Property<Boolean> useCompoundKey = newBoolean("useCompoundKey");
+
+    public CompoundKeyTable compoundKey = new CompoundKeyTable("compoundKey");
+
+    public transient PresentationItem fetchCompoundKey = new PresentationItem("fetchCompoundKey", "Fetch Compound Key");
+
+    // Companies / Opportunities / OpportunityRoles
+
+    public enum StandardAction {
+        describe,
+        get
+    }
+
+    public Property<StandardAction> standardAction = newEnum("standardAction", StandardAction.class);
 
     //
     private static final long serialVersionUID = 3335746787979781L;
@@ -351,6 +373,12 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
         customObjectNames.setValue("");
         customObjectFilterType.setValue("");
         customObjectFilterValues.setValue("");
+        useCompoundKey.setValue(false);
+        //
+        // Opportunities / OpportunityRoles
+        //
+        standardAction.setPossibleValues((Object[]) StandardAction.values());
+        standardAction.setValue(StandardAction.describe);
         //
         schemaInput.schema.setValue(getRESTSchemaForGetLeadOrGetMultipleLeads());
         beforeMappingInput();
@@ -369,13 +397,17 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
 
         Form mainForm = getForm(Form.MAIN);
         mainForm.addRow(inputOperation);
-        // Custom Objects
+        // Custom Objects & Opportunities
         mainForm.addColumn(customObjectAction);
+        mainForm.addColumn(standardAction);
         mainForm.addRow(customObjectName);
         mainForm.addColumn(Widget.widget(fetchCustomObjectSchema).setWidgetType(Widget.BUTTON_WIDGET_TYPE).setLongRunning(true));
         mainForm.addRow(customObjectNames);
         mainForm.addRow(customObjectFilterType);
         mainForm.addColumn(customObjectFilterValues);
+        mainForm.addRow(useCompoundKey);
+        mainForm.addRow(widget(compoundKey).setWidgetType(Widget.TABLE_WIDGET_TYPE));
+        mainForm.addRow(Widget.widget(fetchCompoundKey).setWidgetType(Widget.BUTTON_WIDGET_TYPE).setLongRunning(true));
         //
         mainForm.addRow(widget(mappingInput).setWidgetType(Widget.TABLE_WIDGET_TYPE));
         // leadSelector
@@ -387,7 +419,8 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
         mainForm.addColumn(leadKeyValues);
         //
         mainForm.addRow(listParam);
-        mainForm.addColumn(listParamValue);
+        mainForm.addColumn(listParamListName);
+        mainForm.addColumn(listParamListId);
         //
         mainForm.addRow(oldestCreateDate);
         mainForm.addColumn(latestCreateDate);
@@ -411,16 +444,6 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
         boolean useSOAP = isApiSOAP();
-        LOG.debug("[refreshLayout@{}] Connection API({}) Schema `{}`.", form.getName(), getApiMode(),
-                schemaInput.schema.getValue().getName());
-
-        if (!getApiMode().equals(currentSchemaAPI)) {
-            LOG.debug("[refreshLayout@{}] Connection API({}) *mismatches* Schema `{}` API({}) : resetting schema.",
-                    form.getName(), getApiMode(), schemaInput.schema.getValue().getName(), currentSchemaAPI);
-            updateSchemaRelated();
-            LOG.debug("[refreshLayout@{}] Connection API({}) should match Schema `{}` API({}).", form.getName(), getApiMode(),
-                    schemaInput.schema.getValue().getName(), currentSchemaAPI);
-        }
         //
         if (form.getName().equals(Form.MAIN)) {
             // first hide everything
@@ -431,7 +454,8 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
             form.getWidget(leadKeyValue.getName()).setVisible(false);
             form.getWidget(leadKeyValues.getName()).setVisible(false);
             form.getWidget(listParam.getName()).setVisible(false);
-            form.getWidget(listParamValue.getName()).setVisible(false);
+            form.getWidget(listParamListName.getName()).setVisible(false);
+            form.getWidget(listParamListId.getName()).setVisible(false);
             form.getWidget(oldestUpdateDate.getName()).setVisible(false);
             form.getWidget(latestUpdateDate.getName()).setVisible(false);
             form.getWidget(setIncludeTypes.getName()).setVisible(false);
@@ -450,6 +474,11 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
             form.getWidget(customObjectNames.getName()).setVisible(false);
             form.getWidget(customObjectFilterType.getName()).setVisible(false);
             form.getWidget(customObjectFilterValues.getName()).setVisible(false);
+            form.getWidget(useCompoundKey.getName()).setVisible(false);
+            form.getWidget(compoundKey.getName()).setVisible(false);
+            form.getWidget(fetchCompoundKey.getName()).setVisible(false);
+            //
+            form.getWidget(standardAction.getName()).setVisible(false);
             //
             // enable widgets according params
             //
@@ -475,7 +504,11 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
                         break;
                     case StaticListSelector:
                         form.getWidget(listParam.getName()).setVisible(true);
-                        form.getWidget(listParamValue.getName()).setVisible(true);
+                        if (ListParam.STATIC_LIST_NAME.equals(listParam.getValue())) {
+                            form.getWidget(listParamListName.getName()).setVisible(true);
+                        } else {
+                            form.getWidget(listParamListId.getName()).setVisible(true);
+                        }
                         form.getWidget(batchSize.getName()).setVisible(true);
                         break;
                     case LastUpdateAtSelector:
@@ -493,7 +526,11 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
                         break;
                     case StaticListSelector:
                         form.getWidget(listParam.getName()).setVisible(true);
-                        form.getWidget(listParamValue.getName()).setVisible(true);
+                        if (ListParam.STATIC_LIST_NAME.equals(listParam.getValue())) {
+                            form.getWidget(listParamListName.getName()).setVisible(true);
+                        } else {
+                            form.getWidget(listParamListId.getName()).setVisible(true);
+                        }
                         form.getWidget(batchSize.getName()).setVisible(true);
                         break;
                     }
@@ -542,8 +579,11 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
                 case get:
                     form.getWidget(customObjectName.getName()).setVisible(true);
                     form.getWidget(fetchCustomObjectSchema.getName()).setVisible(true);
-                    form.getWidget(customObjectFilterType.getName()).setVisible(true);
-                    form.getWidget(customObjectFilterValues.getName()).setVisible(true);
+                    form.getWidget(useCompoundKey.getName()).setVisible(true);
+                    form.getWidget(customObjectFilterType.getName()).setVisible(!useCompoundKey.getValue());
+                    form.getWidget(customObjectFilterValues.getName()).setVisible(!useCompoundKey.getValue());
+                    form.getWidget(compoundKey.getName()).setVisible(useCompoundKey.getValue());
+                    form.getWidget(fetchCompoundKey.getName()).setVisible(useCompoundKey.getValue());
                     form.getWidget(batchSize.getName()).setVisible(true);
                     break;
                 }
@@ -553,8 +593,14 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
 
     public ValidationResult validateInputOperation() {
         if (isApiSOAP()) {
-            if (inputOperation.getValue().equals(CustomObject)) {
-                ValidationResult vr = new ValidationResult();
+            switch (inputOperation.getValue()) {
+            case getLead:
+            case getMultipleLeads:
+            case getLeadActivity:
+            case getLeadChanges:
+                return ValidationResult.OK;
+            case CustomObject:
+                ValidationResultMutable vr = new ValidationResultMutable();
                 vr.setStatus(Result.ERROR);
                 vr.setMessage(messages.getMessage("error.validation.customobjects.nosoap"));
                 return vr;
@@ -564,26 +610,49 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
     }
 
     public ValidationResult validateFetchCustomObjectSchema() {
-        ValidationResult vr = new ValidationResult();
+        ValidationResultMutable vr = new ValidationResultMutable();
         // try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(new
         // JarRuntimeInfo(MAVEN_RUNTIME_PATH,
         // DependenciesReader.computeDependenciesFilePath(MAVEN_GROUP_ID, MAVEN_RUNTIME_ARTIFACT_ID),
         // RUNTIME_SOURCEORSINK_CLASS), connection.getClass().getClassLoader())) {
         // MarketoSourceOrSinkSchemaProvider sos = (MarketoSourceOrSinkSchemaProvider) sandboxedInstance.getInstance();
+
+        ValidationResultMutable vrm = new ValidationResultMutable(vr);
         try {
             MarketoSourceOrSink sos = new MarketoSourceOrSink();
             sos.initialize(null, this);
             Schema schema = sos.getSchemaForCustomObject(customObjectName.getValue());
             if (schema == null) {
-                vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
+                vrm.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
                         "error.validation.customobjects.fetchcustomobjectschema", customObjectName.getValue(), "NULL"));
-                return vr;
+                return vrm;
             }
             schemaInput.schema.setValue(schema);
+            vrm.setStatus(ValidationResult.Result.OK);
+        } catch (RuntimeException | IOException e) {
+            vrm.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
+                    "error.validation.customobjects.fetchcustomobjectschema", customObjectName.getValue(), e.getMessage()));
+        }
+        return vr;
+    }
+
+    public ValidationResult validateFetchCompoundKey() {
+        ValidationResultMutable vr = new ValidationResultMutable();
+        try {
+            MarketoSourceOrSink sos = new MarketoSourceOrSink();
+            sos.initialize(null, this);
+            List<String> keys = sos.getCompoundKeyFields(customObjectName.getValue());
+            if (keys == null) {
+                vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages
+                        .getMessage("error.validation.customobjects.fetchcompoundkey", customObjectName.getValue(), "NULL"));
+                return vr;
+            }
+            compoundKey.keyName.setValue(keys);
+            compoundKey.keyValue.setValue(Arrays.asList(new String[keys.size()]));
             vr.setStatus(ValidationResult.Result.OK);
         } catch (RuntimeException | IOException e) {
-            vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
-                    "error.validation.customobjects.fetchcustomobjectschema", customObjectName.getValue(), e.getMessage()));
+            vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages
+                    .getMessage("error.validation.customobjects.fetchcompoundkey", customObjectName.getValue(), e.getMessage()));
         }
         return vr;
     }
@@ -598,7 +667,6 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
 
     public void beforeMappingInput() {
         List<String> fld = getSchemaFields();
-        mappingInput.columnName.setPossibleValues(fld);
         mappingInput.columnName.setValue(fld);
         // protect mappings...
         if (fld.size() != mappingInput.size()) {
@@ -611,12 +679,15 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
     }
 
     public void afterInputOperation() {
-        LOG.debug("[afterInputOperation]");
         updateSchemaRelated();
         refreshLayout(getForm(Form.MAIN));
     }
 
     public void afterCustomObjectAction() {
+        afterInputOperation();
+    }
+
+    public void afterStandardAction() {
         afterInputOperation();
     }
 
@@ -640,10 +711,21 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
         refreshLayout(getForm(Form.MAIN));
     }
 
+    public void afterUseCompoundKey() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void afterFetchCompoundKey() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void afterListParam() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
     public void updateSchemaRelated() {
         Schema s = null;
         if (isApiSOAP()) {
-            currentSchemaAPI = API_SOAP;
             switch (inputOperation.getValue()) {
             case getLead:
             case getMultipleLeads:
@@ -657,7 +739,6 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
                 break;
             }
         } else {
-            currentSchemaAPI = API_REST;
             switch (inputOperation.getValue()) {
             case getLead:
             case getMultipleLeads:
@@ -682,11 +763,34 @@ public class TMarketoInputProperties extends MarketoComponentProperties {
                 break;
             }
         }
-        LOG.debug("[updateSchemaRelated] API({}) Replacing Schema `{}` by Schema `{}`.", getApiMode(),
-                schemaInput.schema.getValue().getName(), s.getName());
         schemaInput.schema.setValue(s);
-        LOG.debug("[updateSchemaRelated] API({}) Replaced Schema. Now schema is `{}`.", getApiMode(),
-                schemaInput.schema.getValue().getName());
+        beforeMappingInput();
+    }
+
+    @Override
+    public int getVersionNumber() {
+        return 1;
+    }
+
+    @Override
+    public boolean postDeserialize(int version, PostDeserializeSetup setup, boolean persistent) {
+        boolean migrated = super.postDeserialize(version, setup, persistent);
+        if (version < this.getVersionNumber()) {
+            if (InputOperation.getMultipleLeads.equals(inputOperation.getValue())
+                    && ((LeadSelector.StaticListSelector.equals(leadSelectorREST.getValue()) && isApiREST())
+                            || (LeadSelector.StaticListSelector.equals(leadSelectorSOAP.getValue()) && isApiSOAP()))
+                    && ListParam.STATIC_LIST_ID.equals(listParam.getValue()) && listParamListId.getValue() == null) {
+                try {
+                    String p = listParamListName.getValue();
+                    Integer listid = Integer.parseInt(p);
+                    listParamListId.setValue(listid);
+                } catch (NumberFormatException e) {
+                    LOG.warn("Couldn't migrate ListId : {}", e.getMessage());
+                }
+                migrated = true;
+            }
+        }
+        return migrated;
     }
 
 }

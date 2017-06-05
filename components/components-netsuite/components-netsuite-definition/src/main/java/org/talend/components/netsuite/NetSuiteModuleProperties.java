@@ -29,16 +29,21 @@ import org.talend.components.netsuite.schema.SearchInfo;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.java8.Function;
 import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.StringProperty;
 
 /**
- *
+ * Base for properties which hold information about target NetSuite record type
+ * which a component will be operating on.
  */
 public abstract class NetSuiteModuleProperties extends ComponentPropertiesImpl
         implements NetSuiteProvideConnectionProperties {
 
     public final NetSuiteConnectionProperties connection;
 
+    /**
+     * Holds name of target NetSuite record type.
+     */
     public final StringProperty moduleName = newString("moduleName"); //$NON-NLS-1$
 
     public final MainSchemaProperties main;
@@ -52,37 +57,78 @@ public abstract class NetSuiteModuleProperties extends ComponentPropertiesImpl
     }
 
     @Override
+    public void refreshLayout(Form form) {
+        super.refreshLayout(form);
+
+        for (Form childForm : connection.getForms()) {
+            connection.refreshLayout(childForm);
+        }
+    }
+
+    @Override
     public NetSuiteConnectionProperties getConnectionProperties() {
         return connection.getEffectiveConnectionProperties();
     }
 
+    /**
+     * Get names of NetSuite record types which are available for a component.
+     *
+     * @return list of NetSuite record types
+     */
     public List<NamedThing> getRecordTypes() {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, List<NamedThing>>() {
-            @Override public List<NamedThing> apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public List<NamedThing> apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getRecordTypes();
             }
         });
     }
 
+    /**
+     * Get names of NetSuite record types which are searchable.
+     *
+     * <p>Some types of NetSuite record can not be searched.
+     *
+     * @return list of searchable NetSuite record types
+     */
     public List<NamedThing> getSearchableTypes() {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, List<NamedThing>>() {
-            @Override public List<NamedThing> apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public List<NamedThing> apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSearchableTypes();
             }
         });
     }
 
+    /**
+     * Get a schema for a given record type.
+     *
+     * @param typeName name of record type
+     * @return
+     */
     public Schema getSchema(final String typeName) {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, Schema>() {
-            @Override public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSchema(typeName);
             }
         });
     }
 
+    /**
+     * Get design-time specific information about search data model.
+     *
+     * @param typeName name of searchable record type
+     * @return search info
+     */
     public SearchInfo getSearchInfo(final String typeName) {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, SearchInfo>() {
-            @Override public SearchInfo apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public SearchInfo apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSearchInfo(typeName);
             }
         });
@@ -96,7 +142,9 @@ public abstract class NetSuiteModuleProperties extends ComponentPropertiesImpl
      */
     public Schema getSchemaForUpdate(final String typeName) {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, Schema>() {
-            @Override public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSchemaForUpdate(typeName);
             }
         });
@@ -110,30 +158,45 @@ public abstract class NetSuiteModuleProperties extends ComponentPropertiesImpl
      */
     public Schema getSchemaForDelete(final String typeName) {
         return NetSuiteComponentDefinition.withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, Schema>() {
-            @Override public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public Schema apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSchemaForDelete(typeName);
             }
         });
     }
 
+    /**
+     * Get list of available search operators.
+     *
+     * @return list of search operators' names
+     */
     public List<String> getSearchFieldOperators() {
         return withDatasetRuntime(this, new Function<NetSuiteDatasetRuntime, List<String>>() {
-            @Override public List<String> apply(NetSuiteDatasetRuntime dataSetRuntime) {
+
+            @Override
+            public List<String> apply(NetSuiteDatasetRuntime dataSetRuntime) {
                 return dataSetRuntime.getSearchFieldOperators();
             }
         });
     }
 
+    /**
+     * Assert that record type name is correct.
+     */
     protected void assertModuleName() {
         if (StringUtils.isEmpty(moduleName.getStringValue())) {
-            throw new ComponentException(new ValidationResult()
-                    .setStatus(ValidationResult.Result.ERROR)
-                    .setMessage(getI18nMessage("error.recordTypeNotSpecified")));
+            throw new ComponentException(
+                    new ValidationResult(ValidationResult.Result.ERROR, getI18nMessage("error.recordTypeNotSpecified")));
         }
     }
 
+    /**
+     * Holds properties of a component's main schema.
+     */
     public static class MainSchemaProperties extends SchemaProperties {
-        protected transient ISchemaListener schemaListener;
+
+        private transient ISchemaListener schemaListener;
 
         public MainSchemaProperties(String name) {
             super(name);
@@ -152,6 +215,5 @@ public abstract class NetSuiteModuleProperties extends ComponentPropertiesImpl
                 schemaListener.afterSchema();
             }
         }
-
     }
 }

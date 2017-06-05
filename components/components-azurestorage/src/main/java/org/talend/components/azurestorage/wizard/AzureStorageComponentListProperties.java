@@ -65,7 +65,7 @@ public class AzureStorageComponentListProperties extends ComponentPropertiesImpl
     }, "selectedQueueNames"); //$NON-NLS-1$
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureStorageComponentListProperties.class);
-
+    
     public AzureStorageComponentListProperties(String name) {
         super(name);
     }
@@ -123,7 +123,13 @@ public class AzureStorageComponentListProperties extends ComponentPropertiesImpl
     }
 
     public ValidationResult afterFormFinishTable(Repository<Properties> repo) throws Exception {
+        
+        connection.BlobSchema = selectedContainerNames.getValue();
+        connection.QueueSchema = selectedQueueNames.getValue();
+        connection.TableSchema = selectedTableNames.getValue();
+        
         String repoLoc = repo.storeProperties(connection, connection.name.getValue(), repositoryLocation, null);
+
         String storeId;
         if (selectedContainerNames.getValue() != null) {
             for (NamedThing nl : selectedContainerNames.getValue()) {

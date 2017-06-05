@@ -36,16 +36,16 @@ import org.talend.components.netsuite.NetSuiteVersion;
 import org.talend.daikon.java8.Function;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.ValidationResult;
+import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.serialize.PostDeserializeSetup;
 
 /**
- *
+ * Properties of NetSuite connection component.
  */
-public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
-        implements NetSuiteProvideConnectionProperties {
+public class NetSuiteConnectionProperties extends ComponentPropertiesImpl implements NetSuiteProvideConnectionProperties {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetSuiteConnectionProperties.class);
 
@@ -53,45 +53,47 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
 
     public static final NetSuiteVersion DEFAULT_API_VERSION = new NetSuiteVersion(2016, 2);
 
-    public static final String DEFAULT_ENDPOINT_URL =
-            "https://webservices.netsuite.com/services/NetSuitePort_" + DEFAULT_API_VERSION.getMajorAsString();
+    public static final String DEFAULT_ENDPOINT_URL = "https://webservices.netsuite.com/services/NetSuitePort_"
+            + DEFAULT_API_VERSION.getMajorAsString();
 
-    public static final List<String> API_VERSIONS = Collections.unmodifiableList(Arrays.asList(
-            "2016.2", "2014.2"
-    ));
+    /**
+     * List of versions supported by NetSuite components.
+     */
+    public static final List<String> API_VERSIONS = Collections.unmodifiableList(Arrays.asList("2016.2", "2014.2"));
 
-    public final Property<String> name = newString("name")
-            .setRequired();
+    public final Property<String> name = newString("name").setRequired();
 
-    public final Property<String> endpoint = newString("endpoint")
-            .setRequired();
+    public final Property<String> endpoint = newString("endpoint").setRequired();
 
-    public final Property<String> apiVersion = newString("apiVersion")
-            .setRequired();
+    public final Property<String> apiVersion = newString("apiVersion").setRequired();
 
-    public final Property<String> email = newString("email")
-            .setRequired();
+    public final Property<String> email = newString("email").setRequired();
 
-    public final Property<String> password = newProperty("password")
-            .setRequired()
+    public final Property<String> password = newProperty("password").setRequired()
             .setFlags(EnumSet.of(Property.Flags.ENCRYPT, Property.Flags.SUPPRESS_LOGGING));
 
-    public final Property<Integer> role = newInteger("role")
-            .setRequired();
+    public final Property<Integer> role = newInteger("role").setRequired();
 
-    public final Property<String> account = newString("account")
-            .setRequired();
+    public final Property<String> account = newString("account").setRequired();
 
     public final Property<String> applicationId = newString("applicationId");
 
+    /**
+     * Specifies whether NetSuite customizations are enabled.
+     * If customizations are enabled then NetSuite runtime retrieves custom record types and
+     * custom fields which are exposed for components.
+     */
     public final Property<Boolean> customizationEnabled = newBoolean("customizationEnabled");
 
-    public final PresentationItem testConnection = new PresentationItem(
-            "testConnection", "Test connection");
+    public final PresentationItem testConnection = new PresentationItem("testConnection", "Test connection");
 
-    public final ComponentReferenceProperties<NetSuiteConnectionProperties> referencedComponent =
-            new ComponentReferenceProperties("referencedComponent", NetSuiteConnectionDefinition.COMPONENT_NAME);
+    public final ComponentReferenceProperties<NetSuiteConnectionProperties> referencedComponent = new ComponentReferenceProperties(
+            "referencedComponent", NetSuiteConnectionDefinition.COMPONENT_NAME);
 
+    /**
+     * Holds data that can be used by NetSuite runtime when components are edited by a component designer.
+     * This object is not serialized and intended to be used in design time only.
+     */
     protected transient NetSuiteRuntime.Context designTimeContext;
 
     public NetSuiteConnectionProperties(String name) {
@@ -118,11 +120,9 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
 
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(endpoint);
-        mainForm.addColumn(widget(apiVersion)
-                .setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
+        mainForm.addColumn(widget(apiVersion).setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
         mainForm.addRow(email);
-        mainForm.addRow(widget(password)
-                .setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
+        mainForm.addRow(widget(password).setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
         mainForm.addRow(role);
         mainForm.addRow(account);
         mainForm.addRow(applicationId);
@@ -132,8 +132,7 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
 
         // A form for a reference to a connection
         Form refForm = Form.create(this, Form.REFERENCE);
-        Widget compListWidget = widget(referencedComponent)
-                .setWidgetType(Widget.COMPONENT_REFERENCE_WIDGET_TYPE);
+        Widget compListWidget = widget(referencedComponent).setWidgetType(Widget.COMPONENT_REFERENCE_WIDGET_TYPE);
         refForm.addRow(compListWidget);
         refForm.addRow(mainForm);
 
@@ -141,16 +140,13 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
         Form wizardForm = Form.create(this, FORM_WIZARD);
         wizardForm.addRow(name);
         wizardForm.addRow(endpoint);
-        wizardForm.addColumn(widget(apiVersion)
-                .setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
+        wizardForm.addColumn(widget(apiVersion).setWidgetType(Widget.ENUMERATION_WIDGET_TYPE));
         wizardForm.addRow(email);
-        wizardForm.addRow(widget(password)
-                .setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
+        wizardForm.addRow(widget(password).setWidgetType(Widget.HIDDEN_TEXT_WIDGET_TYPE));
         wizardForm.addRow(role);
         wizardForm.addRow(account);
         wizardForm.addRow(applicationId);
-        wizardForm.addColumn(widget(testConnection)
-                .setWidgetType(Widget.BUTTON_WIDGET_TYPE).setLongRunning(true));
+        wizardForm.addColumn(widget(testConnection).setWidgetType(Widget.BUTTON_WIDGET_TYPE).setLongRunning(true));
     }
 
     @Override
@@ -180,6 +176,15 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
         return getEffectiveConnectionProperties();
     }
 
+    /**
+     * Return connection properties object which is currently in effect.
+     *
+     * <p>If this object references to another connection component then a referenced
+     * connection properties will be returned. Otherwise, this connection properties
+     * object will be returned.
+     *
+     * @return connection properties object
+     */
     public NetSuiteConnectionProperties getEffectiveConnectionProperties() {
         String refComponentId = getReferencedComponentId();
         if (refComponentId != null) {
@@ -192,10 +197,20 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
         return this;
     }
 
+    /**
+     * Return identifier of referenced connection component.
+     *
+     * @return referenced connection component's ID or {@code null}
+     */
     public String getReferencedComponentId() {
         return referencedComponent.componentInstanceId.getStringValue();
     }
 
+    /**
+     * Return referenced connection properties.
+     *
+     * @return referenced connection properties or {@code null}
+     */
     public NetSuiteConnectionProperties getReferencedConnectionProperties() {
         NetSuiteConnectionProperties refProps = referencedComponent.getReference();
         if (refProps != null) {
@@ -209,6 +224,11 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
         refreshLayout(getForm(Form.REFERENCE));
     }
 
+    /**
+     * Return version of NetSuite.
+     *
+     * @return version object
+     */
     public NetSuiteVersion getApiVersion() {
         if (apiVersion.getValue() != null) {
             String value = apiVersion.getStringValue();
@@ -220,24 +240,35 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
 
     public ValidationResult validateTestConnection() throws Exception {
         ValidationResult vr = withRuntime(this, new Function<NetSuiteRuntime, ValidationResult>() {
-            @Override public ValidationResult apply(NetSuiteRuntime runtimeService) {
+
+            @Override
+            public ValidationResult apply(NetSuiteRuntime runtimeService) {
                 return runtimeService.validateConnection(NetSuiteConnectionProperties.this);
             }
         });
-        if (vr.getStatus() == ValidationResult.Result.OK) {
-            vr.setMessage(getI18nMessage("message.connectionSuccessful"));
+        ValidationResultMutable vrm = new ValidationResultMutable(vr);
+        if (vrm.getStatus() == ValidationResult.Result.OK) {
+            vrm.setMessage(getI18nMessage("message.connectionSuccessful"));
             getForm(FORM_WIZARD).setAllowForward(true);
         } else {
             getForm(FORM_WIZARD).setAllowForward(false);
         }
-        return vr;
+        return vrm;
     }
 
+    /**
+     * Return design-time context object for this connection properties.
+     *
+     * @return context object
+     */
     public NetSuiteRuntime.Context getDesignTimeContext() {
+        // If the component refers to another component
+        // then we should use design-time context from referenced connection properties.
         NetSuiteConnectionProperties refProps = referencedComponent.getReference();
         if (refProps != null) {
             return refProps.getDesignTimeContext();
         }
+        // Lazily create and return context object.
         if (designTimeContext == null) {
             designTimeContext = new NetSuiteComponentDefinition.DesignTimeContext();
         }
@@ -251,6 +282,10 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
         return migrated;
     }
 
+    /**
+     * Performs initialization of {@link #apiVersion} property for old components
+     * that didn't have this property.
+     */
     private void migrateApiVersion() {
         if (apiVersion.getValue() == null) {
             if (endpoint.getValue() != null) {
@@ -266,6 +301,7 @@ public class NetSuiteConnectionProperties extends ComponentPropertiesImpl
                 }
             }
         }
+        // Initialize possible values for apiVersion property.
         if (apiVersion.getPossibleValues().isEmpty()) {
             apiVersion.setPossibleValues(API_VERSIONS);
         }

@@ -6,22 +6,23 @@
 	<parent>
 		<groupId>org.talend.daikon</groupId>
 		<artifactId>service-parent</artifactId>
-		<version>0.16.0-SNAPSHOT</version>
+		<version>0.17.0-SNAPSHOT</version>
 		<relativePath></relativePath>
 	</parent>
 
 	<groupId>org.talend.components</groupId>
 	<artifactId>components-api-service-rest</artifactId>
-	<version>0.18.0-SNAPSHOT</version>
+	<version>0.19.0-SNAPSHOT</version>
 
 	<name>Component REST API</name>
-
 	<properties>
 		<java.version>1.8</java.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<daikon.version>0.16.0-SNAPSHOT</daikon.version>
-		<components-api-full-example.version>0.18.0-SNAPSHOT</components-api-full-example.version>
+		<daikon.version>0.17.0-SNAPSHOT</daikon.version>
+		<!-- Used for Docker images name -->
+		<git_branch>local</git_branch>
+		<talend_docker_registry>registry.datapwn.com</talend_docker_registry>
 	</properties>
 
 	<dependencies>
@@ -29,17 +30,26 @@
 		<!-- spring dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-            	<exclusion>
-            		<groupId>org.slf4j</groupId>
-            		<artifactId>log4j-over-slf4j</artifactId>
-            	</exclusion>
-            </exclusions>
+			<artifactId>spring-boot-starter-jetty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jetty</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>log4j-over-slf4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- added explicytly cause it is in the scope provided by the parent -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -49,12 +59,7 @@
 		<!-- talend dependencies -->
 		<dependency>
 			<groupId>org.talend.components</groupId>
-			<artifactId>components-api-service-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-api</artifactId>
+			<artifactId>components-api-service-spi</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -62,12 +67,6 @@
 			<artifactId>components-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.talend.daikon</groupId>
-			<artifactId>daikon-spring-utils</artifactId>
-			<version>${daikon.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>biz.aQute.bnd</groupId>
 			<artifactId>annotation</artifactId>
@@ -86,6 +85,12 @@
 			<groupId>org.ops4j.pax.url</groupId>
 			<artifactId>pax-url-aether</artifactId>
 			<version>2.4.7</version>
+		</dependency>
+		<!-- provides layouts for logging. It is not really compile dependency, but rather runtime -->
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>logging-event-layout</artifactId>
+			<version>0.17.0-SNAPSHOT</version>
 		</dependency>
 
 		<!-- tests dependencies -->
@@ -115,21 +120,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.talend.components</groupId>
-			<artifactId>components-jdbc-definition</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.talend.components</groupId>
 			<artifactId>components-jdbc-runtime</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.talend.components</groupId>
-			<artifactId>components-jdbc-runtime-beam</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
@@ -153,6 +144,12 @@
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.talend.daikon</groupId>
+			<artifactId>daikon-spring-utils</artifactId>
+			<version>${daikon.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- Drivers needed for embedded database -->
 		<dependency>
 			<groupId>org.apache.derby</groupId>
@@ -166,12 +163,25 @@
 			<version>10.12.1.1</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
-	<!-- dependencyManagement block may be added here and components bom may be included to manage versions -->
+	<!-- dependencyManagement block may be added here and components bom may 
+		be included to manage versions -->
 	<build>
 		<plugins>
 			<plugin>
+				<!-- prevent spring plugin to create a big startable jar -->
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- create the jar only with rest service classes, excluding configuration files -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<executions>
@@ -181,9 +191,48 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
+						<configuration>
+							<classesDirectory>${project.build.outputDirectory}</classesDirectory>
+							<excludes>
+								<exclude>**/application*.properties</exclude>
+								<exclude>**/logback-spring.xml</exclude>
+								<exclude>**/settings.xml</exclude>
+							</excludes>
+						</configuration>
 					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- generate the maven repo for the service app -->
+				<artifactId>maven-invoker-plugin</artifactId>
+				<version>2.0.1-TALEND</version>
+				<configuration>
+					<localRepositoryPath>target/mvn-repo</localRepositoryPath>
+		            <onlyResolveDependencies>true</onlyResolveDependencies>
+				</configuration>
+				<executions>
 					<execution>
-						<id>jar-lib</id>
+						<id>generate-service-maven-repo</id>
+						<phase>package</phase>
+						<goals>
+							<goal>install</goal>
+						</goals>
+						<configuration>
+							<pomIncludes>
+								<pomInclude>*/pom.xml</pomInclude>
+							</pomIncludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<!-- this lib is exactly the same as the default jar but it keept here 
+							because all component tests depends on it. -->
+						<id>lib-jar</id>
 						<phase>package</phase>
 						<goals>
 							<goal>jar</goal>
@@ -193,10 +242,13 @@
 							<classesDirectory>${project.build.outputDirectory}</classesDirectory>
 							<excludes>
 								<exclude>**/application*.properties</exclude>
+								<exclude>**/logback-spring.xml</exclude>
+								<exclude>**/settings.xml</exclude>
 							</excludes>
 						</configuration>
 					</execution>
 					<execution>
+						<!-- generate test jar, I am not sure it enven used -->
 						<id>test-jar</id>
 						<goals>
 							<goal>test-jar</goal>
@@ -212,44 +264,183 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- this creates a temporary maven repo (install goal) and then launches 
-					the integration tests located in src/it (run goal) using that local repo -->
-				<artifactId>maven-invoker-plugin</artifactId>
-				<version>2.0.0-TALEND</version>
-				<configuration>
-					<localRepositoryPath>target/local-repo</localRepositoryPath>
-					<projectsDirectory>src/it</projectsDirectory>
-					<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-				</configuration>
+				<!-- create a class path with all the compile scope dependencies of this 
+					pom using the local maven repository -->
+				<groupId>com.github.veithen.alta</groupId>
+				<artifactId>alta-maven-plugin</artifactId>
+				<version>0.5.4-TALEND</version>
 				<executions>
 					<execution>
-						<id>integration-tests</id>
-						<phase>integration-test</phase>
+						<id>generate-components-linux-classpath</id>
 						<goals>
-							<goal>install</goal>
-							<goal>run</goal>
+							<goal>generate-properties</goal>
 						</goals>
 						<configuration>
-							<localRepositoryPath>${project.build.directory}/it-repo</localRepositoryPath>
-							<settingsFile>src/it/settings.xml</settingsFile>
-							<extraArtifacts>
-								<extraArtifact>org.talend.components:components-api-service-rest:${project.version}:jar:tests</extraArtifact>
-							</extraArtifacts>
-							<pomIncludes>
-								<pomInclude>*/pom.xml</pomInclude>
-							</pomIncludes>
-							<goals>
-								<goal>clean</goal>
-								<goal>verify</goal>
-							</goals>
+							<name>classpath.linux</name>
+							<value>.m2/%mavenPath%</value>
+							<separator>:</separator>
+							<dependencySet>
+								<scope>compile</scope>
+								<useProjectArtifact>true</useProjectArtifact>
+							</dependencySet>
 						</configuration>
 					</execution>
-
+					<execution>
+						<id>generate-components-windows-classpath</id>
+						<goals>
+							<goal>generate-properties</goal>
+						</goals>
+						<configuration>
+							<name>classpath.windows</name>
+							<value>.m2\%mavenPathWindows%</value>
+							<separator>;</separator>
+							<dependencySet>
+								<scope>compile</scope>
+								<useProjectArtifact>true</useProjectArtifact>
+							</dependencySet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<!-- creates the simple bare service zip -->
+						<id>no-arch-package</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>assembly/no-arch.xml</descriptor>
+							</descriptors>
+							<appendAssemblyId>false</appendAssemblyId>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- creates config zip package to be used by any other packaging modules such as as all components -->
+						<id>config-package</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>assembly/config.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- removes jdbc runtime jar from the integration tests classpath -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<classpathDependencyExcludes>
+								<classpathDependencyExclude>org.talend.components:components-jdbc-runtime</classpathDependencyExclude>
+							</classpathDependencyExcludes>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
 		</plugins>
+		<resources>
+			<resource>
+				<!-- This enable maven defined variables in banner.txt as ${project.version} and application.properties-->
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 	</build>
+	<profiles>
+		<profile>
+			<id>skipTestRun</id>
+			<activation>
+				<property>
+					<name>skipTests</name>
+				</property>
+			</activation>
+			<properties>
+				<really.skip.tests>true</really.skip.tests>
+			</properties>
+		</profile>
+		<profile>
+			<id>skipTestItRun</id>
+			<activation>
+				<property>
+					<name>skipITs</name>
+				</property>
+			</activation>
+			<properties>
+				<really.skip.tests>true</really.skip.tests>
+			</properties>
+		</profile>
+		<profile>
+			<id>docker</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<version>0.20.1</version>
+						<executions>
+							<execution>
+								<id>start</id>
+								<phase>package</phase>
+								<goals>
+									<goal>build</goal>
+								</goals>
+								<configuration>
+									<autoPull>once</autoPull>
+									<images>
+										<image>
+											<name>${talend_docker_registry}/talend/tcomp-${project.artifactId}-${git_branch}</name>
+											<build>
+												<from>${talend_docker_registry}/talend/microservices-base:1.latest</from>
+												<tags>
+													<tag>${docker.version}</tag>
+												</tags>
+												<ports>
+													<port>8989</port>
+												</ports>
+												<cmd>
+													<exec>
+														<arg>/maven/start.sh</arg>
+													</exec>
+												</cmd>
+												<runCmds>
+													<run>apk add --no-cache libc6-compat</run>
+													<run>chmod +x /maven/start.sh</run>
+												</runCmds>
+												<assembly><!-- includes the artifact generated by the current 
+														pom -->
+													<descriptor>${project.basedir}/assembly/no-arch.xml</descriptor>
+												</assembly>
+											</build>
+										</image>
+									</images>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<repositories>
 		<repository>

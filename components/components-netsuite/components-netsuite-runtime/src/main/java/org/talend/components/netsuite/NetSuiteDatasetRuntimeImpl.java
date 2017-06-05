@@ -53,12 +53,19 @@ import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.di.DiSchemaConstants;
 
 /**
- *
+ * Provides information about NetSuite data set for components in design time or run time.
  */
 public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
+
+    /** Source of meta data. */
     private MetaDataSource metaDataSource;
 
-    public NetSuiteDatasetRuntimeImpl(MetaDataSource metaDataSource) throws NetSuiteException {
+    /**
+     * Create new instance using given {@code MetaDataSource}.
+     *
+     * @param metaDataSource source of meta data to be used
+     */
+    public NetSuiteDatasetRuntimeImpl(MetaDataSource metaDataSource) {
         this.metaDataSource = metaDataSource;
     }
 
@@ -72,9 +79,11 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
                 recordTypes.add(new SimpleNamedThing(recordTypeInfo.getName(), recordTypeInfo.getDisplayName()));
             }
 
-            // Sort by display name alphabetically
+            // Sort by display name in alphabetical order
             Collections.sort(recordTypes, new Comparator<NamedThing>() {
-                @Override public int compare(NamedThing o1, NamedThing o2) {
+
+                @Override
+                public int compare(NamedThing o1, NamedThing o2) {
                     return o1.getDisplayName().compareTo(o2.getDisplayName());
                 }
             });
@@ -91,16 +100,8 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
             final TypeDesc typeDesc = metaDataSource.getTypeInfo(typeName);
 
             List<FieldDesc> fieldDescList = new ArrayList<>(typeDesc.getFields());
-            Collections.sort(fieldDescList, new Comparator<FieldDesc>() {
-                @Override public int compare(FieldDesc o1, FieldDesc o2) {
-                    int result = Boolean.compare(o1.isKey(), o2.isKey());
-                    if (result != 0) {
-                        return result * -1;
-                    }
-                    result = o1.getName().compareTo(o2.getName());
-                    return result;
-                }
-            });
+            // Sort in alphabetical order
+            Collections.sort(fieldDescList, FieldDescComparator.INSTANCE);
 
             Schema schema = inferSchemaForType(typeDesc.getTypeName(), fieldDescList);
             augmentSchemaWithCustomMetaData(schema, recordTypeInfo, fieldDescList);
@@ -115,12 +116,16 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
     public List<NamedThing> getSearchableTypes() {
         try {
             List<NamedThing> searchableTypes = new ArrayList<>(metaDataSource.getSearchableTypes());
-            // Sort by display name alphabetically
+
+            // Sort by display name in alphabetical order
             Collections.sort(searchableTypes, new Comparator<NamedThing>() {
-                @Override public int compare(NamedThing o1, NamedThing o2) {
+
+                @Override
+                public int compare(NamedThing o1, NamedThing o2) {
                     return o1.getDisplayName().compareTo(o2.getDisplayName());
                 }
             });
+
             return searchableTypes;
         } catch (NetSuiteException e) {
             throw new ComponentException(e);
@@ -141,9 +146,12 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
                 SearchFieldInfo field = new SearchFieldInfo(fieldDesc.getName(), fieldDesc.getValueType());
                 fields.add(field);
             }
-            // Sort by name alphabetically
+
+            // Sort by display name in alphabetical order
             Collections.sort(fields, new Comparator<SearchFieldInfo>() {
-                @Override public int compare(SearchFieldInfo o1, SearchFieldInfo o2) {
+
+                @Override
+                public int compare(SearchFieldInfo o1, SearchFieldInfo o2) {
                     return o1.getName().compareTo(o2.getName());
                 }
             });
@@ -161,7 +169,11 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
             final RecordTypeInfo recordTypeInfo = metaDataSource.getRecordType(typeName);
             final TypeDesc typeDesc = metaDataSource.getTypeInfo(typeName);
 
-            Schema schema = inferSchemaForType(typeDesc.getTypeName(), typeDesc.getFields());
+            List<FieldDesc> fieldDescList = new ArrayList<>(typeDesc.getFields());
+            // Sort in alphabetical order
+            Collections.sort(fieldDescList, FieldDescComparator.INSTANCE);
+
+            Schema schema = inferSchemaForType(typeDesc.getTypeName(), fieldDescList);
             augmentSchemaWithCustomMetaData(schema, recordTypeInfo, typeDesc.getFields());
 
             return schema;
@@ -177,11 +189,17 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
 
     public Schema getSchemaForRecordRef(String typeName) {
         try {
+            // Get info for target record type
             final RecordTypeInfo referencedRecordTypeInfo = metaDataSource.getRecordType(typeName);
             final RefType refType = referencedRecordTypeInfo.getRefType();
+            // Get type info for record ref
             final TypeDesc typeDesc = metaDataSource.getTypeInfo(refType.getTypeName());
 
-            Schema schema = inferSchemaForType(typeDesc.getTypeName(), typeDesc.getFields());
+            List<FieldDesc> fieldDescList = new ArrayList<>(typeDesc.getFields());
+            // Sort in alphabetical order
+            Collections.sort(fieldDescList, FieldDescComparator.INSTANCE);
+
+            Schema schema = inferSchemaForType(typeDesc.getTypeName(), fieldDescList);
             augmentSchemaWithCustomMetaData(schema, referencedRecordTypeInfo, null);
 
             return schema;
@@ -194,12 +212,15 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
     public List<String> getSearchFieldOperators() {
         List<SearchFieldOperatorName> operatorList =
                 new ArrayList<>(metaDataSource.getBasicMetaData().getSearchOperatorNames());
+
         List<String> operatorNames = new ArrayList<>(operatorList.size());
         for (SearchFieldOperatorName operatorName : operatorList) {
             operatorNames.add(operatorName.getQualifiedName());
         }
-        // Sort by name alphabetically
+
+        // Sort in alphabetical order
         Collections.sort(operatorNames);
+
         return operatorNames;
     }
 
@@ -207,6 +228,9 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
     public Schema getSchemaForUpdateFlow(String typeName, Schema schema) {
         RecordTypeInfo recordTypeInfo = metaDataSource.getRecordType(typeName);
         TypeDesc typeDesc = metaDataSource.getTypeInfo(typeName);
+
+        // We should check and add key fields:
+        // internalId, externalId and scriptId (for custom record type)
 
         List<FieldDesc> fieldDescList = new ArrayList<>();
         Schema.Field internalIdField = getNsFieldByName(schema, "internalId");
@@ -229,13 +253,12 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
             }
         }
 
+        // Create schema fields for mandatory fields.
+
         List<Schema.Field> fields = new ArrayList<>();
-
         Schema.Field f;
-
         if (!fieldDescList.isEmpty()) {
             Schema schemaToAdd = inferSchemaForType(typeName, fieldDescList);
-
             for (Schema.Field sourceField : schemaToAdd.getFields()) {
                 f = copyField(sourceField);
                 f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
@@ -252,6 +275,9 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         RecordTypeInfo recordTypeInfo = metaDataSource.getRecordType(typeName);
         TypeDesc typeDesc = metaDataSource.getTypeInfo(typeName);
 
+        // We should check and add key fields:
+        // internalId, externalId and scriptId (for custom record type)
+
         List<FieldDesc> fieldDescList = new ArrayList<>();
         Schema.Field internalIdField = getNsFieldByName(schema, "internalId");
         if (internalIdField == null) {
@@ -273,13 +299,12 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
             }
         }
 
+        // Create schema fields for mandatory fields.
+
         List<Schema.Field> fields = new ArrayList<>();
-
         Schema.Field f;
-
         if (!fieldDescList.isEmpty()) {
             Schema schemaToAdd = inferSchemaForType(typeName, fieldDescList);
-
             for (Schema.Field sourceField : schemaToAdd.getFields()) {
                 f = copyField(sourceField);
                 f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
@@ -301,8 +326,17 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         return getSchemaForReject(schema, typeName + "_REJECT");
     }
 
+    /**
+     * Get schema for outgoing reject flow.
+     *
+     * @param schema schema to be usd as base schema
+     * @param newSchemaName name of new schema
+     * @return schema
+     */
     public Schema getSchemaForReject(Schema schema, String newSchemaName) {
         List<Schema.Field> fields = new ArrayList<>();
+
+        // Add errorCode and errorMessage schema fields.
 
         Schema.Field f;
 
@@ -337,6 +371,7 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
                     inferSchemaForField(fieldDesc), null, (Object) null);
 
             // Add some Talend6 custom properties to the schema.
+
             Schema avroFieldSchema = AvroUtils.unwrapIfNullable(avroField.schema());
 
             avroField.addProp(DiSchemaConstants.TALEND6_COLUMN_ORIGINAL_DB_COLUMN_NAME, fieldDesc.getName());
@@ -356,6 +391,12 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
                 if (customFieldRefType == CustomFieldRefType.DATE) {
                     avroField.addProp(SchemaConstants.TALEND_COLUMN_PATTERN, "yyyy-MM-dd'T'HH:mm:ss'.000Z'");
                 }
+
+                NsRef ref = customFieldInfo.getCustomizationRef();
+                if (StringUtils.isNotEmpty(ref.getName())) {
+                    avroField.addProp(DiSchemaConstants.TALEND6_COMMENT, ref.getName());
+                }
+
             } else {
                 Class<?> fieldType = fieldDesc.getValueType();
 
@@ -456,9 +497,8 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         // Add custom record type meta data to a key field
         if (recordTypeInfo instanceof CustomRecordTypeInfo) {
             CustomRecordTypeInfo customRecordTypeInfo = (CustomRecordTypeInfo) recordTypeInfo;
-            Schema.Field keyField = getNsFieldByName(schema, "internalId");
-            if (keyField != null) {
-                writeCustomRecord(metaDataSource.getBasicMetaData(), keyField, customRecordTypeInfo);
+            for (Schema.Field field : schema.getFields()) {
+                writeCustomRecord(metaDataSource.getBasicMetaData(), field, customRecordTypeInfo);
             }
         }
 
@@ -477,6 +517,14 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         }
     }
 
+    /**
+     * Extend a schema with additional fields.
+     *
+     * @param sourceSchema source schema
+     * @param newSchemaName name of new schema
+     * @param fieldsToAdd fields to be added
+     * @return new schema
+     */
     public static Schema extendSchema(Schema sourceSchema, String newSchemaName, List<Schema.Field> fieldsToAdd) {
         Schema newSchema = Schema.createRecord(newSchemaName,
                 sourceSchema.getDoc(), sourceSchema.getNamespace(),
@@ -499,6 +547,12 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         return newSchema;
     }
 
+    /**
+     * Copy a schema field.
+     *
+     * @param sourceField source field to be copied
+     * @return new field
+     */
     public static Schema.Field copyField(final Schema.Field sourceField) {
         Schema.Field field = new Schema.Field(sourceField.name(), sourceField.schema(),
                 sourceField.doc(), sourceField.defaultVal(), sourceField.order());
@@ -519,7 +573,7 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
      * @param recordTypeInfo information about record type to be used
      */
     public static void writeCustomRecord(BasicMetaData basicMetaData, JsonProperties properties, CustomRecordTypeInfo recordTypeInfo) {
-        NsRef ref = recordTypeInfo.getRef();
+        NsRef ref = recordTypeInfo.getCustomizationRef();
         RecordTypeDesc recordTypeDesc = recordTypeInfo.getRecordType();
 
         properties.addProp(NetSuiteSchemaConstants.NS_CUSTOM_RECORD, "true");
@@ -568,7 +622,7 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
      * @param fieldDesc information about custom field to be used
      */
     public static void writeCustomField(JsonProperties properties, CustomFieldDesc fieldDesc) {
-        NsRef ref = fieldDesc.getRef();
+        NsRef ref = fieldDesc.getCustomizationRef();
         CustomFieldRefType customFieldRefType = fieldDesc.getCustomFieldType();
 
         properties.addProp(NetSuiteSchemaConstants.NS_CUSTOM_FIELD, "true");
@@ -605,7 +659,7 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
 
         CustomFieldDesc fieldDesc = new CustomFieldDesc();
         fieldDesc.setCustomFieldType(customFieldRefType);
-        fieldDesc.setRef(ref);
+        fieldDesc.setCustomizationRef(ref);
         fieldDesc.setName(scriptId);
         fieldDesc.setValueType(getCustomFieldValueClass(customFieldRefType));
         fieldDesc.setNullable(true);
@@ -700,4 +754,19 @@ public class NetSuiteDatasetRuntimeImpl implements NetSuiteDatasetRuntime {
         return null;
     }
 
+    public static class FieldDescComparator implements Comparator<FieldDesc> {
+
+        public static final FieldDescComparator INSTANCE = new FieldDescComparator();
+
+        @Override
+        public int compare(FieldDesc o1, FieldDesc o2) {
+            int result = Boolean.compare(o1.isKey(), o2.isKey());
+            if (result != 0) {
+                return result * -1;
+            }
+            result = o1.getName().compareTo(o2.getName());
+            return result;
+        }
+
+    }
 }

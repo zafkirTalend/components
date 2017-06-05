@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,8 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.talend.components.api.exception.ComponentException;
 import org.talend.components.salesforce.SalesforceBulkProperties.Concurrency;
 import org.talend.components.salesforce.SalesforceOutputProperties.OutputAction;
+import org.talend.components.salesforce.common.SalesforceErrorCodes;
 import org.talend.components.salesforce.runtime.common.SalesforceRuntimeCommon;
+import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties;
 import org.talend.daikon.exception.ExceptionContext;
+import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.DefaultErrorCode;
 
 import com.sforce.async.AsyncApiException;
@@ -96,6 +100,16 @@ public class SalesforceBulkRuntime {
 
     private long awaitTime = 10000L;
 
+    private int chunkSize;
+
+    private int chunkSleepTime;
+
+    private static final String PK_CHUNKING_HEADER_NAME = "Sforce-Enable-PKChunking";
+
+    private static final String CHUNK_SIZE_PROPERTY_NAME = "chunkSize=";
+
+    private static final int MAX_BATCH_EXECUTION_TIME = 600 * 1000;
+
     public SalesforceBulkRuntime(BulkConnection bulkConnection) throws IOException {
         this.bulkConnection = bulkConnection;
         if (this.bulkConnection == null) {
@@ -106,6 +120,20 @@ public class SalesforceBulkRuntime {
 
     public BulkConnection getBulkConnection() {
         return bulkConnection;
+    }
+
+    /**
+     * Sets up chunk size and chunk sleep time for big chunks.
+     *
+     * @param properties - Salesforce input properties.
+     */
+    public void setChunkProperties(TSalesforceInputProperties properties) {
+        this.chunkSize = properties.chunkSize.getValue() > TSalesforceInputProperties.MAX_CHUNK_SIZE
+                ? TSalesforceInputProperties.MAX_CHUNK_SIZE
+                : properties.chunkSize.getValue() <= 0 ? TSalesforceInputProperties.DEFAULT_CHUNK_SIZE
+                        : properties.chunkSize.getValue();
+        this.chunkSleepTime = properties.chunkSleepTime.getValue() > 0 ? properties.chunkSleepTime.getValue() * 1000
+                : TSalesforceInputProperties.DEFAULT_CHUNK_SLEEP_TIME * 1000;
     }
 
     private void setBulkOperation(String sObjectType, OutputAction userOperation, String externalIdFieldName,
@@ -195,7 +223,6 @@ public class SalesforceBulkRuntime {
         }
         job.setContentType(contentType);
         job = createJob(job);
-        // System.out.println(job);
         return job;
     }
 
@@ -307,7 +334,6 @@ public class SalesforceBulkRuntime {
         FileInputStream tmpInputStream = new FileInputStream(tmpFile);
         try {
             BatchInfo batchInfo = createBatchFromStream(job, tmpInputStream);
-            // System.out.println(batchInfo);
             batchInfos.add(batchInfo);
         } finally {
             tmpInputStream.close();
@@ -320,11 +346,22 @@ public class SalesforceBulkRuntime {
      * @throws AsyncApiException
      * @throws ConnectionException
      */
-    private void closeJob() throws AsyncApiException, ConnectionException {
+    void closeJob() throws AsyncApiException, ConnectionException {
         JobInfo closeJob = new JobInfo();
         closeJob.setId(job.getId());
         closeJob.setState(JobStateEnum.Closed);
-        updateJob(closeJob);
+        try {
+            bulkConnection.updateJob(closeJob);
+        } catch (AsyncApiException sfException) {
+            if (AsyncExceptionCode.InvalidSessionId.equals(sfException.getExceptionCode())) {
+                SalesforceRuntimeCommon.renewSession(bulkConnection.getConfig());
+                closeJob();
+            } else if (AsyncExceptionCode.InvalidJobState.equals(sfException.getExceptionCode())) {
+                // Job is already closed on Salesforce side. We don't need to close it again.
+                return;
+            }
+            throw sfException;
+        }
     }
 
     public void setAwaitTime(long awaitTime) {
@@ -348,7 +385,6 @@ public class SalesforceBulkRuntime {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
             }
-            // System.out.println("Awaiting results..." + incomplete.size());
             sleepTime = awaitTime;
             BatchInfo[] statusList = getBatchInfoList(job.getId()).getBatchInfo();
             for (BatchInfo b : statusList) {
@@ -418,6 +454,21 @@ public class SalesforceBulkRuntime {
         return batchInfoList.size();
     }
 
+    /**
+     * Creates and executes job for bulk query. Job must be finished in 2 minutes on Salesforce side.<br/>
+     * From Salesforce documentation two scenarios are possible here:
+     * <ul>
+     * <li>simple bulk query. It should have status - {@link BatchStateEnum#Completed}.</li>
+     * <li>primary key chunking bulk query. It should return first batch info with status - {@link BatchStateEnum#NotProcessed}.<br/>
+     * Other batch info's should have status - {@link BatchStateEnum#Completed}</li>
+     * </ul>
+     *
+     * @param moduleName - input module name.
+     * @param queryStatement - to be executed.
+     * @throws AsyncApiException
+     * @throws InterruptedException
+     * @throws ConnectionException
+     */
     public void doBulkQuery(String moduleName, String queryStatement)
             throws AsyncApiException, InterruptedException, ConnectionException {
         job = new JobInfo();
@@ -441,7 +492,9 @@ public class SalesforceBulkRuntime {
             LOGGER.debug("Awaiting " + secToWait + " seconds for results ...\n" + info);
             Thread.sleep(secToWait * 1000);
             info = getBatchInfo(job.getId(), info.getId());
-            if (info.getState() == BatchStateEnum.Completed) {
+
+            if (info.getState() == BatchStateEnum.Completed
+                    || (BatchStateEnum.NotProcessed == info.getState() && 0 < chunkSize)) {
                 break;
             } else if (info.getState() == BatchStateEnum.Failed) {
                 throw new ComponentException(new DefaultErrorCode(HttpServletResponse.SC_BAD_REQUEST, "failedBatch"),
@@ -461,12 +514,7 @@ public class SalesforceBulkRuntime {
             }
         }
 
-        closeJob();
-        QueryResultList list = getQueryResultList(job.getId(), info.getId());
-        queryResultIDs = new HashSet<String>(Arrays.asList(list.getResult())).iterator();
-        batchInfoList = new ArrayList<BatchInfo>();
-        batchInfoList.add(info);
-
+        retrieveResultsOfQuery(info);
     }
 
     public BulkResultSet getQueryResultSet(String resultId) throws AsyncApiException, IOException, ConnectionException {
@@ -482,6 +530,10 @@ public class SalesforceBulkRuntime {
 
     protected JobInfo createJob(JobInfo job) throws AsyncApiException, ConnectionException {
         try {
+            if (0 != chunkSize) {
+                // Enabling PK chunking by setting header and chunk size.
+                bulkConnection.addHeader(PK_CHUNKING_HEADER_NAME, CHUNK_SIZE_PROPERTY_NAME + chunkSize);
+            }
             return bulkConnection.createJob(job);
         } catch (AsyncApiException sfException) {
             if (AsyncExceptionCode.InvalidSessionId.equals(sfException.getExceptionCode())) {
@@ -489,6 +541,11 @@ public class SalesforceBulkRuntime {
                 return createJob(job);
             }
             throw sfException;
+        } finally {
+            if (0 != chunkSize) {
+                // Need to disable PK chunking after job was created.
+                bulkConnection.addHeader(PK_CHUNKING_HEADER_NAME, Boolean.FALSE.toString());
+            }
         }
     }
 
@@ -595,12 +652,105 @@ public class SalesforceBulkRuntime {
         }
     }
 
+    /**
+     * Retrieve resultId(-s) from job batches info.
+     * Results will be retrieved only from completed batches.
+     *
+     * When pk chunking is enabled, we need to go through all batches in the job.
+     * More information on Salesforce documentation:
+     * https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/
+     * asynch_api_code_curl_walkthrough_pk_chunking.htm
+     *
+     * If some batches were queued or in progress, we must wait till they completed or failed/notprocessed.
+     * Quick instructions for primary key chunking flow may be read here:
+     * https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_bulk_query_processing.htm
+     *
+     * @param info - batch info from created job.
+     * @throws AsyncApiException
+     * @throws ConnectionException
+     * @throws InterruptedException
+     */
+    private void retrieveResultsOfQuery(BatchInfo info) throws AsyncApiException, ConnectionException, InterruptedException {
+
+        if (BatchStateEnum.Completed == info.getState()) {
+            QueryResultList list = getQueryResultList(job.getId(), info.getId());
+            queryResultIDs = new HashSet<String>(Arrays.asList(list.getResult())).iterator();
+            this.batchInfoList = Collections.singletonList(info);
+            return;
+        }
+        BatchInfoList batchInfoList = null;
+        Set<String> resultSet = new HashSet<>();
+        boolean isInProgress = true;
+        while (isInProgress) {
+            batchInfoList = getBatchInfoList(job.getId());
+            isInProgress = isJobBatchesInProgress(batchInfoList, info);
+            if (isInProgress) {
+                Thread.sleep(chunkSleepTime);
+                long processingTime = System.currentTimeMillis() - job.getCreatedDate().getTimeInMillis();
+                if (processingTime > MAX_BATCH_EXECUTION_TIME) {
+                    // Break processing and return processed data if any batch was processed.
+                    break;
+                }
+            }
+        }
+        for (BatchInfo batch : batchInfoList.getBatchInfo()) {
+            if (batch.getId().equals(info.getId())) {
+                continue;
+            }
+            resultSet.addAll(Arrays.asList(getQueryResultList(job.getId(), batch.getId()).getResult()));
+        }
+
+        queryResultIDs = resultSet.iterator();
+        this.batchInfoList = Arrays.asList(batchInfoList.getBatchInfo());
+    }
+
+    /**
+     * Checks if job batch infos were processed correctly. Only if all batches were {@link BatchStateEnum#Completed} are acceptable.<br/>
+     * If any of batches returns {@link BatchStateEnum#Failed} or {@link BatchStateEnum#NotProcessed} - throws an exception.
+     *
+     * @param batchInfoList - batch infos related to the specific job.
+     * @param info - batch info for query batch.
+     * @return true - if job is not processed fully, otherwise - false.
+     */
+    private boolean isJobBatchesInProgress(BatchInfoList batchInfoList, BatchInfo info) {
+        for (BatchInfo batch : batchInfoList.getBatchInfo()) {
+            if (batch.getId().equals(info.getId())) {
+                continue;
+            }
+
+            /*
+             * More details about every batch state can be found here:
+             * https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_batches_interpret_status.htm
+             */
+            switch (batch.getState()) {
+            case Completed:
+                break;
+            case NotProcessed:
+                /* If batch was not processed we should abort further execution.
+                 * From official documentation:
+                 * The batch won’t be processed. This state is assigned when a job is aborted while the batch is queued.
+                 */
+            case Failed:
+                TalendRuntimeException.build(SalesforceErrorCodes.ERROR_IN_BULK_QUERY_PROCESSING)
+                        .put(ExceptionContext.KEY_MESSAGE, batch.getStateMessage()).throwIt();
+            case Queued:
+            case InProgress:
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String nextResultId() {
         String resultId = null;
         if (queryResultIDs != null && queryResultIDs.hasNext()) {
             resultId = queryResultIDs.next();
         }
         return resultId;
+    }
+
+    public boolean hasNextResultId() {
+        return queryResultIDs != null && queryResultIDs.hasNext();
     }
 
 }

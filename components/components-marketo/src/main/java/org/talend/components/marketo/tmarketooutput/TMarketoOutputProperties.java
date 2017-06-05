@@ -17,6 +17,7 @@ import static org.talend.components.marketo.tmarketooutput.TMarketoOutputPropert
 import static org.talend.components.marketo.tmarketooutput.TMarketoOutputProperties.OutputOperation.syncCustomObjects;
 import static org.talend.components.marketo.tmarketooutput.TMarketoOutputProperties.OutputOperation.syncLead;
 import static org.talend.components.marketo.tmarketooutput.TMarketoOutputProperties.OutputOperation.syncMultipleLeads;
+import static org.talend.daikon.properties.ValidationResult.OK;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
@@ -42,6 +43,7 @@ import org.talend.daikon.i18n.GlobalI18N;
 import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
@@ -143,11 +145,11 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
     public void setupProperties() {
         super.setupProperties();
 
-        outputOperation.setPossibleValues(OutputOperation.values());
+        outputOperation.setPossibleValues((Object[]) OutputOperation.values());
         outputOperation.setValue(syncLead);
-        operationType.setPossibleValues(OperationType.values());
+        operationType.setPossibleValues((Object[]) OperationType.values());
         operationType.setValue(OperationType.createOnly);
-        lookupField.setPossibleValues(RESTLookupFields.values());
+        lookupField.setPossibleValues((Object[]) RESTLookupFields.values());
         lookupField.setValue(RESTLookupFields.email);
         deDupeEnabled.setValue(false);
         deleteLeadsInBatch.setValue(false);
@@ -155,9 +157,9 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
         customObjectName.setValue("");
         customObjectDeleteBy.setValue(CustomObjectDeleteBy.idField);
         customObjectDedupeBy.setValue("");
-        customObjectSyncAction.setPossibleValues(CustomObjectSyncAction.values());
+        customObjectSyncAction.setPossibleValues((Object[]) CustomObjectSyncAction.values());
         customObjectSyncAction.setValue(CustomObjectSyncAction.createOrUpdate);
-
+        //
         schemaInput.schema.setValue(MarketoConstants.getRESTOutputSchemaForSyncLead());
         beforeMappingInput();
         setSchemaListener(new ISchemaListener() {
@@ -196,16 +198,6 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
-        LOG.debug("[refreshLayout@{}] Connection API({}) Schema `{}`.", form.getName(), getApiMode(),
-                schemaInput.schema.getValue().getName());
-
-        if (!getApiMode().equals(currentSchemaAPI)) {
-            LOG.debug("[refreshLayout@{}] Connection API({}) *mismatches* Schema `{}` API({}) : resetting schema.",
-                    form.getName(), getApiMode(), schemaInput.schema.getValue().getName(), currentSchemaAPI);
-            updateSchemaRelated();
-            LOG.debug("[refreshLayout@{}] Connection API({}) should match Schema `{}` API({}).", form.getName(), getApiMode(),
-                    schemaInput.schema.getValue().getName(), currentSchemaAPI);
-        }
 
         if (form.getName().equals(Form.MAIN)) {
             // first, hide everything
@@ -220,6 +212,7 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
             form.getWidget(customObjectName.getName()).setVisible(false);
             form.getWidget(customObjectDedupeBy.getName()).setVisible(false);
             form.getWidget(customObjectDeleteBy.getName()).setVisible(false);
+            //
             // batchSize
             if (outputOperation.getValue().equals(syncMultipleLeads)) {
                 form.getWidget(deDupeEnabled.getName()).setVisible(true);
@@ -259,11 +252,11 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
             switch (outputOperation.getValue()) {
             case syncLead:
             case syncMultipleLeads:
-                return ValidationResult.OK;
+                return OK;
             case deleteLeads:
             case syncCustomObjects:
             case deleteCustomObjects:
-                ValidationResult vr = new ValidationResult();
+                ValidationResultMutable vr = new ValidationResultMutable();
                 vr.setStatus(Result.ERROR);
                 vr.setMessage(messages.getMessage("validation.error.operation.soap"));
                 return vr;
@@ -289,7 +282,6 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
 
     public void beforeMappingInput() {
         List<String> fld = getSchemaFields();
-        mappingInput.columnName.setPossibleValues(fld);
         mappingInput.columnName.setValue(fld);
         // protect mappings...
         if (fld.size() != mappingInput.size()) {
@@ -302,7 +294,6 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
     }
 
     public void afterOutputOperation() {
-        LOG.debug("[afterOutputOperation]");
         updateSchemaRelated();
         refreshLayout(getForm(Form.MAIN));
     }
@@ -324,7 +315,7 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
     public void updateSchemaRelated() {
         Schema s = null;
         if (isApiSOAP()) {
-            currentSchemaAPI = API_SOAP;
+            // ensure we have at least one schema set
             s = MarketoConstants.getSOAPOutputSchemaForSyncLead();
             switch (outputOperation.getValue()) {
             case syncLead:
@@ -335,7 +326,8 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
                 break;
             }
         } else {
-            currentSchemaAPI = API_REST;
+            // ensure we have at least one schema set
+            s = MarketoConstants.getRESTOutputSchemaForSyncLead();
             switch (outputOperation.getValue()) {
             case syncLead:
                 s = MarketoConstants.getRESTOutputSchemaForSyncLead();
@@ -352,11 +344,7 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
                 break;
             }
         }
-        LOG.debug("[updateSchemaRelated] API({}) Replacing Schema `{}` by Schema `{}`.", getApiMode(),
-                schemaInput.schema.getValue().getName(), s.getName());
         schemaInput.schema.setValue(s);
-        LOG.debug("[updateSchemaRelated] API({}) Replaced Schema. Now schema is `{}`.", getApiMode(),
-                schemaInput.schema.getValue().getName());
         updateOutputSchemas();
     }
 
@@ -368,36 +356,23 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
         // seems that it may be resolved : https://jira.talendforge.org/browse/TDI-38603
         if ((outputOperation.getValue().equals(deleteLeads) && deleteLeadsInBatch.getValue())
                 || (outputOperation.getValue().equals(syncMultipleLeads) && batchSize.getValue() > 1)) {
-            schemaFlow.schema.setValue(MarketoConstants.getEmptySchema());
+            schemaFlow.schema.setValue(inputSchema);
             schemaReject.schema.setValue(MarketoConstants.getEmptySchema());
             return;
         }
         final List<Field> flowFields = new ArrayList<Field>();
         final List<Field> rejectFields = new ArrayList<Field>();
         Field f;
-        // To maintain migration stable (see TDI-38379)
-        if (outputOperation.getValue().equals(syncLead) || outputOperation.getValue().equals(syncMultipleLeads)) {
-            schemaFlow.schema.setValue(inputSchema);
-            if (inputSchema.getField(MarketoConstants.FIELD_ERROR_MSG) == null) {
-                f = new Field(MarketoConstants.FIELD_ERROR_MSG, Schema.create(Schema.Type.STRING), null, (Object) null);
-                f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
-                f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
-                rejectFields.add(f);
-                schemaReject.schema.setValue(newSchema(inputSchema, "schemaReject", rejectFields));
-
-            } else {
-                schemaReject.schema.setValue(inputSchema);
-            }
-            return;
-        }
         // all other cases
         boolean isCustomObject = (outputOperation.getValue().equals(syncCustomObjects)
                 || outputOperation.getValue().equals(deleteCustomObjects));
         //
-        f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
-        f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
-        f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
-        flowFields.add(f);
+        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
+            f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
+            f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
+            f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
+            flowFields.add(f);
+        }
         if (isCustomObject) {
             if (inputSchema.getField(MarketoConstants.FIELD_MARKETO_GUID) == null) {
                 f = new Field(MarketoConstants.FIELD_MARKETO_GUID, Schema.create(Type.STRING), null, (Object) null);
@@ -405,6 +380,7 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
                 f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
                 flowFields.add(f);
             }
+
             f = new Field(MarketoConstants.FIELD_SEQ, Schema.create(Type.INT), null, (Object) null);
             f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
@@ -415,15 +391,18 @@ public class TMarketoOutputProperties extends MarketoComponentProperties {
             flowFields.add(f);
         }
         //
-        f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
-        f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
-        f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
-        rejectFields.add(f);
-        f = new Field(MarketoConstants.FIELD_ERROR_MSG, Schema.create(Schema.Type.STRING), null, (Object) null);
-        f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
-        f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
-        rejectFields.add(f);
-
+        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
+            f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
+            f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
+            f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
+            rejectFields.add(f);
+        }
+        if (inputSchema.getField(MarketoConstants.FIELD_ERROR_MSG) == null) {
+            f = new Field(MarketoConstants.FIELD_ERROR_MSG, Schema.create(Schema.Type.STRING), null, (Object) null);
+            f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
+            f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
+            rejectFields.add(f);
+        }
         Schema flowSchema = newSchema(inputSchema, "schemaFlow", flowFields);
         Schema rejectSchema = newSchema(inputSchema, "schemaReject", rejectFields);
         schemaFlow.schema.setValue(flowSchema);

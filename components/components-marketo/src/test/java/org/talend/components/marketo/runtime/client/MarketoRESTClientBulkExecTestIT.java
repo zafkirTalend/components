@@ -15,7 +15,6 @@ package org.talend.components.marketo.runtime.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties.APIMode.REST;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -54,7 +53,6 @@ public class MarketoRESTClientBulkExecTestIT extends MarketoBaseTestIT {
         props.connection.endpoint.setValue(ENDPOINT_REST);
         props.connection.clientAccessId.setValue(USERID_REST);
         props.connection.secretKey.setValue(SECRETKEY_REST);
-        props.connection.apiMode.setValue(REST);
         props.connection.setupLayout();
         props.schemaInput.setupProperties();
         props.schemaInput.setupLayout();

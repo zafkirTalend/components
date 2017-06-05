@@ -5,7 +5,7 @@
 	<groupId>org.talend.components</groupId>
 	<artifactId>components-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>0.18.0-SNAPSHOT</version>
+	<version>0.19.0-SNAPSHOT</version>
 
 	<name>Component Parent POM</name>
 	<properties>
@@ -15,8 +15,8 @@
 		<!-- version properties will go to some bom pom -->
 		<spring.boot.version>1.5.1.RELEASE</spring.boot.version>
 		<avro.version>1.8.1</avro.version>
-		<components.version>0.18.0-SNAPSHOT</components.version>
-		<daikon.version>0.16.0-SNAPSHOT</daikon.version>
+		<components.version>0.19.0-SNAPSHOT</components.version>
+		<daikon.version>0.17.0-SNAPSHOT</daikon.version>
 		<guava.version>19.0</guava.version>
 		<hamcrest.version>1.3</hamcrest.version>
 		<org.json.version>20131018</org.json.version>
@@ -31,6 +31,7 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/Talend/components.git</connection>
+	  <tag>HEAD</tag>
 	</scm>
 
 	<modules>
@@ -72,6 +73,12 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.databene</groupId>
+			<artifactId>contiperf</artifactId>
+			<version>2.3.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.25</version>
@@ -93,7 +100,11 @@
 						<artifactId>logback-classic</artifactId>
 					</exclusion>
 				</exclusions>
-
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>1.1.9</version>
 			</dependency>
 			<dependency>
 				<groupId>biz.aQute.bnd</groupId>
@@ -182,7 +193,7 @@
 				<artifactId>components-api</artifactId>
 				<version>${components.version}</version>
 				<classifier>bundle</classifier>
-			</dependency>			
+			</dependency>
 			<dependency>
 				<groupId>org.talend.components</groupId>
 				<artifactId>components-api-service-common</artifactId>
@@ -400,10 +411,7 @@
 						<phase>process-resources</phase>
 						<configuration>
 							<tasks>
-								<echo
-									file="target/classes/META-INF/maven/${project.groupId}/${project.artifactId}/dependencies.txt"
-									message="${project.groupId}:${project.artifactId}:jar:${project.version}:runtime"
-									append="true" encoding="UTF-8" />
+								<echo file="target/classes/META-INF/maven/${project.groupId}/${project.artifactId}/dependencies.txt" message="${project.groupId}:${project.artifactId}:jar:${project.version}:runtime" append="true" encoding="UTF-8" />
 							</tasks>
 						</configuration>
 						<goals>
@@ -426,7 +434,6 @@
 						<!-- settings.xml and repo are used for pax tests on branch build that 
 							mirror the talend_nexus repo -->
 						<org.ops4j.pax.url.mvn.repositories>+https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot@snapshots@noreleases@id=talend_nexus,https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease@id=talrelease</org.ops4j.pax.url.mvn.repositories>
-						<org.ops4j.pax.url.mvn.settings>${project.basedir}/settings.xml</org.ops4j.pax.url.mvn.settings>
 					</systemProperties>
 				</configuration>
 				<executions>

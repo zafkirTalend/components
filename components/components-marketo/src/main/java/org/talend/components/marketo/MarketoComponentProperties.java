@@ -35,10 +35,6 @@ import org.talend.daikon.properties.property.Property;
 public abstract class MarketoComponentProperties extends FixedConnectorsComponentProperties
         implements MarketoProvideConnectionProperties {
 
-    public static final String API_SOAP = "SOAP";
-
-    public static final String API_REST = "REST";
-
     public TMarketoConnectionProperties connection = new TMarketoConnectionProperties("connection");
 
     /**/
@@ -67,8 +63,6 @@ public abstract class MarketoComponentProperties extends FixedConnectorsComponen
 
     public Property<Boolean> dieOnError = newBoolean("dieOnError");
 
-    protected String currentSchemaAPI;
-
     private static final long serialVersionUID = 5587867978797981L;
 
     private transient static final Logger LOG = LoggerFactory.getLogger(MarketoComponentProperties.class);
@@ -83,7 +77,6 @@ public abstract class MarketoComponentProperties extends FixedConnectorsComponen
 
         batchSize.setValue(100);
         dieOnError.setValue(true);
-        currentSchemaAPI = API_REST;
     }
 
     @Override
@@ -93,7 +86,6 @@ public abstract class MarketoComponentProperties extends FixedConnectorsComponen
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(connection.getForm(Form.REFERENCE));
         mainForm.addRow(schemaInput.getForm(Form.REFERENCE));
-
         // Advanced
         Form advancedForm = Form.create(this, Form.ADVANCED);
         advancedForm.addRow(connection.getForm(Form.ADVANCED));
@@ -152,16 +144,12 @@ public abstract class MarketoComponentProperties extends FixedConnectorsComponen
         return connection.getConnectionProperties();
     }
 
-    public String getApiMode() {
-        return (getConnectionProperties().apiMode.getValue().equals(APIMode.SOAP)) ? API_SOAP : API_REST;
-    }
-
     public Boolean isApiSOAP() {
-        return getApiMode().equals(API_SOAP);
+        return APIMode.SOAP.equals(getConnectionProperties().apiMode.getValue());
     }
 
     public Boolean isApiREST() {
-        return !isApiSOAP();
+        return APIMode.REST.equals(getConnectionProperties().apiMode.getValue());
     }
 
 }

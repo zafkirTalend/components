@@ -2,6 +2,7 @@ package org.talend.components.marketo.runtime;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +35,17 @@ import org.talend.daikon.i18n.GlobalI18N;
 import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResult.Result;
+import org.talend.daikon.properties.ValidationResultMutable;
+
+import com.google.gson.Gson;
 
 public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSchemaProvider {
+
+    public static final String RESOURCE_COMPANY = "resourceCompany";
+
+    public static final String RESOURCE_OPPORTUNITY = "resourceOpportunity";
+
+    public static final String RESOURCE_OPPORTUNITY_ROLE = "resourceOpportunityRole";
 
     protected MarketoProvideConnectionProperties properties;
 
@@ -59,7 +69,7 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSch
         String endpoint = conn.endpoint.getValue();
         String clientAccess = conn.clientAccessId.getValue();
         String secretKey = conn.secretKey.getValue();
-        ValidationResult vr = new ValidationResult();
+        ValidationResultMutable vr = new ValidationResultMutable();
         if (endpoint == null || endpoint.isEmpty()) {
             vr.setMessage(messages.getMessage("error.validation.connection.endpoint"));
             vr.setStatus(ValidationResult.Result.ERROR);
@@ -117,14 +127,15 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSch
 
     @Override
     public Schema getEndpointSchema(RuntimeContainer container, String schemaName) throws IOException {
-        MarketoClientServiceExtended client = (MarketoClientServiceExtended) getClientService(null);
-        TMarketoInputProperties ip = new TMarketoInputProperties("COSchemas");
+        MarketoRESTClient client = (MarketoRESTClient) getClientService(null);
+        TMarketoInputProperties ip = new TMarketoInputProperties("retrieveSchema");
+        MarketoRecordResult r = new MarketoRecordResult();
+        Schema describeSchema = MarketoConstants.getCustomObjectDescribeSchema();
         ip.connection = properties.getConnectionProperties();
         ip.inputOperation.setValue(InputOperation.CustomObject);
         ip.customObjectAction.setValue(CustomObjectAction.describe);
         ip.customObjectName.setValue(schemaName);
-        Schema describeSchema = MarketoConstants.getCustomObjectDescribeSchema();
-        MarketoRecordResult r = client.describeCustomObject(ip);
+        r = client.describeCustomObject(ip);
         if (!r.isSuccess()) {
             return null;
         }
@@ -144,6 +155,45 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSch
             return null;
         }
         return getEndpointSchema(null, customObjectName);
+    }
+
+    @Override
+    public Schema getSchemaForCompany() throws IOException {
+        return getEndpointSchema(null, RESOURCE_COMPANY);
+    }
+
+    @Override
+    public Schema getSchemaForOpportunity() throws IOException {
+        return getEndpointSchema(null, RESOURCE_OPPORTUNITY);
+    }
+
+    @Override
+    public Schema getSchemaForOpportunityRole() throws IOException {
+        return getEndpointSchema(null, RESOURCE_OPPORTUNITY_ROLE);
+    }
+
+    @Override
+    public List<String> getCompoundKeyFields(String resource) throws IOException {
+        MarketoRESTClient client = (MarketoRESTClient) getClientService(null);
+        TMarketoInputProperties ip = new TMarketoInputProperties("retrieveSchema");
+        MarketoRecordResult r = new MarketoRecordResult();
+        Schema describeSchema = MarketoConstants.getCustomObjectDescribeSchema();
+        ip.connection = properties.getConnectionProperties();
+        ip.inputOperation.setValue(InputOperation.CustomObject);
+        ip.customObjectAction.setValue(CustomObjectAction.describe);
+        ip.customObjectName.setValue(resource);
+        r = client.describeCustomObject(ip);
+        if (!r.isSuccess()) {
+            return null;
+        }
+        List<IndexedRecord> records = r.getRecords();
+        if (records == null || records.isEmpty()) {
+            return null;
+        }
+        IndexedRecord record = records.get(0);
+        String[] keys = new Gson().fromJson(record.get(describeSchema.getField("dedupeFields").pos()).toString(), String[].class);
+
+        return Arrays.asList(keys);
     }
 
     /**
@@ -204,7 +254,7 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSch
     }
 
     public static ValidationResult validateConnection(MarketoProvideConnectionProperties properties) {
-        ValidationResult vr = new ValidationResult().setStatus(Result.OK);
+        ValidationResultMutable vr = new ValidationResultMutable().setStatus(Result.OK);
         try {
             MarketoSourceOrSink sos = new MarketoSourceOrSink();
             sos.initialize(null, (ComponentProperties) properties);
@@ -247,7 +297,7 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkSch
         if (client == null) {
             try {
                 TMarketoConnectionProperties conn = getEffectiveConnection(container);
-                if (conn.apiMode.getValue().equals(APIMode.SOAP)) {
+                if (APIMode.SOAP.equals(conn.apiMode.getValue())) {
                     client = new MarketoSOAPClient(conn);
                 } else {
                     client = new MarketoRESTClient(conn);

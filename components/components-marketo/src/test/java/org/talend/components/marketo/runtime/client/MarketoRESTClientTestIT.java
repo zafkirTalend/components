@@ -17,7 +17,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.IncludeExcludeFieldsSOAP.ChangeDataValue;
@@ -288,7 +287,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         MarketoRecordResult result = client.getMultipleLeads(iprops, null);
         LOG.debug("{}", result);
         List<IndexedRecord> records = result.getRecords();
-        assertEquals(4, records.size());
+        assertTrue(records.size() >= 4);
     }
 
     @Test
@@ -315,7 +314,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.batchSize.setValue(4); // we have at least 5 members with createDatasets.
         iprops.leadSelectorREST.setValue(StaticListSelector);
         iprops.listParam.setValue(STATIC_LIST_NAME);
-        iprops.listParamValue.setValue(UNDX_TEST_LIST_SMALL);
+        iprops.listParamListName.setValue(UNDX_TEST_LIST_SMALL);
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
         MarketoClientService client = source.getClientService(null);
@@ -335,7 +334,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.batchSize.setValue(104);
         iprops.leadSelectorREST.setValue(StaticListSelector);
         iprops.listParam.setValue(STATIC_LIST_NAME);
-        iprops.listParamValue.setValue(UNDX_TEST_LIST_SMALL);
+        iprops.listParamListName.setValue(UNDX_TEST_LIST_SMALL);
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
         MarketoClientService client = source.getClientService(null);
@@ -362,7 +361,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         //
         iprops.leadSelectorREST.setValue(StaticListSelector);
         iprops.listParam.setValue(STATIC_LIST_NAME);
-        iprops.listParamValue.setValue("undx_test_list******");
+        iprops.listParamListName.setValue("undx_test_list******");
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
         MarketoClientService client = source.getClientService(null);
@@ -384,7 +383,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         //
         iprops.leadSelectorREST.setValue(StaticListSelector);
         iprops.listParam.setValue(STATIC_LIST_ID);
-        iprops.listParamValue.setValue(UNDX_TEST_LIST_SMALL_ID.toString());
+        iprops.listParamListId.setValue(UNDX_TEST_LIST_SMALL_ID);
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
         MarketoClientService client = source.getClientService(null);
@@ -392,7 +391,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         MarketoRecordResult result = client.getMultipleLeads(iprops, null);
         LOG.debug("{}", result);
         assertTrue(result.isSuccess());
-        assertNull(result.getErrors());
+        assertNotNull(result.getErrors());
         assertNotEquals(0, result.getRecordCount());
         assertNotEquals(0, result.getRemainCount());
         assertTrue(result.getRecordCount() > 4);
@@ -406,7 +405,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         //
         iprops.leadSelectorREST.setValue(StaticListSelector);
         iprops.listParam.setValue(STATIC_LIST_ID);
-        iprops.listParamValue.setValue("-666");
+        iprops.listParamListName.setValue("-666");
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
         MarketoClientService client = source.getClientService(null);
@@ -432,6 +431,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.afterInputOperation();
         iprops.batchSize.setValue(50);
         iprops.sinceDateTime.setValue(DATE_OLDEST_CREATE);
+        iprops.beforeMappingInput();
         //
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
@@ -449,6 +449,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.afterInputOperation();
         iprops.batchSize.setValue(300);
         iprops.sinceDateTime.setValue(DATE_LATEST_UPDATE);
+        iprops.beforeMappingInput();
         //
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
@@ -471,6 +472,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.includeTypes.type.getValue().add(IncludeExcludeFieldsREST.NewLead.toString());
         iprops.includeTypes.type.getValue().add(IncludeExcludeFieldsREST.ChangeDataValue.toString());
         iprops.sinceDateTime.setValue(DATE_OLDEST_CREATE);
+        iprops.beforeMappingInput();
         //
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
@@ -494,6 +496,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.excludeTypes.type.getValue().add(IncludeExcludeFieldsSOAP.VisitWebpage.toString());
         iprops.excludeTypes.type.getValue().add(ChangeDataValue.toString());
         iprops.sinceDateTime.setValue(DATE_OLDEST_CREATE);
+        iprops.beforeMappingInput();
         //
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
@@ -520,6 +523,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.batchSize.setValue(100);
         iprops.sinceDateTime.setValue(DATE_OLDEST_CREATE);
         iprops.fieldList.setValue("id,email,firstName,lastName,company");
+        iprops.beforeMappingInput();
         //
         MarketoSource source = new MarketoSource();
         source.initialize(null, iprops);
@@ -784,6 +788,7 @@ public class MarketoRESTClientTestIT extends MarketoClientTestIT {
         iprops.schemaInput.schema.setValue(runtimeSchema);
 
         MarketoRecordResult result = client.getLead(iprops, null);
+        LOG.debug("result = {}.", result);
         IndexedRecord r = result.getRecords().get(0);
         assertNotNull(r);
         LOG.debug("r = {}.", r);

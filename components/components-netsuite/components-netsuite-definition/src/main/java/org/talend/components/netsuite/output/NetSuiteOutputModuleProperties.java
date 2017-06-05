@@ -21,21 +21,26 @@ import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.common.SchemaProperties;
 import org.talend.components.netsuite.NetSuiteComponentDefinition;
 import org.talend.components.netsuite.NetSuiteDatasetRuntime;
 import org.talend.components.netsuite.NetSuiteModuleProperties;
 import org.talend.components.netsuite.connection.NetSuiteConnectionProperties;
+import org.talend.components.netsuite.util.ComponentExceptions;
 import org.talend.daikon.NamedThing;
+import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.java8.Function;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.serialize.PostDeserializeSetup;
 
 /**
- *
+ * NetSuite Output component's Properties which holds information about
+ * target record type, output options and outgoing flows.
  */
 public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
 
@@ -50,6 +55,14 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
     public transient final PresentationItem syncOutgoingSchema = new PresentationItem(
             "syncOutgoingSchema", "Sync outgoing schema");
 
+    /**
+     * Holds main schema after last update to avoid updating of outgoing schemas
+     * due to repeating {@code afterSchema} invocations in {@link SchemaProperties}.
+     *
+     * <p>Used in design time only.
+     */
+    private transient Schema lastMainSchema;
+
     public NetSuiteOutputModuleProperties(String name, NetSuiteConnectionProperties connectionProperties) {
         super(name, connectionProperties);
 
@@ -63,17 +76,31 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
 
         action.setValue(OutputAction.ADD);
         useNativeUpsert.setValue(Boolean.FALSE);
+
+        setupMainSchemaListener();
+    }
+
+    private void setupMainSchemaListener() {
+        main.setSchemaListener(new ISchemaListener() {
+
+            @Override
+            public void afterSchema() {
+                afterMainSchema();
+            }
+        });
     }
 
     @Override
     public void setupLayout() {
         super.setupLayout();
 
+        final Form mainSchemaForm = main.getForm(Form.REFERENCE);
+
         Form mainForm = Form.create(this, Form.MAIN);
         mainForm.addRow(widget(moduleName)
                 .setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE)
                 .setLongRunning(true));
-        mainForm.addRow(main.getForm(Form.REFERENCE));
+        mainForm.addRow(mainSchemaForm);
         mainForm.addRow(widget(action)
                 .setLongRunning(true));
         mainForm.addRow(widget(syncOutgoingSchema)
@@ -88,7 +115,7 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         refForm.addRow(widget(moduleName)
                 .setWidgetType(Widget.NAME_SELECTION_REFERENCE_WIDGET_TYPE)
                 .setLongRunning(true));
-        refForm.addRow(main.getForm(Form.REFERENCE));
+        refForm.addRow(mainSchemaForm);
         refForm.addRow(widget(action)
                 .setLongRunning(true));
         refForm.addRow(widget(syncOutgoingSchema)
@@ -108,17 +135,22 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
     }
 
     public ValidationResult beforeModuleName() throws Exception {
+        // Before selecting of a target record type we should provide
+        // set of record types that are available for work.
         try {
             List<NamedThing> types = getRecordTypes();
             moduleName.setPossibleNamedThingValues(types);
 
             return ValidationResult.OK;
-        } catch (Exception ex) {
+        } catch (TalendRuntimeException ex) {
             return exceptionToValidationResult(ex);
         }
     }
 
     public ValidationResult afterModuleName() throws Exception {
+        // After selecting of target record type we should:
+        // - Set up main schema which will be used for records emitted by component
+        // - Set up schema for outgoing flows (normal and reject flows)
         try {
             setupSchema();
             setupOutgoingSchema();
@@ -127,7 +159,7 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
             refreshLayout(getForm(Form.ADVANCED));
 
             return ValidationResult.OK;
-        } catch (Exception e) {
+        } catch (TalendRuntimeException e) {
             return exceptionToValidationResult(e);
         }
     }
@@ -141,7 +173,7 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
             refreshLayout(getForm(Form.ADVANCED));
 
             return ValidationResult.OK;
-        } catch (Exception e) {
+        } catch (TalendRuntimeException e) {
             return exceptionToValidationResult(e);
         }
     }
@@ -154,8 +186,41 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
             refreshLayout(getForm(Form.ADVANCED));
 
             return ValidationResult.OK;
-        } catch (Exception e) {
+        } catch (TalendRuntimeException e) {
             return exceptionToValidationResult(e);
+        }
+    }
+
+    private void afterMainSchema() {
+        try {
+            Schema schema = main.schema.getValue();
+
+            // If last main schema is null then we treat this as initial update (setup)
+            // of schema properties after materialization/deserialization.
+            // On initial update we skip updating of schema for outgoing flow(s) and
+            // just remember initial schema.
+            // On subsequent updates we should check whether schema was changed and
+            // update schema for outgoing flow(s).
+
+            if (lastMainSchema != null) {
+
+                // If schema was not changed since last known update then we can
+                // ignore this change to avoid unnecessary updating of schema for outgoing flow(s).
+                if (schema.equals(lastMainSchema)) {
+                    return;
+                }
+
+                setupOutgoingSchema();
+
+                refreshLayout(getForm(Form.MAIN));
+                refreshLayout(getForm(Form.ADVANCED));
+            }
+
+            // Remember changed schema for next check
+            lastMainSchema = schema;
+
+        } catch (TalendRuntimeException e) {
+            throw ComponentExceptions.asComponentExceptionWithValidationResult(e);
         }
     }
 
@@ -219,7 +284,12 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         });
     }
 
-    protected void setupSchema() {
+    /**
+     * Set up main schema for component.
+     *
+     * <p>For updating and deletion schemas are different.
+     */
+    private void setupSchema() {
         switch (action.getValue()) {
         case ADD:
         case UPDATE:
@@ -232,7 +302,12 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         }
     }
 
-    protected void setupOutgoingSchema() {
+    /**
+     * Set up schema for outgoing flows.
+     *
+     * <p>For updating and deletion schemas are different.
+     */
+    private void setupOutgoingSchema() {
         flowSchema.schema.setValue(null);
         rejectSchema.schema.setValue(null);
 
@@ -248,7 +323,10 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         }
     }
 
-    protected void setupSchemaForUpdate() {
+    /**
+     * Set up main schema for <i>Add/Update/Upsert</i> output action.
+     */
+    private void setupSchemaForUpdate() {
         assertModuleName();
 
         final String typeName = moduleName.getStringValue();
@@ -257,7 +335,10 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         main.schema.setValue(schema);
     }
 
-    protected void setupOutgoingSchemaForUpdate() {
+    /**
+     * Set up outgoing flow schema for <i>Add/Update/Upsert</i> output action.
+     */
+    private void setupOutgoingSchemaForUpdate() {
         assertModuleName();
 
         final String typeName = moduleName.getStringValue();
@@ -270,7 +351,10 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         rejectSchema.schema.setValue(rejectFlowSchema);
     }
 
-    protected void setupSchemaForDelete() {
+    /**
+     * Set up main schema for <i>Delete</i> output action.
+     */
+    private void setupSchemaForDelete() {
         assertModuleName();
 
         final String typeName = moduleName.getStringValue();
@@ -279,6 +363,9 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         main.schema.setValue(schema);
     }
 
+    /**
+     * Set up outgoing flow schema for <i>Delete</i> output action.
+     */
     protected void setupOutgoingSchemaForDelete() {
         assertModuleName();
 
@@ -291,4 +378,15 @@ public class NetSuiteOutputModuleProperties extends NetSuiteModuleProperties {
         flowSchema.schema.setValue(successFlowSchema);
         rejectSchema.schema.setValue(rejectFlowSchema);
     }
+
+    @Override
+    public boolean postDeserialize(int version, PostDeserializeSetup setup, boolean persistent) {
+        boolean result = super.postDeserialize(version, setup, persistent);
+
+        // Restore main schema listener after materialization
+        setupMainSchemaListener();
+
+        return result;
+    }
+
 }

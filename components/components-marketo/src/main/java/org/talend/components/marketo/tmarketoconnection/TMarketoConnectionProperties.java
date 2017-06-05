@@ -36,13 +36,6 @@ import org.talend.daikon.properties.service.Repository;
 
 public class TMarketoConnectionProperties extends ComponentPropertiesImpl implements MarketoProvideConnectionProperties {
 
-    public enum APIMode {
-        REST,
-        SOAP
-    }
-
-    public Property<APIMode> apiMode = newEnum("apiMode", APIMode.class);
-
     public static final String FORM_WIZARD = "Wizard";
 
     public Property<String> name = newString("name").setRequired();
@@ -73,6 +66,13 @@ public class TMarketoConnectionProperties extends ComponentPropertiesImpl implem
 
     private String repositoryLocation;
 
+    public enum APIMode {
+        REST,
+        SOAP
+    }
+
+    public Property<APIMode> apiMode = newEnum("apiMode", APIMode.class);
+
     //
     private static final Logger LOG = LoggerFactory.getLogger(TMarketoConnectionProperties.class);
 
@@ -91,12 +91,11 @@ public class TMarketoConnectionProperties extends ComponentPropertiesImpl implem
         secretKey.setValue("");
         clientAccessId.setValue("");
 
-        apiMode.setPossibleValues((Object[]) APIMode.values());
-        apiMode.setValue(APIMode.REST);
-
         timeout.setValue(60000);
         maxReconnAttemps.setValue(5);
         attemptsIntervalTime.setValue(1000);
+
+        apiMode.setValue(APIMode.REST);
     }
 
     @Override
@@ -111,8 +110,8 @@ public class TMarketoConnectionProperties extends ComponentPropertiesImpl implem
         // Advanced
         Form advancedForm = Form.create(this, Form.ADVANCED);
         advancedForm.addRow(apiMode);
-        advancedForm.addColumn(timeout);
-        advancedForm.addRow(maxReconnAttemps);
+        advancedForm.addRow(timeout);
+        advancedForm.addColumn(maxReconnAttemps);
         advancedForm.addColumn(attemptsIntervalTime);
 
         // A form for a reference to a connection
@@ -141,13 +140,14 @@ public class TMarketoConnectionProperties extends ComponentPropertiesImpl implem
         boolean useOtherConnection = refComponentIdValue != null
                 && refComponentIdValue.startsWith(TMarketoConnectionDefinition.COMPONENT_NAME);
 
+        if (DEFAULT_ENDPOINT_REST.equals(endpoint.getValue()) && APIMode.SOAP.equals(apiMode.getValue())) {
+            endpoint.setValue(DEFAULT_ENDPOINT_SOAP);
+        }
+        if (DEFAULT_ENDPOINT_SOAP.equals(endpoint.getValue()) && APIMode.REST.equals(apiMode.getValue())) {
+            endpoint.setValue(DEFAULT_ENDPOINT_REST);
+        }
+
         if (form.getName().equals(Form.MAIN) || form.getName().equals(FORM_WIZARD)) {
-            if (DEFAULT_ENDPOINT_REST.equals(endpoint.getValue()) && APIMode.SOAP.equals(apiMode.getValue())) {
-                endpoint.setValue(DEFAULT_ENDPOINT_SOAP);
-            }
-            if (DEFAULT_ENDPOINT_SOAP.equals(endpoint.getValue()) && APIMode.REST.equals(apiMode.getValue())) {
-                endpoint.setValue(DEFAULT_ENDPOINT_REST);
-            }
             form.getWidget(endpoint.getName()).setHidden(useOtherConnection);
             form.getWidget(clientAccessId.getName()).setHidden(useOtherConnection);
             form.getWidget(secretKey.getName()).setHidden(useOtherConnection);
@@ -209,7 +209,7 @@ public class TMarketoConnectionProperties extends ComponentPropertiesImpl implem
         if (refProps != null) {
             return refProps;
         }
-        LOG.error("Connection has a reference to `{}` but the referenced Object is null!", getReferencedComponentId());
+        LOG.debug("Connection has a reference to `{}` but the referenced Object is null!", getReferencedComponentId());
         return null;
     }
 
