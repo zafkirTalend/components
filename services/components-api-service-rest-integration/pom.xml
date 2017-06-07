@@ -47,13 +47,20 @@
 	</repositories>
 
 	<dependencies>
-		<!-- compile dependencies -->
-		<dependency>
+		<!-- jdbc drivers -->
+<!-- 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 			<version>2.0.1</version>
+			<scope>test</scope>
+		</dependency> -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.1.1</version>
+			<scope>test</scope>
 		</dependency>
-		<!-- test dependencies -->
+		<!-- rest service -->
 		<dependency>
 			<groupId>org.talend.components</groupId>
 			<artifactId>components-api-service-rest</artifactId>
@@ -61,6 +68,7 @@
 			<classifier>lib</classifier>
 			<scope>test</scope>
 		</dependency>
+		<!-- test frameworks -->
 		<dependency>
 			<groupId>com.jayway.restassured</groupId>
 			<artifactId>rest-assured</artifactId>

@@ -41,13 +41,15 @@ public class JdbcDatasetTestIT {
 
     public static final String PASS = "Fghjrcbvfwbz";
 
-    public static final String URL = "jdbc:mysql://192.168.99.100:3306/";
+    public static final String URL = "jdbc:postgresql://192.168.99.100:5432/";
 
     public static final String DB_NAME = "test_db";
 
     public static final String TABLE_NAME = "test_table";
 
     public static final String CREATE_DB = "CREATE DATABASE " + DB_NAME;
+    
+    public static final String USE_DB = "USE " + DB_NAME;
 
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
@@ -57,7 +59,7 @@ public class JdbcDatasetTestIT {
 
     public static final String INSERT = "INSERT INTO " + TABLE_NAME + " VALUES(?,?,?,?,?)";
 
-    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"MYSQL\",\"jdbcUrl\":\"jdbc:mysql://192.168.99.100:3306/test_db\",\"userId\":\"root\",\"password\":\"Fghjrcbvfwbz\",\"@definitionName\":\"JDBCDatastore\"}";
+    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"POSTGRESQL\",\"jdbcUrl\":\"jdbc:postgresql://192.168.99.100:5432/test_db\",\"userId\":\"root\",\"password\":\"Fghjrcbvfwbz\",\"@definitionName\":\"JDBCDatastore\"}";
 
     public static final String JDBC_DATASET_PROPERTIES = "{\"sourceType\":\"QUERY\",\"datastore\":\"JDBCDatastore\",\"@definitionName\":\"JDBCDataset\",\"main\":{\"schema\":{\"type\":\"record\",\"name\":\"EmptyRecord\",\"fields\":[]}},\"sql\":\"select * from test_table\"}";
 
@@ -74,16 +76,20 @@ public class JdbcDatasetTestIT {
         RestAssured.port = 8989;
         RestAssured.basePath = "/tcomp";
     }
-
+    
     @Test
     public void setupDB() throws SQLException {
-        // create connection
+        // create connection DBMS
         try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
             try (Statement statement = connection.createStatement()) {
                 // create db
                 statement.executeUpdate(CREATE_DB);
-                // use created db
-                connection.setCatalog(DB_NAME);
+            }
+        }
+        
+        // create connection to database
+        try (Connection connection = DriverManager.getConnection(URL + DB_NAME, USER, PASS)) {
+            try (Statement statement = connection.createStatement()) {
                 // create table
                 statement.executeUpdate(CREATE_TABLE);
             }
@@ -115,7 +121,7 @@ public class JdbcDatasetTestIT {
         when() //
                 .get("/properties/JDBCDatastore") //
                 .then() //
-                .body("jsonSchema.properties.dbTypes.enum", contains("MYSQL", "DERBY")); //
+                .body("jsonSchema.properties.dbTypes.enum", contains("MYSQL", "DERBY", "POSTGRESQL")); //
 
     }
     
@@ -156,8 +162,8 @@ public class JdbcDatasetTestIT {
                 .when() //
                 .post("/runtimes/{datasetDefinitionName}/data", "JDBCDataset") //
                 .then() //
-                .content(containsString("{\"id\":\"1\",\"name\":\"first\",\"salary\":\"1.23\",\"flag\":\"1\",\"created_timestamp\":"))
-                .content(containsString("{\"id\":\"2\",\"name\":\"second\",\"salary\":\"4.56\",\"flag\":\"0\",\"created_timestamp\":"));
+                .content(containsString("{\"id\":\"1\",\"name\":\"first\",\"salary\":\"1.23000002\",\"flag\":\"t\",\"created_timestamp\":"))
+                .content(containsString("{\"id\":\"2\",\"name\":\"second\",\"salary\":\"4.55999994\",\"flag\":\"f\",\"created_timestamp\":"));
     }
 
     /**
