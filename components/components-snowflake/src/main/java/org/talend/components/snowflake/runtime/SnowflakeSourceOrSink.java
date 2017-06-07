@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.runtime.SourceOrSink;
@@ -183,12 +184,20 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
             throws IOException {
         SnowflakeSourceOrSink ss = new SnowflakeSourceOrSink();
         ss.initialize(null, properties);
+        if (null == properties.schemaName.getStringValue() ||properties.schemaName.getStringValue().isEmpty()
+                || null == properties.db.getStringValue() || properties.db.getStringValue().isEmpty()) {
+            return ss.getFullSchemaNames(container);
+        }
         return ss.getSchemaNames(container);
     }
 
     @Override
     public List<NamedThing> getSchemaNames(RuntimeContainer container) throws IOException {
         return getSchemaNames(container, connect(container));
+    }
+
+    public List<NamedThing> getFullSchemaNames(RuntimeContainer container) throws IOException {
+        return getFullSchemaNames(container, connect(container));
     }
 
     protected String getCatalog(SnowflakeConnectionProperties connProps) {
@@ -213,6 +222,40 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
             while (resultIter.next()) {
                 tableName = resultIter.getString("TABLE_NAME");
                 returnList.add(new SimpleNamedThing(tableName, tableName));
+            }
+        } catch (SQLException se) {
+            throw new IOException(i18nMessages.getMessage("error.searchingTable", getCatalog(connProps), getDbSchema(connProps),
+                    se.getMessage()), se);
+        }
+        return returnList;
+    }
+
+    protected List<NamedThing> getFullSchemaNames(RuntimeContainer container, Connection connection) throws IOException {
+        List<NamedThing> returnList = new ArrayList<>();
+        SnowflakeConnectionProperties connProps = getEffectiveConnectionProperties(container);
+        try {
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            // Fetch all tables in the db and schema provided
+            String[] types = { "TABLE" };
+            ResultSet resultIter = metaData.getTables(null, null, null, types);
+            StringBuilder fullTableName = null;
+            while (resultIter.next()) {
+                String schemaName = resultIter.getString("TABLE_SCHEM");
+                String dbName = resultIter.getString("TABLE_CAT");
+                String tableName = resultIter.getString("TABLE_NAME");
+
+                if ((!StringUtils.isEmpty(connProps.schemaName.getStringValue()) && !connProps.schemaName.getStringValue().equals(schemaName))
+                        || (!StringUtils.isEmpty(connProps.db.getStringValue()) && !connProps.db.getStringValue().equals(dbName)))
+                    continue;
+
+                fullTableName = new StringBuilder()
+                        .append(schemaName)
+                        .append(".")
+                        .append(dbName)
+                        .append(".")
+                        .append(tableName);
+                returnList.add(new SimpleNamedThing(fullTableName.toString(), fullTableName.toString()));
             }
         } catch (SQLException se) {
             throw new IOException(i18nMessages.getMessage("error.searchingTable", getCatalog(connProps), getDbSchema(connProps),

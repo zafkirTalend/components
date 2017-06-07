@@ -13,6 +13,7 @@
 package org.talend.components.snowflake;
 
 import org.apache.avro.Schema;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.snowflake.runtime.SnowflakeSourceOrSink;
@@ -22,6 +23,7 @@ import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.StringProperty;
 import org.talend.daikon.properties.service.Repository;
 
 import java.util.List;
@@ -78,12 +80,32 @@ public class SnowflakeTableListProperties extends ComponentPropertiesImpl implem
         getForm(Form.MAIN).setAllowFinish(true);
     }
 
+    private void prepareConnectionProperties() {
+     if (!StringUtils.isEmpty(connection.schemaName.getStringValue()) && !StringUtils.isEmpty(connection.db.getStringValue())) {
+         return;
+     }
+     else if (selectedTableNames.getValue().isEmpty()) {
+         return;
+     } else {
+         connection.schemaName.setValue(selectedTableNames.getValue().get(0).getName().split("\\.")[0]);
+         connection.db.setValue(selectedTableNames.getValue().get(0).getName().split("\\.")[1]);
+         for (int i = 0; i < selectedTableNames.getValue().size(); i++) {
+             selectedTableNames.getValue().set(i, new StringProperty(selectedTableNames.getValue().get(i).getName().split("\\.")[2]));
+         }
+     }
+    }
+
+    private ValidationResult validateSelectedTables() {
+        return ValidationResult.OK;
+    }
+
     public ValidationResult afterFormFinishMain(Repository<Properties> repo) throws Exception {
         ValidationResult vr = SnowflakeSourceOrSink.validateConnection(this);
         if (vr.getStatus() != ValidationResult.Result.OK) {
             return vr;
         }
 
+        prepareConnectionProperties();
         String connRepLocation = repo.storeProperties(connection, connection.name.getValue(), repositoryLocation, null);
 
         for (NamedThing nl : selectedTableNames.getValue()) {

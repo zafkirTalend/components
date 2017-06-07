@@ -17,6 +17,7 @@ import static org.talend.daikon.properties.property.PropertyFactory.newString;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.talend.components.api.component.ISchemaListener;
 import org.talend.components.api.properties.ComponentPropertiesImpl;
 import org.talend.components.common.SchemaProperties;
@@ -90,7 +91,15 @@ public class SnowflakeTableProperties extends ComponentPropertiesImpl implements
     public ValidationResult afterTableName() throws Exception {
         ValidationResultMutable vr = new ValidationResultMutable();
         try {
-            main.schema.setValue(SnowflakeSourceOrSink.getSchema(null, connection, tableName.getStringValue()));
+            if (connection.schemaName.getValue().isEmpty() || connection.db.getValue().isEmpty()) {
+                String[] fullTableNameParts = tableName.getValue().split("\\.");
+                connection.schemaName.setValue(StringUtils.wrap(fullTableNameParts[0], '"'));
+                connection.db.setValue(StringUtils.wrap(fullTableNameParts[1], '"'));
+                tableName.setValue(StringUtils.wrap(fullTableNameParts[2], '"'));
+                main.schema.setValue(SnowflakeSourceOrSink.getSchema(null, connection, fullTableNameParts[2]));
+            }
+            else
+                main.schema.setValue(SnowflakeSourceOrSink.getSchema(null, connection, tableName.getStringValue()));
         } catch (Exception ex) {
             vr.setMessage(ex.getMessage());
             vr.setStatus(ValidationResult.Result.ERROR);
