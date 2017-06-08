@@ -37,11 +37,11 @@ import com.jayway.restassured.RestAssured;
 
 public class JdbcDatasetTestIT {
 
-    public static final String USER = "cassandra";
+    public static final String USER = "sa";
 
-    public static final String PASS = "cassandra";
+    public static final String PASS = "Fghjrcbvfwbz_17";
 
-    public static final String URL = "jdbc:cassandra://192.168.99.100:9160/";
+    public static final String URL = "jdbc:jtds:sqlserver://192.168.99.100:1433/";
 
     public static final String DB_NAME = "test_db";
 
@@ -54,11 +54,11 @@ public class JdbcDatasetTestIT {
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
     public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id int PRIMARY KEY, "
-            + "name varchar, " + "salary float, " + "flag boolean)";
+            + "name varchar(40), " + "salary float, " + "flag bit)";
 
     public static final String INSERT = "INSERT INTO " + TABLE_NAME + " (id, name, salary, flag) VALUES(?,?,?,?)";
 
-    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"CASSANDRA\",\"jdbcUrl\":\"jdbc:cassandra://192.168.99.100:9160/test_db\",\"userId\":\"cassandra\",\"password\":\"cassandra\",\"@definitionName\":\"JDBCDatastore\"}";
+    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"SQL_SERVER\",\"jdbcUrl\":\"jdbc:jtds:sqlserver://192.168.99.100:1433/test_db\",\"userId\":\"sa\",\"password\":\"Fghjrcbvfwbz_17\",\"@definitionName\":\"JDBCDatastore\"}";
 
     public static final String JDBC_DATASET_PROPERTIES = "{\"sourceType\":\"QUERY\",\"datastore\":\"JDBCDatastore\",\"@definitionName\":\"JDBCDataset\",\"main\":{\"schema\":{\"type\":\"record\",\"name\":\"EmptyRecord\",\"fields\":[]}},\"sql\":\"select * from test_table\"}";
 
@@ -79,12 +79,12 @@ public class JdbcDatasetTestIT {
     @Test
     public void setupDB() throws SQLException {
         // create connection DBMS
-//        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
-//            try (Statement statement = connection.createStatement()) {
-//                // create db
-//                statement.executeUpdate(CREATE_DB);
-//            }
-//        }
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
+            try (Statement statement = connection.createStatement()) {
+                // create db
+                statement.executeUpdate(CREATE_DB);
+            }
+        }
         
         // create connection to database
         try (Connection connection = DriverManager.getConnection(URL + DB_NAME, USER, PASS)) {
@@ -96,13 +96,13 @@ public class JdbcDatasetTestIT {
             try (PreparedStatement statement = connection.prepareStatement(INSERT)) {
                 statement.setInt(1, 1);
                 statement.setString(2, "first");
-                statement.setFloat(3, 1.23f);
+                statement.setDouble(3, 1.23);
                 statement.setBoolean(4, true);
                 statement.execute();
 
                 statement.setInt(1, 2);
                 statement.setString(2, "second");
-                statement.setFloat(3, 4.56f);
+                statement.setDouble(3, 4.56);
                 statement.setBoolean(4, false);
                 statement.execute();
             }
@@ -118,7 +118,7 @@ public class JdbcDatasetTestIT {
         when() //
                 .get("/properties/JDBCDatastore") //
                 .then() //
-                .body("jsonSchema.properties.dbTypes.enum", contains("MYSQL", "DERBY", "CASSANDRA", "POSTGRESQL")); //
+                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "MYSQL", "DERBY", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
 
     }
     
@@ -139,7 +139,7 @@ public class JdbcDatasetTestIT {
                 .when() //
                 .post("/runtimes/{datasetDefinitionName}/schema", "JDBCDataset") //
                 .then() //
-                .body("fields.name", contains("id", "flag", "name", "salary")); //
+                .body("fields.name", contains("id", "name", "salary", "flag")); //
     }
     
     /**
@@ -159,8 +159,8 @@ public class JdbcDatasetTestIT {
                 .when() //
                 .post("/runtimes/{datasetDefinitionName}/data", "JDBCDataset") //
                 .then() //
-                .content(containsString("{\"id\":{\"string\":\"1\"},\"flag\":{\"string\":\"true\"},\"name\":{\"string\":\"first\"},\"salary\":{\"string\":\"1.23\"}}"))
-                .content(containsString("{\"id\":{\"string\":\"2\"},\"flag\":{\"string\":\"false\"},\"name\":{\"string\":\"second\"},\"salary\":{\"string\":\"4.56\"}}"));
+                .content(containsString("{\"id\":\"1\",\"name\":{\"string\":\"first\"},\"salary\":{\"string\":\"1.23\"},\"flag\":{\"string\":\"1\"}}"))
+                .content(containsString("{\"id\":\"2\",\"name\":{\"string\":\"second\"},\"salary\":{\"string\":\"4.56\"},\"flag\":{\"string\":\"0\"}}"));
     }
 
     /**
