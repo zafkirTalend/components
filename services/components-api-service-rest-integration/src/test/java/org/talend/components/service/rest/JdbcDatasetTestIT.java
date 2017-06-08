@@ -40,9 +40,9 @@ public class JdbcDatasetTestIT {
 
     public static final String PASS = "Fghjrcbvfwbz_17";
 
-    public static final String URL = "jdbc:derby:D:\\temp\\derby.db;create=true";
+    public static final String URL = "jdbc:hive2://192.168.150.69:2181,192.168.150.68:2181/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2";
 
-    public static final String DB_NAME = "test_db";
+    public static final String DB_NAME = "igonchar";
 
     public static final String TABLE_NAME = "test_table";
 
@@ -52,12 +52,12 @@ public class JdbcDatasetTestIT {
 
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
-    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id INTEGER NOT NULL, "
-            + "name VARCHAR(30), " + "salary DOUBLE, " + "flag INTEGER, PRIMARY KEY (id))";
+    public static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(id int, "
+            + "name String, " + "salary String, " + "flag String)";
 
-    public static final String INSERT = "INSERT INTO " + TABLE_NAME + " (id, name, salary, flag) VALUES(?,?,?,?)";
+    public static final String INSERT = "INSERT INTO TABLE " + TABLE_NAME + " VALUES(?,?,?,?)";
 
-    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"SQLITE\",\"jdbcUrl\":\"jdbc:sqlite:/maven/config/test.db\",\"userId\":\"\",\"password\":\"\",\"@definitionName\":\"JDBCDatastore\"}";
+    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"HIVE\",\"jdbcUrl\":\"jdbc:hive2://192.168.150.69:2181,192.168.150.68:2181/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2\",\"userId\":\"\",\"password\":\"\",\"@definitionName\":\"JDBCDatastore\"}";
 
     public static final String JDBC_DATASET_PROPERTIES = "{\"sourceType\":\"QUERY\",\"datastore\":\"JDBCDatastore\",\"@definitionName\":\"JDBCDataset\",\"main\":{\"schema\":{\"type\":\"record\",\"name\":\"EmptyRecord\",\"fields\":[]}},\"sql\":\"select * from test_table\"}";
 
@@ -78,12 +78,12 @@ public class JdbcDatasetTestIT {
     @Test
     public void setupDB() throws SQLException {
         // create connection DBMS
-//        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
-//            try (Statement statement = connection.createStatement()) {
-//                // create db
-//                statement.executeUpdate(CREATE_DB);
-//            }
-//        }
+        try (Connection connection = DriverManager.getConnection(URL)) {
+            try (Statement statement = connection.createStatement()) {
+                // create db
+                statement.executeUpdate(CREATE_DB);
+            }
+        }
         
         // create connection to database
         try (Connection connection = DriverManager.getConnection(URL)) {
@@ -95,14 +95,14 @@ public class JdbcDatasetTestIT {
             try (PreparedStatement statement = connection.prepareStatement(INSERT)) {
                 statement.setInt(1, 1);
                 statement.setString(2, "first");
-                statement.setDouble(3, 1.23);
-                statement.setInt(4, 1);
+                statement.setString(3, "1.23");
+                statement.setString(4, "1");
                 statement.execute();
 
                 statement.setInt(1, 2);
                 statement.setString(2, "second");
-                statement.setDouble(3, 4.56);
-                statement.setInt(4, 0);
+                statement.setString(3, "4.56");
+                statement.setString(4, "0");
                 statement.execute();
             }
             
@@ -125,7 +125,7 @@ public class JdbcDatasetTestIT {
         when() //
                 .get("/properties/JDBCDatastore") //
                 .then() //
-                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "MYSQL", "DERBY", "SQLITE", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
+                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "HIVE", "MYSQL", "DERBY", "SQLITE", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
 
     }
     
@@ -178,9 +178,10 @@ public class JdbcDatasetTestIT {
     @Test
     public void teardown() throws SQLException {
         // create connections
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
+        try (Connection connection = DriverManager.getConnection(URL)) {
             try (Statement statement = connection.createStatement()) {
                 // remove db
+                statement.executeUpdate("DROP TABLE test_table");
                 statement.executeUpdate(DROP_DB);
             }
         }
