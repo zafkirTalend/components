@@ -21,11 +21,10 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.Date;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class JdbcDatasetTestIT {
 
     public static final String PASS = "Fghjrcbvfwbz_17";
 
-    public static final String URL = "jdbc:jtds:sqlserver://192.168.99.100:1433/";
+    public static final String URL = "jdbc:sqlite:D:\\temp\\test.db";
 
     public static final String DB_NAME = "test_db";
 
@@ -53,12 +52,12 @@ public class JdbcDatasetTestIT {
 
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
-    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id int PRIMARY KEY, "
-            + "name varchar(40), " + "salary float, " + "flag bit)";
+    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id INTEGER, "
+            + "name TEXT, " + "salary REAL, " + "flag INTEGER)";
 
     public static final String INSERT = "INSERT INTO " + TABLE_NAME + " (id, name, salary, flag) VALUES(?,?,?,?)";
 
-    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"SQL_SERVER\",\"jdbcUrl\":\"jdbc:jtds:sqlserver://192.168.99.100:1433/test_db\",\"userId\":\"sa\",\"password\":\"Fghjrcbvfwbz_17\",\"@definitionName\":\"JDBCDatastore\"}";
+    public static final String JDBC_DATASTORE_PROPERTIES = "{\"dbTypes\":\"SQLITE\",\"jdbcUrl\":\"jdbc:sqlite:/maven/config/test.db\",\"userId\":\"\",\"password\":\"\",\"@definitionName\":\"JDBCDatastore\"}";
 
     public static final String JDBC_DATASET_PROPERTIES = "{\"sourceType\":\"QUERY\",\"datastore\":\"JDBCDatastore\",\"@definitionName\":\"JDBCDataset\",\"main\":{\"schema\":{\"type\":\"record\",\"name\":\"EmptyRecord\",\"fields\":[]}},\"sql\":\"select * from test_table\"}";
 
@@ -79,15 +78,15 @@ public class JdbcDatasetTestIT {
     @Test
     public void setupDB() throws SQLException {
         // create connection DBMS
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
-            try (Statement statement = connection.createStatement()) {
-                // create db
-                statement.executeUpdate(CREATE_DB);
-            }
-        }
+//        try (Connection connection = DriverManager.getConnection(URL, USER, PASS)) {
+//            try (Statement statement = connection.createStatement()) {
+//                // create db
+//                statement.executeUpdate(CREATE_DB);
+//            }
+//        }
         
         // create connection to database
-        try (Connection connection = DriverManager.getConnection(URL + DB_NAME, USER, PASS)) {
+        try (Connection connection = DriverManager.getConnection(URL)) {
             try (Statement statement = connection.createStatement()) {
                 // create table
                 statement.executeUpdate(CREATE_TABLE);
@@ -106,6 +105,14 @@ public class JdbcDatasetTestIT {
                 statement.setBoolean(4, false);
                 statement.execute();
             }
+            
+            try (Statement statement = connection.createStatement()) {
+                // create table
+                ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
+                while(rs.next()) {
+                    System.out.println(rs.getString(2));
+                }
+            }
         }
     }
 
@@ -118,7 +125,7 @@ public class JdbcDatasetTestIT {
         when() //
                 .get("/properties/JDBCDatastore") //
                 .then() //
-                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "MYSQL", "DERBY", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
+                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "MYSQL", "DERBY", "SQLITE", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
 
     }
     
