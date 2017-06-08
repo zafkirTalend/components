@@ -40,7 +40,7 @@ public class JdbcDatasetTestIT {
 
     public static final String PASS = "Fghjrcbvfwbz_17";
 
-    public static final String URL = "jdbc:sqlite:D:\\temp\\test.db";
+    public static final String URL = "jdbc:derby:D:\\temp\\derby.db;create=true";
 
     public static final String DB_NAME = "test_db";
 
@@ -52,8 +52,8 @@ public class JdbcDatasetTestIT {
 
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
-    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id INTEGER, "
-            + "name TEXT, " + "salary REAL, " + "flag INTEGER)";
+    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(id INTEGER NOT NULL, "
+            + "name VARCHAR(30), " + "salary DOUBLE, " + "flag INTEGER, PRIMARY KEY (id))";
 
     public static final String INSERT = "INSERT INTO " + TABLE_NAME + " (id, name, salary, flag) VALUES(?,?,?,?)";
 
@@ -96,13 +96,13 @@ public class JdbcDatasetTestIT {
                 statement.setInt(1, 1);
                 statement.setString(2, "first");
                 statement.setDouble(3, 1.23);
-                statement.setBoolean(4, true);
+                statement.setInt(4, 1);
                 statement.execute();
 
                 statement.setInt(1, 2);
                 statement.setString(2, "second");
                 statement.setDouble(3, 4.56);
-                statement.setBoolean(4, false);
+                statement.setInt(4, 0);
                 statement.execute();
             }
             
