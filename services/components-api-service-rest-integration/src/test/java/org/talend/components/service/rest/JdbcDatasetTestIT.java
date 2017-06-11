@@ -19,13 +19,16 @@ import static org.hamcrest.Matchers.containsString;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.talend.components.service.rest.dto.PropertiesDto;
@@ -47,13 +50,13 @@ public class JdbcDatasetTestIT {
     public static final String TABLE_NAME = "test_table";
 
     public static final String CREATE_DB = "CREATE DATABASE " + DB_NAME;
-    
+
     public static final String USE_DB = "USE " + DB_NAME;
 
     public static final String DROP_DB = "DROP DATABASE " + DB_NAME;
 
-    public static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(id int, "
-            + "name String, " + "salary String, " + "flag String)";
+    public static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(id int, " + "name String, "
+            + "salary String, " + "flag String)";
 
     public static final String INSERT = "INSERT INTO TABLE " + TABLE_NAME + " VALUES(?,?,?,?)";
 
@@ -74,7 +77,39 @@ public class JdbcDatasetTestIT {
         RestAssured.port = 8989;
         RestAssured.basePath = "/tcomp";
     }
-    
+
+    public static void main(String args[]) {
+        System.out.println("Try");
+        try {
+            org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
+            conf.set("hadoop.security.authentication", "Kerberos");
+            UserGroupInformation.setConfiguration(conf);
+            UserGroupInformation.loginUserFromKeytab("hellweek@BIGDATA.COM",
+                    "D:\\Talend\\DatasourcesCredentials\\HiveHadoop\\hellweek.keytab");
+            Class.forName("org.apache.hive.jdbc.HiveDriver");
+            System.out.println("getting connection");
+            Connection con = DriverManager
+                    .getConnection("jdbc:hive2://tbd-bench-01:10000/default;principal=hive/_HOST@BIGDATA.COM;");
+            System.out.println("got connection");
+
+            DatabaseMetaData meta = con.getMetaData();
+            ResultSet rs = meta.getTables(null, null, "%", null);
+            while (rs.next()) {
+                System.out.println(rs.getString(3));
+            }
+            try (Statement st = con.createStatement()) {
+                ResultSet rs2 = st.executeQuery("select * from testhivejson2 limit 10");
+                ResultSetMetaData md = rs.getMetaData();
+                System.out.println(md.getColumnCount());
+            }
+             
+
+            con.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void setupDB() throws SQLException {
         // create connection DBMS
@@ -84,7 +119,7 @@ public class JdbcDatasetTestIT {
                 statement.executeUpdate(CREATE_DB);
             }
         }
-        
+
         // create connection to database
         try (Connection connection = DriverManager.getConnection(URL)) {
             try (Statement statement = connection.createStatement()) {
@@ -105,11 +140,11 @@ public class JdbcDatasetTestIT {
                 statement.setString(4, "0");
                 statement.execute();
             }
-            
+
             try (Statement statement = connection.createStatement()) {
                 // create table
                 ResultSet rs = statement.executeQuery("SELECT * FROM test_table");
-                while(rs.next()) {
+                while (rs.next()) {
                     System.out.println(rs.getString(2));
                 }
             }
@@ -125,10 +160,11 @@ public class JdbcDatasetTestIT {
         when() //
                 .get("/properties/JDBCDatastore") //
                 .then() //
-                .body("jsonSchema.properties.dbTypes.enum", contains("SQL_SERVER", "HIVE", "MYSQL", "DERBY", "SQLITE", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
+                .body("jsonSchema.properties.dbTypes.enum",
+                        contains("SQL_SERVER", "HIVE", "MYSQL", "DERBY", "SQLITE", "CASSANDRA", "POSTGRESQL", "AZURE_SQL")); //
 
     }
-    
+
     /**
      * Checks schema returned for JDBC connection
      * 
@@ -148,7 +184,7 @@ public class JdbcDatasetTestIT {
                 .then() //
                 .body("fields.name", contains("id", "name", "salary", "flag")); //
     }
-    
+
     /**
      * Checks schema returned for JDBC connection
      * 
@@ -166,8 +202,10 @@ public class JdbcDatasetTestIT {
                 .when() //
                 .post("/runtimes/{datasetDefinitionName}/data", "JDBCDataset") //
                 .then() //
-                .content(containsString("{\"id\":\"1\",\"name\":{\"string\":\"first\"},\"salary\":{\"string\":\"1.23\"},\"flag\":{\"string\":\"1\"}}"))
-                .content(containsString("{\"id\":\"2\",\"name\":{\"string\":\"second\"},\"salary\":{\"string\":\"4.56\"},\"flag\":{\"string\":\"0\"}}"));
+                .content(containsString(
+                        "{\"id\":\"1\",\"name\":{\"string\":\"first\"},\"salary\":{\"string\":\"1.23\"},\"flag\":{\"string\":\"1\"}}"))
+                .content(containsString(
+                        "{\"id\":\"2\",\"name\":{\"string\":\"second\"},\"salary\":{\"string\":\"4.56\"},\"flag\":{\"string\":\"0\"}}"));
     }
 
     /**
@@ -211,7 +249,8 @@ public class JdbcDatasetTestIT {
 
     private PropertiesDto getJdbcDatasetPropertiesWithSchema() throws java.io.IOException {
         PropertiesDto propertiesDto = new PropertiesDto();
-        ObjectNode jdbcDatasetProperties = objectMapper.readerFor(ObjectNode.class).readValue(JDBC_DATASET_PROPERTIES_WITH_SCHEMA);
+        ObjectNode jdbcDatasetProperties = objectMapper.readerFor(ObjectNode.class)
+                .readValue(JDBC_DATASET_PROPERTIES_WITH_SCHEMA);
         ObjectNode jdbcDatastoreProperties = objectMapper.readerFor(ObjectNode.class).readValue(JDBC_DATASTORE_PROPERTIES);
         propertiesDto.setProperties(jdbcDatasetProperties);
         propertiesDto.setDependencies(Collections.singletonList(jdbcDatastoreProperties));
