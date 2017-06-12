@@ -25,6 +25,7 @@ import org.talend.components.common.ProxyProperties;
 import org.talend.components.common.oauth.OauthProperties;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.tsalesforceconnection.TSalesforceConnectionDefinition;
+import org.talend.daikon.java8.Function;
 import org.talend.daikon.properties.PresentationItem;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResultMutable;
@@ -179,13 +180,9 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
     }
 
     public ValidationResult validateTestConnection() throws Exception {
-        ClassLoader classLoader = SalesforceDefinition.class.getClassLoader();
-        RuntimeInfo runtimeInfo = SalesforceDefinition
-                .getCommonRuntimeInfo("org.talend.components.salesforce.runtime.SalesforceSourceOrSink");
-        try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClassWithCurrentJVMProperties(runtimeInfo,
-                classLoader)) {
+        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
             SalesforceRuntimeSourceOrSink ss = (SalesforceRuntimeSourceOrSink) sandboxedInstance.getInstance();
-            ss.initialize(null, this);
+            ss.initialize(null, SalesforceConnectionProperties.this);
             ValidationResultMutable vr = new ValidationResultMutable(ss.validate(null));
             if (vr.getStatus() == ValidationResult.Result.OK) {
                 vr.setMessage("Connection successful");
@@ -195,6 +192,13 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
             }
             return vr;
         }
+    }
+
+    public SandboxedInstance getRuntimeSandboxedInstance() {
+        ClassLoader classLoader = SalesforceDefinition.class.getClassLoader();
+        RuntimeInfo runtimeInfo = SalesforceDefinition
+                .getCommonRuntimeInfo("org.talend.components.salesforce.runtime.SalesforceSourceOrSink");
+        return RuntimeUtil.createRuntimeClassWithCurrentJVMProperties(runtimeInfo, classLoader);
     }
 
     @Override
