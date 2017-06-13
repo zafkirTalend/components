@@ -1,9 +1,10 @@
 package org.talend.components.snowflake.tsnowflakeclose;
 
-import static org.junit.Assert.assertEquals;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.talend.daikon.properties.presentation.Form;
+
 
 public class TSnowflakeClosePropertiesTest {
 
@@ -15,6 +16,14 @@ public class TSnowflakeClosePropertiesTest {
     }
 
     @Test
+    public void testSetupLayout() {
+        Assert.assertEquals(0, closeProperties.getForms().size());
+        closeProperties.setupLayout();
+        Assert.assertEquals(1, closeProperties.getForms().size());
+        Assert.assertNotNull(closeProperties.getForm(Form.MAIN).getWidget(closeProperties.referencedComponent.getName()));
+    }
+
+    @Test
     public void testGetReferencedComponentId() {
         String expectedStringValue;
         String referencedComponentId;
@@ -23,7 +32,7 @@ public class TSnowflakeClosePropertiesTest {
         closeProperties.referencedComponent.componentInstanceId.setValue(expectedStringValue);
         referencedComponentId = closeProperties.getReferencedComponentId();
 
-        assertEquals(referencedComponentId, expectedStringValue);
+        Assert.assertEquals(referencedComponentId, expectedStringValue);
     }
 
 }

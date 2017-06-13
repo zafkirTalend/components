@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.EnumSet;
 import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.ConnectorTopology;
@@ -30,38 +31,22 @@ public class TSnowflakeOutputDefinitionTest {
 
     @Test
     public void testIsSchemaAutoPropagate() {
-        boolean isSchemaAutoPropagate;
-
-        isSchemaAutoPropagate = outputDefinition.isSchemaAutoPropagate();
-
-        assertFalse(isSchemaAutoPropagate);
+        assertFalse(outputDefinition.isSchemaAutoPropagate());
     }
 
     @Test
     public void testIsConditionalInputs() {
-        boolean isConditionalInputs;
-
-        isConditionalInputs = outputDefinition.isConditionalInputs();
-
-        assertTrue(isConditionalInputs);
+        assertTrue(outputDefinition.isConditionalInputs());
     }
 
     @Test
     public void testIsRejectAfterClose() {
-        boolean isRejectAfterClose;
-
-        isRejectAfterClose = outputDefinition.isRejectAfterClose();
-
-        assertTrue(isRejectAfterClose);
+        assertTrue(outputDefinition.isRejectAfterClose());
     }
 
     @Test
     public void testGetPartitioning() {
-        String partitioning;
-
-        partitioning = outputDefinition.getPartitioning();
-
-        assertEquals(partitioning, outputDefinition.AUTO);
+        assertEquals(TSnowflakeOutputDefinition.AUTO, outputDefinition.getPartitioning());
     }
 
     @Test
@@ -87,13 +72,10 @@ public class TSnowflakeOutputDefinitionTest {
 
     @Test
     public void testGetReturnProperties() {
-        Property<?>[] properties;
 
-        properties = outputDefinition.getReturnProperties();
-
-        assertArrayEquals(properties,
-                new Property<?>[] { outputDefinition.RETURN_ERROR_MESSAGE_PROP, outputDefinition.RETURN_TOTAL_RECORD_COUNT_PROP,
-                        outputDefinition.RETURN_SUCCESS_RECORD_COUNT_PROP, outputDefinition.RETURN_REJECT_RECORD_COUNT_PROP });
+        assertArrayEquals(outputDefinition.getReturnProperties(),
+                new Property<?>[] { TSnowflakeOutputDefinition.RETURN_ERROR_MESSAGE_PROP, TSnowflakeOutputDefinition.RETURN_TOTAL_RECORD_COUNT_PROP,
+            TSnowflakeOutputDefinition.RETURN_SUCCESS_RECORD_COUNT_PROP, TSnowflakeOutputDefinition.RETURN_REJECT_RECORD_COUNT_PROP });
 
     }
 
@@ -110,6 +92,11 @@ public class TSnowflakeOutputDefinitionTest {
         assertNotNull(runtimeInfoForIncomingTopology);
         assertNotNull(runtimeInfoForIncomingAndOutgoingTopology);
 
+    }
+
+    @Test
+    public void testGetRuntimeInfoWithIncorrectConnector() {
+        Assert.assertNull(outputDefinition.getRuntimeInfo(ExecutionEngine.DI, null, ConnectorTopology.OUTGOING));
     }
 
     @Test

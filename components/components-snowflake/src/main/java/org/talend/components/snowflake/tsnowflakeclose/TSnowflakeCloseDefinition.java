@@ -50,7 +50,7 @@ public class TSnowflakeCloseDefinition extends SnowflakeDefinition {
     }
 
     @Override
-    public Property[] getReturnProperties() {
+    public Property<?>[] getReturnProperties() {
         return new Property[] { RETURN_ERROR_MESSAGE_PROP };
     }
 
