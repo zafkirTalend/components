@@ -24,12 +24,16 @@ import org.talend.components.common.CommonTags;
 import org.talend.daikon.i18n.tag.TagImpl;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.runtime.RuntimeInfo;
+import org.talend.daikon.runtime.RuntimeUtil;
+import org.talend.daikon.sandbox.SandboxedInstance;
 
 public abstract class SalesforceDefinition extends AbstractComponentDefinition {
 
     protected static final TagImpl SALESFORCE_CLOUD_TAG = new TagImpl("salesforce", CommonTags.CLOUD_TAG);
 
     protected static final TagImpl SALESFORCE_BUSINESS_TAG = new TagImpl("salesforce", CommonTags.BUSINESS_TAG);
+
+    private static SandboxedInstanceProvider sandboxedInstanceProvider = new SandboxedInstanceProvider();
 
     public SalesforceDefinition(String componentName, ExecutionEngine engine1, ExecutionEngine... engines) {
         super(componentName, engine1, engines);
@@ -62,4 +66,32 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
         return Arrays.asList(SALESFORCE_CLOUD_TAG, SALESFORCE_BUSINESS_TAG);
     }
 
+    public static void setSandboxedInstanceProvider(SandboxedInstanceProvider provider) {
+        sandboxedInstanceProvider = provider;
+    }
+
+    public static SandboxedInstanceProvider getSandboxedInstanceProvider() {
+        return sandboxedInstanceProvider;
+    }
+
+    public static SandboxedInstance getSandboxedInstance(String runtimeClassName) {
+        return getSandboxedInstance(runtimeClassName, false);
+    }
+
+    public static SandboxedInstance getSandboxedInstance(String runtimeClassName, boolean useCurrentJvmProperties) {
+        return sandboxedInstanceProvider.getSandboxedInstance(runtimeClassName, useCurrentJvmProperties);
+    }
+
+    public static class SandboxedInstanceProvider {
+
+        public SandboxedInstance getSandboxedInstance(String runtimeClassName, boolean useCurrentJvmProperties) {
+            ClassLoader classLoader = SalesforceDefinition.class.getClassLoader();
+            RuntimeInfo runtimeInfo = SalesforceDefinition.getCommonRuntimeInfo(runtimeClassName);
+            if (useCurrentJvmProperties) {
+                return RuntimeUtil.createRuntimeClassWithCurrentJVMProperties(runtimeInfo, classLoader);
+            } else {
+                return RuntimeUtil.createRuntimeClass(runtimeInfo, classLoader);
+            }
+        }
+    }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
@@ -159,10 +160,10 @@ public class SalesforceConnectionPropertiesTest {
         Form wizardForm = properties.getForm(SalesforceConnectionProperties.FORM_WIZARD);
 
         SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        when(properties.getRuntimeSandboxedInstance()).thenReturn(sandboxedInstance);
+        doReturn(sandboxedInstance).when(properties).getRuntimeSandboxedInstance();
 
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        when(sandboxedInstance.getInstance()).thenReturn(runtimeSourceOrSink);
+        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
         when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties))).thenReturn(ValidationResult.OK);
 
         // Valid

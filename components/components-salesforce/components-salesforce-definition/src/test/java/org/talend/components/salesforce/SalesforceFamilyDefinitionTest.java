@@ -14,6 +14,8 @@
 package org.talend.components.salesforce;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -27,6 +29,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.talend.components.api.ComponentInstaller;
+import org.talend.components.common.CommonTags;
 import org.talend.components.salesforce.dataprep.SalesforceInputDefinition;
 import org.talend.components.salesforce.dataset.SalesforceDatasetDefinition;
 import org.talend.components.salesforce.datastore.SalesforceDatastoreDefinition;
@@ -40,6 +43,7 @@ import org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputDefin
 import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkDefinition;
 import org.talend.components.salesforce.tsalesforceoutputbulkexec.TSalesforceOutputBulkExecDefinition;
 import org.talend.daikon.definition.Definition;
+import org.talend.daikon.i18n.tag.TagImpl;
 
 import com.google.common.collect.Lists;
 
@@ -81,6 +85,31 @@ public class SalesforceFamilyDefinitionTest {
         assertEquals(matchers.size(), definitions.size());
         for (Matcher m : matchers) {
             assertThat(definitions, hasItem(m));
+        }
+    }
+
+    @Test
+    public void testTags() {
+        List<? extends Definition> definitions = Lists.newArrayList(familyDefinition.getDefinitions());
+        for (Definition definition : definitions) {
+            if (definition instanceof SalesforceDefinition) {
+                SalesforceDefinition d = (SalesforceDefinition) definition;
+                assertThat(d.doGetTags(), containsInAnyOrder(
+                        new TagImpl("salesforce", CommonTags.CLOUD_TAG),
+                        new TagImpl("salesforce", CommonTags.BUSINESS_TAG)
+                ));
+            }
+        }
+    }
+
+    @Test
+    public void testFamilies() {
+        List<? extends Definition> definitions = Lists.newArrayList(familyDefinition.getDefinitions());
+        for (Definition definition : definitions) {
+            if (definition instanceof SalesforceDefinition) {
+                SalesforceDefinition d = (SalesforceDefinition) definition;
+                assertThat(d.getFamilies(), arrayContainingInAnyOrder("Business/Salesforce", "Cloud/Salesforce"));
+            }
         }
     }
 

@@ -12,7 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceinput;
 
-
+import static org.talend.components.salesforce.SalesforceDefinition.getSandboxedInstance;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
 import static org.talend.daikon.properties.property.PropertyFactory.newInteger;
@@ -24,8 +24,6 @@ import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.api.component.runtime.DependenciesReader;
-import org.talend.components.api.component.runtime.JarRuntimeInfo;
 import org.talend.components.common.ComponentConstants;
 import org.talend.components.salesforce.SalesforceConnectionModuleProperties;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
@@ -37,7 +35,6 @@ import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
-import org.talend.daikon.runtime.RuntimeUtil;
 import org.talend.daikon.sandbox.SandboxedInstance;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -128,15 +125,9 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     public ValidationResult validateGuessSchema() {
         ValidationResultMutable validationResult = new ValidationResultMutable();
 
-        try (SandboxedInstance sandboxISalesforceSourceOrSink = RuntimeUtil
-                .createRuntimeClass(
-                        new JarRuntimeInfo("mvn:org.talend.components/components-salesforce-runtime",
-                                DependenciesReader.computeDependenciesFilePath("org.talend.components",
-                                        "components-salesforce-runtime"),
-                                "org.talend.components.salesforce.runtime.SalesforceSourceOrSink"),
-                        connection.getClass().getClassLoader())) {
+        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
 
-            SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxISalesforceSourceOrSink
+            SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxedInstance
                     .getInstance();
             salesforceSourceOrSink.initialize(null, this);
 
@@ -160,15 +151,9 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     public ValidationResult validateGuessQuery() {
         ValidationResultMutable validationResult = new ValidationResultMutable();
 
-        try (SandboxedInstance sandboxISalesforceSourceOrSink = RuntimeUtil
-                .createRuntimeClass(
-                        new JarRuntimeInfo("mvn:org.talend.components/components-salesforce-runtime",
-                                DependenciesReader.computeDependenciesFilePath("org.talend.components",
-                                        "components-salesforce-runtime"),
-                                "org.talend.components.salesforce.runtime.SalesforceSourceOrSink"),
-                        connection.getClass().getClassLoader())) {
+        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
 
-            SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxISalesforceSourceOrSink
+            SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxedInstance
                     .getInstance();
             salesforceSourceOrSink.initialize(null, this);
 
@@ -249,4 +234,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         return isOutputConnection ? Collections.singleton(MAIN_CONNECTOR) : Collections.<PropertyPathConnector> emptySet();
     }
 
+    public SandboxedInstance getRuntimeSandboxedInstance() {
+        return getSandboxedInstance("org.talend.components.salesforce.runtime.SalesforceSourceOrSink");
+    }
 }
