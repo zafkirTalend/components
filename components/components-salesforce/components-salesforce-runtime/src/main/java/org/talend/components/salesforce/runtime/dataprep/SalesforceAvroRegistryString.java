@@ -25,7 +25,6 @@ import org.talend.daikon.java8.SerializableFunction;
 
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Field;
-import com.sforce.soap.partner.FieldType;
 
 /**
  * avro registry for dataprep platform
@@ -56,12 +55,6 @@ public class SalesforceAvroRegistryString extends AvroRegistry {
     private Schema inferSchemaDescribeSObjectResult(DescribeSObjectResult in) {
         List<Schema.Field> fields = new ArrayList<>();
         for (Field field : in.getFields()) {
-            // filter the invalud columns for salesforce bulk query api
-            // not sure the picklist is a good filter for it
-            if (field.getType() == FieldType.address || field.getType() == FieldType.location
-                    || field.getType() == FieldType.picklist) {
-                continue;
-            }
 
             Schema.Field avroField = new Schema.Field(field.getName(), salesforceField2AvroTypeSchema(field), null,
                     field.getDefaultValueFormula());
