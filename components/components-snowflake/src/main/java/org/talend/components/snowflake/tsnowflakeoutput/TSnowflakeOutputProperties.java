@@ -145,7 +145,7 @@ public class TSnowflakeOutputProperties extends SnowflakeConnectionTableProperti
     }
 
     public void beforeUpsertKeyColumn() {
-        if (table.main.schema.getValue() != null)
+        if (getSchema() != null)
             upsertKeyColumn.setPossibleValues(getFieldNames(table.main.schema));
     }
 
