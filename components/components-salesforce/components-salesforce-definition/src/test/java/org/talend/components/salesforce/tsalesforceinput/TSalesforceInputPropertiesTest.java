@@ -204,6 +204,20 @@ public class TSalesforceInputPropertiesTest {
     }
 
     @Test
+    public void testAfterQueryMode() {
+        properties.init();
+
+        reset(properties);
+
+        Form mainForm = properties.getForm(Form.MAIN);
+        Form advForm = properties.getForm(Form.ADVANCED);
+        properties.afterQueryMode();
+
+        verify(properties, times(1)).refreshLayout(eq(mainForm));
+        verify(properties, times(1)).refreshLayout(eq(advForm));
+    }
+
+    @Test
     public void testAfterPkChunking() {
         properties.init();
 
