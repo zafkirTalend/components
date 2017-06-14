@@ -12,13 +12,17 @@
 // ============================================================================
 package org.talend.components.snowflake.runtime;
 
-import org.talend.components.api.exception.ComponentException;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+
+import org.talend.components.api.exception.ComponentException;
+import org.talend.components.snowflake.SnowflakeConnectionProperties;
 
 /**
  * Contains only runtime helper classes, mainly to do with logging.
@@ -83,6 +87,11 @@ public class SnowflakeRuntimeHelper {
         } else {
             return null;
         }
+    }
+
+    public static Connection getConnection(SnowflakeConnectionProperties connProps, Driver driver) throws Exception{
+        DriverManager.registerDriver(driver);
+        return DriverManager.getConnection(connProps.getConnectionUrl(), connProps.getJdbcProperties());
     }
 
 }

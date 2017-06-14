@@ -40,7 +40,7 @@ public class TSnowflakeCloseProperties extends ComponentPropertiesImpl {
     }
 
     public String getReferencedComponentId() {
-        return referencedComponent.componentInstanceId.getStringValue();
+        return referencedComponent.componentInstanceId.getValue();
     }
 
 }
