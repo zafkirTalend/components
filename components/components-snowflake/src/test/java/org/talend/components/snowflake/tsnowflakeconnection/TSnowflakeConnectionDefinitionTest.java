@@ -14,6 +14,7 @@ package org.talend.components.snowflake.tsnowflakeconnection;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.ConnectorTopology;
@@ -23,11 +24,16 @@ import org.talend.components.snowflake.runtime.SnowflakeSourceOrSink;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
- *
+ * Unit tests for {@link TSnowflakeConnectionDefinition} class
  */
 public class TSnowflakeConnectionDefinitionTest {
-    private static TSnowflakeConnectionDefinition tSnowflakeConnectionDefinition = new TSnowflakeConnectionDefinition();
 
+    private TSnowflakeConnectionDefinition tSnowflakeConnectionDefinition;
+
+    @Before
+    public void setup() {
+        tSnowflakeConnectionDefinition = new TSnowflakeConnectionDefinition();
+    }
 
     @Test
     public void testCheckComponentName() {

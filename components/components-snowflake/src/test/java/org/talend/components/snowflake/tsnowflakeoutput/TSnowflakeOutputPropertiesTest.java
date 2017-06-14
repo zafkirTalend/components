@@ -21,10 +21,12 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.SchemaProperty;
 
+/**
+ * Unit tests for {@link TSnowflakeOutputProperties} class
+ */
 public class TSnowflakeOutputPropertiesTest {
 
     TSnowflakeOutputProperties outputProperties;
-
 
     @Before
     public void reset() {

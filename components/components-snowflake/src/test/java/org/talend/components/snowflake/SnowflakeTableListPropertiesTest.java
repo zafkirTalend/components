@@ -36,7 +36,7 @@ import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.service.Repository;
 
 /**
- *
+ * Unit Tests for {@link SnowflakeTableListProperties} class
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SnowflakeSourceOrSink.class)
@@ -93,7 +93,6 @@ public class SnowflakeTableListPropertiesTest {
         Assert.assertEquals(ValidationResult.OK, properties.afterFormFinishMain(repo));
         Mockito.verify(repo, Mockito.times(2)).storeProperties(Mockito.any(Properties.class), Mockito.anyString(),
                 Mockito.anyString(), Mockito.anyString());
-
     }
 
     @Test

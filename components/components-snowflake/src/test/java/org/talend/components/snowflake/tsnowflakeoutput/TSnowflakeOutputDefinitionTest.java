@@ -20,6 +20,9 @@ import org.talend.components.snowflake.SnowflakeTableProperties;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.runtime.RuntimeInfo;
 
+/**
+ * Unit tests for {@link TSnowflakeOutputDefinition} class
+ */
 public class TSnowflakeOutputDefinitionTest {
 
     TSnowflakeOutputDefinition outputDefinition;
@@ -109,6 +112,5 @@ public class TSnowflakeOutputDefinitionTest {
 
         assertEquals(requiredConnectorTopologies, supportedConnectorTopologies);
     }
-    //
 
 }

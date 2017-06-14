@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.ComponentDefinition;
 import org.talend.components.api.component.ConnectorTopology;
@@ -36,7 +37,12 @@ import org.talend.daikon.sandbox.SandboxedInstance;
  */
 public class TSnowflakeCloseDefinitionTest {
 
-    private static TSnowflakeCloseDefinition snowflakeCloseDefinition = new TSnowflakeCloseDefinition();
+    private TSnowflakeCloseDefinition snowflakeCloseDefinition;
+
+    @Before
+    public void setup() {
+        snowflakeCloseDefinition = new TSnowflakeCloseDefinition();
+    }
 
     /**
      * Check {@link TSnowflakeCloseDefinition#getFamilies()} returns string array, which contains "Cloud/Snowflake"

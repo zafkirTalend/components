@@ -21,7 +21,7 @@ import org.talend.components.api.service.common.DefinitionRegistry;
 import org.talend.daikon.definition.Definition;
 
 /**
- *
+ * Unit tests for {@link SnowflakeFamilyDefinition} class
  */
 public class SnowflakeFamilyDefinitionTest {
 
@@ -35,6 +35,5 @@ public class SnowflakeFamilyDefinitionTest {
 
         Assert.assertEquals(((List<Definition<ComponentProperties>>) snowflakeFamilyDefinition.getDefinitions()).size(),
                 definitionRegistry.getDefinitions().size());
-
     }
 }

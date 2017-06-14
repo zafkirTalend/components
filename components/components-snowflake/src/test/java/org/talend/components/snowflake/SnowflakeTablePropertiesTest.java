@@ -32,7 +32,7 @@ import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 
 /**
- *
+ * Unit tests for {@link SnowflakeTableProperties} class
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SnowflakeSourceOrSink.class)
@@ -63,7 +63,6 @@ public class SnowflakeTablePropertiesTest {
 
         Assert.assertEquals(ValidationResult.Result.OK, tableProperties.beforeTableName().getStatus());
         Assert.assertEquals(tableNames.size(), tableProperties.tableName.getPossibleValues().size());
-
     }
 
     @Test
@@ -73,7 +72,6 @@ public class SnowflakeTablePropertiesTest {
                 .thenThrow(new IOException("Failed get TableNames from Snowflake"));
 
         Assert.assertEquals(ValidationResult.Result.ERROR, tableProperties.beforeTableName().getStatus());
-
     }
 
     @Test

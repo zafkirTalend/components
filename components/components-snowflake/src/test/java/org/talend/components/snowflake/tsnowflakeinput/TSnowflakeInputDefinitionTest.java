@@ -18,6 +18,10 @@ import org.talend.components.snowflake.SnowflakeConnectionProperties;
 import org.talend.components.snowflake.SnowflakeTableProperties;
 import org.talend.daikon.runtime.RuntimeInfo;
 
+/**
+ * Unit tests for {@link TSnowflakeInputDefinition} class
+ *
+ */
 public class TSnowflakeInputDefinitionTest {
 
     TSnowflakeInputDefinition inputDefinition;

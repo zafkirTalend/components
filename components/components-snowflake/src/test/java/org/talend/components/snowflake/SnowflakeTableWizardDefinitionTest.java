@@ -13,16 +13,22 @@
 package org.talend.components.snowflake;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.wizard.WizardImageType;
 import org.talend.daikon.definition.DefinitionImageType;
 
 /**
- *
+ * Unit tests for {@link SnowflakeTableWizardDefinition} class
  */
 public class SnowflakeTableWizardDefinitionTest {
 
-    private SnowflakeTableWizardDefinition definition = new SnowflakeTableWizardDefinition();
+    private SnowflakeTableWizardDefinition definition;
+
+    @Before
+    public void setup() {
+        definition = new SnowflakeTableWizardDefinition();
+    }
 
     @Test
     public void testCreateWizardWithSetConnectionProperties() {

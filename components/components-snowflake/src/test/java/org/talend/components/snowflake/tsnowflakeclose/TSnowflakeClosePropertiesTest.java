@@ -5,7 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.daikon.properties.presentation.Form;
 
-
+/**
+ * Unit tests for {@link TSnowflakeCloseProperties} class
+ *
+ */
 public class TSnowflakeClosePropertiesTest {
 
     TSnowflakeCloseProperties closeProperties;
