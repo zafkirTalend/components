@@ -46,10 +46,12 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceOutputProperties;
+import org.talend.components.salesforce.TestFixture;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.avro.SchemaConstants;
+import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.PropertiesDynamicMethodHelper;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
@@ -59,14 +61,20 @@ import org.talend.daikon.sandbox.SandboxedInstance;
 
 public class TSalesforceOutputPropertiesTest {
 
-    private TSalesforceOutputProperties properties;
-
-    public static final Schema DEFAULT_SCHEMA = SchemaBuilder.builder().record("Schema").fields() //
+    public static final Schema DEFAULT_SCHEMA_1 = SchemaBuilder.builder().record("Schema").fields() //
             .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
             .name("Name").type().stringType().noDefault() //
             .endRecord();
 
+    public static final Schema DEFAULT_SCHEMA_2 = SchemaBuilder.builder().record("Schema").fields() //
+            .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
+            .name("FirstName").type().stringType().noDefault() //
+            .name("LastName").type().stringType().noDefault() //
+            .endRecord();
+
     private PropertiesService propertiesService;
+
+    private TSalesforceOutputProperties properties;
 
     @Rule
     public ErrorCollector errorCollector = new ErrorCollector();
@@ -105,7 +113,7 @@ public class TSalesforceOutputPropertiesTest {
         assertNull(properties.logFileName.getValue());
 
         // 1.After schema changed
-        properties.module.main.schema.setValue(DEFAULT_SCHEMA);
+        properties.module.main.schema.setValue(DEFAULT_SCHEMA_1);
         properties.module.schemaListener.afterSchema();
         rejectSchema = properties.schemaReject.schema.getValue();
         assertNotNull(rejectSchema);
@@ -150,28 +158,8 @@ public class TSalesforceOutputPropertiesTest {
     public void testBeforeModuleName() throws Throwable {
         properties.init();
 
-        SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
-                SalesforceDefinition.SandboxedInstanceProvider.class);
-        SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
-
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
-                .thenReturn(sandboxedInstance);
-
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
-                .thenReturn(ValidationResult.OK);
-
-        List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
-                new SimpleNamedThing("Account"),
-                new SimpleNamedThing("Customer")
-        );
-
-        when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
-                .thenReturn(moduleNames);
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         propertiesService.beforePropertyActivate("moduleName", properties.module);
 
@@ -179,29 +167,26 @@ public class TSalesforceOutputPropertiesTest {
                 "Account", "Customer"));
     }
 
+    @Test(expected = TalendRuntimeException.class)
+    public void testBeforeModuleNameException() throws Throwable {
+        properties.init();
+
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
+
+        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
+                .getSchemaNames(any(RuntimeContainer.class)))
+                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+
+        propertiesService.beforePropertyActivate("moduleName", properties.module);
+    }
+
     @Test
     public void testAfterModuleName() throws Throwable {
         properties.init();
 
-        SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
-                SalesforceDefinition.SandboxedInstanceProvider.class);
-        SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
-
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
-                .thenReturn(sandboxedInstance);
-
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
-                .thenReturn(ValidationResult.OK);
-
-        when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
-                .thenReturn(DEFAULT_SCHEMA);
-
-        // Insert
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.INSERT);
         propertiesService.afterProperty("outputAction", properties);
@@ -209,18 +194,41 @@ public class TSalesforceOutputPropertiesTest {
         properties.module.moduleName.setValue("Account");
         propertiesService.afterProperty("moduleName", properties.module);
 
-        assertEquals(DEFAULT_SCHEMA, properties.module.main.schema.getValue());
+        assertEquals(DEFAULT_SCHEMA_1, properties.module.main.schema.getValue());
         assertThat((Iterable<String>) properties.upsertRelationTable.columnName.getPossibleValues(), contains(
                 "Id", "Name"));
+    }
 
-        // Upsert
+    @Test
+    public void testAfterModuleNameForUpsert() throws Throwable {
+        properties.init();
+
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.UPSERT);
         propertiesService.afterProperty("outputAction", properties);
+
+        properties.module.moduleName.setValue("Account");
         propertiesService.afterProperty("moduleName", properties.module);
 
         assertThat((Iterable<String>) properties.upsertKeyColumn.getPossibleValues(), contains(
                 "Id", "Name"));
+    }
+
+    @Test(expected = TalendRuntimeException.class)
+    public void testAfterModuleNameException() throws Throwable {
+        properties.init();
+
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
+
+        when(sandboxedInstanceTestFixture.runtimeSourceOrSink.getEndpointSchema(
+                any(RuntimeContainer.class), eq("Customer")))
+                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+
+        properties.module.moduleName.setValue("Customer");
+        propertiesService.afterProperty("moduleName", properties.module);
     }
 
     @Test
@@ -239,5 +247,49 @@ public class TSalesforceOutputPropertiesTest {
         properties.init();
 
         ComponentTestUtils.checkSerialize(properties, errorCollector);
+    }
+
+    class SandboxedInstanceTestFixture implements TestFixture {
+
+        SandboxedInstance sandboxedInstance;
+        SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
+
+        @Override
+        public void setUp() throws Exception {
+            SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
+                    SalesforceDefinition.SandboxedInstanceProvider.class);
+            SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+
+            sandboxedInstance = mock(SandboxedInstance.class);
+            when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
+                    .thenReturn(sandboxedInstance);
+
+            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
+            doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
+            when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties.connection)))
+                    .thenReturn(ValidationResult.OK);
+            when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(ValidationResult.OK);
+
+            List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
+                    new SimpleNamedThing("Account"),
+                    new SimpleNamedThing("Customer")
+            );
+
+            when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
+                    .thenReturn(moduleNames);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
+                    .thenReturn(DEFAULT_SCHEMA_1);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
+                    .thenReturn(DEFAULT_SCHEMA_2);
+        }
+
+        @Override
+        public void tearDown() throws Exception {
+            SalesforceDefinition.setSandboxedInstanceProvider(
+                    SalesforceDefinition.SandboxedInstanceProvider.INSTANCE);
+        }
     }
 }

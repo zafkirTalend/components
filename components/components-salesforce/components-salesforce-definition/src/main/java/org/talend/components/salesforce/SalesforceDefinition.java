@@ -33,7 +33,7 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
 
     protected static final TagImpl SALESFORCE_BUSINESS_TAG = new TagImpl("salesforce", CommonTags.BUSINESS_TAG);
 
-    private static SandboxedInstanceProvider sandboxedInstanceProvider = new SandboxedInstanceProvider();
+    private static SandboxedInstanceProvider sandboxedInstanceProvider = SandboxedInstanceProvider.INSTANCE;
 
     public SalesforceDefinition(String componentName, ExecutionEngine engine1, ExecutionEngine... engines) {
         super(componentName, engine1, engines);
@@ -83,6 +83,8 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
     }
 
     public static class SandboxedInstanceProvider {
+
+        public static final SandboxedInstanceProvider INSTANCE = new SandboxedInstanceProvider();
 
         public SandboxedInstance getSandboxedInstance(String runtimeClassName, boolean useCurrentJvmProperties) {
             ClassLoader classLoader = SalesforceDefinition.class.getClassLoader();

@@ -13,10 +13,10 @@
 
 package org.talend.components.salesforce.tsalesforceinput;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,6 +27,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -34,10 +38,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
+import org.talend.components.salesforce.SalesforceDefinition;
+import org.talend.components.salesforce.TestFixture;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties.QueryMode;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.avro.AvroUtils;
+import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
@@ -50,6 +59,17 @@ import org.talend.daikon.sandbox.SandboxedInstance;
  */
 
 public class TSalesforceInputPropertiesTest {
+
+    public static final Schema DEFAULT_SCHEMA_1 = SchemaBuilder.builder().record("Schema").fields() //
+            .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
+            .name("Name").type().stringType().noDefault() //
+            .endRecord();
+
+    public static final Schema DEFAULT_SCHEMA_2 = SchemaBuilder.builder().record("Schema").fields() //
+            .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
+            .name("FirstName").type().stringType().noDefault() //
+            .name("LastName").type().stringType().noDefault() //
+            .endRecord();
 
     private TSalesforceInputProperties properties;
 
@@ -206,7 +226,7 @@ public class TSalesforceInputPropertiesTest {
     }
 
     @Test
-    public void testValidateGuessQuery() {
+    public void testValidateGuessQuery() throws Exception {
         properties.init();
 
         String query = "\"SELECT Id, Name, BillingCity FROM Account\"";
@@ -222,18 +242,13 @@ public class TSalesforceInputPropertiesTest {
         properties.module.moduleName.setValue("Account");
         properties.module.main.schema.setValue(schema);
 
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        doReturn(sandboxedInstance).when(properties).getRuntimeSandboxedInstance();
-
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class, withSettings()
-                .extraInterfaces(SalesforceSchemaHelper.class));
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         // Valid
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessQuery(eq(schema), eq("Account")))
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessQuery(eq(schema), eq("Account")))
                 .thenReturn(query);
 
         ValidationResult vr1 = properties.validateGuessQuery();
@@ -250,7 +265,8 @@ public class TSalesforceInputPropertiesTest {
 
         // Error
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessQuery(eq(schema), eq("Account")))
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessQuery(eq(schema), eq("Account")))
                 .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
         properties.module.main.schema.setValue(schema);
@@ -262,7 +278,7 @@ public class TSalesforceInputPropertiesTest {
     }
 
     @Test
-    public void testValidateGuessSchema() throws IOException {
+    public void testValidateGuessSchema() throws Exception {
         properties.init();
 
         String query = "\"SELECT Id, Name, BillingCity FROM Account\"";
@@ -281,19 +297,14 @@ public class TSalesforceInputPropertiesTest {
         properties.module.main.schema.setValue(emptySchema);
         properties.query.setValue(query);
 
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        doReturn(sandboxedInstance).when(properties).getRuntimeSandboxedInstance();
-
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class, withSettings()
-                .extraInterfaces(SalesforceSchemaHelper.class));
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
-
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         // Valid
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessSchema(eq(query))).thenReturn(schema);
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessSchema(eq(query)))
+                .thenReturn(schema);
 
         ValidationResult vr1 = properties.validateGuessSchema();
         assertEquals(ValidationResult.Result.OK, vr1.getStatus());
@@ -304,21 +315,24 @@ public class TSalesforceInputPropertiesTest {
         properties.query.setValue(invalidQuery);
         properties.module.main.schema.setValue(schema);
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessSchema(eq(invalidQuery)))
                 .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
         ValidationResult vr2 = properties.validateGuessSchema();
         assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
         assertEquals(schema, properties.module.main.schema.getValue());
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessSchema(eq(invalidQuery)))
                 .thenThrow(new RuntimeException("ERROR"));
 
         vr2 = properties.validateGuessSchema();
         assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
         assertEquals(schema, properties.module.main.schema.getValue());
 
-        when(((SalesforceSchemaHelper) runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                .guessSchema(eq(invalidQuery)))
                 .thenThrow(new IOException("I/O ERROR"));
 
         vr2 = properties.validateGuessSchema();
@@ -333,4 +347,48 @@ public class TSalesforceInputPropertiesTest {
         properties.module.init();
     }
 
+    class SandboxedInstanceTestFixture implements TestFixture {
+
+        SandboxedInstance sandboxedInstance;
+        SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
+
+        @Override
+        public void setUp() throws Exception {
+            SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
+                    SalesforceDefinition.SandboxedInstanceProvider.class);
+            SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+
+            sandboxedInstance = mock(SandboxedInstance.class);
+            when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
+                    .thenReturn(sandboxedInstance);
+
+            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
+                    withSettings().extraInterfaces(SalesforceSchemaHelper.class));
+            doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
+            when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
+                    .thenReturn(ValidationResult.OK);
+            when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(ValidationResult.OK);
+
+            List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
+                    new SimpleNamedThing("Account"),
+                    new SimpleNamedThing("Customer")
+            );
+
+            when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
+                    .thenReturn(moduleNames);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
+                    .thenReturn(DEFAULT_SCHEMA_1);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
+                    .thenReturn(DEFAULT_SCHEMA_2);
+        }
+
+        @Override
+        public void tearDown() throws Exception {
+            SalesforceDefinition.setSandboxedInstanceProvider(
+                    SalesforceDefinition.SandboxedInstanceProvider.INSTANCE);
+        }
+    }
 }
