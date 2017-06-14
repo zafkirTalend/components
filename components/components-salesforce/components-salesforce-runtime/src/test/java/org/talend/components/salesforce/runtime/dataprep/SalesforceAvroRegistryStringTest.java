@@ -13,7 +13,7 @@ import com.sforce.soap.partner.FieldType;
 public class SalesforceAvroRegistryStringTest {
 
     @Test
-    public void test() throws Exception {
+    public void testPickList() throws Exception {
         DescribeSObjectResult describeSObjectResult = new DescribeSObjectResult();
         Field pickList = new Field();
         pickList.setName("pickList");
@@ -26,7 +26,7 @@ public class SalesforceAvroRegistryStringTest {
     }
 
     @Test
-    public void testAddress() throws Exception {
+    public void testAddressTypeFilter() throws Exception {
         DescribeSObjectResult describeSObjectResult = new DescribeSObjectResult();
         Field address = new Field();
         address.setName("address");
@@ -35,19 +35,19 @@ public class SalesforceAvroRegistryStringTest {
 
         Schema schema = SalesforceAvroRegistryString.get().inferSchema(describeSObjectResult);
 
-        assertThat(1, is(schema.getFields().size()));
+        assertThat(0, is(schema.getFields().size()));
     }
 
     @Test
-    public void testLocation() throws Exception {
+    public void testLocationTypeFilter() throws Exception {
         DescribeSObjectResult describeSObjectResult = new DescribeSObjectResult();
         Field location = new Field();
         location.setName("location");
-        location.setType(FieldType.address);
+        location.setType(FieldType.location);
         describeSObjectResult.setFields(new Field[] { location });
 
         Schema schema = SalesforceAvroRegistryString.get().inferSchema(describeSObjectResult);
 
-        assertThat(1, is(schema.getFields().size()));
+        assertThat(0, is(schema.getFields().size()));
     }
 }
