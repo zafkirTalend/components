@@ -192,7 +192,7 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
         }
     }
 
-    public SandboxedInstance getRuntimeSandboxedInstance() {
+    protected SandboxedInstance getRuntimeSandboxedInstance() {
         return getSandboxedInstance("org.talend.components.salesforce.runtime.SalesforceSourceOrSink", true);
     }
 

@@ -234,7 +234,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
         return isOutputConnection ? Collections.singleton(MAIN_CONNECTOR) : Collections.<PropertyPathConnector> emptySet();
     }
 
-    public SandboxedInstance getRuntimeSandboxedInstance() {
+    protected SandboxedInstance getRuntimeSandboxedInstance() {
         return getSandboxedInstance("org.talend.components.salesforce.runtime.SalesforceSourceOrSink");
     }
 }

@@ -19,6 +19,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,12 +29,16 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
+import org.talend.components.salesforce.SalesforceDefinition;
+import org.talend.components.salesforce.TestFixture;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
+import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
@@ -159,24 +165,21 @@ public class SalesforceConnectionPropertiesTest {
 
         Form wizardForm = properties.getForm(SalesforceConnectionProperties.FORM_WIZARD);
 
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        doReturn(sandboxedInstance).when(properties).getRuntimeSandboxedInstance();
-
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties))).thenReturn(ValidationResult.OK);
+        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
+        sandboxedInstanceTestFixture.setUp();
 
         // Valid
 
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class))).thenReturn(ValidationResult.OK);
         ValidationResult vr1 = properties.validateTestConnection();
         assertEquals(ValidationResult.Result.OK, vr1.getStatus());
         assertTrue(wizardForm.isAllowForward());
 
         // Not valid
 
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class))).thenReturn(
-                new ValidationResultMutable().setStatus(ValidationResult.Result.ERROR).setMessage("Error"));
+        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
+                .validate(any(RuntimeContainer.class)))
+                .thenReturn(new ValidationResultMutable()
+                        .setStatus(ValidationResult.Result.ERROR).setMessage("Error"));
         ValidationResult vr2 = properties.validateTestConnection();
         assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
         assertFalse(wizardForm.isAllowForward());
@@ -186,5 +189,36 @@ public class SalesforceConnectionPropertiesTest {
         assertTrue(form.getWidget(properties.oauth.getName()).isVisible());
         assertFalse(form.getWidget(properties.userPassword.getName()).isVisible());
 
+    }
+
+    class SandboxedInstanceTestFixture implements TestFixture {
+
+        SandboxedInstance sandboxedInstance;
+        SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
+
+        @Override
+        public void setUp() throws Exception {
+            SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
+                    SalesforceDefinition.SandboxedInstanceProvider.class);
+            SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+
+            sandboxedInstance = mock(SandboxedInstance.class);
+            when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
+                    .thenReturn(sandboxedInstance);
+
+            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
+                    withSettings().extraInterfaces(SalesforceSchemaHelper.class));
+            doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
+            when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
+                    .thenReturn(ValidationResult.OK);
+            when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(ValidationResult.OK);
+        }
+
+        @Override
+        public void tearDown() throws Exception {
+            SalesforceDefinition.setSandboxedInstanceProvider(
+                    SalesforceDefinition.SandboxedInstanceProvider.INSTANCE);
+        }
     }
 }
