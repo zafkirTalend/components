@@ -252,7 +252,7 @@ public class SnowflakeSourceOrSink implements SourceOrSink {
             throws IOException {
         SnowflakeSourceOrSink ss = new SnowflakeSourceOrSink();
         ss.initialize(null, (ComponentProperties) properties);
-        return ss.getSchema(container, ss.connect(container), table);
+        return ss.getEndpointSchema(container, table);
     }
 
     @Override
