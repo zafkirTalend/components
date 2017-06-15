@@ -100,6 +100,8 @@ public class SnowflakeSourceOrSinkTest {
 
         class SnowflakeSourceOrSinkChild extends SnowflakeSourceOrSink {
 
+            private static final long serialVersionUID = 1L;
+
             @Override
             public SnowflakeAvroRegistry getSnowflakeAvroRegistry() {
                 return snowflakeAvroRegistryMock;

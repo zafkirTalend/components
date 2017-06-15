@@ -6,7 +6,6 @@ import java.sql.Statement;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.IndexedRecord;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +29,7 @@ public class SnowflakeReaderTest {
     @Mock
     private SnowflakeSource snowflakeSourceMock = Mockito.mock(SnowflakeSource.class);
 
-    private SnowflakeReader<IndexedRecord> snowflakeReader;
+    private SnowflakeReader snowflakeReader;
 
     @Before
     public void setUp() throws Exception {
@@ -43,7 +42,7 @@ public class SnowflakeReaderTest {
         tSnowflakeInputProperties.table.main.schema.setValue(schema);
         tSnowflakeInputProperties.table.tableName.setValue("Table");
 
-        snowflakeReader = new SnowflakeReader<IndexedRecord>(runtimeContainerMock, snowflakeSourceMock, tSnowflakeInputProperties);
+        snowflakeReader = new SnowflakeReader(runtimeContainerMock, snowflakeSourceMock, tSnowflakeInputProperties);
     }
 
     /**
