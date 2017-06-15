@@ -33,6 +33,12 @@
             <version>2.4.7</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.talend.components</groupId>
+            <artifactId>bigquery-runtime</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
