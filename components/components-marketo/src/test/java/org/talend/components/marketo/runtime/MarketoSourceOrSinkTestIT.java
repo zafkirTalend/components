@@ -38,6 +38,7 @@ public class MarketoSourceOrSinkTestIT extends MarketoBaseTestIT {
         props.connection.endpoint.setValue(MarketoBaseTestIT.ENDPOINT_REST);
         props.connection.clientAccessId.setValue(MarketoBaseTestIT.USERID_REST);
         props.connection.secretKey.setValue(MarketoBaseTestIT.SECRETKEY_REST);
+        sos.initialize(null, props);
     }
 
     @Test(expected = IllegalArgumentException.class)

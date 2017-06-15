@@ -127,5 +127,4 @@ public class MarketoCustomObjectsSchemasPropertiesTest {
         properties.afterFormFinishCustomObjects(repo);
         // TODO avoid NPE.
     }
-
 }

@@ -22,6 +22,7 @@ import static org.talend.components.marketo.tmarketoconnection.TMarketoConnectio
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.properties.ComponentReferenceProperties;
+import org.talend.daikon.properties.ValidationResult.Result;
 import org.talend.daikon.properties.presentation.Form;
 
 public class TMarketoConnectionPropertiesTest {
@@ -50,12 +51,16 @@ public class TMarketoConnectionPropertiesTest {
         props.setupProperties();
         props.setupLayout();
         props.refreshLayout(props.getForm(Form.MAIN));
+        props.afterApiMode();
         assertTrue(props.getForm(Form.MAIN).getWidget(props.endpoint.getName()).isVisible());
         assertTrue(props.getForm(Form.MAIN).getWidget(props.clientAccessId.getName()).isVisible());
         assertTrue(props.getForm(Form.MAIN).getWidget(props.secretKey.getName()).isVisible());
         assertTrue(props.getForm(TMarketoConnectionProperties.FORM_WIZARD).getWidget(props.endpoint.getName()).isVisible());
         assertTrue(props.getForm(TMarketoConnectionProperties.FORM_WIZARD).getWidget(props.clientAccessId.getName()).isVisible());
         assertTrue(props.getForm(TMarketoConnectionProperties.FORM_WIZARD).getWidget(props.secretKey.getName()).isVisible());
+
+        assertEquals(Result.ERROR, props.validateTestConnection().getStatus());
+        assertEquals(Result.ERROR, props.afterFormFinishWizard(null).getStatus());
 
         TMarketoConnectionProperties rProps = new TMarketoConnectionProperties("ref");
         rProps.setupProperties();

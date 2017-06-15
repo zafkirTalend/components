@@ -21,6 +21,7 @@ import static org.talend.components.marketo.wizard.MarketoComponentWizardBasePro
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.InputOperation.getLeadChanges;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.InputOperation.getMultipleLeads;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Before;
@@ -34,6 +35,7 @@ import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadK
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadKeyTypeSOAP;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.LeadSelector;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.ListParam;
+import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.StandardAction;
 import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.CustomObjectAction;
 import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.InputOperation;
 import org.talend.daikon.properties.ValidationResult.Result;
@@ -790,6 +792,9 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         assertEquals(LeadKeyTypeSOAP.SFDCLEADID, LeadKeyTypeSOAP.valueOf("SFDCLEADID"));
         assertEquals(LeadKeyTypeSOAP.SFDCLEADOWNERID, LeadKeyTypeSOAP.valueOf("SFDCLEADOWNERID"));
         assertEquals(LeadKeyTypeSOAP.SFDCOPPTYID, LeadKeyTypeSOAP.valueOf("SFDCOPPTYID"));
+        //
+        assertEquals(StandardAction.describe, StandardAction.valueOf("describe"));
+        assertEquals(StandardAction.get, StandardAction.valueOf("get"));
     }
 
     @Test
@@ -890,4 +895,70 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         assertTrue(f.getWidget(props.fetchCustomObjectSchema).isVisible());
         assertTrue(f.getWidget(props.fetchCompoundKey).isVisible());
     }
+
+    @Test
+    public void testSetupProperties() throws Exception {
+    }
+
+    @Test
+    public void testSetupLayout() throws Exception {
+    }
+
+    @Test
+    public void testValidateFetchCompoundKey() throws Exception {
+    }
+
+    @Test
+    public void testBeforeInputOperation() throws Exception {
+        props.beforeInputOperation();
+        assertEquals(Arrays.asList(getLead, getMultipleLeads, getLeadActivity, getLeadChanges, CustomObject),
+                props.inputOperation.getPossibleValues());
+        props.connection.apiMode.setValue(APIMode.SOAP);
+        props.beforeInputOperation();
+        assertEquals(Arrays.asList(getLead, getMultipleLeads, getLeadActivity, getLeadChanges),
+                props.inputOperation.getPossibleValues());
+    }
+
+    @Test
+    public void testBeforeMappingInput() throws Exception {
+    }
+
+    @Test
+    public void testAfterInputOperation() throws Exception {
+    }
+
+    @Test
+    public void testAfterCustomObjectAction() throws Exception {
+    }
+
+    @Test
+    public void testAfterStandardAction() throws Exception {
+    }
+
+    @Test
+    public void testAfterFetchCustomObjectSchema() throws Exception {
+    }
+
+    @Test
+    public void testAfterUseCompoundKey() throws Exception {
+    }
+
+    @Test
+    public void testAfterFetchCompoundKey() throws Exception {
+    }
+
+    @Test
+    public void testAfterListParam() throws Exception {
+    }
+
+    @Test
+    public void testGetVersionNumber() throws Exception {
+        assertTrue(props.getVersionNumber() > 0);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testPostDeserialize() throws Exception {
+        props.postDeserialize(1, null, true);
+    }
+
 }

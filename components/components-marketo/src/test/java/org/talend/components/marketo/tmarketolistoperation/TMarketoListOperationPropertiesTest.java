@@ -106,6 +106,12 @@ public class TMarketoListOperationPropertiesTest extends MarketoTestBase {
         assertEquals(MarketoConstants.getListOperationRejectSOAPSchema(), s);
         assertNotNull(s.getField("ERROR_MSG"));
         assertTrue(s.getField("ERROR_MSG").schema().getTypes().get(0).getType().equals(Schema.Type.STRING));
+
+        props.listOperation.setValue(ListOperation.removeFrom);
+        props.multipleOperation.setValue(true);
+        props.afterMultipleOperation();
+        assertEquals(props.schemaInput.schema.getValue().getFields().size(),
+                props.schemaFlow.schema.getValue().getFields().size());
     }
 
     @Test
@@ -144,6 +150,10 @@ public class TMarketoListOperationPropertiesTest extends MarketoTestBase {
         assertEquals(ListOperation.addTo, ListOperation.valueOf("addTo"));
         assertEquals(ListOperation.isMemberOf, ListOperation.valueOf("isMemberOf"));
         assertEquals(ListOperation.removeFrom, ListOperation.valueOf("removeFrom"));
+    }
+
+    @Test
+    public void testAfterMultipleOperation() throws Exception {
     }
 
 }
