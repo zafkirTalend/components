@@ -8,6 +8,7 @@
     </parent>
     <artifactId>components-marketo</artifactId>
     <name>Components - Marketo</name>
+    <version>0.19.99</version>
     <packaging>bundle</packaging>
     <dependencies>
         <!-- marketo runtime specific dependencies -->
