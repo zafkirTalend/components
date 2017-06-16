@@ -33,7 +33,9 @@ public class TMarketoBulkExecDefinition extends MarketoComponentDefinition {
     public RuntimeInfo getRuntimeInfo(ExecutionEngine engine, ComponentProperties properties,
             ConnectorTopology connectorTopology) {
         assertEngineCompatibility(engine);
-        assertConnectorTopologyCompatibility(connectorTopology);
+        if (connectorTopology != ConnectorTopology.NONE) {
+            assertConnectorTopologyCompatibility(connectorTopology);
+        }
         return getCommonRuntimeInfo(this.getClass().getClassLoader(), RUNTIME_SOURCE_CLASS);
     }
 
@@ -46,7 +48,7 @@ public class TMarketoBulkExecDefinition extends MarketoComponentDefinition {
     public Class<? extends ComponentProperties> getPropertyClass() {
         return TMarketoBulkExecProperties.class;
     }
-    
+
     @Override
     public boolean isStartable() {
         return false;
