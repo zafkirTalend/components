@@ -111,7 +111,7 @@ public class SnowflakeReader extends AbstractBoundedReader<IndexedRecord> {
 
     @Override
     public boolean start() throws IOException {
-        if (null ==  factory.getSchema()) {
+        if (null == factory.getSchema()) {
             factory.setSchema(getSchema());
         }
         result = new Result();
