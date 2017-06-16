@@ -33,9 +33,7 @@ public class TMarketoBulkExecDefinition extends MarketoComponentDefinition {
     public RuntimeInfo getRuntimeInfo(ExecutionEngine engine, ComponentProperties properties,
             ConnectorTopology connectorTopology) {
         assertEngineCompatibility(engine);
-        if (connectorTopology != ConnectorTopology.NONE) {
-            assertConnectorTopologyCompatibility(connectorTopology);
-        }
+        assertConnectorTopologyCompatibility(connectorTopology);
         return getCommonRuntimeInfo(this.getClass().getClassLoader(), RUNTIME_SOURCE_CLASS);
     }
 
