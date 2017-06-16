@@ -17,8 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.EnumSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +43,7 @@ public class TMarketoOutputDefinitionTest {
 
     @Test
     public void testGetSupportedConnectorTopologies() throws Exception {
-        assertEquals(new HashSet<ConnectorTopology>(Arrays.asList(ConnectorTopology.INCOMING,
-                ConnectorTopology.INCOMING_AND_OUTGOING, ConnectorTopology.NONE, ConnectorTopology.OUTGOING)),
+        assertEquals(EnumSet.of(ConnectorTopology.INCOMING, ConnectorTopology.INCOMING_AND_OUTGOING),
                 def.getSupportedConnectorTopologies());
     }
 
