@@ -26,6 +26,8 @@ import org.talend.components.simplefileio.SimpleFileIODatasetDefinition;
 import org.talend.components.simplefileio.SimpleFileIODatasetProperties;
 import org.talend.daikon.properties.ReferenceProperties;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.PropertyFactory;
 
 public class SimpleFileIOOutputProperties extends FixedConnectorsComponentProperties implements IOProperties {
 
@@ -33,8 +35,12 @@ public class SimpleFileIOOutputProperties extends FixedConnectorsComponentProper
         super(name);
     }
 
+    public Property<Boolean> overwrite = PropertyFactory.newBoolean("overwrite", false);
+
     public transient ReferenceProperties<SimpleFileIODatasetProperties> datasetRef = new ReferenceProperties<>("datasetRef",
             SimpleFileIODatasetDefinition.NAME);
+
+    public Property<Boolean> mergeOutput = PropertyFactory.newBoolean("mergeOutput", false);
 
     protected transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "dataset.main");
 
@@ -42,6 +48,8 @@ public class SimpleFileIOOutputProperties extends FixedConnectorsComponentProper
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
+        mainForm.addRow(overwrite);
+        mainForm.addRow(mergeOutput);
     }
 
     @Override

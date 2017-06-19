@@ -1,6 +1,6 @@
 Components API Service REST
 ===
-This module packages the Web Service together with required components. This module should be with other Talend Products (DataPrep etc).
+This module packages bare Components REST Service.
 
 
 ###Run locally:
@@ -29,7 +29,7 @@ This docker image accepts multiple environment variable but the only one that is
 
 This contains the list of maven repositories following the definition of repositories in https://ops4j1.jira.com/wiki/display/paxurl/Mvn+Protocol
 
-* MVN\_CONFIG\_URL=mvn:org.talend.components/components-maven-repo/0.19.0-SNAPSHOT/zip/config
+* MVN\_CONFIG\_URL=mvn:org.talend.components/components-maven-repo/0.20.0-SNAPSHOT/zip/config
 
 This specify where the service will look for the configuration files like the component list or the jdbc config file.
 

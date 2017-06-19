@@ -1,23 +1,56 @@
 [
 
 	{
-		"id" : "MYSQL",
-		"class" : "org.gjt.mm.mysql.Driver",
+		"id" : "MySQL",
+		"class" : "org.mariadb.jdbc.Driver",
 		"url" : "jdbc:mysql://localhost:3306/db",
 		"paths" : 
 	 	[
-	 		{"path" : "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0"}
+	 		{"path" : "mvn:org.mariadb.jdbc/mariadb-java-client/2.0.2"}
 	 	]
 	
 	},
 	
 	{
-		"id" : "DERBY",
+		"id" : "Derby",
 		"class" : "org.apache.derby.jdbc.ClientDriver",
-		"url" : "jdbc:derby://localhost:3306/db",
+		"url" : "jdbc:derby://localhost:1527/db",
 		"paths" : 
 	 	[
-	 		{"path" : "mvn:org.apache.derby/derby/10.12.1.1"}
+	 		{"path" : "mvn:org.apache.derby/derbyclient/10.12.1.1"}
+	 	]
+	
+	},
+	
+	{
+		"id" : "PostgreSQL",
+		"class" : "org.postgresql.Driver",
+		"url" : "jdbc:postgresql://localhost:5432/db",
+		"paths" : 
+	 	[
+	 		{"path" : "mvn:org.postgresql/postgresql/42.1.1"}
+	 	]
+	
+	},
+	
+	{
+		"id" : "SQL Server",
+		"class" : "net.sourceforge.jtds.jdbc.Driver",
+		"url" : "jdbc:jtds:sqlserver://localhost:1433/db",
+		"paths" : 
+	 	[
+	 		{"path" : "mvn:net.sourceforge.jtds/jtds/1.3.1"}
+	 	]
+	
+	},
+	
+	{
+		"id" : "Azure SQL",
+		"class" : "net.sourceforge.jtds.jdbc.Driver",
+		"url" : "jdbc:jtds:sqlserver://localhost:1433/db",
+		"paths" : 
+	 	[
+	 		{"path" : "mvn:net.sourceforge.jtds/jtds/1.3.1"}
 	 	]
 	
 	}

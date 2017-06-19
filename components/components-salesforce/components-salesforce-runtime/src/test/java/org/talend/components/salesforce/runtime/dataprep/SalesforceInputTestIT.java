@@ -14,6 +14,7 @@ package org.talend.components.salesforce.runtime.dataprep;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.talend.components.api.component.SupportedProduct;
 import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.api.exception.ComponentException;
 import org.talend.components.salesforce.dataprep.SalesforceInputDefinition;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
 import org.talend.components.salesforce.dataset.SalesforceDatasetProperties;
@@ -135,6 +137,44 @@ public class SalesforceInputTestIT {
         }
     }
 
+    @Test(expected = ComponentException.class)
+    public void testTypeForModuleWithCompoundType() throws Exception {
+        SalesforceInputProperties properties = createCommonSalesforceInputPropertiesForModule();
+
+        SalesforceDataprepSource source = new SalesforceDataprepSource();
+        source.initialize(null, properties);
+        source.validate(null);
+        properties.getDatasetProperties().selectColumnIds
+                .setValue(Arrays.asList("IsDeleted", "Id", "Name", "BillingAddress", "ShippingAddress"));
+
+        try (Reader reader = source.createReader(null)) {
+            reader.start();
+        }
+    }
+
+    @Test
+    public void testTypeForModuleWithPickListType() throws Exception {
+        SalesforceInputProperties properties = createCommonSalesforceInputPropertiesForModule();
+
+        SalesforceDataprepSource source = new SalesforceDataprepSource();
+        source.initialize(null, properties);
+        source.validate(null);
+        properties.getDatasetProperties().selectColumnIds.setValue(Arrays.asList("IsDeleted", "Id", "Name", "Type"));
+
+        try (Reader reader = source.createReader(null)) {
+            int count = 3;
+            for (boolean available = reader.start(); available; available = reader.advance()) {
+                IndexedRecord record = (IndexedRecord) reader.getCurrent();
+
+                assertEquals(4, record.getSchema().getFields().size());
+                if ((count--) < 1) {
+                    break;
+                }
+            }
+
+        }
+    }
+
     @Test
     public void testReaderForQuery() {
         Reader reader = null;
@@ -195,6 +235,32 @@ public class SalesforceInputTestIT {
                 }
             }
 
+        }
+    }
+
+    public void testLimitOfSalesforceBulQueryReader() throws Exception {
+        SalesforceInputProperties properties = createCommonSalesforceInputPropertiesForModule();
+
+        SalesforceDataprepSource source = new SalesforceDataprepSource();
+        source.initialize(null, properties);
+        source.validate(null);
+        properties.getDatasetProperties().selectColumnIds.setValue(Arrays.asList("IsDeleted", "Id", "Name"));
+
+        try (Reader reader = source.createReader(null);) {
+            ((SalesforceBulkQueryReader) reader).setLimit(1);
+
+            reader.start();
+            reader.advance();
+
+            IndexedRecord record = (IndexedRecord) reader.getCurrent();
+
+            assertEquals(3, record.getSchema().getFields().size());
+            try {
+                reader.advance();
+                fail();
+            } catch (IOException e) {
+                // Excepted to happen
+            }
         }
     }
 
