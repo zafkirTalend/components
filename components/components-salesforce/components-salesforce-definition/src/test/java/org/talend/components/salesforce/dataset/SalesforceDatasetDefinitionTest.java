@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.talend.components.salesforce.SalesforceDefinition.DATASET_RUNTIME_CLASS;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,8 +55,7 @@ public class SalesforceDatasetDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals("org.talend.components.salesforce.runtime.dataprep.SalesforceDatasetRuntime",
-                jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(DATASET_RUNTIME_CLASS, jarRuntimeInfo.getRuntimeClassName());
     }
 
     @Test

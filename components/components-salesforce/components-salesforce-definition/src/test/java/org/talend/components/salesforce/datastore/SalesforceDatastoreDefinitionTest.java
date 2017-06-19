@@ -25,6 +25,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
+import static org.talend.components.salesforce.SalesforceDefinition.DATASTORE_RUNTIME_CLASS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +36,7 @@ import org.talend.components.api.component.runtime.JarRuntimeInfo;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.dataset.DatasetProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
-import org.talend.components.salesforce.TestFixture;
+import org.talend.components.salesforce.TestFixtureBase;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.dataprep.SalesforceInputDefinition;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
@@ -77,24 +78,23 @@ public class SalesforceDatastoreDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals("org.talend.components.salesforce.runtime.dataprep.SalesforceDatastoreRuntime",
-                jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(DATASTORE_RUNTIME_CLASS, jarRuntimeInfo.getRuntimeClassName());
     }
 
     @Test
     public void testCreateDatasetProperties() throws Exception {
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+            DatasetProperties datasetProperties = definition.createDatasetProperties(properties);
+            assertEquals(properties, datasetProperties.getDatastoreProperties());
 
-        DatasetProperties datasetProperties = definition.createDatasetProperties(properties);
-        assertEquals(properties, datasetProperties.getDatastoreProperties());
-
-        Form mainForm = properties.getForm(Form.MAIN);
-        assertNotNull(mainForm);
-        assertNotNull(mainForm.getWidget(properties.userId.getName()));
-        assertNotNull(mainForm.getWidget(properties.password.getName()));
-        assertNotNull(mainForm.getWidget(properties.securityKey.getName()));
+            Form mainForm = properties.getForm(Form.MAIN);
+            assertNotNull(mainForm);
+            assertNotNull(mainForm.getWidget(properties.userId.getName()));
+            assertNotNull(mainForm.getWidget(properties.password.getName()));
+            assertNotNull(mainForm.getWidget(properties.securityKey.getName()));
+        }
     }
 
     @Test
@@ -113,7 +113,7 @@ public class SalesforceDatastoreDefinitionTest {
         assertNull(definition.getImagePath(DefinitionImageType.SVG_ICON));
     }
 
-    class SandboxedInstanceTestFixture implements TestFixture {
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
         SandboxedInstance sandboxedInstance;
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink;

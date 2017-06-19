@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.talend.components.salesforce.SalesforceDefinition.SOURCE_OR_SINK_CLASS;
 
 import java.util.Set;
 
@@ -55,7 +56,7 @@ public class TSalesforceConnectionDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals("org.talend.components.salesforce.runtime.SalesforceSourceOrSink", jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(SOURCE_OR_SINK_CLASS, jarRuntimeInfo.getRuntimeClassName());
 
         runtimeInfo = definition.getRuntimeInfo(ExecutionEngine.DI, properties, ConnectorTopology.OUTGOING);
         assertThat(runtimeInfo, nullValue(RuntimeInfo.class));

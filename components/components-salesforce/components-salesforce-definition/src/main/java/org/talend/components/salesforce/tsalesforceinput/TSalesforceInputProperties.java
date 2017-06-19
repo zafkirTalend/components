@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.tsalesforceinput;
 
+import static org.talend.components.salesforce.SalesforceDefinition.SOURCE_OR_SINK_CLASS;
 import static org.talend.components.salesforce.SalesforceDefinition.getSandboxedInstance;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
@@ -125,7 +126,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     public ValidationResult validateGuessSchema() {
         ValidationResultMutable validationResult = new ValidationResultMutable();
 
-        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
+        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(SOURCE_OR_SINK_CLASS)) {
 
             SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxedInstance
                     .getInstance();
@@ -151,7 +152,7 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     public ValidationResult validateGuessQuery() {
         ValidationResultMutable validationResult = new ValidationResultMutable();
 
-        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
+        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(SOURCE_OR_SINK_CLASS)) {
 
             SalesforceRuntimeSourceOrSink salesforceSourceOrSink = (SalesforceRuntimeSourceOrSink) sandboxedInstance
                     .getInstance();
@@ -232,9 +233,5 @@ public class TSalesforceInputProperties extends SalesforceConnectionModuleProper
     @Override
     protected Set<PropertyPathConnector> getAllSchemaPropertiesConnectors(boolean isOutputConnection) {
         return isOutputConnection ? Collections.singleton(MAIN_CONNECTOR) : Collections.<PropertyPathConnector> emptySet();
-    }
-
-    protected SandboxedInstance getRuntimeSandboxedInstance() {
-        return getSandboxedInstance("org.talend.components.salesforce.runtime.SalesforceSourceOrSink");
     }
 }

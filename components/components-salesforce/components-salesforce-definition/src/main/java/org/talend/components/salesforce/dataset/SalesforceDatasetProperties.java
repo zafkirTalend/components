@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.salesforce.dataset;
 
+import static org.talend.components.salesforce.SalesforceDefinition.DATAPREP_SOURCE_CLASS;
 import static org.talend.components.salesforce.SalesforceDefinition.getSandboxedInstance;
 import static org.talend.daikon.properties.property.PropertyFactory.newStringList;
 
@@ -112,8 +113,7 @@ public class SalesforceDatasetProperties extends PropertiesImpl implements Datas
     }
 
     private void runtimeTask(Consumer task) throws IOException {
-        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(
-                "org.talend.components.salesforce.runtime.dataprep.SalesforceDataprepSource")) {
+        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(DATAPREP_SOURCE_CLASS)) {
             SalesforceRuntimeSourceOrSink runtime = (SalesforceRuntimeSourceOrSink) sandboxedInstance.getInstance();
 
             SalesforceInputProperties properties = new SalesforceInputProperties("model");

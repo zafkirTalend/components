@@ -12,6 +12,8 @@
 // ============================================================================
 package org.talend.components.salesforce;
 
+import static org.talend.components.salesforce.SalesforceDefinition.SOURCE_OR_SINK_CLASS;
+import static org.talend.components.salesforce.SalesforceDefinition.USE_CURRENT_JVM_PROPS;
 import static org.talend.components.salesforce.SalesforceDefinition.getSandboxedInstance;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
@@ -178,7 +180,7 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
     }
 
     public ValidationResult validateTestConnection() throws Exception {
-        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
+        try (SandboxedInstance sandboxedInstance = getSandboxedInstance(SOURCE_OR_SINK_CLASS, USE_CURRENT_JVM_PROPS)) {
             SalesforceRuntimeSourceOrSink ss = (SalesforceRuntimeSourceOrSink) sandboxedInstance.getInstance();
             ss.initialize(null, SalesforceConnectionProperties.this);
             ValidationResultMutable vr = new ValidationResultMutable(ss.validate(null));
@@ -190,10 +192,6 @@ public class SalesforceConnectionProperties extends ComponentPropertiesImpl
             }
             return vr;
         }
-    }
-
-    protected SandboxedInstance getRuntimeSandboxedInstance() {
-        return getSandboxedInstance("org.talend.components.salesforce.runtime.SalesforceSourceOrSink", true);
     }
 
     @Override

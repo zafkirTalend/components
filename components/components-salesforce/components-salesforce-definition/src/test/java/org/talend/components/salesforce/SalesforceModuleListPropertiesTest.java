@@ -26,6 +26,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
+import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.avro.SchemaConstants;
@@ -118,37 +120,18 @@ public class SalesforceModuleListPropertiesTest {
     public void testBeforeFormPresentMain() throws Throwable {
         properties.init();
 
-        SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
-                SalesforceDefinition.SandboxedInstanceProvider.class);
-        SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
-                .thenReturn(sandboxedInstance);
+            propertiesService.beforeFormPresent("Main", properties);
 
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
-                .thenReturn(ValidationResult.OK);
+            assertThat((Iterable<NamedThing>) properties.selectedModuleNames.getPossibleValues(),
+                    containsInAnyOrder((NamedThing) new SimpleNamedThing("Account"), new SimpleNamedThing("Customer")));
 
-        List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
-                new SimpleNamedThing("Account"),
-                new SimpleNamedThing("Customer")
-        );
-
-        when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
-                .thenReturn(moduleNames);
-
-        propertiesService.beforeFormPresent("Main", properties);
-
-        assertThat((Iterable<NamedThing>) properties.selectedModuleNames.getPossibleValues(), containsInAnyOrder(
-                (NamedThing) new SimpleNamedThing("Account"), new SimpleNamedThing("Customer")));
-
-        Form mainForm = properties.getForm(Form.MAIN);
-        assertTrue(mainForm.isAllowBack());
-        assertTrue(mainForm.isAllowFinish());
+            Form mainForm = properties.getForm(Form.MAIN);
+            assertTrue(mainForm.isAllowBack());
+            assertTrue(mainForm.isAllowFinish());
+        }
     }
 
     @Test
@@ -159,70 +142,97 @@ public class SalesforceModuleListPropertiesTest {
         TestRepository repository = new TestRepository(repoEntries);
         propertiesService.setRepository(repository);
 
-        SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
-                SalesforceDefinition.SandboxedInstanceProvider.class);
-        SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        SandboxedInstance sandboxedInstance = mock(SandboxedInstance.class);
-        when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
-                .thenReturn(sandboxedInstance);
+            properties.selectedModuleNames.setValue(Arrays.<NamedThing>asList(
+                    new SimpleNamedThing("Account"), new SimpleNamedThing("Customer")));
 
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
-        doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-        when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
-                .thenReturn(ValidationResult.OK);
-        when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
-                .thenReturn(ValidationResult.OK);
+            propertiesService.afterFormFinish("Main", properties);
 
-        properties.selectedModuleNames.setValue(Arrays.<NamedThing>asList(
-                new SimpleNamedThing("Account"),
-                new SimpleNamedThing("Customer"))
-        );
+            assertEquals(3, repoEntries.size());
 
-        when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
-                .thenReturn(DEFAULT_SCHEMA_1);
-        when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
-                .thenReturn(DEFAULT_SCHEMA_2);
+            // Connection entry
 
-        propertiesService.afterFormFinish("Main", properties);
+            TestRepository.Entry connRepoEntry = repoEntries.get(0);
+            assertEquals(connectionName, connRepoEntry.getName());
+            assertThat(connRepoEntry.getProperties(), instanceOf(SalesforceConnectionProperties.class));
 
-        assertEquals(3, repoEntries.size());
+            // Module entry 1
 
-        // Connection entry
+            TestRepository.Entry repoEntry1 = repoEntries.get(1);
 
-        TestRepository.Entry connRepoEntry = repoEntries.get(0);
-        assertEquals(connectionName, connRepoEntry.getName());
-        assertThat(connRepoEntry.getProperties(), instanceOf(SalesforceConnectionProperties.class));
+            assertEquals("Account", repoEntry1.getName());
+            assertEquals("main.schema", repoEntry1.getSchemaPropertyName());
+            assertEquals(DEFAULT_SCHEMA_1, repoEntry1.getSchema());
+            assertThat(repoEntry1.getProperties(), instanceOf(SalesforceModuleProperties.class));
 
-        // Module entry 1
+            SalesforceModuleProperties modProps1 = (SalesforceModuleProperties) repoEntry1.getProperties();
+            assertEquals(connectionProperties, modProps1.getConnectionProperties());
+            assertEquals("Account", modProps1.moduleName.getValue());
+            assertEquals(DEFAULT_SCHEMA_1, modProps1.main.schema.getValue());
+            assertNotNull(modProps1.getForm(Form.MAIN));
 
-        TestRepository.Entry repoEntry1 = repoEntries.get(1);
+            // Module entry 2
 
-        assertEquals("Account", repoEntry1.getName());
-        assertEquals("main.schema", repoEntry1.getSchemaPropertyName());
-        assertEquals(DEFAULT_SCHEMA_1, repoEntry1.getSchema());
-        assertThat(repoEntry1.getProperties(), instanceOf(SalesforceModuleProperties.class));
+            TestRepository.Entry repoEntry2 = repoEntries.get(2);
 
-        SalesforceModuleProperties modProps1 = (SalesforceModuleProperties) repoEntry1.getProperties();
-        assertEquals(connectionProperties, modProps1.getConnectionProperties());
-        assertEquals("Account", modProps1.moduleName.getValue());
-        assertEquals(DEFAULT_SCHEMA_1, modProps1.main.schema.getValue());
-        assertNotNull(modProps1.getForm(Form.MAIN));
+            assertEquals("Customer", repoEntry2.getName());
+            assertEquals("main.schema", repoEntry2.getSchemaPropertyName());
+            assertEquals(DEFAULT_SCHEMA_2, repoEntry2.getSchema());
+            assertThat(repoEntry2.getProperties(), instanceOf(SalesforceModuleProperties.class));
 
-        // Module entry 2
+            SalesforceModuleProperties modProps2 = (SalesforceModuleProperties) repoEntry2.getProperties();
+            assertEquals(connectionProperties, modProps2.getConnectionProperties());
+            assertEquals("Customer", modProps2.moduleName.getValue());
+            assertEquals(DEFAULT_SCHEMA_2, modProps2.main.schema.getValue());
+            assertNotNull(modProps2.getForm(Form.MAIN));
+        }
+    }
 
-        TestRepository.Entry repoEntry2 = repoEntries.get(2);
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
-        assertEquals("Customer", repoEntry2.getName());
-        assertEquals("main.schema", repoEntry2.getSchemaPropertyName());
-        assertEquals(DEFAULT_SCHEMA_2, repoEntry2.getSchema());
-        assertThat(repoEntry2.getProperties(), instanceOf(SalesforceModuleProperties.class));
+        SandboxedInstance sandboxedInstance;
+        SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
 
-        SalesforceModuleProperties modProps2 = (SalesforceModuleProperties) repoEntry2.getProperties();
-        assertEquals(connectionProperties, modProps2.getConnectionProperties());
-        assertEquals("Customer", modProps2.moduleName.getValue());
-        assertEquals(DEFAULT_SCHEMA_2, modProps2.main.schema.getValue());
-        assertNotNull(modProps2.getForm(Form.MAIN));
+        @Override
+        public void setUp() throws Exception {
+            SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
+                    SalesforceDefinition.SandboxedInstanceProvider.class);
+            SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
+
+            sandboxedInstance = mock(SandboxedInstance.class);
+            when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
+                    .thenReturn(sandboxedInstance);
+
+            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
+                    withSettings().extraInterfaces(SalesforceSchemaHelper.class));
+            doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
+            when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties)))
+                    .thenReturn(ValidationResult.OK);
+            when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(ValidationResult.OK);
+
+            List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
+                    new SimpleNamedThing("Account"),
+                    new SimpleNamedThing("Customer")
+            );
+
+            when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
+                    .thenReturn(moduleNames);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
+                    .thenReturn(DEFAULT_SCHEMA_1);
+
+            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
+                    .thenReturn(DEFAULT_SCHEMA_2);
+        }
+
+        @Override
+        public void tearDown() throws Exception {
+            SalesforceDefinition.setSandboxedInstanceProvider(
+                    SalesforceDefinition.SandboxedInstanceProvider.INSTANCE);
+        }
     }
 
     static class TestRepository implements Repository {

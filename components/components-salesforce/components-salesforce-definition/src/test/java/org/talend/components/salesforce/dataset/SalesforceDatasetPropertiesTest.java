@@ -45,7 +45,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.SalesforceDefinition;
-import org.talend.components.salesforce.TestFixture;
+import org.talend.components.salesforce.TestFixtureBase;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
 import org.talend.components.salesforce.datastore.SalesforceDatastoreProperties;
@@ -116,15 +116,16 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                "Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
+                    "Account", "Customer"));
 
-        assertThat(properties.selectColumnIds.getPossibleValues(), empty());
+            assertThat(properties.selectColumnIds.getPossibleValues(), empty());
+        }
     }
 
     @Test(expected = TalendRuntimeException.class)
@@ -195,23 +196,24 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        Form mainForm = properties.getForm(Form.MAIN);
+            Form mainForm = properties.getForm(Form.MAIN);
 
-        properties.sourceType.setValue(SalesforceDatasetProperties.SourceType.SOQL_QUERY);
+            properties.sourceType.setValue(SalesforceDatasetProperties.SourceType.SOQL_QUERY);
 
-        properties.refreshLayout(mainForm);
+            properties.refreshLayout(mainForm);
 
-        assertTrue(mainForm.getWidget(properties.query.getName()).isVisible());
-        assertTrue(properties.query.isRequired());
-        assertFalse(mainForm.getWidget(properties.moduleName.getName()).isVisible());
-        assertFalse(properties.moduleName.isRequired());
-        assertFalse(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
-        assertFalse(properties.selectColumnIds.isRequired());
+            assertTrue(mainForm.getWidget(properties.query.getName()).isVisible());
+            assertTrue(properties.query.isRequired());
+            assertFalse(mainForm.getWidget(properties.moduleName.getName()).isVisible());
+            assertFalse(properties.moduleName.isRequired());
+            assertFalse(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
+            assertFalse(properties.selectColumnIds.isRequired());
+        }
     }
 
     @Test
@@ -219,21 +221,22 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        properties.moduleName.setValue("Account");
+            properties.moduleName.setValue("Account");
 
-        properties.refreshProperties();
+            properties.refreshProperties();
 
-        assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                "Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(),
+                    containsInAnyOrder("Account", "Customer"));
 
-        assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(), contains(
-                (NamedThing) new SimpleNamedThing("Id", "Id"),
-                new SimpleNamedThing("Name", "Name")));
+            assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(), contains(
+                    (NamedThing) new SimpleNamedThing("Id", "Id"),
+                    new SimpleNamedThing("Name", "Name")));
+        }
     }
 
     @Test
@@ -243,24 +246,25 @@ public class SalesforceDatasetPropertiesTest {
 
         reset(properties);
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        properties.sourceType.setValue(SalesforceDatasetProperties.SourceType.MODULE_SELECTION);
+            properties.sourceType.setValue(SalesforceDatasetProperties.SourceType.MODULE_SELECTION);
 
-        propertiesService.afterProperty("sourceType", properties);
+            propertiesService.afterProperty("sourceType", properties);
 
-        assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                "Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
+                    "Account", "Customer"));
 
-        assertNull(properties.moduleName.getValue());
-        assertNull(properties.selectColumnIds.getValue());
-        assertNull(properties.query.getValue());
+            assertNull(properties.moduleName.getValue());
+            assertNull(properties.selectColumnIds.getValue());
+            assertNull(properties.query.getValue());
 
-        Form mainForm = properties.getForm(Form.MAIN);
-        verify(properties, times(1)).refreshLayout(eq(mainForm));
+            Form mainForm = properties.getForm(Form.MAIN);
+            verify(properties, times(1)).refreshLayout(eq(mainForm));
+        }
     }
 
     @Test
@@ -270,27 +274,28 @@ public class SalesforceDatasetPropertiesTest {
 
         reset(properties);
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        properties.moduleName.setValue("Account");
+            properties.moduleName.setValue("Account");
 
-        propertiesService.afterProperty("moduleName", properties);
+            propertiesService.afterProperty("moduleName", properties);
 
-        assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                "Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
+                    "Account", "Customer"));
 
-        assertNotNull(properties.moduleName.getValue());
-        assertNull(properties.selectColumnIds.getValue());
-        assertNull(properties.query.getValue());
+            assertNotNull(properties.moduleName.getValue());
+            assertNull(properties.selectColumnIds.getValue());
+            assertNull(properties.query.getValue());
 
-        Form mainForm = properties.getForm(Form.MAIN);
-        verify(properties, times(1)).refreshLayout(eq(mainForm));
+            Form mainForm = properties.getForm(Form.MAIN);
+            verify(properties, times(1)).refreshLayout(eq(mainForm));
+        }
     }
 
-    class SandboxedInstanceTestFixture implements TestFixture {
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
         SandboxedInstance sandboxedInstance;
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink;

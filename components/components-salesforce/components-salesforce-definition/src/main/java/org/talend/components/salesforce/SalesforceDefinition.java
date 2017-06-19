@@ -33,6 +33,23 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
 
     protected static final TagImpl SALESFORCE_BUSINESS_TAG = new TagImpl("salesforce", CommonTags.BUSINESS_TAG);
 
+    public static final boolean USE_CURRENT_JVM_PROPS = true;
+
+    public static final String DATASTORE_RUNTIME_CLASS = "org.talend.components.salesforce.runtime.dataprep.SalesforceDatastoreRuntime";
+
+    public static final String DATASET_RUNTIME_CLASS = "org.talend.components.salesforce.runtime.dataprep.SalesforceDatasetRuntime";
+
+    public static final String DATAPREP_SOURCE_CLASS = "org.talend.components.salesforce.runtime.dataprep.SalesforceDataprepSource";
+
+    public static final String SOURCE_OR_SINK_CLASS = "org.talend.components.salesforce.runtime.SalesforceSourceOrSink";
+
+    public static final String SOURCE_CLASS = "org.talend.components.salesforce.runtime.SalesforceSource";
+
+    public static final String SINK_CLASS = "org.talend.components.salesforce.runtime.SalesforceSink";
+
+    public static final String BULK_FILE_SINK = "org.talend.components.salesforce.runtime.SalesforceBulkFileSink";
+
+    /** Provides {@link SandboxedInstance}s. */
     private static SandboxedInstanceProvider sandboxedInstanceProvider = SandboxedInstanceProvider.INSTANCE;
 
     public SalesforceDefinition(String componentName, ExecutionEngine engine1, ExecutionEngine... engines) {
@@ -74,19 +91,48 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
         return sandboxedInstanceProvider;
     }
 
+    /**
+     * Get {@link SandboxedInstance} for given runtime object class and <b>not</b> using current JVM properties.
+     *
+     * @see #getSandboxedInstance(String, boolean)
+     * @see SandboxedInstanceProvider
+     *
+     * @param runtimeClassName full name of runtime object class
+     * @return sandboxed instance
+     */
     public static SandboxedInstance getSandboxedInstance(String runtimeClassName) {
         return getSandboxedInstance(runtimeClassName, false);
     }
 
+    /**
+     * Get {@link SandboxedInstance} for given runtime object class.
+     *
+     * @see SandboxedInstanceProvider
+     *
+     * @param runtimeClassName full name of runtime object class
+     * @param useCurrentJvmProperties whether to use current JVM properties
+     * @return sandboxed instance
+     */
     public static SandboxedInstance getSandboxedInstance(String runtimeClassName, boolean useCurrentJvmProperties) {
         return sandboxedInstanceProvider.getSandboxedInstance(runtimeClassName, useCurrentJvmProperties);
     }
 
+    /**
+     * Provides {@link SandboxedInstance} objects.
+     */
     public static class SandboxedInstanceProvider {
 
+        /** Shared instance of provider. */
         public static final SandboxedInstanceProvider INSTANCE = new SandboxedInstanceProvider();
 
-        public SandboxedInstance getSandboxedInstance(String runtimeClassName, boolean useCurrentJvmProperties) {
+        /**
+         * Get {@link SandboxedInstance} for given runtime object class.
+         *
+         * @param runtimeClassName full name of runtime object class
+         * @param useCurrentJvmProperties whether to use current JVM properties
+         * @return sandboxed instance
+         */
+        public SandboxedInstance getSandboxedInstance(final String runtimeClassName, final boolean useCurrentJvmProperties) {
             ClassLoader classLoader = SalesforceDefinition.class.getClassLoader();
             RuntimeInfo runtimeInfo = SalesforceDefinition.getCommonRuntimeInfo(runtimeClassName);
             if (useCurrentJvmProperties) {

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.talend.components.salesforce.SalesforceDefinition.SOURCE_CLASS;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +71,7 @@ public class TSalesforceInputDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals("org.talend.components.salesforce.runtime.SalesforceSource", jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(SOURCE_CLASS, jarRuntimeInfo.getRuntimeClassName());
     }
 
     @Test

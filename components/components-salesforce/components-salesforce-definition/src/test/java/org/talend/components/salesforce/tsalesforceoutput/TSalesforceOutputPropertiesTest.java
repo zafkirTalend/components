@@ -27,6 +27,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 import static org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties.FIELD_ERROR_MESSAGE;
 import static org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties.FIELD_SALESFORCE_ID;
 import static org.talend.components.salesforce.tsalesforceoutput.TSalesforceOutputProperties.FIELD_STATUS;
@@ -46,8 +47,9 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.api.test.ComponentTestUtils;
 import org.talend.components.salesforce.SalesforceDefinition;
 import org.talend.components.salesforce.SalesforceOutputProperties;
-import org.talend.components.salesforce.TestFixture;
+import org.talend.components.salesforce.TestFixtureBase;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
+import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
 import org.talend.daikon.avro.SchemaConstants;
@@ -158,77 +160,81 @@ public class TSalesforceOutputPropertiesTest {
     public void testBeforeModuleName() throws Throwable {
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        propertiesService.beforePropertyActivate("moduleName", properties.module);
+            propertiesService.beforePropertyActivate("moduleName", properties.module);
 
-        assertThat((Iterable<String>) properties.module.moduleName.getPossibleValues(), containsInAnyOrder(
-                "Account", "Customer"));
+            assertThat((Iterable<String>) properties.module.moduleName.getPossibleValues(),
+                    containsInAnyOrder("Account", "Customer"));
+        }
     }
 
     @Test(expected = TalendRuntimeException.class)
     public void testBeforeModuleNameException() throws Throwable {
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
-                .getSchemaNames(any(RuntimeContainer.class)))
-                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+            when(sandboxedInstanceTestFixture.runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
+                    .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
-        propertiesService.beforePropertyActivate("moduleName", properties.module);
+            propertiesService.beforePropertyActivate("moduleName", properties.module);
+        }
     }
 
     @Test
     public void testAfterModuleName() throws Throwable {
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.INSERT);
-        propertiesService.afterProperty("outputAction", properties);
+            properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.INSERT);
+            propertiesService.afterProperty("outputAction", properties);
 
-        properties.module.moduleName.setValue("Account");
-        propertiesService.afterProperty("moduleName", properties.module);
+            properties.module.moduleName.setValue("Account");
+            propertiesService.afterProperty("moduleName", properties.module);
 
-        assertEquals(DEFAULT_SCHEMA_1, properties.module.main.schema.getValue());
-        assertThat((Iterable<String>) properties.upsertRelationTable.columnName.getPossibleValues(), contains(
-                "Id", "Name"));
+            assertEquals(DEFAULT_SCHEMA_1, properties.module.main.schema.getValue());
+            assertThat((Iterable<String>) properties.upsertRelationTable.columnName.getPossibleValues(),
+                    contains("Id", "Name"));
+        }
     }
 
     @Test
     public void testAfterModuleNameForUpsert() throws Throwable {
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.UPSERT);
-        propertiesService.afterProperty("outputAction", properties);
+            properties.outputAction.setValue(SalesforceOutputProperties.OutputAction.UPSERT);
+            propertiesService.afterProperty("outputAction", properties);
 
-        properties.module.moduleName.setValue("Account");
-        propertiesService.afterProperty("moduleName", properties.module);
+            properties.module.moduleName.setValue("Account");
+            propertiesService.afterProperty("moduleName", properties.module);
 
-        assertThat((Iterable<String>) properties.upsertKeyColumn.getPossibleValues(), contains(
-                "Id", "Name"));
+            assertThat((Iterable<String>) properties.upsertKeyColumn.getPossibleValues(),
+                    contains("Id", "Name"));
+        }
     }
 
     @Test(expected = TalendRuntimeException.class)
     public void testAfterModuleNameException() throws Throwable {
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        when(sandboxedInstanceTestFixture.runtimeSourceOrSink.getEndpointSchema(
-                any(RuntimeContainer.class), eq("Customer")))
-                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+            when(sandboxedInstanceTestFixture.runtimeSourceOrSink
+                    .getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
+                    .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
-        properties.module.moduleName.setValue("Customer");
-        propertiesService.afterProperty("moduleName", properties.module);
+            properties.module.moduleName.setValue("Customer");
+            propertiesService.afterProperty("moduleName", properties.module);
+        }
     }
 
     @Test
@@ -249,7 +255,7 @@ public class TSalesforceOutputPropertiesTest {
         ComponentTestUtils.checkSerialize(properties, errorCollector);
     }
 
-    class SandboxedInstanceTestFixture implements TestFixture {
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
         SandboxedInstance sandboxedInstance;
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
@@ -264,7 +270,8 @@ public class TSalesforceOutputPropertiesTest {
             when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
                     .thenReturn(sandboxedInstance);
 
-            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class);
+            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
+                    withSettings().extraInterfaces(SalesforceSchemaHelper.class));
             doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
             when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), eq(properties.connection)))
                     .thenReturn(ValidationResult.OK);

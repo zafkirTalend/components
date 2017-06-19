@@ -39,7 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.SalesforceDefinition;
-import org.talend.components.salesforce.TestFixture;
+import org.talend.components.salesforce.TestFixtureBase;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.components.salesforce.tsalesforceinput.TSalesforceInputProperties.QueryMode;
@@ -256,39 +256,39 @@ public class TSalesforceInputPropertiesTest {
         properties.module.moduleName.setValue("Account");
         properties.module.main.schema.setValue(schema);
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        // Valid
+            // Valid
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessQuery(eq(schema), eq("Account")))
-                .thenReturn(query);
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                    .guessQuery(eq(schema), eq("Account"))).thenReturn(query);
 
-        ValidationResult vr1 = properties.validateGuessQuery();
-        assertEquals(ValidationResult.Result.OK, vr1.getStatus());
-        assertEquals(query, properties.query.getValue());
+            ValidationResult vr1 = properties.validateGuessQuery();
+            assertEquals(ValidationResult.Result.OK, vr1.getStatus());
+            assertEquals(query, properties.query.getValue());
 
-        // Not valid
+            // Not valid
 
-        properties.module.main.schema.setValue(emptySchema);
+            properties.module.main.schema.setValue(emptySchema);
 
-        ValidationResult vr2 = properties.validateGuessQuery();
-        assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
-        assertEquals("", properties.query.getValue());
+            ValidationResult vr2 = properties.validateGuessQuery();
+            assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
+            assertEquals("", properties.query.getValue());
 
-        // Error
+            // Error
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessQuery(eq(schema), eq("Account")))
-                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
+                    .guessQuery(eq(schema), eq("Account")))
+                    .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
-        properties.module.main.schema.setValue(schema);
-        properties.query.setValue(query);
+            properties.module.main.schema.setValue(schema);
+            properties.query.setValue(query);
 
-        ValidationResult vr3 = properties.validateGuessQuery();
-        assertEquals(ValidationResult.Result.ERROR, vr3.getStatus());
-        assertEquals(query, properties.query.getValue());
+            ValidationResult vr3 = properties.validateGuessQuery();
+            assertEquals(ValidationResult.Result.ERROR, vr3.getStatus());
+            assertEquals(query, properties.query.getValue());
+        }
     }
 
     @Test
@@ -311,47 +311,44 @@ public class TSalesforceInputPropertiesTest {
         properties.module.main.schema.setValue(emptySchema);
         properties.query.setValue(query);
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        // Valid
+            // Valid
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessSchema(eq(query)))
-                .thenReturn(schema);
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink).guessSchema(eq(query)))
+                    .thenReturn(schema);
 
-        ValidationResult vr1 = properties.validateGuessSchema();
-        assertEquals(ValidationResult.Result.OK, vr1.getStatus());
-        assertEquals(schema, properties.module.main.schema.getValue());
+            ValidationResult vr1 = properties.validateGuessSchema();
+            assertEquals(ValidationResult.Result.OK, vr1.getStatus());
+            assertEquals(schema, properties.module.main.schema.getValue());
 
-        // Not valid / Error
+            // Not valid / Error
 
-        properties.query.setValue(invalidQuery);
-        properties.module.main.schema.setValue(schema);
+            properties.query.setValue(invalidQuery);
+            properties.module.main.schema.setValue(schema);
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessSchema(eq(invalidQuery)))
-                .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+                    .thenThrow(TalendRuntimeException.createUnexpectedException("ERROR"));
 
-        ValidationResult vr2 = properties.validateGuessSchema();
-        assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
-        assertEquals(schema, properties.module.main.schema.getValue());
+            ValidationResult vr2 = properties.validateGuessSchema();
+            assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
+            assertEquals(schema, properties.module.main.schema.getValue());
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessSchema(eq(invalidQuery)))
-                .thenThrow(new RuntimeException("ERROR"));
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+                    .thenThrow(new RuntimeException("ERROR"));
 
-        vr2 = properties.validateGuessSchema();
-        assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
-        assertEquals(schema, properties.module.main.schema.getValue());
+            vr2 = properties.validateGuessSchema();
+            assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
+            assertEquals(schema, properties.module.main.schema.getValue());
 
-        when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink)
-                .guessSchema(eq(invalidQuery)))
-                .thenThrow(new IOException("I/O ERROR"));
+            when(((SalesforceSchemaHelper) sandboxedInstanceTestFixture.runtimeSourceOrSink).guessSchema(eq(invalidQuery)))
+                    .thenThrow(new IOException("I/O ERROR"));
 
-        vr2 = properties.validateGuessSchema();
-        assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
-        assertEquals(schema, properties.module.main.schema.getValue());
+            vr2 = properties.validateGuessSchema();
+            assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
+            assertEquals(schema, properties.module.main.schema.getValue());
+        }
     }
 
     private void setupProperties() {
@@ -361,7 +358,7 @@ public class TSalesforceInputPropertiesTest {
         properties.module.init();
     }
 
-    class SandboxedInstanceTestFixture implements TestFixture {
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
         SandboxedInstance sandboxedInstance;
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink;

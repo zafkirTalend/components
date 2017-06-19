@@ -43,6 +43,7 @@ import org.talend.daikon.runtime.RuntimeInfo;
 public class TSalesforceOutputBulkExecDefinitionTest {
 
     private TSalesforceOutputBulkExecDefinition definition;
+
     private TSalesforceOutputBulkExecProperties properties;
 
     @Before

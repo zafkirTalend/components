@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.talend.components.salesforce.SalesforceDefinition.DATAPREP_SOURCE_CLASS;
 
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import org.talend.daikon.runtime.RuntimeInfo;
 public class SalesforceInputDefinitionTest {
 
     private SalesforceInputDefinition definition;
+
     private SalesforceInputProperties properties;
 
     @Before
@@ -61,8 +63,7 @@ public class SalesforceInputDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals("org.talend.components.salesforce.runtime.dataprep.SalesforceDataprepSource",
-                jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(DATAPREP_SOURCE_CLASS, jarRuntimeInfo.getRuntimeClassName());
     }
 
     @Test

@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceDefinition;
-import org.talend.components.salesforce.TestFixture;
+import org.talend.components.salesforce.TestFixtureBase;
 import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
 import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.properties.ValidationResult;
@@ -165,24 +165,23 @@ public class SalesforceConnectionPropertiesTest {
 
         Form wizardForm = properties.getForm(SalesforceConnectionProperties.FORM_WIZARD);
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
+            sandboxedInstanceTestFixture.setUp();
 
-        // Valid
+            // Valid
 
-        ValidationResult vr1 = properties.validateTestConnection();
-        assertEquals(ValidationResult.Result.OK, vr1.getStatus());
-        assertTrue(wizardForm.isAllowForward());
+            ValidationResult vr1 = properties.validateTestConnection();
+            assertEquals(ValidationResult.Result.OK, vr1.getStatus());
+            assertTrue(wizardForm.isAllowForward());
 
-        // Not valid
+            // Not valid
 
-        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
-                .validate(any(RuntimeContainer.class)))
-                .thenReturn(new ValidationResultMutable()
-                        .setStatus(ValidationResult.Result.ERROR).setMessage("Error"));
-        ValidationResult vr2 = properties.validateTestConnection();
-        assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
-        assertFalse(wizardForm.isAllowForward());
+            when(sandboxedInstanceTestFixture.runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(new ValidationResultMutable().setStatus(ValidationResult.Result.ERROR).setMessage("Error"));
+            ValidationResult vr2 = properties.validateTestConnection();
+            assertEquals(ValidationResult.Result.ERROR, vr2.getStatus());
+            assertFalse(wizardForm.isAllowForward());
+        }
     }
 
     private void testLoginTypeWidgets(Form form) {
@@ -191,7 +190,7 @@ public class SalesforceConnectionPropertiesTest {
 
     }
 
-    class SandboxedInstanceTestFixture implements TestFixture {
+    class SandboxedInstanceTestFixture extends TestFixtureBase {
 
         SandboxedInstance sandboxedInstance;
         SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
