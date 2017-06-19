@@ -285,6 +285,15 @@
                     <outputDirectory>${project.build.sourceDirectory}/org/talend/components/salesforce/soql/parser</outputDirectory>
                 </configuration>
             </plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>org/talend/components/salesforce/soql/parser/**/*</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>
