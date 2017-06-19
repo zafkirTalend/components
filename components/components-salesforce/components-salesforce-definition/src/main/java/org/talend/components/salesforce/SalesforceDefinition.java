@@ -35,6 +35,12 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
 
     public static final boolean USE_CURRENT_JVM_PROPS = true;
 
+    public static final String RUNTIME_MVN_URL = "mvn:org.talend.components/components-salesforce-runtime";
+
+    public static final String RUNTIME_MVN_GROUP_ID = "org.talend.components";
+
+    public static final String RUNTIME_MVN_ARTIFACT_ID = "components-salesforce-runtime";
+
     public static final String DATASTORE_RUNTIME_CLASS = "org.talend.components.salesforce.runtime.dataprep.SalesforceDatastoreRuntime";
 
     public static final String DATASET_RUNTIME_CLASS = "org.talend.components.salesforce.runtime.dataprep.SalesforceDatasetRuntime";
@@ -47,7 +53,7 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
 
     public static final String SINK_CLASS = "org.talend.components.salesforce.runtime.SalesforceSink";
 
-    public static final String BULK_FILE_SINK = "org.talend.components.salesforce.runtime.SalesforceBulkFileSink";
+    public static final String BULK_FILE_SINK_CLASS = "org.talend.components.salesforce.runtime.SalesforceBulkFileSink";
 
     /** Provides {@link SandboxedInstance}s. */
     private static SandboxedInstanceProvider sandboxedInstanceProvider = SandboxedInstanceProvider.INSTANCE;
@@ -74,8 +80,8 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
     }
 
     public static RuntimeInfo getCommonRuntimeInfo(String clazzFullName) {
-        return new JarRuntimeInfo("mvn:org.talend.components/components-salesforce-runtime",
-                DependenciesReader.computeDependenciesFilePath("org.talend.components", "components-salesforce-runtime"),
+        return new JarRuntimeInfo(RUNTIME_MVN_URL,
+                DependenciesReader.computeDependenciesFilePath(RUNTIME_MVN_GROUP_ID, RUNTIME_MVN_ARTIFACT_ID),
                 clazzFullName);
     }
 
@@ -83,10 +89,22 @@ public abstract class SalesforceDefinition extends AbstractComponentDefinition {
         return Arrays.asList(SALESFORCE_CLOUD_TAG, SALESFORCE_BUSINESS_TAG);
     }
 
+    /**
+     * Set provider of {@link SandboxedInstance}s.
+     *
+     * <p>The method is intended for debug/test purposes only and should not be used in production.
+     *
+     * @param provider provider to be set, can't be {@code null}
+     */
     public static void setSandboxedInstanceProvider(SandboxedInstanceProvider provider) {
         sandboxedInstanceProvider = provider;
     }
 
+    /**
+     * Get current provider of {@link SandboxedInstance}s.
+     *
+     * @return provider
+     */
     public static SandboxedInstanceProvider getSandboxedInstanceProvider() {
         return sandboxedInstanceProvider;
     }

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.talend.components.salesforce.SalesforceDefinition.BULK_FILE_SINK;
+import static org.talend.components.salesforce.SalesforceDefinition.BULK_FILE_SINK_CLASS;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,7 +73,7 @@ public class TSalesforceOutputBulkDefinitionTest {
         JarRuntimeInfo jarRuntimeInfo = (JarRuntimeInfo) runtimeInfo;
         assertNotNull(jarRuntimeInfo.getJarUrl());
         assertNotNull(jarRuntimeInfo.getDepTxtPath());
-        assertEquals(BULK_FILE_SINK, jarRuntimeInfo.getRuntimeClassName());
+        assertEquals(BULK_FILE_SINK_CLASS, jarRuntimeInfo.getRuntimeClassName());
     }
 
     @Test
