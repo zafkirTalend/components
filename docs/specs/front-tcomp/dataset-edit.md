@@ -3,8 +3,7 @@ Modifying an instance
 
 here we can see the different approach taken by dataprep and datastream to add they how metadata to an existing component ui-spec.
 
-1) The Dataprep way
---
+### 1) The Dataprep way
 Summary
 * **[003]** retrieve dataset and datastore properties from dataprep storage.
 * **[004]** Get the UI specs for that datastore and dataset from TCOMP. Datastore is required to initialise some of the dataset values
@@ -17,12 +16,11 @@ The injection of dataprep specific node is done at the json parser level using j
 ![Basic UI sequence: Modifying an instance](dataset_edit_dataprep.png)
 
 
-2) The Datastream way 
---
+### 2) The Datastream way 
 Summary
 * **[003]** retrieve dataset and datastore properties from datastream storage.
 * **[004]** Get the UI specs for that datastore and dataset from TCOMP. Datastore is required to initialise some of the dataset values
-* **[006]** _here it differes from dataprep_ the datastream metadata is no injected into the tcomp payload but rather the tcomp payload is nested into datastream payload. The 3 json (schema, ui, props) are all nested into a higher level schema, ui and props. 
+* **[006]** _here it differs from dataprep_ the datastream metadata is not injected into the tcomp payload but rather the tcomp payload is nested into datastream payload. The 3 json (schema, ui, props) are all nested into a higher level schema, ui and props. 
 
 The nesting is also done at the json parser level
 
