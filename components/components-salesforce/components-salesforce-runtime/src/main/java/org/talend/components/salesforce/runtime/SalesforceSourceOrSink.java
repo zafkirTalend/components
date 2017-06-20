@@ -336,6 +336,11 @@ public class SalesforceSourceOrSink implements SalesforceRuntimeSourceOrSink, Sa
             public List<URL> getMavenUrlDependencies() {
                 return Collections.emptyList();
             }
+
+            @Override
+            public boolean isClassLoaderReusable() {
+                return true;
+            }
         };
     }
 

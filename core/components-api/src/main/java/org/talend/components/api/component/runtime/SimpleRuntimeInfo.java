@@ -72,6 +72,11 @@ public class SimpleRuntimeInfo implements RuntimeInfo {
     }
 
     @Override
+    public boolean isClassLoaderReusable() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
