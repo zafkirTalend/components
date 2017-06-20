@@ -468,7 +468,8 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
         props.oauth.clientSecret.setValue("3545101463828280342");
         props.oauth.callbackHost.setValue("localhost");
         props.oauth.callbackPort.setValue(8115);
-        // props.oauth.tokenFile.setValue();
+        String tokenFile = tempFolder.newFile("token" + createNewRandom()).getPath();
+        props.oauth.tokenFile.setValue(tokenFile);
         return props;
     }
 
