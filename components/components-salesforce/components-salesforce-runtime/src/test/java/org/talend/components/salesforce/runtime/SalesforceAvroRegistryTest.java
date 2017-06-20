@@ -30,7 +30,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -59,7 +58,6 @@ public class SalesforceAvroRegistryTest {
     @Before
     public void setUp() {
         dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("EET"));
     }
 
     /**
