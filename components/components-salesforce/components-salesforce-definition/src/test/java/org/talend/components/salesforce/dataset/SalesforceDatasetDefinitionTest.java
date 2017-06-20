@@ -23,13 +23,14 @@ import static org.talend.components.salesforce.SalesforceDefinition.DATASET_RUNT
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.runtime.JarRuntimeInfo;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.definition.DefinitionImageType;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class SalesforceDatasetDefinitionTest {
+public class SalesforceDatasetDefinitionTest extends SalesforceTestBase {
 
     private SalesforceDatasetDefinition definition;
     private SalesforceDatasetProperties properties;

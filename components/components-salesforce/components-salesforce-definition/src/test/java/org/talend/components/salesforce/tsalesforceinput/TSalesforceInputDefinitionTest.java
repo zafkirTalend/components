@@ -36,15 +36,17 @@ import org.talend.components.api.component.runtime.JarRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class TSalesforceInputDefinitionTest {
+public class TSalesforceInputDefinitionTest extends SalesforceTestBase {
 
     private TSalesforceInputDefinition definition;
+
     private SalesforceInputProperties properties;
 
     @Before

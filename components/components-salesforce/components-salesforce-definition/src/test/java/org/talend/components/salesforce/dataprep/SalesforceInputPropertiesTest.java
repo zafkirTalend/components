@@ -23,13 +23,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.components.salesforce.dataset.SalesforceDatasetProperties;
 import org.talend.daikon.properties.presentation.Form;
 
 /**
  *
  */
-public class SalesforceInputPropertiesTest {
+public class SalesforceInputPropertiesTest extends SalesforceTestBase {
 
     private SalesforceInputProperties properties;
 

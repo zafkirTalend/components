@@ -35,12 +35,13 @@ import org.talend.components.api.component.runtime.ExecutionEngine;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class TSalesforceOutputBulkExecDefinitionTest {
+public class TSalesforceOutputBulkExecDefinitionTest extends SalesforceTestBase {
 
     private TSalesforceOutputBulkExecDefinition definition;
 

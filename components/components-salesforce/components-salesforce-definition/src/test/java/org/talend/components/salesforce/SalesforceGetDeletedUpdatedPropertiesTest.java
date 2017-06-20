@@ -29,7 +29,7 @@ import org.talend.daikon.properties.presentation.Form;
 /**
  *
  */
-public class SalesforceGetDeletedUpdatedPropertiesTest {
+public class SalesforceGetDeletedUpdatedPropertiesTest extends SalesforceTestBase {
 
     private SalesforceGetDeletedUpdatedProperties properties;
 

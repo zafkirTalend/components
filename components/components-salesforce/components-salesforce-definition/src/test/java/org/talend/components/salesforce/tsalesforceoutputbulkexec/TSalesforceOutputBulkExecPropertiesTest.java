@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.salesforce.SalesforceOutputProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecProperties;
 import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkProperties;
 import org.talend.daikon.properties.presentation.Form;
@@ -32,7 +33,7 @@ import org.talend.daikon.properties.presentation.Form;
 /**
  *
  */
-public class TSalesforceOutputBulkExecPropertiesTest {
+public class TSalesforceOutputBulkExecPropertiesTest extends SalesforceTestBase {
 
     private TSalesforceOutputBulkExecProperties properties;
 

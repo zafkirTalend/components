@@ -31,12 +31,13 @@ import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.api.component.SupportedProduct;
 import org.talend.components.api.component.runtime.ExecutionEngine;
 import org.talend.components.api.component.runtime.JarRuntimeInfo;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class SalesforceInputDefinitionTest {
+public class SalesforceInputDefinitionTest extends SalesforceTestBase {
 
     private SalesforceInputDefinition definition;
 

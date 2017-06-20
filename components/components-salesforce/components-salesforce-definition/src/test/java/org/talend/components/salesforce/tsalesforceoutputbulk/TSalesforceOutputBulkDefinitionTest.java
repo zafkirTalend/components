@@ -38,12 +38,13 @@ import org.talend.components.api.component.runtime.JarRuntimeInfo;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.common.SchemaProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class TSalesforceOutputBulkDefinitionTest {
+public class TSalesforceOutputBulkDefinitionTest extends SalesforceTestBase {
 
     private TSalesforceOutputBulkDefinition definition;
 

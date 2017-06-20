@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.salesforce.SalesforceOutputProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.service.PropertiesService;
@@ -37,7 +38,7 @@ import org.talend.daikon.properties.service.PropertiesServiceImpl;
 /**
  *
  */
-public class TSalesforceBulkExecPropertiesTest {
+public class TSalesforceBulkExecPropertiesTest extends SalesforceTestBase {
 
     public static final Schema DEFAULT_SCHEMA = SchemaBuilder.builder().record("Schema").fields() //
             .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //

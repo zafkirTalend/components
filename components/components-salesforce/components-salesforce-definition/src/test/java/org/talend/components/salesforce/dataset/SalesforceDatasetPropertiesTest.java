@@ -15,6 +15,7 @@ package org.talend.components.salesforce.dataset;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,58 +24,33 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.salesforce.SalesforceDefinition;
-import org.talend.components.salesforce.TestFixtureBase;
-import org.talend.components.salesforce.common.SalesforceRuntimeSourceOrSink;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.components.salesforce.dataprep.SalesforceInputProperties;
 import org.talend.components.salesforce.datastore.SalesforceDatastoreProperties;
-import org.talend.components.salesforce.schema.SalesforceSchemaHelper;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.SimpleNamedThing;
-import org.talend.daikon.avro.SchemaConstants;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.ValidationResult;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.service.PropertiesService;
 import org.talend.daikon.properties.service.PropertiesServiceImpl;
-import org.talend.daikon.sandbox.SandboxedInstance;
 
 /**
  *
  */
-public class SalesforceDatasetPropertiesTest {
-
-    public static final Schema DEFAULT_SCHEMA_1 = SchemaBuilder.builder().record("Schema").fields() //
-            .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
-            .name("Name").type().stringType().noDefault() //
-            .endRecord();
-
-    public static final Schema DEFAULT_SCHEMA_2 = SchemaBuilder.builder().record("Schema").fields() //
-            .name("Id").prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true").type().stringType().noDefault() //
-            .name("FirstName").type().stringType().noDefault() //
-            .name("LastName").type().stringType().noDefault() //
-            .endRecord();
+public class SalesforceDatasetPropertiesTest extends SalesforceTestBase {
 
     private PropertiesService propertiesService;
 
@@ -116,8 +92,9 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
-            sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
             properties.setDatastoreProperties(datastoreProperties);
 
@@ -125,6 +102,7 @@ public class SalesforceDatasetPropertiesTest {
                     "Account", "Customer"));
 
             assertThat(properties.selectColumnIds.getPossibleValues(), empty());
+
         }
     }
 
@@ -133,14 +111,16 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
-        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
-                .getSchemaNames(any(RuntimeContainer.class)))
-                .thenThrow(new IOException("ERROR"));
+            when(testFixture.runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
+                    .thenThrow(new IOException("ERROR"));
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
+
+        }
     }
 
     @Test(expected = TalendRuntimeException.class)
@@ -148,14 +128,15 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
-        when(sandboxedInstanceTestFixture.runtimeSourceOrSink
-                .validate(any(RuntimeContainer.class)))
-                .thenReturn(new ValidationResult(ValidationResult.Result.ERROR, "CONNECTION ERROR"));
+            when(testFixture.runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
+                    .thenReturn(new ValidationResult(ValidationResult.Result.ERROR, "CONNECTION ERROR"));
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
+        }
     }
 
     @Test
@@ -163,32 +144,34 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture();
-        sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
-        properties.setDatastoreProperties(datastoreProperties);
+            properties.setDatastoreProperties(datastoreProperties);
 
-        Form mainForm = properties.getForm(Form.MAIN);
+            Form mainForm = properties.getForm(Form.MAIN);
 
-        // Module name not set
+            // Module name not set
 
-        properties.refreshLayout(mainForm);
+            properties.refreshLayout(mainForm);
 
-        assertTrue(mainForm.getWidget(properties.moduleName.getName()).isVisible());
-        assertFalse(mainForm.getWidget(properties.query.getName()).isVisible());
-        assertFalse(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
-        assertFalse(properties.selectColumnIds.isRequired());
+            assertTrue(mainForm.getWidget(properties.moduleName.getName()).isVisible());
+            assertFalse(mainForm.getWidget(properties.query.getName()).isVisible());
+            assertFalse(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
+            assertFalse(properties.selectColumnIds.isRequired());
 
-        // Module name set
+            // Module name set
 
-        properties.moduleName.setValue("Account");
+            properties.moduleName.setValue("Account");
 
-        properties.refreshLayout(mainForm);
+            properties.refreshLayout(mainForm);
 
-        assertTrue(mainForm.getWidget(properties.moduleName.getName()).isVisible());
-        assertFalse(mainForm.getWidget(properties.query.getName()).isVisible());
-        assertTrue(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
-        assertTrue(properties.selectColumnIds.isRequired());
+            assertTrue(mainForm.getWidget(properties.moduleName.getName()).isVisible());
+            assertFalse(mainForm.getWidget(properties.query.getName()).isVisible());
+            assertTrue(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
+            assertTrue(properties.selectColumnIds.isRequired());
+        }
     }
 
     @Test
@@ -196,8 +179,9 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
-            sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
             properties.setDatastoreProperties(datastoreProperties);
 
@@ -221,8 +205,9 @@ public class SalesforceDatasetPropertiesTest {
         datastoreProperties.init();
         properties.init();
 
-        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
-            sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
             properties.setDatastoreProperties(datastoreProperties);
 
@@ -230,12 +215,13 @@ public class SalesforceDatasetPropertiesTest {
 
             properties.refreshProperties();
 
-            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(),
-                    containsInAnyOrder("Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
+                    "Account", "Customer"));
 
-            assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(), contains(
-                    (NamedThing) new SimpleNamedThing("Id", "Id"),
-                    new SimpleNamedThing("Name", "Name")));
+            assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(),
+                    contains((NamedThing) new SimpleNamedThing("Id", "Id"),
+                            new SimpleNamedThing("Name", "Name")));
+
         }
     }
 
@@ -246,8 +232,9 @@ public class SalesforceDatasetPropertiesTest {
 
         reset(properties);
 
-        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
-            sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
             properties.setDatastoreProperties(datastoreProperties);
 
@@ -255,8 +242,7 @@ public class SalesforceDatasetPropertiesTest {
 
             propertiesService.afterProperty("sourceType", properties);
 
-            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                    "Account", "Customer"));
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder("Account", "Customer"));
 
             assertNull(properties.moduleName.getValue());
             assertNull(properties.selectColumnIds.getValue());
@@ -264,6 +250,7 @@ public class SalesforceDatasetPropertiesTest {
 
             Form mainForm = properties.getForm(Form.MAIN);
             verify(properties, times(1)).refreshLayout(eq(mainForm));
+
         }
     }
 
@@ -274,8 +261,9 @@ public class SalesforceDatasetPropertiesTest {
 
         reset(properties);
 
-        try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
-            sandboxedInstanceTestFixture.setUp();
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
 
             properties.setDatastoreProperties(datastoreProperties);
 
@@ -292,51 +280,6 @@ public class SalesforceDatasetPropertiesTest {
 
             Form mainForm = properties.getForm(Form.MAIN);
             verify(properties, times(1)).refreshLayout(eq(mainForm));
-        }
-    }
-
-    class SandboxedInstanceTestFixture extends TestFixtureBase {
-
-        SandboxedInstance sandboxedInstance;
-        SalesforceRuntimeSourceOrSink runtimeSourceOrSink;
-
-        @Override
-        public void setUp() throws Exception {
-            SalesforceDefinition.SandboxedInstanceProvider sandboxedInstanceProvider = mock(
-                    SalesforceDefinition.SandboxedInstanceProvider.class);
-            SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
-
-            sandboxedInstance = mock(SandboxedInstance.class);
-            when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
-                    .thenReturn(sandboxedInstance);
-
-            runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
-                    withSettings().extraInterfaces(SalesforceSchemaHelper.class));
-            doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
-            when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), any(SalesforceInputProperties.class)))
-                    .thenReturn(ValidationResult.OK);
-            when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
-                    .thenReturn(ValidationResult.OK);
-
-            List<NamedThing> moduleNames = Arrays.<NamedThing>asList(
-                    new SimpleNamedThing("Account"),
-                    new SimpleNamedThing("Customer")
-            );
-
-            when(runtimeSourceOrSink.getSchemaNames(any(RuntimeContainer.class)))
-                    .thenReturn(moduleNames);
-
-            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Account")))
-                    .thenReturn(DEFAULT_SCHEMA_1);
-
-            when(runtimeSourceOrSink.getEndpointSchema(any(RuntimeContainer.class), eq("Customer")))
-                    .thenReturn(DEFAULT_SCHEMA_2);
-        }
-
-        @Override
-        public void tearDown() throws Exception {
-            SalesforceDefinition.setSandboxedInstanceProvider(
-                    SalesforceDefinition.SandboxedInstanceProvider.INSTANCE);
         }
     }
 }

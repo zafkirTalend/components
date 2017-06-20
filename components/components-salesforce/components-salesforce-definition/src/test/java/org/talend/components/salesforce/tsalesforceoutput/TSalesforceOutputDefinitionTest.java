@@ -39,14 +39,16 @@ import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
 import org.talend.components.salesforce.SalesforceOutputProperties;
+import org.talend.components.salesforce.SalesforceTestBase;
 import org.talend.daikon.runtime.RuntimeInfo;
 
 /**
  *
  */
-public class TSalesforceOutputDefinitionTest {
+public class TSalesforceOutputDefinitionTest extends SalesforceTestBase {
 
     private TSalesforceOutputDefinition definition;
+
     private SalesforceOutputProperties properties;
 
     @Before
