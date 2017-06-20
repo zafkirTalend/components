@@ -1,7 +1,7 @@
-Modifying an instance
+Modifying a Dataset instance
 =====================
 
-here we can see the different approach taken by dataprep and datastream to add they how metadata to an existing component ui-spec.
+here we can see the different approach taken by dataprep and datastream of how each app adds their own specific metadata to an tcomp dataset.
 
 ### 1) The Dataprep way
 Summary
