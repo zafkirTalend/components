@@ -70,8 +70,19 @@ public class SalesforceTestBase {
                 .module("Customer", DEFAULT_TEST_SCHEMA_2);
     }
 
+    /**
+     * Test fixture which creates mocked {@link SalesforceRuntimeSourceOrSink} which implements
+     * {@link SalesforceSchemaHelper}.
+     *
+     * <p>This class supports {@link AutoCloseable} and can be used in {@code try-with-resources} block.
+     */
     public static class MockRuntimeSourceOrSinkTestFixture implements TestFixture, AutoCloseable {
 
+        /**
+         * Matcher to be used for matching of properties passed to
+         * {@link org.talend.components.api.component.runtime.SourceOrSink#initialize(RuntimeContainer, Properties)} method
+         * invoked on mock.
+         */
         protected Matcher<? extends ComponentProperties> propertiesMatcher;
 
         protected TestDataset testDataset;
@@ -104,14 +115,18 @@ public class SalesforceTestBase {
             SalesforceDefinition.setSandboxedInstanceProvider(sandboxedInstanceProvider);
 
             sandboxedInstance = mock(SandboxedInstance.class);
+
             when(sandboxedInstanceProvider.getSandboxedInstance(anyString(), anyBoolean()))
                     .thenReturn(sandboxedInstance);
 
             runtimeSourceOrSink = mock(SalesforceRuntimeSourceOrSink.class,
                     withSettings().extraInterfaces(SalesforceSchemaHelper.class));
+
             doReturn(runtimeSourceOrSink).when(sandboxedInstance).getInstance();
+
             when(runtimeSourceOrSink.initialize(any(RuntimeContainer.class), argThat(propertiesMatcher)))
                     .thenReturn(ValidationResult.OK);
+
             when(runtimeSourceOrSink.validate(any(RuntimeContainer.class)))
                     .thenReturn(ValidationResult.OK);
 

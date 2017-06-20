@@ -106,6 +106,29 @@ public class SalesforceDatasetPropertiesTest extends SalesforceTestBase {
         }
     }
 
+    @Test
+    public void testSetDataStorePropertiesWithModuleNameSpecified() throws Exception {
+        datastoreProperties.init();
+        properties.init();
+
+        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
+                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
+            testFixture.setUp();
+
+            properties.moduleName.setValue("Account");
+
+            properties.setDatastoreProperties(datastoreProperties);
+
+            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
+                    "Account", "Customer"));
+
+            assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(),
+                    contains((NamedThing) new SimpleNamedThing("Id", "Id"),
+                            new SimpleNamedThing("Name", "Name")));
+
+        }
+    }
+
     @Test(expected = TalendRuntimeException.class)
     public void testSetDatastorePropertiesException() throws Exception {
         datastoreProperties.init();
@@ -197,31 +220,6 @@ public class SalesforceDatasetPropertiesTest extends SalesforceTestBase {
             assertFalse(properties.moduleName.isRequired());
             assertFalse(mainForm.getWidget(properties.selectColumnIds.getName()).isVisible());
             assertFalse(properties.selectColumnIds.isRequired());
-        }
-    }
-
-    @Test
-    public void testRefreshProperties() throws Exception {
-        datastoreProperties.init();
-        properties.init();
-
-        try (MockRuntimeSourceOrSinkTestFixture testFixture = new MockRuntimeSourceOrSinkTestFixture(
-                isA(SalesforceInputProperties.class), createDefaultTestDataset())) {
-            testFixture.setUp();
-
-            properties.setDatastoreProperties(datastoreProperties);
-
-            properties.moduleName.setValue("Account");
-
-            properties.refreshProperties();
-
-            assertThat((Iterable<String>) properties.moduleName.getPossibleValues(), containsInAnyOrder(
-                    "Account", "Customer"));
-
-            assertThat((Iterable<NamedThing>) properties.selectColumnIds.getPossibleValues(),
-                    contains((NamedThing) new SimpleNamedThing("Id", "Id"),
-                            new SimpleNamedThing("Name", "Name")));
-
         }
     }
 
