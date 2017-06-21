@@ -198,32 +198,32 @@ public final class SnowflakeWriter implements WriterWithFeedback<Result, Indexed
             Field f = collectedFields.get(i);
             Schema s = AvroUtils.unwrapIfNullable(f.schema());
             Object inputValue = input.get(i);
-            if (inputValue instanceof String || inputValue == null) {
-                row[i] = input.get(i);
+            if (null == inputValue || inputValue instanceof String) {
+                row[i] = inputValue;
             } else if (AvroUtils.isSameType(s, AvroUtils._date())) {
-                Date date = (Date) input.get(i);
+                Date date = (Date) inputValue;
                 row[i] = date.getTime();
             } else if (LogicalTypes.fromSchemaIgnoreInvalid(s) == LogicalTypes.timeMillis()) {
-                Date date = new Date((int) input.get(i));
+                Date date = new Date((int) inputValue);
                 row[i] = timeFormatter.format(date);
             } else if (LogicalTypes.fromSchemaIgnoreInvalid(s) == LogicalTypes.date()) {
                 Date date = null;
-                if (input.get(i) instanceof Date) {
+                if (inputValue instanceof Date) {
                     // Sometimes it can be sent as a Date object. We need to process it like a common date then.
-                    date = (Date) input.get(i);
-                } else if (input.get(i) instanceof Integer) {
+                    date = (Date) inputValue;
+                } else if (inputValue instanceof Integer) {
                     // If the date is int, it represents amount of days from 1970(no timezone). So if the date is
                     // 14.01.2017 it shouldn't be influenced by timezones time differences. It should be the same date
                     // in any timezone.
                     Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
                     c.setTimeInMillis(0);
-                    c.add(Calendar.DATE, (Integer) input.get(i));
+                    c.add(Calendar.DATE, (Integer) inputValue);
                     c.setTimeZone(TimeZone.getDefault());
                     long timeInMillis = c.getTime().getTime();
                     date = new Date(timeInMillis - c.getTimeZone().getOffset(timeInMillis));
                 } else {
                     // long is just a common timestamp value.
-                    date = new Date((Long) input.get(i));
+                    date = new Date((Long) inputValue);
                 }
                 row[i] = dateFormatter.format(date);
             } else if (LogicalTypes.fromSchemaIgnoreInvalid(s) == LogicalTypes.timestampMillis()) {
@@ -235,7 +235,7 @@ public final class SnowflakeWriter implements WriterWithFeedback<Result, Indexed
                     row[i] = inputValue;
                 }
             } else {
-                row[i] = input.get(i);
+                row[i] = inputValue;
             }
         }
 

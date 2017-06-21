@@ -116,7 +116,7 @@ public class SnowflakeAvroRegistry extends JDBCAvroRegistry {
                         return value.getInt(index);
                     } else if (basicSchema.getLogicalType() == LogicalTypes.timeMillis()) {
                         java.sql.Time time = value.getTime(index);
-                        return (time != null) ? (int) value.getTime(index).getTime() : null;
+                        return (time != null) ? (int) time.getTime() : null;
                     } else {
                         java.sql.Timestamp timestamp = value.getTimestamp(index);
                         return (timestamp != null) ? timestamp.getTime() : null;
