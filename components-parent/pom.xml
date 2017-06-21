@@ -457,6 +457,12 @@
 						</goals>
 					</execution>
 					<execution>
+						<id>default-prepare-agent-it</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+					</execution>
+					<execution>
 						<id>default-report</id>
 						<phase>prepare-package</phase>
 						<goals>
