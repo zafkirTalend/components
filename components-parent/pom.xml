@@ -430,7 +430,6 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.18</version>
 				<configuration>
-					<argLine>${jacoco.agent.argLine} ${argLine}</argLine>
 					<systemProperties>
 						<!-- settings.xml and repo are used for pax tests on branch build that 
 							mirror the talend_nexus repo -->
