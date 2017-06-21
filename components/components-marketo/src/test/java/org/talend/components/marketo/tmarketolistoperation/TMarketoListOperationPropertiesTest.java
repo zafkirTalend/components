@@ -152,8 +152,4 @@ public class TMarketoListOperationPropertiesTest extends MarketoTestBase {
         assertEquals(ListOperation.removeFrom, ListOperation.valueOf("removeFrom"));
     }
 
-    @Test
-    public void testAfterMultipleOperation() throws Exception {
-    }
-
 }

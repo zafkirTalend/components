@@ -897,18 +897,6 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
     }
 
     @Test
-    public void testSetupProperties() throws Exception {
-    }
-
-    @Test
-    public void testSetupLayout() throws Exception {
-    }
-
-    @Test
-    public void testValidateFetchCompoundKey() throws Exception {
-    }
-
-    @Test
     public void testBeforeInputOperation() throws Exception {
         props.beforeInputOperation();
         assertEquals(Arrays.asList(getLead, getMultipleLeads, getLeadActivity, getLeadChanges, CustomObject),
@@ -917,38 +905,6 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
         props.beforeInputOperation();
         assertEquals(Arrays.asList(getLead, getMultipleLeads, getLeadActivity, getLeadChanges),
                 props.inputOperation.getPossibleValues());
-    }
-
-    @Test
-    public void testBeforeMappingInput() throws Exception {
-    }
-
-    @Test
-    public void testAfterInputOperation() throws Exception {
-    }
-
-    @Test
-    public void testAfterCustomObjectAction() throws Exception {
-    }
-
-    @Test
-    public void testAfterStandardAction() throws Exception {
-    }
-
-    @Test
-    public void testAfterFetchCustomObjectSchema() throws Exception {
-    }
-
-    @Test
-    public void testAfterUseCompoundKey() throws Exception {
-    }
-
-    @Test
-    public void testAfterFetchCompoundKey() throws Exception {
-    }
-
-    @Test
-    public void testAfterListParam() throws Exception {
     }
 
     @Test

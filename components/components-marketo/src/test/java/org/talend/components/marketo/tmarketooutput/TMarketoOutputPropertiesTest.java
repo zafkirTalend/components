@@ -227,14 +227,6 @@ public class TMarketoOutputPropertiesTest {
     }
 
     @Test
-    public void testAfterBatchSize() throws Exception {
-    }
-
-    @Test
-    public void testUpdateOutputSchemas() throws Exception {
-    }
-
-    @Test
     public void testGetVersionNumber() throws Exception {
         assertTrue(props.getVersionNumber() > 0);
     }
