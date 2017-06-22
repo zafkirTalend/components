@@ -7,7 +7,10 @@ import org.talend.components.api.component.PropertyPathConnector;
 import org.talend.components.common.FixedConnectorsComponentProperties;
 import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.properties.property.PropertyFactory;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -19,6 +22,11 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
 
     public transient PropertyPathConnector MAIN_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "main");
 
+    // output schema
+    public transient PropertyPathConnector FLOW_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "schemaFlow");
+
+    public SchemaProperties schemaFlow = new SchemaProperties("schemaFlow");
+
     public SchemaProperties main = new SchemaProperties("main") {
 
         @SuppressWarnings("unused")
@@ -27,15 +35,20 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         }
     };
 
-    // output schema
-    public transient PropertyPathConnector FLOW_CONNECTOR = new PropertyPathConnector(Connector.MAIN_NAME, "schemaFlow");
+    public Property<String> columnName = PropertyFactory.newString("columnName").setRequired();
 
-    public SchemaProperties schemaFlow = new SchemaProperties("schemaFlow");
+    public Property<String> fieldSeparator = PropertyFactory.newString("fieldSeparator", ",").setRequired();
 
-    // reject schema
-    public transient PropertyPathConnector REJECT_CONNECTOR = new PropertyPathConnector(Connector.REJECT_NAME, "schemaReject");
+    public Property<Boolean> csvOption = PropertyFactory.newBoolean("csvOption", false);
 
-    public SchemaProperties schemaReject = new SchemaProperties("schemaReject");
+    public Property<String> escapeMode = PropertyFactory.newString("escapeMode", NormalizeConstant.ESCAPE_MODES.get(0))
+            .setPossibleValues(NormalizeConstant.ESCAPE_MODES);
+
+    public Property<String> txtEnclosure = PropertyFactory.newString("txtEnclosure", "\"");
+
+    public Property<Boolean> discardTrailingEmptyStr = PropertyFactory.newBoolean("discardTrailingEmptyStr", false);
+
+    public Property<Boolean> trim = PropertyFactory.newBoolean("trim", false);
 
     public transient ISchemaListener schemaListener;
 
@@ -47,6 +60,13 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
+        mainForm.addRow(columnName);
+        mainForm.addRow(fieldSeparator);
+        /*mainForm.addRow(csvOption);
+        mainForm.addRow(escapeMode);
+        mainForm.addRow(txtEnclosure);*/
+        mainForm.addRow(discardTrailingEmptyStr);
+        mainForm.addRow(trim);
     }
 
     @Override
@@ -56,7 +76,7 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
 
             @Override
             public void afterSchema() {
-                updateOutputSchemas();
+            updateOutputSchemas();
             }
 
         };
@@ -65,8 +85,10 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
-        if (form.getName().equals(Form.MAIN)) {
-        }
+        /*if (form.getName().equals(Form.MAIN)) {
+            form.getWidget(escapeMode).setVisible(csvOption);
+            form.getWidget(txtEnclosure).setVisible(csvOption);
+        }*/
     }
 
     @Override
@@ -75,7 +97,6 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         if (isOutputConnection) {
             // output schemas
             connectors.add(FLOW_CONNECTOR);
-            connectors.add(REJECT_CONNECTOR);
         } else {
             // input schema
             connectors.add(MAIN_CONNECTOR);
@@ -87,23 +108,5 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         // Copy the "main" schema into the "flow" schema
         Schema inputSchema = main.schema.getValue();
         schemaFlow.schema.setValue(inputSchema);
-
-        // Copy the "main" schema in to the "reject" schema
-        schemaReject.schema.setValue(inputSchema);
-    }
-
-    /**
-     * TODO: This method will be used once the field autocompletion will be implemented
-     */
-    private Boolean isString(Schema.Type type) {
-        return Schema.Type.STRING.equals(type);
-    }
-
-    /**
-     * TODO: This method will be used once the field autocompletion will be implemented
-     */
-    private Boolean isNumerical(Schema.Type type) {
-        return Schema.Type.INT.equals(type) || Schema.Type.LONG.equals(type) //
-                || Schema.Type.DOUBLE.equals(type) || Schema.Type.FLOAT.equals(type);
     }
 }

@@ -18,21 +18,15 @@ import org.talend.daikon.properties.ValidationResult;
 /**
  * Created by zafkir on 19/06/2017.
  */
-public class NormalizeRuntime extends PTransform<PCollection<Object>, PCollectionTuple>
+public class NormalizeRuntime extends PTransform<PCollection<Object>, PCollection>
         implements BeamJobBuilder, RuntimableRuntime<NormalizeProperties> {
 
     final static TupleTag<IndexedRecord> flowOutput = new TupleTag<IndexedRecord>() {
     };
 
-    // Word lengths side output.
-    final static TupleTag<IndexedRecord> rejectOutput = new TupleTag<IndexedRecord>() {
-    };
-
     private NormalizeProperties properties;
 
     private boolean hasFlow;
-
-    private boolean hasReject;
 
     @Override
     public ValidationResult initialize(RuntimeContainer container, NormalizeProperties componentProperties) {
@@ -41,14 +35,12 @@ public class NormalizeRuntime extends PTransform<PCollection<Object>, PCollectio
     }
 
     @Override
-    public PCollectionTuple expand(PCollection<Object> inputPCollection) {
+    public PCollection expand(PCollection<Object> inputPCollection) {
         NormalizeDoFn doFn = new NormalizeDoFn() //
-                .withProperties(properties) //
-                .withOutputSchema(hasFlow) //
-                .withRejectSchema(hasReject);
-        return inputPCollection.apply(properties.getName(),
-                ParDo.withOutputTags(flowOutput, TupleTagList.of(rejectOutput)).of(doFn));
+                .withProperties(properties);
 
+        PCollection outputCollection = inputPCollection.apply(properties.getName(), ParDo.of(doFn));
+        return outputCollection;
     }
 
     @Override
@@ -58,18 +50,13 @@ public class NormalizeRuntime extends PTransform<PCollection<Object>, PCollectio
             PCollection<Object> mainPCollection = ctx.getPCollectionByLinkName(mainLink);
             if (mainPCollection != null) {
                 String flowLink = ctx.getLinkNameByPortName("output_" + properties.FLOW_CONNECTOR.getName());
-                String rejectLink = ctx.getLinkNameByPortName("output_" + properties.REJECT_CONNECTOR.getName());
 
                 hasFlow = !StringUtils.isEmpty(flowLink);
-                hasReject = !StringUtils.isEmpty(rejectLink);
 
-                PCollectionTuple outputTuples = expand(mainPCollection);
+                PCollection outputTuples = expand(mainPCollection);
 
                 if (hasFlow) {
-                    ctx.putPCollectionByLinkName(flowLink, outputTuples.get(flowOutput));
-                }
-                if (hasReject) {
-                    ctx.putPCollectionByLinkName(rejectLink, outputTuples.get(rejectOutput));
+                    ctx.putPCollectionByLinkName(flowLink, outputTuples);
                 }
             }
         }

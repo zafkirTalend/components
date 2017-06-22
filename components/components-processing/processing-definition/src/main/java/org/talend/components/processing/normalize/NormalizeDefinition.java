@@ -45,7 +45,7 @@ public class NormalizeDefinition extends AbstractComponentDefinition {
 
     @Override
     public String getIconKey() {
-        return "filter-row";
+        return "normalize";
     }
 
     @Override
