@@ -35,16 +35,16 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         }
     };
 
-    public Property<String> columnName = PropertyFactory.newString("columnName").setRequired();
+    public Property<String> columnToNormalize = PropertyFactory.newString("columnToNormalize", "").setRequired();
 
     public Property<String> fieldSeparator = PropertyFactory.newString("fieldSeparator", ",").setRequired();
 
-    public Property<Boolean> csvOption = PropertyFactory.newBoolean("csvOption", false);
+    /*public Property<Boolean> csvOption = PropertyFactory.newBoolean("csvOption", false);
 
     public Property<String> escapeMode = PropertyFactory.newString("escapeMode", NormalizeConstant.ESCAPE_MODES.get(0))
             .setPossibleValues(NormalizeConstant.ESCAPE_MODES);
 
-    public Property<String> txtEnclosure = PropertyFactory.newString("txtEnclosure", "\"");
+    public Property<String> txtEnclosure = PropertyFactory.newString("txtEnclosure", "\"");*/
 
     public Property<Boolean> discardTrailingEmptyStr = PropertyFactory.newBoolean("discardTrailingEmptyStr", false);
 
@@ -60,7 +60,7 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     public void setupLayout() {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
-        mainForm.addRow(columnName);
+        mainForm.addRow(columnToNormalize);
         mainForm.addRow(fieldSeparator);
         /*mainForm.addRow(csvOption);
         mainForm.addRow(escapeMode);

@@ -29,7 +29,7 @@ public class NormalizeDoFnTest {
 
     private final GenericRecord inputSimpleRecord = new GenericRecordBuilder(inputSimpleSchema) //
             .set("a", "aaa") //
-            .set("b", "BBB,BBB") //
+            .set("b", "  BBB,  BBB  ,") //
             .set("c", "Ccc") //
             .build();
 
@@ -45,7 +45,9 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.columnName.setValue("b");
+        properties.columnToNormalize.setValue("b");
+        properties.trim.setValue(true);
+        properties.discardTrailingEmptyStr.setValue(true);
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);

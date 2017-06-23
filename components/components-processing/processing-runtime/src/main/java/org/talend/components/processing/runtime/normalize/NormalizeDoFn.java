@@ -2,6 +2,7 @@ package org.talend.components.processing.runtime.normalize;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
@@ -37,23 +38,29 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
         IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
         Schema schema = inputRecord.getSchema();
 
-        String columnToNormalize = properties.columnName.getValue();
+        String columnToNormalize = properties.columnToNormalize.getValue();
         //boolean useCSV = properties.csvOption.getValue();
         String delim = properties.fieldSeparator.getValue();
         boolean discardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
         boolean trim = properties.trim.getValue();
 
         if (!StringUtils.isEmpty(columnToNormalize)) {
-
-            int indexColumnToNormalize = inputRecord.getSchema().getField(columnToNormalize).pos();
-
+            int indexColumnToNormalize = schema.getField(columnToNormalize).pos();
             List<Object> inputValues = getInputFields(inputRecord, columnToNormalize);
-            if(inputValues.size() == 1) {
-                inputRecord.put(indexColumnToNormalize, delimit(inputValues.get(0), delim, discardTrailingEmptyStr, trim));
+            if (inputValues.size() == 1) {
+                String[] strs = delimit(inputValues.get(0), delim, discardTrailingEmptyStr, trim);
+                for (int i=0; i<strs.length; i++) {
+                    GenericRecord outputRecord = new GenericData.Record(schema);
+                    for(int j=0; j<schema.getFields().size(); j++) {
+                        if(j != indexColumnToNormalize) {
+                            outputRecord.put(j, inputRecord.get(j));
+                        }
+                    }
+                    outputRecord.put(indexColumnToNormalize, strs[i]);
+                    context.output(outputRecord);
+                }
             }
         }
-        System.out.println(inputRecord);
-        context.output(inputRecord);
     }
 
     private String[] delimit(Object obj, String delim, boolean discardTrailingEmptyStr, boolean trim) {
@@ -61,10 +68,10 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
         String[] strDelimited = str.split(delim);
         for(int i=0; i<strDelimited.length; i++) {
             if(discardTrailingEmptyStr) {
-                strDelimited[i].replaceAll("\\s+$", "");
+                strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
             }
             if(trim) {
-                strDelimited[i].trim();
+                strDelimited[i] = strDelimited[i].trim();
             }
         }
         return strDelimited;
@@ -73,12 +80,6 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
     public NormalizeDoFn withProperties(NormalizeProperties properties) {
         this.properties = properties;
         return this;
-    }
-
-    private String[] getInputFields(IndexedRecord inputRecord, String columnToNormalize, String delim) {
-        int indexColumnToNormalize = inputRecord.getSchema().getField(columnToNormalize).pos();
-        Object inputValue = inputRecord.get(indexColumnToNormalize);
-        return inputValue.toString().split(delim);
     }
 
     private List<Object> getInputFields(IndexedRecord inputRecord, String columnName) {
