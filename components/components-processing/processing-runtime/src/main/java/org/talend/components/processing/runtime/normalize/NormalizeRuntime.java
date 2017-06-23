@@ -4,9 +4,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.components.adapter.beam.BeamJobBuilder;
 import org.talend.components.adapter.beam.BeamJobContext;
@@ -15,9 +13,6 @@ import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.processing.normalize.NormalizeProperties;
 import org.talend.daikon.properties.ValidationResult;
 
-/**
- * Created by zafkir on 19/06/2017.
- */
 public class NormalizeRuntime extends PTransform<PCollection<Object>, PCollection>
         implements BeamJobBuilder, RuntimableRuntime<NormalizeProperties> {
 

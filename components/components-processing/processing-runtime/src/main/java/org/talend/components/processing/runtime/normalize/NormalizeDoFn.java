@@ -6,7 +6,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
-import org.talend.components.processing.filterrow.ConditionsRowConstant;
 import org.talend.components.processing.normalize.NormalizeProperties;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
@@ -16,9 +15,6 @@ import org.talend.daikon.exception.error.CommonErrorCodes;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by zafkir on 19/06/2017.
- */
 public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
 
     private NormalizeProperties properties = null;
@@ -39,7 +35,6 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
         Schema schema = inputRecord.getSchema();
 
         String columnToNormalize = properties.columnToNormalize.getValue();
-        //boolean useCSV = properties.csvOption.getValue();
         String delim = properties.fieldSeparator.getValue();
         boolean discardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
         boolean trim = properties.trim.getValue();

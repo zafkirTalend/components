@@ -18,9 +18,6 @@ import java.net.URL;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- * Created by zafkir on 19/06/2017.
- */
 public class NormalizeDefinition extends AbstractComponentDefinition {
 
     public static final String COMPONENT_NAME = "Normalize";
