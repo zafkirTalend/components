@@ -1,21 +1,33 @@
+// ============================================================================
+//
+// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
 package org.talend.components.processing.normalize;
 
-import org.junit.Ignore;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
+
 import org.junit.Test;
 import org.talend.components.api.component.ComponentImageType;
 import org.talend.components.api.component.ConnectorTopology;
 import org.talend.components.api.component.runtime.ExecutionEngine;
 import org.talend.components.processing.ProcessingFamilyDefinition;
 import org.talend.daikon.runtime.RuntimeInfo;
-
-import java.util.Set;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class NormalizeDefinitionTest {
 
@@ -51,7 +63,6 @@ public class NormalizeDefinitionTest {
     }
 
     @Test
-    @Ignore
     public void testGetPngImagePath() {
         assertEquals("Normalize_icon32.png", definition.getPngImagePath(ComponentImageType.PALLETE_ICON_32X32));
     }
@@ -85,11 +96,11 @@ public class NormalizeDefinitionTest {
     }
 
     /**
-     * Check {@link NormalizeDefinition#isSchemaAutoPropagate()} returns <code>false</code>
+     * Check {@link NormalizeDefinition#isConditionalInputs()} returns <code>false</code>
      */
     @Test
-    public void testIsSchemaAutoPropagate() {
-        boolean result = definition.isSchemaAutoPropagate();
-        assertTrue(result);
+    public void testIsConditionalInputs() {
+        boolean result = definition.isConditionalInputs();
+        assertFalse(result);
     }
 }

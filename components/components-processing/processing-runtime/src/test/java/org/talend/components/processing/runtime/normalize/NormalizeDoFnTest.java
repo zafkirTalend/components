@@ -1,4 +1,21 @@
+// ============================================================================
+//
+// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
 package org.talend.components.processing.runtime.normalize;
+
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -8,12 +25,6 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFnTester;
 import org.junit.Test;
 import org.talend.components.processing.normalize.NormalizeProperties;
-import org.talend.components.processing.runtime.normalize.NormalizeDoFn;
-import org.talend.components.processing.runtime.normalize.NormalizeRuntime;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class NormalizeDoFnTest {
 
@@ -24,19 +35,76 @@ public class NormalizeDoFnTest {
             .name("c").type().optional().stringType() //
             .endRecord();
 
+    private final Schema inputEmbeddedSchema = SchemaBuilder.record("inputEmbeddedRow") //
+            .fields() //
+            .name("x").type().optional().stringType() //
+            .name("y").type().optional().stringType() //
+            .endRecord();
+
+    private final Schema inputHierarchicalSchema = SchemaBuilder.record("inputHierarchicalRow") //
+            .fields() //
+            .name("a").type().optional().stringType() //
+            .name("b").type(inputEmbeddedSchema).noDefault() //
+            .name("c").type().optional().stringType() //
+            .endRecord();
+
+    private final GenericRecord inputEmbeddedRecord = new GenericRecordBuilder(inputEmbeddedSchema) //
+            .set("x", "xxx1;xxx2") //
+            .set("y", "yyy1") //
+            .build();
+
+    private final GenericRecord inputEmbeddedRecord2 = new GenericRecordBuilder(inputEmbeddedSchema) //
+            .set("x", "xxx2") //
+            .set("y", "yyy2") //
+            .build();
+
+    List<GenericRecord> list = Arrays.asList(inputEmbeddedRecord, inputEmbeddedRecord2);
+
+    private final GenericRecord inputHierarchicalRecord = new GenericRecordBuilder(inputHierarchicalSchema) //
+            .set("a", "aaa") //
+            .set("b", inputEmbeddedRecord) //
+            .set("c", "ccc") //
+            .build();
+
+    private final GenericRecord inputHierarchicalRecordWithList = new GenericRecordBuilder(inputHierarchicalSchema) //
+            .set("a", "aaa") //
+            .set("b", list) //
+            .set("c", "ccc") //
+            .build();
+
     private final GenericRecord inputSimpleRecord = new GenericRecordBuilder(inputSimpleSchema) //
             .set("a", "aaa") //
-            .set("b", "  bbb;  bbb  ;") //
+            .set("b", "  bbb1;  bbb2  ;") //
             .set("c", "ccc") //
             .build();
 
     private final GenericRecord inputSimpleRecord2 = new GenericRecordBuilder(inputSimpleSchema) //
             .set("a", "aaa") //
-            .set("b", "  bbb;  bbb  ; ") //
+            .set("b", "  bbb1;  bbb2  ; ") //
             .set("c", "ccc") //
             .build();
 
-    private void checkOutput_AllInputFieldsAreValidAndFilled(DoFnTester<Object, IndexedRecord> fnTester) throws Exception {
+    @Test
+    public void test() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.columnToNormalize.setValue("b.x");
+        properties.fieldSeparator.setValue(";");
+        properties.trim.setValue(true);
+        properties.discardTrailingEmptyStr.setValue(true);
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+
+        List<IndexedRecord> outputs = fnTester.processBundle(inputHierarchicalRecord); // inputHierarchicalRecord
+                                                                                       // inputSimpleRecord
+                                                                                       // inputHierarchicalRecordWithList
+        System.out.println(outputs);
+        // assertEquals(2, outputs.size());
+    }
+
+    private void checkOutput_AllInputFieldsAreValidAndFilled(DoFnTester<IndexedRecord, IndexedRecord> fnTester) throws Exception {
         List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord);
         assertEquals(2, outputs.size());
         assertEquals("aaa", outputs.get(0).get(0));
@@ -50,7 +118,8 @@ public class NormalizeDoFnTest {
     /**
      * trim is set to false
      */
-    private void checkOutput_AllInputFieldsAreValidAndFilled2(DoFnTester<Object, IndexedRecord> fnTester) throws Exception {
+    private void checkOutput_AllInputFieldsAreValidAndFilled2(DoFnTester<IndexedRecord, IndexedRecord> fnTester)
+            throws Exception {
         List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord);
         assertEquals(2, outputs.size());
         assertEquals("aaa", outputs.get(0).get(0));
@@ -64,7 +133,8 @@ public class NormalizeDoFnTest {
     /**
      * discardTrailingEmptyStr is set to false
      */
-    private void checkOutput_AllInputFieldsAreValidAndFilled3(DoFnTester<Object, IndexedRecord> fnTester) throws Exception {
+    private void checkOutput_AllInputFieldsAreValidAndFilled3(DoFnTester<IndexedRecord, IndexedRecord> fnTester)
+            throws Exception {
         List<IndexedRecord> outputs = fnTester.processBundle(inputSimpleRecord2);
         assertEquals(3, outputs.size());
         assertEquals("aaa", outputs.get(0).get(0));
@@ -89,7 +159,7 @@ public class NormalizeDoFnTest {
         properties.discardTrailingEmptyStr.setValue(true);
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
-        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         checkOutput_AllInputFieldsAreValidAndFilled(fnTester);
     }
 
@@ -107,7 +177,7 @@ public class NormalizeDoFnTest {
         properties.discardTrailingEmptyStr.setValue(true);
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
-        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         checkOutput_AllInputFieldsAreValidAndFilled2(fnTester);
     }
 
@@ -125,7 +195,7 @@ public class NormalizeDoFnTest {
         properties.discardTrailingEmptyStr.setValue(false);
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
-        DoFnTester<Object, IndexedRecord> fnTester = DoFnTester.of(function);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         checkOutput_AllInputFieldsAreValidAndFilled3(fnTester);
     }
 }

@@ -1,4 +1,18 @@
+// ============================================================================
+//
+// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+//
+// This source code is available under agreement available at
+// %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
+//
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
+//
+// ============================================================================
 package org.talend.components.processing.runtime.normalize;
+
+import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -6,16 +20,15 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.components.processing.normalize.NormalizeProperties;
-import org.talend.daikon.avro.AvroRegistry;
+import org.talend.components.processing.runtime.Utils;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
-import org.talend.daikon.exception.TalendRuntimeException;
-import org.talend.daikon.exception.error.CommonErrorCodes;
 
-import java.util.ArrayList;
-import java.util.List;
+public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
-public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
+    private static final Logger LOG = LoggerFactory.getLogger(NormalizeDoFn.class);
 
     private NormalizeProperties properties = null;
 
@@ -26,48 +39,119 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-        if (converter == null) {
-            AvroRegistry registry = new AvroRegistry();
-            converter = registry.createIndexedRecordConverter(context.element().getClass());
-        }
-        IndexedRecord inputRecord = (IndexedRecord) converter.convertToAvro(context.element());
+    public void processElement(ProcessContext context) throws Exception {
+        IndexedRecord inputRecord = context.element();
         Schema schema = inputRecord.getSchema();
 
         String columnToNormalize = properties.columnToNormalize.getValue();
         String delim = properties.fieldSeparator.getValue();
-        boolean discardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
-        boolean trim = properties.trim.getValue();
+        boolean isDiscardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
+        boolean isTrim = properties.trim.getValue();
 
         if (!StringUtils.isEmpty(columnToNormalize)) {
-            int indexColumnToNormalize = schema.getField(columnToNormalize).pos();
-            List<Object> inputValues = getInputFields(inputRecord, columnToNormalize);
-            if (inputValues.size() == 1) {
-                String[] strs = delimit(inputValues.get(0), delim, discardTrailingEmptyStr, trim);
-                for (int i=0; i<strs.length; i++) {
-                    GenericRecord outputRecord = new GenericData.Record(schema);
-                    for(int j=0; j<schema.getFields().size(); j++) {
-                        if(j != indexColumnToNormalize) {
-                            outputRecord.put(j, inputRecord.get(j));
+            if (StringUtils.contains(columnToNormalize, ".")) {
+                String[] path = columnToNormalize.split("\\.");
+                int indexColumnToNormalize = schema.getField(path[0]).pos();
+                List<Object> inputValues = Utils.getInputFields(inputRecord, columnToNormalize);
+
+                for (int i = 0; i < inputValues.size(); i++) {
+
+                    Object inputValue = inputValues.get(i);
+
+                    if (inputValue instanceof GenericData.Record) {
+
+                        List<Object> inputChildValues = Utils.getInputFields((IndexedRecord) inputValue, path[1]);
+                        for (int j = 0; j < inputChildValues.size(); j++) {
+                            String[] strDelimited = delimit(inputChildValues.get(j), delim, isDiscardTrailingEmptyStr, isTrim);
+                            for (int k = 0; k < strDelimited.length; k++) {
+                                GenericRecord outputRecord = new GenericData.Record(schema);
+                                for (int l = 0; l < schema.getFields().size(); l++) {
+                                    if (l != indexColumnToNormalize) {
+                                        outputRecord.put(l, inputRecord.get(l));
+                                    }
+                                }
+                                outputRecord.put(indexColumnToNormalize, strDelimited[k]);
+                                context.output(outputRecord);
+                            }
+                        }
+                    } else {
+                        String[] strDelimited = delimit(inputValue, delim, isDiscardTrailingEmptyStr, isTrim);
+                        for (int j = 0; j < strDelimited.length; j++) {
+                            GenericRecord outputRecord = new GenericData.Record(schema);
+
+                            for (int k = 0; k < schema.getFields().size(); k++) {
+                                if (k != indexColumnToNormalize) {
+                                    outputRecord.put(k, inputRecord.get(k));
+                                }
+                            }
+
+                            // GenericRecord indexedRecordToNormalize = (GenericRecord) inputRecord.get(indexColumnToNormalize);
+
+                            Schema columnSchemaToNormalize = schema.getField(path[0]).schema();
+
+                            IndexedRecord indexedRecordToNormalize = new GenericData.Record(columnSchemaToNormalize);
+
+                            for (int k = 0; k < columnSchemaToNormalize.getFields().size(); k++) {
+
+                                IndexedRecord tmp = (IndexedRecord) inputRecord.get(indexColumnToNormalize);
+                                indexedRecordToNormalize.put(k, tmp.get(k));
+                            }
+
+                            int indexChildColumnToNormalize = columnSchemaToNormalize.getField(path[1]).pos();
+
+                            indexedRecordToNormalize.put(indexChildColumnToNormalize, strDelimited[j]);
+
+                            outputRecord.put(indexColumnToNormalize, indexedRecordToNormalize);
+
+                            context.output(outputRecord);
                         }
                     }
-                    outputRecord.put(indexColumnToNormalize, strs[i]);
-                    context.output(outputRecord);
+                }
+            } else {
+                int indexColumnToNormalize = schema.getField(columnToNormalize).pos();
+                List<Object> inputValues = Utils.getInputFields(inputRecord, columnToNormalize);
+                for (int i = 0; i < inputValues.size(); i++) {
+                    String[] strDelimited = delimit(inputValues.get(i), delim, isDiscardTrailingEmptyStr, isTrim);
+                    for (int j = 0; j < strDelimited.length; j++) {
+                        GenericRecord outputRecord = new GenericData.Record(schema);
+                        for (int k = 0; k < schema.getFields().size(); k++) {
+                            if (k != indexColumnToNormalize) {
+                                outputRecord.put(k, inputRecord.get(k));
+                            }
+                        }
+                        outputRecord.put(indexColumnToNormalize, strDelimited[j]);
+                        context.output(outputRecord);
+                    }
                 }
             }
         }
     }
 
-    private String[] delimit(Object obj, String delim, boolean discardTrailingEmptyStr, boolean trim) {
-        String str = (String) obj;
-        String[] strDelimited = str.split(delim);
-        for(int i=0; i<strDelimited.length; i++) {
-            if(discardTrailingEmptyStr) {
-                strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
+    /**
+     * Splits obj around matches of the given delim parameter.
+     * 
+     * @param obj
+     * @param delim the delimiting regular expression
+     * @param isDiscardTrailingEmptyStr
+     * @param isTrim
+     * @return
+     * @throws Exception if cannot cast obj to String.
+     */
+    private String[] delimit(Object obj, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim) throws Exception {
+        String[] strDelimited = {};
+        try {
+            String str = (String) obj;
+            strDelimited = str.split(delim);
+            for (int i = 0; i < strDelimited.length; i++) {
+                if (isDiscardTrailingEmptyStr) {
+                    strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
+                }
+                if (isTrim) {
+                    strDelimited[i] = strDelimited[i].trim();
+                }
             }
-            if(trim) {
-                strDelimited[i] = strDelimited[i].trim();
-            }
+        } catch (Exception e) {
+            LOG.debug("Cannot cast Object to String {}", e.getMessage());
         }
         return strDelimited;
     }
@@ -75,54 +159,5 @@ public class NormalizeDoFn extends DoFn<Object, IndexedRecord> {
     public NormalizeDoFn withProperties(NormalizeProperties properties) {
         this.properties = properties;
         return this;
-    }
-
-    private List<Object> getInputFields(IndexedRecord inputRecord, String columnName) {
-        // TODO current implementation will only extract one element, but
-        // further implementation may
-        ArrayList<Object> inputFields = new ArrayList<Object>();
-        String[] path = columnName.split("\\.");
-        Schema schema = inputRecord.getSchema();
-
-        for (Integer i = 0; i < path.length; i++) {
-            // The column was existing on the input record, we forward it to the
-            // output record.
-            if (schema.getField(path[i]) == null) {
-                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT, new Throwable(String.format("The field %s is not present on the input record", columnName)));
-            }
-            Object inputValue = inputRecord.get(schema.getField(path[i]).pos());
-
-            // The current column can be a Record (an hierarchical sub-object)
-            // or directly a value.
-            if (inputValue instanceof GenericData.Record) {
-                // If we are on a record, we need to recursively do the process
-                inputRecord = (IndexedRecord) inputValue;
-
-                // The sub-schema at this level is a union of "empty" and a
-                // record, so we need to get the true
-                // sub-schema
-                if (schema.getField(path[i]).schema().getType().equals(Schema.Type.RECORD)) {
-                    schema = schema.getField(path[i]).schema();
-                } else if (schema.getField(path[i]).schema().getType().equals(Schema.Type.UNION)) {
-                    for (Schema childSchema : schema.getField(path[i]).schema().getTypes()) {
-                        if (childSchema.getType().equals(Schema.Type.RECORD)) {
-                            schema = childSchema;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                // if we are on a object, then this is or the expected value of
-                // an error.
-                if (i == path.length - 1) {
-                    inputFields.add(inputValue);
-                } else {
-                    // No need to go further, return an empty list
-                    break;
-                }
-            }
-        }
-
-        return inputFields;
     }
 }
