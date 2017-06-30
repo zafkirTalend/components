@@ -20,6 +20,9 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.processing.normalize.NormalizeProperties;
@@ -49,65 +52,78 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
         boolean isTrim = properties.trim.getValue();
 
         if (!StringUtils.isEmpty(columnToNormalize)) {
+
+            // structure hierarchique
             if (StringUtils.contains(columnToNormalize, ".")) {
+
                 String[] path = columnToNormalize.split("\\.");
-                int indexColumnToNormalize = schema.getField(path[0]).pos();
-                List<Object> inputValues = Utils.getInputFields(inputRecord, columnToNormalize);
 
-                for (int i = 0; i < inputValues.size(); i++) {
+                ObjectMapper mapper = new ObjectMapper();
 
-                    Object inputValue = inputValues.get(i);
+                // transform inputRecord to jsonNode
+                JsonNode hierarchicalNode = mapper.readTree(inputRecord.toString());
 
-                    if (inputValue instanceof GenericData.Record) {
+                // search the normalized node
+                JsonNode normalizedNode = Utils.searchNode(hierarchicalNode, path);
 
-                        List<Object> inputChildValues = Utils.getInputFields((IndexedRecord) inputValue, path[1]);
-                        for (int j = 0; j < inputChildValues.size(); j++) {
-                            String[] strDelimited = delimit(inputChildValues.get(j), delim, isDiscardTrailingEmptyStr, isTrim);
-                            for (int k = 0; k < strDelimited.length; k++) {
-                                GenericRecord outputRecord = new GenericData.Record(schema);
-                                for (int l = 0; l < schema.getFields().size(); l++) {
-                                    if (l != indexColumnToNormalize) {
-                                        outputRecord.put(l, inputRecord.get(l));
-                                    }
-                                }
-                                outputRecord.put(indexColumnToNormalize, strDelimited[k]);
-                                context.output(outputRecord);
-                            }
-                        }
-                    } else {
-                        String[] strDelimited = delimit(inputValue, delim, isDiscardTrailingEmptyStr, isTrim);
-                        for (int j = 0; j < strDelimited.length; j++) {
-                            GenericRecord outputRecord = new GenericData.Record(schema);
+                // get the normalized values delimited
+                String[] delimited = delimit(normalizedNode.getTextValue(), delim, isDiscardTrailingEmptyStr, isTrim); // Utils.tmp(actualObj,
+                // path, 0);
 
-                            for (int k = 0; k < schema.getFields().size(); k++) {
-                                if (k != indexColumnToNormalize) {
-                                    outputRecord.put(k, inputRecord.get(k));
-                                }
-                            }
+                // get the index of the parent column to normalize: c.g.h : index c = 2
+                int indexParentColumnToNormalize = schema.getField(path[0]).pos();
 
-                            // GenericRecord indexedRecordToNormalize = (GenericRecord) inputRecord.get(indexColumnToNormalize);
+                // int combienNormalize = Utils.combienNormalize(inputRecord, columnToNormalize, delim);
 
-                            Schema columnSchemaToNormalize = schema.getField(path[0]).schema();
+                for (int l = 0; l < delimited.length; l++) {
 
-                            IndexedRecord indexedRecordToNormalize = new GenericData.Record(columnSchemaToNormalize);
-
-                            for (int k = 0; k < columnSchemaToNormalize.getFields().size(); k++) {
-
-                                IndexedRecord tmp = (IndexedRecord) inputRecord.get(indexColumnToNormalize);
-                                indexedRecordToNormalize.put(k, tmp.get(k));
-                            }
-
-                            int indexChildColumnToNormalize = columnSchemaToNormalize.getField(path[1]).pos();
-
-                            indexedRecordToNormalize.put(indexChildColumnToNormalize, strDelimited[j]);
-
-                            outputRecord.put(indexColumnToNormalize, indexedRecordToNormalize);
-
-                            context.output(outputRecord);
+                    // put outputRecord for the columns non normalized
+                    GenericRecord outputRecord = new GenericData.Record(schema);
+                    for (int k = 0; k < schema.getFields().size(); k++) {
+                        if (k != indexParentColumnToNormalize) {
+                            outputRecord.put(k, inputRecord.get(k));
                         }
                     }
+
+                    // put outputRecord for the normalized column
+                    Schema columnSchemaToNormalize = schema.getField(path[0]).schema();
+                    IndexedRecord indexedRecordToNormalize = new GenericData.Record(columnSchemaToNormalize);
+
+                    Object fieldNormalized = Utils.getFieldNormalizedFromNode(hierarchicalNode, path, delimited[l], 0);
+                    // Utils.getFieldNormalized(inputRecord, path, indexColumnToNormalizeParent, l, delim);
+
+                    JsonNode jsonFieldNormalized = (JsonNode) fieldNormalized;
+
+                    // Replace the normalized node
+
+                    JsonNode hierarchicalNodeTmp = hierarchicalNode;
+                    for (int i = 0; i < path.length; i++) {
+
+                        try {
+                            hierarchicalNodeTmp = hierarchicalNodeTmp.with(path[i]);
+                        } catch (Exception e) {
+                            hierarchicalNodeTmp = hierarchicalNodeTmp.path(path[i]);
+                        } finally {
+                            ((ObjectNode) hierarchicalNode).put(path[i], hierarchicalNodeTmp);
+                        }
+                    }
+
+                    int indexChildColumnToNormalize = columnSchemaToNormalize.getField(path[1]).pos();
+                    indexedRecordToNormalize.put(indexChildColumnToNormalize, hierarchicalNode.get(path[0]));
+
+                    outputRecord.put(indexParentColumnToNormalize, indexedRecordToNormalize); // actualObj.get(path[0]));
+
+                    context.output(outputRecord);
                 }
-            } else {
+
+                // Object elementNormalized = generateElementNormalized();
+
+                // outputRecord.put(indexColumnToNormalizeParent, elementNormalized);
+
+            }
+
+            // simple structure
+            else {
                 int indexColumnToNormalize = schema.getField(columnToNormalize).pos();
                 List<Object> inputValues = Utils.getInputFields(inputRecord, columnToNormalize);
                 for (int i = 0; i < inputValues.size(); i++) {
