@@ -54,7 +54,7 @@ public class NormalizeDoFnTest {
     private final Schema inputEmbeddedSchema = SchemaBuilder.record("inputEmbeddedRow") //
             .fields() //
             .name("x").type().optional().stringType() //
-            .name("y").type().optional().stringType() //
+            .name("y").type(inputSimpleSchemaDE).noDefault() //
             .endRecord();
 
     private final Schema inputHierarchicalSchema = SchemaBuilder.record("inputHierarchicalRow") //

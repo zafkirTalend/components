@@ -15,18 +15,20 @@ package org.talend.components.processing.runtime.normalize;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.processing.normalize.NormalizeProperties;
 import org.talend.components.processing.runtime.Utils;
+import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
@@ -58,6 +60,7 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
                 String[] path = columnToNormalize.split("\\.");
 
+
                 ObjectMapper mapper = new ObjectMapper();
 
                 // transform inputRecord to jsonNode
@@ -70,56 +73,11 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
                 String[] delimited = delimit(normalizedNode.getTextValue(), delim, isDiscardTrailingEmptyStr, isTrim); // Utils.tmp(actualObj,
                 // path, 0);
 
-                // get the index of the parent column to normalize: c.g.h : index c = 2
-                int indexParentColumnToNormalize = schema.getField(path[0]).pos();
-
-                // int combienNormalize = Utils.combienNormalize(inputRecord, columnToNormalize, delim);
-
-                for (int l = 0; l < delimited.length; l++) {
-
-                    // put outputRecord for the columns non normalized
-                    GenericRecord outputRecord = new GenericData.Record(schema);
-                    for (int k = 0; k < schema.getFields().size(); k++) {
-                        if (k != indexParentColumnToNormalize) {
-                            outputRecord.put(k, inputRecord.get(k));
-                        }
-                    }
-
-                    // put outputRecord for the normalized column
-                    Schema columnSchemaToNormalize = schema.getField(path[0]).schema();
-                    IndexedRecord indexedRecordToNormalize = new GenericData.Record(columnSchemaToNormalize);
-
-                    Object fieldNormalized = Utils.getFieldNormalizedFromNode(hierarchicalNode, path, delimited[l], 0);
-                    // Utils.getFieldNormalized(inputRecord, path, indexColumnToNormalizeParent, l, delim);
-
-                    JsonNode jsonFieldNormalized = (JsonNode) fieldNormalized;
-
-                    // Replace the normalized node
-
-                    JsonNode hierarchicalNodeTmp = hierarchicalNode;
-                    for (int i = 0; i < path.length; i++) {
-
-                        try {
-                            hierarchicalNodeTmp = hierarchicalNodeTmp.with(path[i]);
-                        } catch (Exception e) {
-                            hierarchicalNodeTmp = hierarchicalNodeTmp.path(path[i]);
-                        } finally {
-                            ((ObjectNode) hierarchicalNode).put(path[i], hierarchicalNodeTmp);
-                        }
-                    }
-
-                    int indexChildColumnToNormalize = columnSchemaToNormalize.getField(path[1]).pos();
-                    indexedRecordToNormalize.put(indexChildColumnToNormalize, hierarchicalNode.get(path[0]));
-
-                    outputRecord.put(indexParentColumnToNormalize, indexedRecordToNormalize); // actualObj.get(path[0]));
-
-                    context.output(outputRecord);
+                Object[] outputValues = { "h1", "h2" };
+                for (Object outputValue : delimited) {
+                    context.output(generateNormalizedRecord(context.element(), context.element().getSchema(), schema, path, 0,
+                            outputValue));
                 }
-
-                // Object elementNormalized = generateElementNormalized();
-
-                // outputRecord.put(indexColumnToNormalizeParent, elementNormalized);
-
             }
 
             // simple structure
@@ -170,6 +128,99 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
             LOG.debug("Cannot cast Object to String {}", e.getMessage());
         }
         return strDelimited;
+    }
+
+    private GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
+            String[] pathToElementToNormalize, int pathIterator, Object outputValue) {
+        GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
+        for (Schema.Field field : outputSchema.getFields()) {
+            if (inputSchema.getField(field.name()) != null) {
+                // The column was existing on the input record, we forward it to the output record.
+                Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
+
+                if (pathToElementToNormalize.length > 0 && pathIterator < pathToElementToNormalize.length) {
+                    if (field.name().equals(pathToElementToNormalize[pathIterator])) {
+                        // The current column can be a Record (an hierarchical sub-object) or directly a value.
+                        // If we are on a record, we need to recursively do the process
+                        // if we are on a object, we save it to the output.
+                        if (inputValue instanceof GenericData.Record) {
+                            // The sub-schema at this level is a union of "empty" and a record,
+                            // so we need to get the true sub-schema
+                            Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
+                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
+                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                pathIterator++;
+                                Object childRecord = generateNormalizedRecord((IndexedRecord) inputValue, inputChildSchema,
+                                        outputChildSchema, pathToElementToNormalize, pathIterator, outputValue);
+                                outputRecord.set(field.name(), childRecord);
+                            }
+                        } else {
+                            if (pathIterator == pathToElementToNormalize.length - 1) {
+                                outputRecord.set(field.name(), outputValue);
+                            } else {
+                                // TODO return exception
+                            }
+                        }
+                    } else {
+                        // The current column can be a Record (an hierarchical sub-object) or directly a value.
+                        // If we are on a record, we need to recursively do the process
+                        // if we are on a object, we save it to the output.
+                        if (inputValue instanceof GenericData.Record) {
+                            // The sub-schema at this level is a union of "empty" and a record,
+                            // so we need to get the true sub-schema
+                            Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
+                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
+                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                Object childRecord = dupplicateRecord((IndexedRecord) inputValue, inputChildSchema,
+                                        outputChildSchema);
+                                outputRecord.set(field.name(), childRecord);
+                            }
+                        } else {
+                            outputRecord.set(field.name(), inputValue);
+                        }
+                    }
+                } else {
+                    // TODO return exception
+                }
+            } else {
+                // element not found => set to the value and its hierarchy to null
+                outputRecord.set(field.name(), SchemaGeneratorUtils.generateEmptyRecord(outputSchema, field.name()));
+            }
+        }
+        return outputRecord.build();
+    }
+
+    private GenericRecord dupplicateRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema) {
+        GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
+        for (Schema.Field field : outputSchema.getFields()) {
+            if (inputSchema.getField(field.name()) != null) {
+                // The column was existing on the input record, we forward it to the output record.
+                Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
+
+                // The current column can be a Record (an hierarchical sub-object) or directly a value.
+                // If we are on a record, we need to recursively do the process
+                // if we are on a object, we save it to the output.
+                if (inputValue instanceof GenericData.Record) {
+                    // The sub-schema at this level is a union of "empty" and a record,
+                    // so we need to get the true sub-schema
+                    Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
+                    Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
+                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                            && outputChildSchema.getType().equals(Type.RECORD)) {
+                        Object childRecord = dupplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
+                        outputRecord.set(field.name(), childRecord);
+                    }
+                } else {
+                    outputRecord.set(field.name(), inputValue);
+                }
+            } else {
+                // element not found => set to the value and its hierarchy to null
+                outputRecord.set(field.name(), SchemaGeneratorUtils.generateEmptyRecord(outputSchema, field.name()));
+            }
+        }
+        return outputRecord.build();
     }
 
     public NormalizeDoFn withProperties(NormalizeProperties properties) {
