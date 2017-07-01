@@ -26,89 +26,70 @@ import org.talend.components.processing.normalize.NormalizeProperties;
 
 public class NormalizeDoFnTest {
 
-    private final Schema inputSimpleSchema = SchemaBuilder.record("inputRow") //
-            .fields() //
-            .name("a").type().optional().stringType() //
-            .name("b").type().optional().stringType() //
-            .name("c").type().optional().stringType() //
-            .endRecord();
-
-    private final Schema inputSimpleSchemaDE = SchemaBuilder.record("inputRow") //
+    private final Schema inputSchemaDE = SchemaBuilder.record("inputRow") //
             .fields() //
             .name("d").type().optional().stringType() //
             .name("e").type().optional().stringType() //
             .endRecord();
 
-    private final Schema inputSimpleSchemaHI = SchemaBuilder.record("inputRow") //
+    private final Schema inputSchemaHI = SchemaBuilder.record("inputRow") //
             .fields() //
             .name("h").type().optional().stringType() //
             .name("i").type().optional().stringType() //
             .endRecord();
 
-    private final Schema inputSimpleSchemaFG = SchemaBuilder.record("inputRow") //
+    private final Schema inputSchemaFG = SchemaBuilder.record("inputRow") //
             .fields() //
             .name("f").type().optional().stringType() //
-            .name("g").type(inputSimpleSchemaHI).noDefault() //
+            .name("g").type(inputSchemaHI).noDefault() //
             .endRecord();
 
-    private final Schema inputEmbeddedSchema = SchemaBuilder.record("inputEmbeddedRow") //
+    private final Schema inputSchemaXY = SchemaBuilder.record("inputEmbeddedRow") //
             .fields() //
             .name("x").type().optional().stringType() //
-            .name("y").type(inputSimpleSchemaDE).noDefault() //
+            .name("y").type(inputSchemaDE).noDefault() //
             .endRecord();
 
     private final Schema inputHierarchicalSchema = SchemaBuilder.record("inputHierarchicalRow") //
             .fields() //
             .name("a").type().optional().stringType() //
-            .name("b").type(inputEmbeddedSchema).noDefault() //
-            .name("c").type(inputSimpleSchemaFG).noDefault() //
+            .name("b").type(inputSchemaXY).noDefault() //
+            .name("c").type(inputSchemaFG).noDefault() //
             .endRecord();
 
-    private final GenericRecord inputSimpleRecordDE = new GenericRecordBuilder(inputSimpleSchemaDE) //
+    private final GenericRecord inputRecordDE = new GenericRecordBuilder(inputSchemaDE) //
             .set("d", "d") //
             .set("e", "e") //
             .build();
 
-    private final GenericRecord inputSimpleRecordDE2 = new GenericRecordBuilder(inputSimpleSchemaDE) //
-            .set("d", "d2") //
-            .set("e", "e2") //
-            .build();
-
-    private final GenericRecord inputSimpleRecordHI = new GenericRecordBuilder(inputSimpleSchemaHI) //
+    private final GenericRecord inputRecordHI = new GenericRecordBuilder(inputSchemaHI) //
             .set("h", "h1;h2") //
             .set("i", "i") //
             .build();
 
-    private final GenericRecord inputSimpleRecordFG = new GenericRecordBuilder(inputSimpleSchemaFG) //
+    private final GenericRecord inputRecordHI2 = new GenericRecordBuilder(inputSchemaHI) //
+            .set("h", "h") //
+            .set("i", "i") //
+            .build();
+
+    List<GenericRecord> listInputRecordG = Arrays.asList(inputRecordHI2, inputRecordHI2);
+
+    private final GenericRecord inputRecordFG = new GenericRecordBuilder(inputSchemaFG) //
             .set("f", "f") //
-            .set("g", inputSimpleRecordHI) //
+            .set("g", listInputRecordG) // inputRecordHI
             .build();
 
-    List<GenericRecord> listDE = Arrays.asList(inputSimpleRecordDE, inputSimpleRecordDE2);
+    // List<GenericRecord> listDE = Arrays.asList(inputSimpleRecordDE, inputSimpleRecordDE2);
 
-    private final GenericRecord inputEmbeddedRecord = new GenericRecordBuilder(inputEmbeddedSchema) //
+    private final GenericRecord inputRecordXY = new GenericRecordBuilder(inputSchemaXY) //
             .set("x", "xxx1;xxx2") //
-            .set("y", inputSimpleRecordDE) // listDE
+            .set("y", inputRecordDE) // listDE
             .build();
-
-    private final GenericRecord inputEmbeddedRecord2 = new GenericRecordBuilder(inputEmbeddedSchema) //
-            .set("x", "xxx2") //
-            .set("y", "yyy2") //
-            .build();
-
-    List<GenericRecord> list = Arrays.asList(inputEmbeddedRecord, inputEmbeddedRecord2);
-
 
     private final GenericRecord inputHierarchicalRecord = new GenericRecordBuilder(inputHierarchicalSchema) //
             .set("a", "aaa") //
-            .set("b", inputEmbeddedRecord) //
-            .set("c", inputSimpleRecordFG) //
-            .build();
-
-    private final GenericRecord inputHierarchicalRecordWithList = new GenericRecordBuilder(inputHierarchicalSchema) //
-            .set("a", "aaa") //
-            .set("b", list) //
-            .set("c", "ccc") //
+            .set("b", inputRecordXY) //
+            .set("c", inputRecordFG) //
             .build();
 
     @Test
@@ -116,7 +97,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.columnToNormalize.setValue("c.g.h"); // c.g b.y
+        properties.columnToNormalize.setValue("c.g"); // c.g b.y
         properties.fieldSeparator.setValue(";");
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);

@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.processing.runtime.normalize;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -30,6 +31,8 @@ import org.talend.components.processing.normalize.NormalizeProperties;
 import org.talend.components.processing.runtime.Utils;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
+
+import com.google.common.collect.Iterators;
 
 public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
@@ -53,6 +56,8 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
         boolean isDiscardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
         boolean isTrim = properties.trim.getValue();
 
+        System.out.println(inputRecord);
+
         if (!StringUtils.isEmpty(columnToNormalize)) {
 
             // structure hierarchique
@@ -69,11 +74,14 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
                 // search the normalized node
                 JsonNode normalizedNode = Utils.searchNode(hierarchicalNode, path);
 
-                // get the normalized values delimited
-                String[] delimited = delimit(normalizedNode.getTextValue(), delim, isDiscardTrailingEmptyStr, isTrim); // Utils.tmp(actualObj,
-                // path, 0);
+                Object[] delimited = null;
 
-                Object[] outputValues = { "h1", "h2" };
+                if (normalizedNode.isArray()) {
+                    delimited = delimit(normalizedNode, delim, isDiscardTrailingEmptyStr, isTrim, true); // Utils.tmp(actualObj,
+                } else {
+                    delimited = delimit(normalizedNode.getTextValue(), delim, isDiscardTrailingEmptyStr, isTrim, false); // Utils.tmp(actualObj,
+                }
+
                 for (Object outputValue : delimited) {
                     context.output(generateNormalizedRecord(context.element(), context.element().getSchema(), schema, path, 0,
                             outputValue));
@@ -85,7 +93,7 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
                 int indexColumnToNormalize = schema.getField(columnToNormalize).pos();
                 List<Object> inputValues = Utils.getInputFields(inputRecord, columnToNormalize);
                 for (int i = 0; i < inputValues.size(); i++) {
-                    String[] strDelimited = delimit(inputValues.get(i), delim, isDiscardTrailingEmptyStr, isTrim);
+                    Object[] strDelimited = delimit(inputValues.get(i), delim, isDiscardTrailingEmptyStr, isTrim, false);
                     for (int j = 0; j < strDelimited.length; j++) {
                         GenericRecord outputRecord = new GenericData.Record(schema);
                         for (int k = 0; k < schema.getFields().size(); k++) {
@@ -111,23 +119,30 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
      * @return
      * @throws Exception if cannot cast obj to String.
      */
-    private String[] delimit(Object obj, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim) throws Exception {
-        String[] strDelimited = {};
-        try {
-            String str = (String) obj;
-            strDelimited = str.split(delim);
-            for (int i = 0; i < strDelimited.length; i++) {
-                if (isDiscardTrailingEmptyStr) {
-                    strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
+    private Object[] delimit(Object obj, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim, boolean isArray)
+            throws Exception {
+
+        if (isArray) {
+            Iterator<JsonNode> iteratorNodes = ((JsonNode) obj).getElements();
+            return Iterators.toArray(iteratorNodes, Object.class); // iteratorNodes;
+        } else {
+            String[] strDelimited = {};
+            try {
+                String str = (String) obj;
+                strDelimited = str.split(delim);
+                for (int i = 0; i < strDelimited.length; i++) {
+                    if (isDiscardTrailingEmptyStr) {
+                        strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
+                    }
+                    if (isTrim) {
+                        strDelimited[i] = strDelimited[i].trim();
+                    }
                 }
-                if (isTrim) {
-                    strDelimited[i] = strDelimited[i].trim();
-                }
+            } catch (Exception e) {
+                LOG.debug("Cannot cast Object to String {}", e.getMessage());
             }
-        } catch (Exception e) {
-            LOG.debug("Cannot cast Object to String {}", e.getMessage());
+            return strDelimited;
         }
-        return strDelimited;
     }
 
     private GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
