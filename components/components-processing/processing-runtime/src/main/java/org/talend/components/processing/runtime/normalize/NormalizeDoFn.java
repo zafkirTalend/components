@@ -15,6 +15,7 @@ package org.talend.components.processing.runtime.normalize;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
@@ -45,16 +46,19 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
             String[] path = columnToNormalize.split("\\.");
 
-            List<Object> inputFields = NormalizeUtils.getInputFields(inputRecord, columnToNormalize);
+            List<Object> normalizedFields = NormalizeUtils.getInputFields(inputRecord, columnToNormalize);
 
-            if (NormalizeUtils.isSimpleField(inputFields)) {
-                inputFields = NormalizeUtils.delimit((String) inputFields.get(0), delim, isDiscardTrailingEmptyStr, isTrim);
+            if (NormalizeUtils.isSimpleField(normalizedFields)) {
+                normalizedFields = NormalizeUtils.delimit(String.valueOf(normalizedFields.get(0)), delim,
+                        isDiscardTrailingEmptyStr, isTrim);
             }
 
-            for (Object outputValue : inputFields) {
-                context.output(NormalizeUtils.generateNormalizedRecord(context.element(), context.element().getSchema(), schema,
+            for (Object outputValue : normalizedFields) {
+                GenericRecord outputRecord = NormalizeUtils.generateNormalizedRecord(context.element(),
+                        context.element().getSchema(), schema,
                         path, 0,
-                            outputValue));
+                        outputValue);
+                context.output(outputRecord);
             }
         }
     }

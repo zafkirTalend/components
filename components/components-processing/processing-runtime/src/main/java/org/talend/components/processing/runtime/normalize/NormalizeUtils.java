@@ -20,19 +20,26 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.generic.IndexedRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.talend.daikon.avro.AvroUtils;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 
 public class NormalizeUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NormalizeUtils.class);
+    public static Schema getUnwrappedSchema(Schema.Field field) {
+        return AvroUtils.unwrapIfNullable(field.schema());
+    }
 
+    public static Schema getUnwrappedSchema(IndexedRecord record) {
+        return AvroUtils.unwrapIfNullable(record.getSchema());
+    }
+
+    /**
+     * Get the fields from inputRecord of the field columnName.
+     *
+     * @return list contains the fields from inputRecord of the field columnName
+     */
     public static List<Object> getInputFields(IndexedRecord inputRecord, String columnName) {
-        // TODO current implementation will only extract one element, but
-        // further implementation may
         ArrayList<Object> inputFields = new ArrayList<Object>();
         String[] path = columnName.split("\\.");
         Schema schema = inputRecord.getSchema();
@@ -78,23 +85,20 @@ public class NormalizeUtils {
                 }
                 break;
             } else {
-                // if we are on a object, then this is or the expected value of
-                // an error.
                 if (i == path.length - 1) {
                     inputFields.add(inputValue);
                 }
-                /*
-                 * else {
-                 * // No need to go further, return an empty list
-                 * break;
-                 * }
-                 */
             }
         }
 
         return inputFields;
     }
 
+    /**
+     * Generate a new Index Record which is the filtered result of the input record.
+     *
+     * @return the new record
+     */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
             String[] pathToElementToNormalize, int pathIterator, Object outputValue) {
         GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
@@ -123,8 +127,6 @@ public class NormalizeUtils {
                         } else {
                             if (pathIterator == pathToElementToNormalize.length - 1) {
                                 outputRecord.set(field.name(), outputValue);
-                            } else {
-                                // TODO return exception
                             }
                         }
                     } else {
@@ -167,12 +169,17 @@ public class NormalizeUtils {
                 }
             } else {
                 // element not found => set to the value and its hierarchy to null
-                outputRecord.set(field.name(), SchemaGeneratorUtils.generateEmptyRecord(outputSchema, field.name()));
+                outputRecord.set(field.name(), generateEmptyRecord(outputSchema, field.name()));
             }
         }
         return outputRecord.build();
     }
 
+    /**
+     * Generate a new Index Record which is the dupplicated of the input record.
+     *
+     * @return the new record
+     */
     public static GenericRecord dupplicateRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema) {
         GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
         for (Schema.Field field : outputSchema.getFields()) {
@@ -198,45 +205,43 @@ public class NormalizeUtils {
                 }
             } else {
                 // element not found => set to the value and its hierarchy to null
-                outputRecord.set(field.name(), SchemaGeneratorUtils.generateEmptyRecord(outputSchema, field.name()));
+                outputRecord.set(field.name(), generateEmptyRecord(outputSchema, field.name()));
             }
         }
         return outputRecord.build();
     }
 
-    /*
-     * public static Object[] delimit(Object obj, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim, NodeType
-     * nodeType)
-     * throws Exception {
-     * 
-     * if (nodeType.getIsArray()) {
-     * Iterator<JsonNode> iteratorNodes = ((JsonNode) obj).getElements();
-     * return Iterators.toArray(iteratorNodes, Object.class);
-     * } else if (nodeType.getIsTextual()) {
-     * String[] strDelimited = {};
-     * try {
-     * JsonNode txtNode = (JsonNode) obj;
-     * String str = txtNode.getTextValue();
-     * strDelimited = str.split(delim);
-     * for (int i = 0; i < strDelimited.length; i++) {
-     * if (isDiscardTrailingEmptyStr) {
-     * strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
-     * }
-     * if (isTrim) {
-     * strDelimited[i] = strDelimited[i].trim();
-     * }
-     * }
-     * } catch (Exception e) {
-     * LOG.debug("Cannot cast Object to String {}", e.getMessage());
-     * }
-     * return strDelimited;
-     * } else if (nodeType.getIsContainer()) {
-     * return new Object[] { obj };
-     * }
-     * return null;
-     * }
+    /**
+     * Use a Schema to generate a hierarchical GenericRecord that contains only null values.
+     *
+     * @param schema the parent schema of the field to set as null
+     * @param fieldName the name of the field to set as null
+     * @return if fieldName is a Record of the schema, the method will return a GenericRecord with any leaf set as null,
+     * otherwise return null
      */
+    public static IndexedRecord generateEmptyRecord(Schema schema, String fieldName) {
+        if (schema.getType().equals(Schema.Type.RECORD)) {
+            Schema unwrappedSchema = getUnwrappedSchema(schema.getField(fieldName));
+            if (unwrappedSchema.getType().equals(Schema.Type.RECORD)) {
+                GenericRecordBuilder outputRecord = new GenericRecordBuilder(unwrappedSchema);
+                for (Schema.Field field : unwrappedSchema.getFields()) {
+                    IndexedRecord value = generateEmptyRecord(unwrappedSchema, field.name());
+                    outputRecord.set(field.name(), value);
+                }
+                return outputRecord.build();
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
 
+    /**
+     * Check if the list contains a simple field.
+     * 
+     * @return true if list parameter contains a simple field
+     */
     public static boolean isSimpleField(List<Object> list) {
         if (list != null && list.size() == 1 && !(list.get(0) instanceof GenericRecord)) {
             return true;
@@ -245,27 +250,26 @@ public class NormalizeUtils {
     }
 
     /**
-     * Splits toDelimit around matches of the given delim parameter.
+     * Splits toSplit parameter around matches of the given delim parameter.
      *
-     * @param toDelimit
+     * @param toSplit string to split
      * @param delim the delimiting regular expression
      * @param isDiscardTrailingEmptyStr
      * @param isTrim
-     * @return
-     * @throws Exception if cannot cast obj to String.
+     * @return substrings
      */
-    public static List<Object> delimit(String toDelimit, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim) {
+    public static List<Object> delimit(String toSplit, String delim, boolean isDiscardTrailingEmptyStr, boolean isTrim) {
 
-        String[] strDelimited = toDelimit.split(delim);
+        String[] strSplitted = toSplit.split(delim);
         List<Object> strList = new ArrayList<Object>();
-        for (int i = 0; i < strDelimited.length; i++) {
+        for (int i = 0; i < strSplitted.length; i++) {
             if (isDiscardTrailingEmptyStr) {
-                strDelimited[i] = strDelimited[i].replaceAll("\\s+$", "");
+                strSplitted[i] = strSplitted[i].replaceAll("\\s+$", "");
             }
             if (isTrim) {
-                strDelimited[i] = strDelimited[i].trim();
+                strSplitted[i] = strSplitted[i].trim();
             }
-            strList.add(strDelimited[i]);
+            strList.add(strSplitted[i]);
         }
         return strList;
     }

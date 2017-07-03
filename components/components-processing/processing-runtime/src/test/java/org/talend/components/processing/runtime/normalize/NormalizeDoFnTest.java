@@ -24,6 +24,7 @@ import org.apache.beam.sdk.transforms.DoFnTester;
 import org.junit.Assert;
 import org.junit.Test;
 import org.talend.components.processing.normalize.NormalizeProperties;
+import org.talend.daikon.exception.TalendRuntimeException;
 
 public class NormalizeDoFnTest {
 
@@ -200,8 +201,6 @@ public class NormalizeDoFnTest {
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize a");
-        System.out.println(outputs);
         Assert.assertEquals(1, outputs.size());
         Assert.assertEquals(inputParentRecord, outputs.get(0));
 
@@ -211,8 +210,6 @@ public class NormalizeDoFnTest {
         function = new NormalizeDoFn().withProperties(properties);
         fnTester = DoFnTester.of(function);
         outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b.x");
-        System.out.println(outputs);
         Assert.assertEquals(2, outputs.size());
 
         GenericRecord inputRecordX1Y = new GenericRecordBuilder(inputSchemaXY) //
@@ -245,8 +242,6 @@ public class NormalizeDoFnTest {
         function = new NormalizeDoFn().withProperties(properties);
         fnTester = DoFnTester.of(function);
         outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b.y.d.k");
-        System.out.println(outputs);
         Assert.assertEquals(2, outputs.size());
 
         GenericRecord inputRecordJK1 = new GenericRecordBuilder(inputSchemaJK) //
@@ -327,8 +322,6 @@ public class NormalizeDoFnTest {
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize c.g");
-        System.out.println(outputs);
         Assert.assertEquals(2, outputs.size());
 
         GenericRecord inputRecordFG1 = new GenericRecordBuilder(inputSchemaFG) //
@@ -360,8 +353,6 @@ public class NormalizeDoFnTest {
         function = new NormalizeDoFn().withProperties(properties);
         fnTester = DoFnTester.of(function);
         outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b.y.d.j");
-        System.out.println(outputs);
 
         GenericRecord inputRecordJ1K = new GenericRecordBuilder(inputSchemaJK) //
                 .set("j", inputRecordL1) //
@@ -428,8 +419,6 @@ public class NormalizeDoFnTest {
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b");
-        System.out.println(outputs);
         Assert.assertEquals(1, outputs.size());
         GenericRecord record = (GenericRecord) outputs.get(0);
         Assert.assertEquals(inputParentRecord, record);
@@ -440,8 +429,6 @@ public class NormalizeDoFnTest {
         function = new NormalizeDoFn().withProperties(properties);
         fnTester = DoFnTester.of(function);
         outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b.y");
-        System.out.println(outputs);
         Assert.assertEquals(1, outputs.size());
         record = (GenericRecord) outputs.get(0);
         Assert.assertEquals(inputParentRecord, record);
@@ -452,10 +439,25 @@ public class NormalizeDoFnTest {
         function = new NormalizeDoFn().withProperties(properties);
         fnTester = DoFnTester.of(function);
         outputs = fnTester.processBundle(inputParentRecord);
-        System.out.println("Normalize b.y.d");
-        System.out.println(outputs);
         Assert.assertEquals(1, outputs.size());
         record = (GenericRecord) outputs.get(0);
         Assert.assertEquals(inputParentRecord, record);
+    }
+
+    /**
+     * Normalize a field not present in the input record will throw TalendRuntimeException.
+     * 
+     * @throws Exception
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testNormalizeNotFoundField() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.columnToNormalize.setValue("b.y.f");
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        fnTester.processBundle(inputParentRecord);
     }
 }
