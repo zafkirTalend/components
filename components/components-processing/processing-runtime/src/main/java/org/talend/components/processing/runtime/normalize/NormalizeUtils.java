@@ -99,12 +99,18 @@ public class NormalizeUtils {
      *
      * @return the new record
      */
-    public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
+    public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema,
             String[] pathToElementToNormalize, int pathIterator, Object outputValue) {
 
-        GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
+        GenericRecordBuilder outputRecord = null;
+        if ((pathIterator == pathToElementToNormalize.length - 1) && (Schema.Type.ARRAY.equals(inputSchema.getType()))) {
+            // we are on the element to normalise, and this is a list => Get the schema of the sub-element.
+            outputRecord = new GenericRecordBuilder(inputSchema.getElementType());
+        } else {
+            outputRecord = new GenericRecordBuilder(inputSchema);
+        }
 
-        for (Schema.Field field : outputSchema.getFields()) {
+        for (Schema.Field field : inputSchema.getFields()) {
             if (inputSchema.getField(field.name()) != null) {
                 // The column was existing on the input record, we forward it to the output record.
                 Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
@@ -118,12 +124,10 @@ public class NormalizeUtils {
                             // The sub-schema at this level is a union of "empty" and a record,
                             // so we need to get the true sub-schema
                             Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
                                 pathIterator++;
                                 Object childRecord = generateNormalizedRecord((IndexedRecord) inputValue, inputChildSchema,
-                                        outputChildSchema, pathToElementToNormalize, pathIterator, outputValue);
+                                        pathToElementToNormalize, pathIterator, outputValue);
                                 outputRecord.set(field.name(), childRecord);
                             }
                         } else if (inputValue instanceof List) {
@@ -131,11 +135,8 @@ public class NormalizeUtils {
                             if (pathIterator == pathToElementToNormalize.length - 1) {
 
                                 Schema inputChildSchema = ((GenericRecord) outputValue).getSchema();
-                                Schema outputChildSchema = ((GenericRecord) outputValue).getSchema();
-                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                        && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                    Object childRecord = duplicateRecord((IndexedRecord) outputValue, inputChildSchema,
-                                            outputChildSchema);
+                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                    Object childRecord = duplicateRecord((IndexedRecord) outputValue, inputChildSchema);
                                     outputRecord.set(field.name(), childRecord);
                                     GenericRecord tmp = (GenericRecord) outputRecord.get(field.name());
                                     System.out.println(tmp);
@@ -160,11 +161,8 @@ public class NormalizeUtils {
                             // The sub-schema at this level is a union of "empty" and a record,
                             // so we need to get the true sub-schema
                             Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
-                                        outputChildSchema);
+                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema);
                                 outputRecord.set(field.name(), childRecord);
                             }
                         } else {
@@ -179,11 +177,8 @@ public class NormalizeUtils {
                         // The sub-schema at this level is a union of "empty" and a record,
                         // so we need to get the true sub-schema
                         Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                        Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                        if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                            Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
-                                    outputChildSchema);
+                        if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                            Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema);
                             outputRecord.set(field.name(), childRecord);
                         }
                     } else {
@@ -203,9 +198,9 @@ public class NormalizeUtils {
      *
      * @return the new record
      */
-    public static GenericRecord duplicateRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema) {
-        GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
-        for (Schema.Field field : outputSchema.getFields()) {
+    public static GenericRecord duplicateRecord(IndexedRecord inputRecord, Schema inputSchema) {
+        GenericRecordBuilder outputRecord = new GenericRecordBuilder(inputSchema);
+        for (Schema.Field field : inputSchema.getFields()) {
             if (inputSchema.getField(field.name()) != null) {
                 // The column was existing on the input record, we forward it to the output record.
                 Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
@@ -217,10 +212,8 @@ public class NormalizeUtils {
                     // The sub-schema at this level is a union of "empty" and a record,
                     // so we need to get the true sub-schema
                     Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                    Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                            && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                        Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
+                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                        Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema);
                         outputRecord.set(field.name(), childRecord);
                     }
                 } else {
