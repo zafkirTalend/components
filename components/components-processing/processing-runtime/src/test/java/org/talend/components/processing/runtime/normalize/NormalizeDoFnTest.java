@@ -544,60 +544,51 @@ public class NormalizeDoFnTest {
         properties.schemaListener.afterSchema();
 
         // Normalize `c.g` array field
-        properties.columnToNormalize.setValue("c.g");
+        properties.columnToNormalize.setValue("m");
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
-        Assert.assertEquals(2, outputs.size());
-
-        Schema expectedSchemaHI = SchemaBuilder.record("inputRowHI") //
-                .fields() //
-                .name("h").type().optional().stringType() //
-                .name("i").type().optional().stringType() //
-                .endRecord();
-
-        Schema expectedSchemaFG = SchemaBuilder.record("inputRowFG") //
-                .fields() //
-                .name("f").type().optional().stringType() //
-                .name("g").type(expectedSchemaHI).noDefault() //
-                .endRecord();
+        Assert.assertEquals(3, outputs.size());
 
         Schema expectedParentSchema = SchemaBuilder.record("inputParentRow") //
                 .fields() //
                 .name("a").type().optional().stringType() //
                 .name("b").type(inputSchemaXY).noDefault() //
-                .name("c").type(expectedSchemaFG).noDefault() //
-                .name("m").type(inputSchemaListM).noDefault() //
+                .name("c").type(inputSchemaFG).noDefault() //
+                .name("m").type().optional().stringType() //
                 .endRecord();
 
-        GenericRecord expectedRecordFG1 = new GenericRecordBuilder(expectedSchemaFG) //
-                .set("f", "f") //
-                .set("g", inputRecordHI1) //
-                .build();
-        GenericRecord expectedParentRecordG1 = new GenericRecordBuilder(expectedParentSchema) //
+        GenericRecord expectedParentRecordM1 = new GenericRecordBuilder(expectedParentSchema) //
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
-                .set("c", expectedRecordFG1) //
+                .set("c", inputRecordFG) //
+                .set("m", "m1") //
                 .build();
 
-        GenericRecord expectedRecordFG2 = new GenericRecordBuilder(expectedSchemaFG) //
-                .set("f", "f") //
-                .set("g", inputRecordHI2) //
-                .build();
-        GenericRecord expectedParentRecordG2 = new GenericRecordBuilder(expectedParentSchema) //
+        GenericRecord expectedParentRecordM2 = new GenericRecordBuilder(expectedParentSchema) //
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
-                .set("c", expectedRecordFG2) //
-                .set("m", listInputRecordM) //
+                .set("c", inputRecordFG) //
+                .set("m", "m2") //
+                .build();
+
+        GenericRecord expectedParentRecordM3 = new GenericRecordBuilder(expectedParentSchema) //
+                .set("a", "aaa") //
+                .set("b", inputRecordXY) //
+                .set("c", inputRecordFG) //
+                .set("m", "m3") //
                 .build();
 
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
         GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
-        Assert.assertEquals(expectedParentRecordG1.toString(), outputRecord1.toString());
-        Assert.assertEquals(expectedParentRecordG1.getSchema().toString(), outputRecord1.getSchema().toString());
-        Assert.assertEquals(expectedParentRecordG2.toString(), outputRecord2.toString());
-        Assert.assertEquals(expectedParentRecordG2.getSchema().toString(), outputRecord2.getSchema().toString());
+        GenericRecord outputRecord3 = (GenericRecord) outputs.get(2);
+        Assert.assertEquals(expectedParentRecordM1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordM1.getSchema().toString(), outputRecord1.getSchema().toString());
+        Assert.assertEquals(expectedParentRecordM2.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordM2.getSchema().toString(), outputRecord1.getSchema().toString());
+        Assert.assertEquals(expectedParentRecordM3.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordM3.getSchema().toString(), outputRecord1.getSchema().toString());
     }
 
     /**
