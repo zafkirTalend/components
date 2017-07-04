@@ -92,28 +92,49 @@ public class NormalizeUtils {
         return inputFields;
     }
 
+    public static Schema transformSchema(Schema inputSchema, String[] pathToNormalize, int pathIterator) {
+        List<Schema.Field> fieldList = new ArrayList<>();
+        for (Schema.Field field : inputSchema.getFields()) {
+            Schema unwrappedSchema = getUnwrappedSchema(field);
+            if ((pathIterator < pathToNormalize.length) && (field.name().equals(pathToNormalize[pathIterator]))
+                    && (unwrappedSchema.getType().equals(Schema.Type.ARRAY))) {
+                fieldList.add(new Schema.Field(field.name(), unwrappedSchema.getElementType(), field.doc(), field.defaultVal()));
+            } else if (unwrappedSchema.getType().equals(Schema.Type.RECORD)) {
+                if ((pathIterator < pathToNormalize.length) && (field.name().equals(pathToNormalize[pathIterator]))) {
+                    Schema subElementSchema = transformSchema(unwrappedSchema, pathToNormalize, ++pathIterator);
+                    fieldList.add(new Schema.Field(field.name(), subElementSchema, null, null));
+                } else {
+                    // if we are outside of the pathToNormalize, set the pathIterator at something that cannot be used
+                    // again
+                    Schema subElementSchema = transformSchema(unwrappedSchema, pathToNormalize, pathToNormalize.length);
+                    fieldList.add(new Schema.Field(field.name(), subElementSchema, null, null));
+                }
+            } else {
+                // element add it directly
+                fieldList.add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultVal()));
+            }
+        }
+        return Schema.createRecord(inputSchema.getName(), inputSchema.getDoc(), inputSchema.getNamespace(), inputSchema.isError(),
+                fieldList);
+
+    }
+
     /**
      * Generate a new Record which is the filtered result of the input record. @TODO
      *
      * @return the new record
      */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
-            String[] pathToElementToNormalize, int pathIterator, Object outputValue) {
-        GenericRecordBuilder outputRecord = null;
-        if ((pathIterator == pathToElementToNormalize.length - 1) && (Schema.Type.ARRAY.equals(outputSchema.getType()))) {
-            // we are on the element to normalise, and this is a list => Get the schema of the sub-element.
-            outputRecord = new GenericRecordBuilder(outputSchema.getElementType());
-        } else {
-            outputRecord = new GenericRecordBuilder(outputSchema);
-        }
+            String[] pathToNormalize, int pathIterator, Object outputValue) {
+        GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
 
-        for (Schema.Field field : outputSchema.getFields()) {
-            if (inputSchema.getField(field.name()) != null) {
+        for (Schema.Field field : inputSchema.getFields()) {
+            if (outputSchema.getField(field.name()) != null) {
                 // The column was existing on the input record, we forward it to the output record.
                 Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
 
-                if (pathToElementToNormalize.length > 0 && pathIterator < pathToElementToNormalize.length) {
-                    if (field.name().equals(pathToElementToNormalize[pathIterator])) {
+                if (pathToNormalize.length > 0 && pathIterator < pathToNormalize.length) {
+                    if (field.name().equals(pathToNormalize[pathIterator])) {
                         // The current column can be a Record (an hierarchical sub-object) or directly a value.
                         // If we are on a record, we need to recursively do the process
                         // if we are on a object, we save it to the output.
@@ -124,26 +145,28 @@ public class NormalizeUtils {
                             Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
                             if (inputChildSchema.getType().equals(Schema.Type.RECORD)
                                     && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                pathIterator++;
                                 Object childRecord = generateNormalizedRecord((IndexedRecord) inputValue, inputChildSchema,
-                                        outputChildSchema, pathToElementToNormalize, pathIterator, outputValue);
+                                        outputChildSchema, pathToNormalize, ++pathIterator, outputValue);
                                 outputRecord.set(field.name(), childRecord);
                             }
                         } else if (inputValue instanceof List) {
-                            if (pathIterator == pathToElementToNormalize.length - 1) {
-
-                                Schema inputChildSchema = ((GenericRecord) outputValue).getSchema();
-                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                    Object childRecord = duplicateRecord((IndexedRecord) outputValue, inputChildSchema,
-                                            inputChildSchema);
-                                    outputRecord.set(field.name(), childRecord);
-                                }
+                            if (pathIterator == pathToNormalize.length - 1) {
+                                outputRecord.set(field.name(), outputValue);
                             } else {
-                                // @TODO throw an exception
+                                Schema inputChildSchema = ((GenericRecord) outputValue).getSchema();
+                                Schema outputChildSchema = AvroUtils
+                                        .unwrapIfNullable(outputSchema.getField(field.name()).schema());
+                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                                        && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                    Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
+                                            outputChildSchema);
+                                    outputRecord.set(field.name(), childRecord);
+                                } else {
+                                    // @TODO throw an exception
+                                }
                             }
-                            System.out.println(outputValue);
                         } else {
-                            if (pathIterator == pathToElementToNormalize.length - 1) {
+                            if (pathIterator == pathToNormalize.length - 1) {
                                 outputRecord.set(field.name(), outputValue);
                             } else {
                                 // @TODO throw an exception

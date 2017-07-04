@@ -35,7 +35,6 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
     @ProcessElement
     public void processElement(ProcessContext context) throws Exception {
         IndexedRecord inputRecord = context.element();
-        Schema schema = inputRecord.getSchema();
 
         String columnToNormalize = properties.columnToNormalize.getValue();
         String delim = properties.fieldSeparator.getValue();
@@ -47,6 +46,8 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
             String[] path = columnToNormalize.split("\\.");
 
             List<Object> normalizedFields = NormalizeUtils.getInputFields(inputRecord, columnToNormalize);
+
+            Schema schema = NormalizeUtils.transformSchema(inputRecord.getSchema(), path, 0);
 
             if (NormalizeUtils.isSimpleField(normalizedFields)) {
                 normalizedFields = NormalizeUtils.delimit(String.valueOf(normalizedFields.get(0)), delim,
