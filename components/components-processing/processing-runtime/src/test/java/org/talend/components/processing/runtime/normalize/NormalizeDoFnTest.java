@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.processing.runtime.normalize;
 
+import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -331,7 +332,7 @@ public class NormalizeDoFnTest {
 
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
         GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
-        //Assert.assertEquals(expectedParentRecordK1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordK1.toString(), outputRecord1.toString());
         Assert.assertEquals(expectedParentRecordK1.getSchema().toString(), outputRecord1.getSchema().toString());
         Assert.assertEquals(expectedParentRecordK2.toString(), outputRecord2.toString());
         Assert.assertEquals(expectedParentRecordK2.getSchema().toString(), outputRecord2.getSchema().toString());
@@ -672,6 +673,93 @@ public class NormalizeDoFnTest {
         GenericRecord outputRecord = (GenericRecord) outputs.get(0);
         Assert.assertEquals(inputParentRecord.toString(), outputRecord.toString());
         Assert.assertEquals(inputParentRecord.getSchema().toString(), outputRecord.getSchema().toString());
+    }
+
+    /**
+     * This test will normalize `b.x`. It will create 2 output. We are going to see if modifying the first output will
+     * not ahve any inpact on the second one.
+     *
+     * Normalize simple fields: `b.x`
+     *
+     * Expected normalized results of the field `b.x`:
+     *
+     * [{"a": "aaa", "b": {"x": "x1", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}]
+     *
+     * After modification : [{"a": "MODIFIED_A", "b": {"x": "MODIFIED_X1", "y": {"d": {"j": [{"l": "MODIFIED_L1"}, {"l":
+     * "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m":
+     * ["m1", "m2", "m3", "MODIFIED_M1"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}]
+     *
+     *
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testVariableDuplication() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.fieldSeparator.setValue(";");
+        properties.trim.setValue(true);
+        properties.discardTrailingEmptyStr.setValue(true);
+
+        // Normalize `b.x` simple field
+        properties.columnToNormalize.setValue("b.x");
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
+        Assert.assertEquals(2, outputs.size());
+
+        GenericRecord expectedRecordX1Y = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x1") //
+                .set("y", inputRecordDE) //
+                .build();
+        GenericRecord expectedRecordX2Y = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x2") //
+                .set("y", inputRecordDE) //
+                .build();
+        GenericRecord expectedParentRecordX1 = new GenericRecordBuilder(inputParentSchema) //
+                .set("a", "aaa") //
+                .set("b", expectedRecordX1Y) //
+                .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+        GenericRecord expectedParentRecordX2 = new GenericRecordBuilder(inputParentSchema) //
+                .set("a", "aaa") //
+                .set("b", expectedRecordX2Y) //
+                .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+
+        // test initial output
+        GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
+        GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
+        Assert.assertEquals(expectedParentRecordX1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordX1.getSchema().toString(), outputRecord1.getSchema().toString());
+        Assert.assertEquals(expectedParentRecordX2.toString(), outputRecord2.toString());
+        Assert.assertEquals(expectedParentRecordX2.getSchema().toString(), outputRecord2.getSchema().toString());
+
+        // modify outputRecord1
+        // Test a simple variable
+        outputRecord1.put("a", "MODIFIED_A");
+        // Test a hierarchical variable
+        ((GenericRecord) outputRecord1.get("b")).put("x", "MODIFIED_X1");
+        // Test a looped variable
+        AbstractList<GenericRecord> j = (AbstractList<GenericRecord>) ((GenericRecord) ((GenericRecord) ((GenericRecord) outputRecord1
+                .get("b")).get("y")).get("d")).get("j");
+        j.get(0).put("l", "MODIFIED_L1");
+
+        // Check outputRecord2
+        Assert.assertNotEquals(expectedParentRecordX1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordX2.toString(), outputRecord2.toString());
+        Assert.assertEquals(expectedParentRecordX2.getSchema().toString(), outputRecord2.getSchema().toString());
     }
 
     /**

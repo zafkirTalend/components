@@ -169,6 +169,8 @@ public class NormalizeUtils {
                             if (pathIterator == pathToNormalize.length - 1) {
                                 outputRecord.set(field.name(), outputValue);
                             } else {
+                                // We should never use the method normalize to access leaf element.
+                                // it should be done on duplicateRecord.
                                 // @TODO throw an exception
                             }
                         }
@@ -241,6 +243,17 @@ public class NormalizeUtils {
                     Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
                     outputRecord.set(field.name(), childRecord);
                 }
+            } else if (inputValue instanceof List) {
+                List<Object> outputElements = new ArrayList<>();
+                for (Object element : (List<Object>) inputValue) {
+                    Schema inputChildSchema = inputSchema.getField(field.name()).schema().getElementType();
+                    Schema outputChildSchema = outputSchema.getField(field.name()).schema().getElementType();
+                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                            && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                        outputElements.add(duplicateRecord((IndexedRecord) element, inputChildSchema, outputChildSchema));
+                    }
+                }
+                outputRecord.set(field.name(), outputElements);
             } else {
                 outputRecord.set(field.name(), inputValue);
             }
