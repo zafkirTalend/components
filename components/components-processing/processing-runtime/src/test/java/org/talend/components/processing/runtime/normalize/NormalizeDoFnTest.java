@@ -242,6 +242,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", expectedRecordX1Y) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
                 .build();
         GenericRecord expectedParentRecordX2 = new GenericRecordBuilder(inputParentSchema) //
                 .set("a", "aaa") //
