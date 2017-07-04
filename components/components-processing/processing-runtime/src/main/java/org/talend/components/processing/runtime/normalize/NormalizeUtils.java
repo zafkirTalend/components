@@ -95,13 +95,15 @@ public class NormalizeUtils {
     }
 
     /**
-     * Generate a new Index Record which is the filtered result of the input record.
+     * Generate a new Record which is the filtered result of the input record. @TODO
      *
      * @return the new record
      */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
             String[] pathToElementToNormalize, int pathIterator, Object outputValue) {
+
         GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
+
         for (Schema.Field field : outputSchema.getFields()) {
             if (inputSchema.getField(field.name()) != null) {
                 // The column was existing on the input record, we forward it to the output record.
@@ -124,9 +126,30 @@ public class NormalizeUtils {
                                         outputChildSchema, pathToElementToNormalize, pathIterator, outputValue);
                                 outputRecord.set(field.name(), childRecord);
                             }
+                        } else if (inputValue instanceof List) {
+                            System.out.println(inputValue);
+                            if (pathIterator == pathToElementToNormalize.length - 1) {
+
+                                Schema inputChildSchema = ((GenericRecord) outputValue).getSchema();
+                                Schema outputChildSchema = ((GenericRecord) outputValue).getSchema();
+                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)
+                                        && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                                    Object childRecord = duplicateRecord((IndexedRecord) outputValue, inputChildSchema,
+                                            outputChildSchema);
+                                    outputRecord.set(field.name(), childRecord);
+                                    GenericRecord tmp = (GenericRecord) outputRecord.get(field.name());
+                                    System.out.println(tmp);
+                                }
+
+                            } else {
+                                // @TODO throw an exception
+                            }
+                            System.out.println(outputValue);
                         } else {
                             if (pathIterator == pathToElementToNormalize.length - 1) {
                                 outputRecord.set(field.name(), outputValue);
+                            } else {
+                                // @TODO throw an exception
                             }
                         }
                     } else {
@@ -140,7 +163,7 @@ public class NormalizeUtils {
                             Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
                             if (inputChildSchema.getType().equals(Schema.Type.RECORD)
                                     && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                Object childRecord = dupplicateRecord((IndexedRecord) inputValue, inputChildSchema,
+                                Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
                                         outputChildSchema);
                                 outputRecord.set(field.name(), childRecord);
                             }
@@ -159,7 +182,7 @@ public class NormalizeUtils {
                         Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
                         if (inputChildSchema.getType().equals(Schema.Type.RECORD)
                                 && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                            Object childRecord = dupplicateRecord((IndexedRecord) inputValue, inputChildSchema,
+                            Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
                                     outputChildSchema);
                             outputRecord.set(field.name(), childRecord);
                         }
@@ -168,19 +191,19 @@ public class NormalizeUtils {
                     }
                 }
             } else {
-                // element not found => set to the value and its hierarchy to null
-                outputRecord.set(field.name(), generateEmptyRecord(outputSchema, field.name()));
+                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                        new Throwable(String.format("The field %s is not present on the input schema", field.name())));
             }
         }
         return outputRecord.build();
     }
 
     /**
-     * Generate a new Index Record which is the dupplicated of the input record.
+     * Generate a new Index Record which is the duplicated of the input record.
      *
      * @return the new record
      */
-    public static GenericRecord dupplicateRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema) {
+    public static GenericRecord duplicateRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema) {
         GenericRecordBuilder outputRecord = new GenericRecordBuilder(outputSchema);
         for (Schema.Field field : outputSchema.getFields()) {
             if (inputSchema.getField(field.name()) != null) {
@@ -197,44 +220,18 @@ public class NormalizeUtils {
                     Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
                     if (inputChildSchema.getType().equals(Schema.Type.RECORD)
                             && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                        Object childRecord = dupplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
+                        Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
                         outputRecord.set(field.name(), childRecord);
                     }
                 } else {
                     outputRecord.set(field.name(), inputValue);
                 }
             } else {
-                // element not found => set to the value and its hierarchy to null
-                outputRecord.set(field.name(), generateEmptyRecord(outputSchema, field.name()));
+                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                        new Throwable(String.format("The field %s is not present on the input schema", field.name())));
             }
         }
         return outputRecord.build();
-    }
-
-    /**
-     * Use a Schema to generate a hierarchical GenericRecord that contains only null values.
-     *
-     * @param schema the parent schema of the field to set as null
-     * @param fieldName the name of the field to set as null
-     * @return if fieldName is a Record of the schema, the method will return a GenericRecord with any leaf set as null,
-     * otherwise return null
-     */
-    public static IndexedRecord generateEmptyRecord(Schema schema, String fieldName) {
-        if (schema.getType().equals(Schema.Type.RECORD)) {
-            Schema unwrappedSchema = getUnwrappedSchema(schema.getField(fieldName));
-            if (unwrappedSchema.getType().equals(Schema.Type.RECORD)) {
-                GenericRecordBuilder outputRecord = new GenericRecordBuilder(unwrappedSchema);
-                for (Schema.Field field : unwrappedSchema.getFields()) {
-                    IndexedRecord value = generateEmptyRecord(unwrappedSchema, field.name());
-                    outputRecord.set(field.name(), value);
-                }
-                return outputRecord.build();
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
     }
 
     /**

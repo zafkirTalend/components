@@ -33,9 +33,11 @@ public class NormalizeDoFnTest {
             .name("l").type().optional().stringType() //
             .endRecord();
 
+    private final Schema inputSchemaListOfL = SchemaBuilder.array().items(inputSchemaL);
+
     private final Schema inputSchemaJK = SchemaBuilder.record("inputRow") //
             .fields() //
-            .name("j").type(inputSchemaL).noDefault() //
+            .name("j").type(inputSchemaListOfL).noDefault() //
             .name("k").type().optional().stringType() //
             .endRecord();
 
@@ -51,7 +53,15 @@ public class NormalizeDoFnTest {
             .name("i").type().optional().stringType() //
             .endRecord();
 
-    private final Schema inputSchemaFG = SchemaBuilder.record("inputRow") //
+    private final Schema inputSchemaListOfHI = SchemaBuilder.array().items(inputSchemaHI);
+
+    private final Schema inputSchemaFGArray = SchemaBuilder.record("inputRow") //
+            .fields() //
+            .name("f").type().optional().stringType() //
+            .name("g").type(inputSchemaListOfHI).noDefault() //
+            .endRecord();
+
+    private final Schema inputSchemaFGSimple = SchemaBuilder.record("inputRow") //
             .fields() //
             .name("f").type().optional().stringType() //
             .name("g").type(inputSchemaHI).noDefault() //
@@ -67,7 +77,14 @@ public class NormalizeDoFnTest {
             .fields() //
             .name("a").type().optional().stringType() //
             .name("b").type(inputSchemaXY).noDefault() //
-            .name("c").type(inputSchemaFG).noDefault() //
+            .name("c").type(inputSchemaFGArray).noDefault() //
+            .endRecord();
+
+    private final Schema inputParentSchemaSimpleFG = SchemaBuilder.record("inputParentRow") //
+            .fields() //
+            .name("a").type().optional().stringType() //
+            .name("b").type(inputSchemaXY).noDefault() //
+            .name("c").type(inputSchemaFGSimple).noDefault() //
             .endRecord();
 
     /**
@@ -129,7 +146,7 @@ public class NormalizeDoFnTest {
     /**
      * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}
      */
-    private final GenericRecord inputRecordFG = new GenericRecordBuilder(inputSchemaFG) //
+    private final GenericRecord inputRecordFG = new GenericRecordBuilder(inputSchemaFGArray) //
             .set("f", "f") //
             .set("g", listInputRecordG) // inputRecordHI
             .build();
@@ -288,7 +305,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `c.g` | `b.y.d.j`
+     * Normalize array fields: `c.g` | `b.y.d.j`
      *
      * Expected normalized results of the field `c.g`:
      *
@@ -324,28 +341,30 @@ public class NormalizeDoFnTest {
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
         Assert.assertEquals(2, outputs.size());
 
-        GenericRecord inputRecordFG1 = new GenericRecordBuilder(inputSchemaFG) //
+        GenericRecord expectedRecordFG1 = new GenericRecordBuilder(inputSchemaFGSimple) //
                 .set("f", "f") //
                 .set("g", inputRecordHI1) //
                 .build();
-        GenericRecord inputRecordFG2 = new GenericRecordBuilder(inputSchemaFG) //
+        GenericRecord expectedRecordFG2 = new GenericRecordBuilder(inputSchemaFGSimple) //
                 .set("f", "f") //
                 .set("g", inputRecordHI2) //
                 .build();
-        GenericRecord inputParentRecordG1 = new GenericRecordBuilder(inputParentSchema) //
+        GenericRecord expectedParentRecordG1 = new GenericRecordBuilder(inputParentSchemaSimpleFG) //
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
-                .set("c", inputRecordFG1) //
+                .set("c", expectedRecordFG1) //
                 .build();
-        GenericRecord inputParentRecordG2 = new GenericRecordBuilder(inputParentSchema) //
+        GenericRecord expectedParentRecordG2 = new GenericRecordBuilder(inputParentSchemaSimpleFG) //
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
-                .set("c", inputRecordFG2) //
+                .set("c", expectedRecordFG2) //
                 .build();
         GenericRecord record1 = (GenericRecord) outputs.get(0);
         GenericRecord record2 = (GenericRecord) outputs.get(1);
-        Assert.assertEquals(inputParentRecordG1, record1);
-        Assert.assertEquals(inputParentRecordG2, record2);
+        Assert.assertEquals(expectedParentRecordG1.toString(), record1.toString());
+        Assert.assertEquals(expectedParentRecordG2.toString(), record2.toString());
+        Assert.assertEquals(expectedParentRecordG1.getSchema().toString(), record1.toString());
+        Assert.assertEquals(expectedParentRecordG2.getSchema().toString(), record2.toString());
 
         // Normalize `b.y.d.j` array field
         properties.columnToNormalize.setValue("b.y.d.j");
