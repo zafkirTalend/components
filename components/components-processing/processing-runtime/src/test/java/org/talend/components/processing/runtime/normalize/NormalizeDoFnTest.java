@@ -67,11 +67,14 @@ public class NormalizeDoFnTest {
             .name("y").type(inputSchemaDE).noDefault() //
             .endRecord();
 
+    private final Schema inputSchemaListM = SchemaBuilder.array().items().stringType();
+
     private final Schema inputParentSchema = SchemaBuilder.record("inputParentRow") //
             .fields() //
             .name("a").type().optional().stringType() //
             .name("b").type(inputSchemaXY).noDefault() //
             .name("c").type(inputSchemaFG).noDefault() //
+            .name("m").type(inputSchemaListM).noDefault() //
             .endRecord();
 
     /**
@@ -147,13 +150,19 @@ public class NormalizeDoFnTest {
             .build();
 
     /**
+     * ["m1", "m2", "m3"]
+     */
+    private final List<String> listInputRecordM = Arrays.asList("m1", "m2", "m3");
+
+    /**
      * { "a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l":"l1"},{"l":"l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
-     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]} }
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
      */
     private final GenericRecord inputParentRecord = new GenericRecordBuilder(inputParentSchema) //
             .set("a", "aaa") //
             .set("b", inputRecordXY) //
             .set("c", inputRecordFG) //
+            .set("m", listInputRecordM) //
             .build();
 
     /**
@@ -163,8 +172,8 @@ public class NormalizeDoFnTest {
      *
      * Expected normalized results of the field `a`:
      *
-     * [{"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
-     * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}}]
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
+     * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
      *
      * @throws Exception
      */
@@ -197,9 +206,10 @@ public class NormalizeDoFnTest {
      * Expected normalized results of the field `b.x`:
      *
      * [{"a": "aaa", "b": {"x": "x1", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
-     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}}, {"a": "aaa", "b": {"x": "x2", "y": {"d": {"j":
-     * [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2",
-     * "i": "i1"}]}}]
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}]
      *
      * @throws Exception
      */
@@ -237,6 +247,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", expectedRecordX2Y) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
                 .build();
 
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
@@ -255,9 +266,10 @@ public class NormalizeDoFnTest {
      * Expected normalized results of the field `b.y.d.k`:
      *
      * [{"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1"}, "e": "e"}}, "c": {"f":
-     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}}, {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j":
-     * [{"l": "l1"}, {"l": "l2"}], "k": "k2"}, "e": "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2",
-     * "i": "i1"}]}}]
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}]
      *
      * @throws Exception
      */
@@ -282,35 +294,38 @@ public class NormalizeDoFnTest {
                 .set("j", listInputRecordL) //
                 .set("k", "k1") //
                 .build();
-        GenericRecord expectedRecordJK2 = new GenericRecordBuilder(inputSchemaJK) //
-                .set("j", listInputRecordL) //
-                .set("k", "k2") //
-                .build();
         GenericRecord expectedRecordDE1 = new GenericRecordBuilder(inputSchemaDE) //
                 .set("d", expectedRecordJK1) //
-                .set("e", "e") //
-                .build();
-        GenericRecord expectedRecordDE2 = new GenericRecordBuilder(inputSchemaDE) //
-                .set("d", expectedRecordJK2) //
                 .set("e", "e") //
                 .build();
         GenericRecord expectedRecordXY1 = new GenericRecordBuilder(inputSchemaXY) //
                 .set("x", "x1;x2") //
                 .set("y", expectedRecordDE1) //
                 .build();
-        GenericRecord expectedRecordXY2 = new GenericRecordBuilder(inputSchemaXY) //
-                .set("x", "x1;x2") //
-                .set("y", expectedRecordDE2) //
-                .build();
         GenericRecord expectedParentRecordK1 = new GenericRecordBuilder(inputParentSchema) //
                 .set("a", "aaa") //
                 .set("b", expectedRecordXY1) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+
+        GenericRecord expectedRecordJK2 = new GenericRecordBuilder(inputSchemaJK) //
+                .set("j", listInputRecordL) //
+                .set("k", "k2") //
+                .build();
+        GenericRecord expectedRecordDE2 = new GenericRecordBuilder(inputSchemaDE) //
+                .set("d", expectedRecordJK2) //
+                .set("e", "e") //
+                .build();
+        GenericRecord expectedRecordXY2 = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x1;x2") //
+                .set("y", expectedRecordDE2) //
                 .build();
         GenericRecord expectedParentRecordK2 = new GenericRecordBuilder(inputParentSchema) //
                 .set("a", "aaa") //
                 .set("b", expectedRecordXY2) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
                 .build();
 
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
@@ -329,8 +344,10 @@ public class NormalizeDoFnTest {
      * The schema of g must change from a list to a simple object. Expected normalized results of the field `c.g`:
      *
      * [{"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
-     * {"f": "f", "g": {"h": "h1", "i": "i2"}}}, {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l":
-     * "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g": {"h": "h2", "i": "i1"}}}]
+     * {"f": "f", "g": {"h": "h1", "i": "i2"}}, "m": ["m1", "m2", "m3"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
+     * {"f": "f", "g": {"h": "h2", "i": "i1"}}, "m": ["m1", "m2", "m3"]}]
      *
      * @throws Exception
      */
@@ -365,6 +382,7 @@ public class NormalizeDoFnTest {
                 .name("a").type().optional().stringType() //
                 .name("b").type(inputSchemaXY).noDefault() //
                 .name("c").type(expectedSchemaFG).noDefault() //
+                .name("m").type(inputSchemaListM).noDefault() //
                 .endRecord();
 
         GenericRecord expectedRecordFG1 = new GenericRecordBuilder(expectedSchemaFG) //
@@ -375,6 +393,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
                 .set("c", expectedRecordFG1) //
+                .set("m", listInputRecordM) //
                 .build();
 
         GenericRecord expectedRecordFG2 = new GenericRecordBuilder(expectedSchemaFG) //
@@ -385,6 +404,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", inputRecordXY) //
                 .set("c", expectedRecordFG2) //
+                .set("m", listInputRecordM) //
                 .build();
 
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
@@ -403,9 +423,10 @@ public class NormalizeDoFnTest {
      * The schema of j must change from a list to a simple object Expected normalized results of the field `b.y.d.j`:
      *
      * [{ "a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l":"l1"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g":
-     * [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]} } { "a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j":
-     * [{"l":"l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}
-     * }]
+     * [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]},
+     * 
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l":"l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f": "f", "g":
+     * [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"] }]
      *
      * @throws Exception
      */
@@ -450,6 +471,7 @@ public class NormalizeDoFnTest {
                 .name("a").type().optional().stringType() //
                 .name("b").type(expectedSchemaXY).noDefault() //
                 .name("c").type(inputSchemaFG).noDefault() //
+                .name("m").type(inputSchemaListM).noDefault() //
                 .endRecord();
 
         GenericRecord expectedRecordJ1K = new GenericRecordBuilder(expectedSchemaJK) //
@@ -468,6 +490,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", expectedRecordXY1) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
                 .build();
 
         GenericRecord expectedRecordJ2K = new GenericRecordBuilder(expectedSchemaJK) //
@@ -486,6 +509,7 @@ public class NormalizeDoFnTest {
                 .set("a", "aaa") //
                 .set("b", expectedRecordXY2) //
                 .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
                 .build();
         GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
         GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
@@ -493,6 +517,87 @@ public class NormalizeDoFnTest {
         Assert.assertEquals(expectedParentRecordL1.getSchema().toString(), outputRecord1.getSchema().toString());
         Assert.assertEquals(expectedParentRecordL2.toString(), outputRecord2.toString());
         Assert.assertEquals(expectedParentRecordL2.getSchema().toString(), outputRecord2.getSchema().toString());
+    }
+
+    /**
+     * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
+     *
+     * Normalize simple fields: `m`
+     *
+     * The schema of m must change from a list to a simple object. Expected normalized results of the field `m`:
+     *
+     * [{"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
+     * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": "m1"},
+     * 
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
+     * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": "m2"},
+     * 
+     * {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c":
+     * {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": "m3"}]
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testNormalizeArrayFields_m() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+
+        // Normalize `c.g` array field
+        properties.columnToNormalize.setValue("c.g");
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
+        Assert.assertEquals(2, outputs.size());
+
+        Schema expectedSchemaHI = SchemaBuilder.record("inputRowHI") //
+                .fields() //
+                .name("h").type().optional().stringType() //
+                .name("i").type().optional().stringType() //
+                .endRecord();
+
+        Schema expectedSchemaFG = SchemaBuilder.record("inputRowFG") //
+                .fields() //
+                .name("f").type().optional().stringType() //
+                .name("g").type(expectedSchemaHI).noDefault() //
+                .endRecord();
+
+        Schema expectedParentSchema = SchemaBuilder.record("inputParentRow") //
+                .fields() //
+                .name("a").type().optional().stringType() //
+                .name("b").type(inputSchemaXY).noDefault() //
+                .name("c").type(expectedSchemaFG).noDefault() //
+                .name("m").type(inputSchemaListM).noDefault() //
+                .endRecord();
+
+        GenericRecord expectedRecordFG1 = new GenericRecordBuilder(expectedSchemaFG) //
+                .set("f", "f") //
+                .set("g", inputRecordHI1) //
+                .build();
+        GenericRecord expectedParentRecordG1 = new GenericRecordBuilder(expectedParentSchema) //
+                .set("a", "aaa") //
+                .set("b", inputRecordXY) //
+                .set("c", expectedRecordFG1) //
+                .build();
+
+        GenericRecord expectedRecordFG2 = new GenericRecordBuilder(expectedSchemaFG) //
+                .set("f", "f") //
+                .set("g", inputRecordHI2) //
+                .build();
+        GenericRecord expectedParentRecordG2 = new GenericRecordBuilder(expectedParentSchema) //
+                .set("a", "aaa") //
+                .set("b", inputRecordXY) //
+                .set("c", expectedRecordFG2) //
+                .set("m", listInputRecordM) //
+                .build();
+
+        GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
+        GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
+        Assert.assertEquals(expectedParentRecordG1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordG1.getSchema().toString(), outputRecord1.getSchema().toString());
+        Assert.assertEquals(expectedParentRecordG2.toString(), outputRecord2.toString());
+        Assert.assertEquals(expectedParentRecordG2.getSchema().toString(), outputRecord2.getSchema().toString());
     }
 
     /**
