@@ -14,7 +14,6 @@ package org.talend.components.processing.runtime.normalize;
 
 import java.util.List;
 
-import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -35,7 +34,6 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
     @ProcessElement
     public void processElement(ProcessContext context) throws Exception {
         IndexedRecord inputRecord = context.element();
-        Schema schema = inputRecord.getSchema();
 
         String columnToNormalize = properties.columnToNormalize.getValue();
         String delim = properties.fieldSeparator.getValue();
@@ -55,9 +53,7 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
             for (Object outputValue : normalizedFields) {
                 GenericRecord outputRecord = NormalizeUtils.generateNormalizedRecord(context.element(),
-                        context.element().getSchema(), schema,
-                        path, 0,
-                        outputValue);
+                        context.element().getSchema(), path, 0, outputValue);
                 context.output(outputRecord);
             }
         }
