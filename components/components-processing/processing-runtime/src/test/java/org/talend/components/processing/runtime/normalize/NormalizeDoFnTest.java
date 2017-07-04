@@ -74,12 +74,6 @@ public class NormalizeDoFnTest {
             .name("c").type(inputSchemaFG).noDefault() //
             .endRecord();
 
-    @Test
-    public void titi() {
-        System.out.println(inputSchemaListOfL.toString());
-        System.out.println(inputSchemaListOfL.getElementType());
-    }
-
     /**
      * {"l":"l1"}
      */
