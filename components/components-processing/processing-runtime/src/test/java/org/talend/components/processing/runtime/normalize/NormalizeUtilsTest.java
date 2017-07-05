@@ -22,6 +22,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.Assert;
 import org.junit.Test;
+import org.talend.daikon.exception.TalendRuntimeException;
 
 public class NormalizeUtilsTest {
 
@@ -203,6 +204,39 @@ public class NormalizeUtilsTest {
 
         List<Object> list = NormalizeUtils.getInputFields(inputParentRecord, "b.y.d");
         Assert.assertEquals(inputRecordJK.toString(), list.get(0).toString());
+    }
+
+    /**
+     * Input parent record: {@link NormalizeUtilsTest#inputParentRecord}
+     *
+     * Get sub-fields of a field not present in the input parent record will throw TalendRuntimeException.
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testGetInputFieldsException() {
+        NormalizeUtils.getInputFields(inputParentRecord, "b.y.z");
+    }
+
+    /**
+     * Input parent record: {@link NormalizeUtilsTest#inputParentRecord}
+     *
+     * will throw TalendRuntimeException. @TODO
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testGenerateNormalizedRecordException() {
+
+        Schema wrongSchema = SchemaBuilder.record("inputParentRow") //
+                .fields() //
+                .name("a").type().optional().stringType() //
+                .name("q").type(inputSchemaXY).noDefault() //
+                .name("c").type(inputSchemaFG).noDefault() //
+                .name("m").type(inputSchemaListM).noDefault() //
+                .endRecord();
+
+        String[] path = { "b", "y", "d", "k" };
+
+        Schema schema = NormalizeUtils.transformSchema(inputParentRecord.getSchema(), path, 0);
+
+        NormalizeUtils.generateNormalizedRecord(inputParentRecord, wrongSchema, schema, path, 0, null);
     }
 
     /**
@@ -449,8 +483,38 @@ public class NormalizeUtilsTest {
     @Test
     public void testDelimit() {
 
-        String toSplit = " a1 ; a2 ; a3 ";
-        List<Object> listSplit = NormalizeUtils.delimit(toSplit, ";", true, true);
+        String toSplit = "a1;a2;a3";
+        List<Object> listSplit = NormalizeUtils.delimit(toSplit, ";", false, false);
+        Assert.assertEquals(listSplit.get(0).toString(), "a1");
+        Assert.assertEquals(listSplit.get(1).toString(), "a2");
+        Assert.assertEquals(listSplit.get(2).toString(), "a3");
+    }
+
+    /**
+     * Splits toSplit variable around matches of ";" with removing white space at the end of each item.
+     *
+     * Expected results of split: {" a1", " a2", " a3"}
+     */
+    @Test
+    public void testDelimitIsDiscardTrailingEmptyStr() {
+
+        String toSplit = " a1 ; a2  ; a3   ";
+        List<Object> listSplit = NormalizeUtils.delimit(toSplit, ";", true, false);
+        Assert.assertEquals(listSplit.get(0).toString(), " a1");
+        Assert.assertEquals(listSplit.get(1).toString(), " a2");
+        Assert.assertEquals(listSplit.get(2).toString(), " a3");
+    }
+
+    /**
+     * Splits toSplit variable around matches of ";" with leading and trailing white space removed.
+     * 
+     * Expected results of split: {"a1", "a2", "a3"}
+     */
+    @Test
+    public void testDelimitIsTrim() {
+
+        String toSplit = " a1 ;  a2  ;   a3   ";
+        List<Object> listSplit = NormalizeUtils.delimit(toSplit, ";", false, true);
         Assert.assertEquals(listSplit.get(0).toString(), "a1");
         Assert.assertEquals(listSplit.get(1).toString(), "a2");
         Assert.assertEquals(listSplit.get(2).toString(), "a3");
