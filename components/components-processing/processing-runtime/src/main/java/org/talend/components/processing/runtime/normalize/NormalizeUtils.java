@@ -30,10 +30,6 @@ public class NormalizeUtils {
         return AvroUtils.unwrapIfNullable(field.schema());
     }
 
-    public static Schema getUnwrappedSchema(IndexedRecord record) {
-        return AvroUtils.unwrapIfNullable(record.getSchema());
-    }
-
     /**
      * Get the sub-fields from inputRecord of the field columnName.
      *
@@ -125,6 +121,24 @@ public class NormalizeUtils {
     }
 
     /**
+     * Get the child schema of a field, and check if this is correctly a Record. If not, thow a TalendRuntimeException.
+     *
+     * @param parentSchema the schema of the parent element
+     * @param field the field to extract
+     * @return the schema of the element extracted
+     */
+    public static Schema getChildSchemaAsRecord(Schema parentSchema, Schema.Field field) {
+        Schema childSchema = AvroUtils.unwrapIfNullable(parentSchema.getField(field.name()).schema());
+        if (childSchema.getType().equals(Schema.Type.RECORD)) {
+            return childSchema;
+        } else {
+            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
+                    new Throwable(String.format("The field %s has the type %s but should be a Record on the schema %s",
+                            field.name(), childSchema.getType(), parentSchema.toString())));
+        }
+    }
+
+    /**
      * Generate a new Record which contains the normalized value `outputValue`.
      */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
@@ -136,86 +150,50 @@ public class NormalizeUtils {
                 // The column was existing on the input record, we forward it to the output record.
                 Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
 
-                if (pathToNormalize.length > 0 && pathIterator < pathToNormalize.length) {
-                    if (field.name().equals(pathToNormalize[pathIterator])) {
-                        // The current column can be a Record (an hierarchical sub-object) or directly a value.
-                        // If we are on a record, we need to recursively do the process
-                        // if we are on a object, we save it to the output.
-                        if (inputValue instanceof GenericData.Record) {
-                            // The sub-schema at this level is a union of "empty" and a record,
-                            // so we need to get the true sub-schema
-                            Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                Object childRecord = generateNormalizedRecord((IndexedRecord) inputValue, inputChildSchema,
-                                        outputChildSchema, pathToNormalize, ++pathIterator, outputValue);
-                                outputRecord.set(field.name(), childRecord);
-                            }
-                        } else if (inputValue instanceof List) {
-                            if (pathIterator == pathToNormalize.length - 1) {
-                                outputRecord.set(field.name(), outputValue);
-                            } else {
-                                Schema inputChildSchema = ((GenericRecord) outputValue).getSchema();
-                                Schema outputChildSchema = AvroUtils
-                                        .unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                                if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                        && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                    Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
-                                            outputChildSchema);
-                                    outputRecord.set(field.name(), childRecord);
-                                } else {
-                                    throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
-                                            new Throwable(String.format(
-                                                    "Accessing to leaf element of the field %s should be done on duplicate record",
-                                                    field.name())));
-                                }
-                            }
+                if ((pathToNormalize.length > 0) && (pathIterator < pathToNormalize.length)
+                        && (field.name().equals(pathToNormalize[pathIterator]))) {
+                    // The current column can be a Record (an hierarchical sub-object), a list or directly a value.
+                    // If we are on a record, we need to reach the element to normalize
+                    // if we are on a object or a list (aka the element to normalize), we save it to the output.
+                    if (inputValue instanceof GenericData.Record) {
+                        // use recursivity to reach the element to normalize
+                        Schema inputChildSchema = getChildSchemaAsRecord(inputSchema, field);
+                        Schema outputChildSchema = getChildSchemaAsRecord(outputSchema, field);
+                        Object childRecord = generateNormalizedRecord((IndexedRecord) inputValue, inputChildSchema,
+                                outputChildSchema, pathToNormalize, ++pathIterator, outputValue);
+                        outputRecord.set(field.name(), childRecord);
+                    } else if (inputValue instanceof List) {
+                        // a list if we are on element to normalize.
+                        // If we reach a list and we are not on the final element, this is a case that is currently
+                        // not available.
+                        if (pathIterator == pathToNormalize.length - 1) {
+                            outputRecord.set(field.name(), outputValue);
                         } else {
-                            if (pathIterator == pathToNormalize.length - 1) {
-                                outputRecord.set(field.name(), outputValue);
-                            } else {
-                                // We should never use the method normalize to access leaf element.
-                                // it should be done on duplicateRecord.
-                                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
-                                        new Throwable(String.format(
-                                                "Accessing to leaf element of the field %s should be done on duplicate record",
-                                                field.name())));
-                            }
+                            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                                    new Throwable(String.format("You cannot reach element to normalize inside a list.")));
                         }
                     } else {
-                        // The current column can be a Record (an hierarchical sub-object) or directly a value.
-                        // If we are on a record, we need to recursively do the process
-                        // if we are on a object, we save it to the output.
-                        if (inputValue instanceof GenericData.Record) {
-                            // The sub-schema at this level is a union of "empty" and a record,
-                            // so we need to get the true sub-schema
-                            Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                            Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                            if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                    && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                                Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema,
-                                        outputChildSchema);
-                                outputRecord.set(field.name(), childRecord);
-                            }
+                        // Reach the element to normalize => duplicate it.
+                        if (pathIterator == pathToNormalize.length - 1) {
+                            outputRecord.set(field.name(), outputValue);
                         } else {
-                            outputRecord.set(field.name(), inputValue);
+                            // We should never use the method normalize to access leaf element.
+                            // it should be done on duplicateRecord.
+                            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                                    new Throwable(String.format(
+                                            "Accessing to leaf element of the field %s should be done on duplicate record",
+                                            field.name())));
                         }
                     }
                 } else {
-                    // The current column can be a Record (an hierarchical sub-object) or directly a value.
-                    // If we are on a record, we need to recursively do the process
-                    // if we are on a object, we save it to the output.
+                    // We are on an element that is not on the path to the element to normalize.
+                    // We just have to duplicate everything.
                     if (inputValue instanceof GenericData.Record) {
-                        // The sub-schema at this level is a union of "empty" and a record,
-                        // so we need to get the true sub-schema
-                        Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                        Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                        if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                                && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                            Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
-                            outputRecord.set(field.name(), childRecord);
-                        }
+                        // Use a specific function to duplicate elements.
+                        Schema inputChildSchema = getChildSchemaAsRecord(inputSchema, field);
+                        Schema outputChildSchema = getChildSchemaAsRecord(outputSchema, field);
+                        Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
+                        outputRecord.set(field.name(), childRecord);
                     } else {
                         outputRecord.set(field.name(), inputValue);
                     }
@@ -239,36 +217,45 @@ public class NormalizeUtils {
             // The column was existing on the input record, we forward it to the output record.
             Object inputValue = inputRecord.get(inputSchema.getField(field.name()).pos());
 
-            // The current column can be a Record (an hierarchical sub-object) or directly a value.
-            // If we are on a record, we need to recursively do the process
-            // if we are on a object, we save it to the output.
+            // The current column can be a Record (an hierarchical sub-object), a list or directly a value.
+            // If we are on a record, we need to recursively duplicate the element
+            // If we are on a list, we need to duplicate each element of the list
+            // if we are on a object, we duplicate it to the output.
             if (inputValue instanceof GenericData.Record) {
                 // The sub-schema at this level is a union of "empty" and a record,
                 // so we need to get the true sub-schema
-                Schema inputChildSchema = AvroUtils.unwrapIfNullable(inputSchema.getField(field.name()).schema());
-                Schema outputChildSchema = AvroUtils.unwrapIfNullable(outputSchema.getField(field.name()).schema());
-                if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                        && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                    Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
-                    outputRecord.set(field.name(), childRecord);
-                }
+                Schema inputChildSchema = getChildSchemaAsRecord(inputSchema, field);
+                Schema outputChildSchema = getChildSchemaAsRecord(outputSchema, field);
+                Object childRecord = duplicateRecord((IndexedRecord) inputValue, inputChildSchema, outputChildSchema);
+                outputRecord.set(field.name(), childRecord);
             } else if (inputValue instanceof List) {
+                // We are on a list, duplicate each sub element
                 List<Object> outputElements = new ArrayList<>();
                 for (Object element : (List<Object>) inputValue) {
                     Schema inputChildSchema = inputSchema.getField(field.name()).schema().getElementType();
                     Schema outputChildSchema = outputSchema.getField(field.name()).schema().getElementType();
-                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)
-                            && outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                        outputElements.add(duplicateRecord((IndexedRecord) element, inputChildSchema, outputChildSchema));
+                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                        if (outputChildSchema.getType().equals(Schema.Type.RECORD)) {
+                            outputElements.add(duplicateRecord((IndexedRecord) element, inputChildSchema, outputChildSchema));
+                        } else {
+                            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
+                                    new Throwable(
+                                            String.format("The field %s has the type %s but should be a Record on the schema %s",
+                                                    field.name(), outputChildSchema.getType(), outputSchema.toString())));
+                        }
+                    } else {
+                        throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
+                                new Throwable(String.format("The field %s has the type %s but should be a Record on the schema %s",
+                                        field.name(), inputChildSchema.getType(), inputSchema.toString())));
                     }
                 }
                 outputRecord.set(field.name(), outputElements);
             } else {
+                // We are on a raw type, use it directly
                 outputRecord.set(field.name(), inputValue);
             }
         }
         return outputRecord.build();
-
     }
 
     /**

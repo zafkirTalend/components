@@ -167,6 +167,27 @@ public class NormalizeDoFnTest {
             .build();
 
     /**
+     * Invalid path to normalize => throw error
+     */
+    @Test
+    public void testNormalize_nothing() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.fieldSeparator.setValue(";");
+        properties.trim.setValue(true);
+        properties.discardTrailingEmptyStr.setValue(true);
+
+        // Normalize `a` simple field
+        properties.columnToNormalize.setValue(null);
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
+        Assert.assertEquals(0, outputs.size());
+    }
+
+    /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
      * Normalize simple field: `a`

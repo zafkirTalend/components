@@ -41,7 +41,7 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
         boolean isDiscardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
         boolean isTrim = properties.trim.getValue();
 
-        if (!StringUtils.isEmpty(columnToNormalize)) {
+        if (StringUtils.isNotEmpty(columnToNormalize)) {
 
             String[] path = columnToNormalize.split("\\.");
 
