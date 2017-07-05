@@ -139,6 +139,24 @@ public class NormalizeUtils {
     }
 
     /**
+     * Get the child schema of a field, and check if this is correctly a Record. If not, thow a TalendRuntimeException.
+     *
+     * @param parentSchema the schema of the parent element
+     * @param field the field to extract
+     * @return the schema of the element extracted
+     */
+    public static Schema getChildSchemaOfListAsRecord(Schema parentSchema, Schema.Field field) {
+        Schema childSchema = AvroUtils.unwrapIfNullable(parentSchema.getField(field.name()).schema()).getElementType();
+        if (childSchema.getType().equals(Schema.Type.RECORD)) {
+            return childSchema;
+        } else {
+            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
+                    new Throwable(String.format("The field %s has the type %s but should be a Record on the schema %s",
+                            field.name(), childSchema.getType(), parentSchema.toString())));
+        }
+    }
+
+    /**
      * Generate a new Record which contains the normalized value `outputValue`.
      */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
@@ -232,22 +250,9 @@ public class NormalizeUtils {
                 // We are on a list, duplicate each sub element
                 List<Object> outputElements = new ArrayList<>();
                 for (Object element : (List<Object>) inputValue) {
-                    Schema inputChildSchema = inputSchema.getField(field.name()).schema().getElementType();
-                    Schema outputChildSchema = outputSchema.getField(field.name()).schema().getElementType();
-                    if (inputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                        if (outputChildSchema.getType().equals(Schema.Type.RECORD)) {
-                            outputElements.add(duplicateRecord((IndexedRecord) element, inputChildSchema, outputChildSchema));
-                        } else {
-                            throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
-                                    new Throwable(
-                                            String.format("The field %s has the type %s but should be a Record on the schema %s",
-                                                    field.name(), outputChildSchema.getType(), outputSchema.toString())));
-                        }
-                    } else {
-                        throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_EXCEPTION,
-                                new Throwable(String.format("The field %s has the type %s but should be a Record on the schema %s",
-                                        field.name(), inputChildSchema.getType(), inputSchema.toString())));
-                    }
+                    Schema inputChildSchema = getChildSchemaOfListAsRecord(inputSchema, field);
+                    Schema outputChildSchema = getChildSchemaOfListAsRecord(outputSchema, field);
+                    outputElements.add(duplicateRecord((IndexedRecord) element, inputChildSchema, outputChildSchema));
                 }
                 outputRecord.set(field.name(), outputElements);
             } else {

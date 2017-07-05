@@ -163,6 +163,19 @@ public class NormalizeUtilsTest {
             .set("m", listInputRecordM) //
             .build();
 
+    private final Schema listSchemas = SchemaBuilder.array().items(inputSchemaListM);
+
+    private final List<List<String>> listRecords = Arrays.asList(listInputRecordM);
+
+    private final Schema listOfListSchema = SchemaBuilder.record("listOfListRow") //
+            .fields() //
+            .name("parentList").type(listSchemas).noDefault() //
+            .endRecord();
+
+    private final GenericRecord listOfListRecord = new GenericRecordBuilder(listOfListSchema) //
+            .set("parentList", listRecords) //
+            .build();
+
     /**
      * Input parent record: {@link NormalizeUtilsTest#inputParentRecord}
      *
@@ -172,7 +185,6 @@ public class NormalizeUtilsTest {
      */
     @Test
     public void testGetInputFieldsSimple() {
-
         List<Object> list = NormalizeUtils.getInputFields(inputParentRecord, "b.y.d.k");
         Assert.assertEquals(inputRecordJK.get("k").toString(), list.get(0).toString());
     }
@@ -186,7 +198,6 @@ public class NormalizeUtilsTest {
      */
     @Test
     public void testGetInputFieldsArray() {
-
         List<Object> list = NormalizeUtils.getInputFields(inputParentRecord, "b.y.d.j");
         Assert.assertEquals(inputRecordL1.toString(), list.get(0).toString());
         Assert.assertEquals(inputRecordL2.toString(), list.get(1).toString());
@@ -214,6 +225,41 @@ public class NormalizeUtilsTest {
     @Test(expected = TalendRuntimeException.class)
     public void testGetInputFieldsException() {
         NormalizeUtils.getInputFields(inputParentRecord, "b.y.z");
+    }
+
+    /**
+     * retrieve a valid record
+     */
+    @Test
+    public void testGetChildSchemaAsRecord_valid() {
+        Assert.assertEquals(inputSchemaXY, NormalizeUtils.getChildSchemaAsRecord(inputParentRecord.getSchema(),
+                inputParentRecord.getSchema().getField("b")));
+    }
+
+    /**
+     * retrieve a invalid record => "m" is a list. As a resutl throw and TalendRuntimeException
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testGetChildSchemaAsRecord_invalid() {
+        NormalizeUtils.getChildSchemaAsRecord(inputParentRecord.getSchema(), inputParentRecord.getSchema().getField("m"));
+    }
+
+    /**
+     * retrieve a valid record
+     */
+    @Test
+    public void testGetChildSchemaOfListAsRecord_valid() {
+        Assert.assertEquals(inputSchemaHI,
+                NormalizeUtils.getChildSchemaOfListAsRecord(inputRecordFG.getSchema(), inputRecordFG.getSchema().getField("g")));
+    }
+
+    /**
+     * retrieve a invalid record => "b" is a not a list. As a resutl throw and TalendRuntimeException
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testGetChildSchemaOfLiswtAsRecord_invalid() {
+        NormalizeUtils.getChildSchemaOfListAsRecord(listOfListRecord.getSchema(),
+                listOfListRecord.getSchema().getField("parentList"));
     }
 
     /**
@@ -246,13 +292,11 @@ public class NormalizeUtilsTest {
      *
      * Expected normalized results of the field `b.y.d.k`:
      *
-     * outputRecord1: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1"}, "e": "e"}}, "c":
-     * {"f":
-     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
+     * outputRecord1: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1"}, "e":
+     * "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
      *
-     * outputRecord2: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k2"}, "e": "e"}}, "c":
-     * {"f":
-     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
+     * outputRecord2: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k2"}, "e":
+     * "e"}}, "c": {"f": "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}
      *
      */
     @Test
@@ -323,13 +367,11 @@ public class NormalizeUtilsTest {
      *
      * The schema of g must change from a list to a simple object. Expected normalized results of the field `c.g`:
      *
-     * outputRecord1: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}},
-     * "c":
-     * {"f": "f", "g": {"h": "h1", "i": "i2"}}, "m": ["m1", "m2", "m3"]}
+     * outputRecord1: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e":
+     * "e"}}, "c": {"f": "f", "g": {"h": "h1", "i": "i2"}}, "m": ["m1", "m2", "m3"]}
      *
-     * outputRecord2: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}},
-     * "c":
-     * {"f": "f", "g": {"h": "h2", "i": "i1"}}, "m": ["m1", "m2", "m3"]}
+     * outputRecord2: {"a": "aaa", "b": {"x": "x1;x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e":
+     * "e"}}, "c": {"f": "f", "g": {"h": "h2", "i": "i1"}}, "m": ["m1", "m2", "m3"]}
      *
      */
     @Test

@@ -362,6 +362,28 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
+     * Normalize simple field: `b.y.d.k.t`
+     *
+     * Throw an exception: the element t does not exist
+     *
+     * @throws Exception
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testNormalizeSimpleFields_bydkt() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        // Normalize `b.y.d.j` array field
+        properties.columnToNormalize.setValue("b.y.d.k.t");
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
+    }
+
+    /**
+     * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
+     *
      * Normalize array field: c.g`
      *
      * The schema of g must change from a list to a simple object. Expected normalized results of the field `c.g`:
@@ -612,6 +634,28 @@ public class NormalizeDoFnTest {
         Assert.assertEquals(expectedParentRecordM2.getSchema().toString(), outputRecord1.getSchema().toString());
         Assert.assertEquals(expectedParentRecordM3.toString(), outputRecord3.toString());
         Assert.assertEquals(expectedParentRecordM3.getSchema().toString(), outputRecord1.getSchema().toString());
+    }
+
+    /**
+     * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
+     *
+     * Normalize simple field: `b.y.d.j.l`
+     *
+     * Throw an exception: the element l is inside a loop.
+     *
+     * @throws Exception
+     */
+    @Test(expected = TalendRuntimeException.class)
+    public void testNormalizeArrayFields_bydjl() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        // Normalize `b.y.d.j` array field
+        properties.columnToNormalize.setValue("b.y.d.j.l");
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
     }
 
     /**
