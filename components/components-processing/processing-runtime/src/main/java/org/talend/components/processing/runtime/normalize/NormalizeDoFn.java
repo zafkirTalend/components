@@ -20,13 +20,10 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.components.processing.normalize.NormalizeProperties;
-import org.talend.daikon.avro.converter.IndexedRecordConverter;
 
 public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 
     private NormalizeProperties properties = null;
-
-    private IndexedRecordConverter converter = null;
 
     @Setup
     public void setup() throws Exception {
