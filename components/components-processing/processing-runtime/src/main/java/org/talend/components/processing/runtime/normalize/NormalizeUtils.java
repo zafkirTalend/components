@@ -35,9 +35,9 @@ public class NormalizeUtils {
     }
 
     /**
-     * Get the fields from inputRecord of the field columnName.
+     * Get the sub-fields from inputRecord of the field columnName.
      *
-     * @return list contains the fields from inputRecord of the field columnName
+     * @return list contains the sub-fields from inputRecord of the field columnName
      */
     public static List<Object> getInputFields(IndexedRecord inputRecord, String columnName) {
         ArrayList<Object> inputFields = new ArrayList<Object>();
@@ -92,6 +92,11 @@ public class NormalizeUtils {
         return inputFields;
     }
 
+    /**
+     * Transform input schema to a new schema.
+     *
+     * The schema of the array field `pathToNormalize` will be modified to the schema of its fields.
+     */
     public static Schema transformSchema(Schema inputSchema, String[] pathToNormalize, int pathIterator) {
         List<Schema.Field> fieldList = new ArrayList<>();
         for (Schema.Field field : inputSchema.getFields()) {
@@ -120,9 +125,7 @@ public class NormalizeUtils {
     }
 
     /**
-     * Generate a new Record which is the filtered result of the input record. @TODO
-     *
-     * @return the new record
+     * Generate a new Record which contains the normalized value `outputValue`.
      */
     public static GenericRecord generateNormalizedRecord(IndexedRecord inputRecord, Schema inputSchema, Schema outputSchema,
             String[] pathToNormalize, int pathIterator, Object outputValue) {
@@ -162,7 +165,10 @@ public class NormalizeUtils {
                                             outputChildSchema);
                                     outputRecord.set(field.name(), childRecord);
                                 } else {
-                                    // @TODO throw an exception
+                                    throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                                            new Throwable(String.format(
+                                                    "Accessing to leaf element of the field %s should be done on duplicate record",
+                                                    field.name())));
                                 }
                             }
                         } else {
@@ -171,7 +177,10 @@ public class NormalizeUtils {
                             } else {
                                 // We should never use the method normalize to access leaf element.
                                 // it should be done on duplicateRecord.
-                                // @TODO throw an exception
+                                throw new TalendRuntimeException(CommonErrorCodes.UNEXPECTED_ARGUMENT,
+                                        new Throwable(String.format(
+                                                "Accessing to leaf element of the field %s should be done on duplicate record",
+                                                field.name())));
                             }
                         }
                     } else {

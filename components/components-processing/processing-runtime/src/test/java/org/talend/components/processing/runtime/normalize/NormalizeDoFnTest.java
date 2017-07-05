@@ -169,7 +169,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `a`
+     * Normalize simple field: `a`
      *
      * Expected normalized results of the field `a`:
      *
@@ -202,7 +202,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `b.x`
+     * Normalize simple field: `b.x`
      *
      * Expected normalized results of the field `b.x`:
      *
@@ -263,7 +263,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `b.y.d.k`
+     * Normalize simple field: `b.y.d.k`
      *
      * Expected normalized results of the field `b.y.d.k`:
      *
@@ -341,7 +341,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields:c.g`
+     * Normalize array field: c.g`
      *
      * The schema of g must change from a list to a simple object. Expected normalized results of the field `c.g`:
      *
@@ -420,7 +420,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `b.y.d.j`
+     * Normalize simple field: `b.y.d.j`
      *
      * The schema of j must change from a list to a simple object Expected normalized results of the field `b.y.d.j`:
      *
@@ -524,7 +524,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple fields: `m`
+     * Normalize simple field: `m`
      *
      * The schema of m must change from a list to a simple object. Expected normalized results of the field `m`:
      *
@@ -596,7 +596,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize complex fields: `b`
+     * Normalize complex field: `b`
      *
      * Expected: no change
      *
@@ -623,7 +623,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize complex fields: `b.y`
+     * Normalize complex field: `b.y`
      *
      * Expected: no change
      *
@@ -651,7 +651,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize complex fields: `b.y.d`
+     * Normalize complex field: `b.y.d`
      *
      * Expected: no change
      *
@@ -677,9 +677,9 @@ public class NormalizeDoFnTest {
 
     /**
      * This test will normalize `b.x`. It will create 2 output. We are going to see if modifying the first output will
-     * not ahve any inpact on the second one.
+     * not have any impact on the second one.
      *
-     * Normalize simple fields: `b.x`
+     * Normalize simple field: `b.x`
      *
      * Expected normalized results of the field `b.x`:
      *
