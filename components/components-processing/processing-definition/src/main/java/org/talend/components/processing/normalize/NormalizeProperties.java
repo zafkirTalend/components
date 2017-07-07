@@ -12,6 +12,10 @@
 // ============================================================================
 package org.talend.components.processing.normalize;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.apache.avro.Schema;
 import org.talend.components.api.component.Connector;
 import org.talend.components.api.component.ISchemaListener;
@@ -21,10 +25,6 @@ import org.talend.components.common.SchemaProperties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyFactory;
-
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public class NormalizeProperties extends FixedConnectorsComponentProperties {
 
@@ -44,7 +44,12 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
 
     public Property<String> columnToNormalize = PropertyFactory.newString("columnToNormalize", "").setRequired();
 
-    public Property<String> fieldSeparator = PropertyFactory.newString("fieldSeparator", ",").setRequired();
+    public Property<Boolean> isList = PropertyFactory.newBoolean("isList", false);
+
+    public Property<String> fieldSeparator = PropertyFactory.newString("fieldSeparator", NormalizeConstant.Delimiter.SEMICOLON)
+            .setPossibleValues(NormalizeConstant.FIELD_SEPARATORS);
+
+    public Property<String> otherSeparator = PropertyFactory.newString("otherSeparator", "");
 
     public Property<Boolean> discardTrailingEmptyStr = PropertyFactory.newBoolean("discardTrailingEmptyStr", false);
 
@@ -61,7 +66,9 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         super.setupLayout();
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(columnToNormalize);
+        mainForm.addRow(isList);
         mainForm.addRow(fieldSeparator);
+        mainForm.addRow(otherSeparator);
         mainForm.addRow(discardTrailingEmptyStr);
         mainForm.addRow(trim);
     }

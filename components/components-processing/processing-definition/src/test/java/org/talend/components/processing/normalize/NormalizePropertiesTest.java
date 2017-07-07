@@ -12,19 +12,6 @@
 // ============================================================================
 package org.talend.components.processing.normalize;
 
-import org.apache.avro.Schema;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.talend.components.api.component.PropertyPathConnector;
-import org.talend.components.processing.normalize.NormalizeProperties;
-import org.talend.daikon.avro.AvroRegistry;
-import org.talend.daikon.properties.presentation.Form;
-import org.talend.daikon.properties.presentation.Widget;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -32,6 +19,17 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
+
+import org.apache.avro.Schema;
+import org.junit.Test;
+import org.talend.components.api.component.PropertyPathConnector;
+import org.talend.daikon.avro.AvroRegistry;
+import org.talend.daikon.properties.presentation.Form;
+import org.talend.daikon.properties.presentation.Widget;
 
 public class NormalizePropertiesTest {
 
@@ -45,7 +43,9 @@ public class NormalizePropertiesTest {
         assertNull(properties.schemaFlow.schema.getValue());
 
         assertEquals("", properties.columnToNormalize.getValue());
-        assertEquals(",", properties.fieldSeparator.getValue());
+        assertEquals(false, properties.isList.getValue());
+        assertEquals(NormalizeConstant.Delimiter.SEMICOLON, properties.fieldSeparator.getValue());
+        assertEquals("", properties.otherSeparator.getValue());
         assertEquals(false, properties.discardTrailingEmptyStr.getValue());
         assertEquals(false, properties.trim.getValue());
 
@@ -54,7 +54,9 @@ public class NormalizePropertiesTest {
         assertEquals("EmptyRecord", properties.schemaFlow.schema.getValue().getName());
 
         assertEquals("", properties.columnToNormalize.getValue());
-        assertEquals(",", properties.fieldSeparator.getValue());
+        assertEquals(false, properties.isList.getValue());
+        assertEquals(NormalizeConstant.Delimiter.SEMICOLON, properties.fieldSeparator.getValue());
+        assertEquals("", properties.otherSeparator.getValue());
         assertEquals(false, properties.discardTrailingEmptyStr.getValue());
         assertEquals(false, properties.trim.getValue());
     }
@@ -75,7 +77,9 @@ public class NormalizePropertiesTest {
         properties.main.schema.setValue(inputSchema);
 
         properties.columnToNormalize.setValue("testColumnToNormalize");
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
+        properties.fieldSeparator.setValue(NormalizeConstant.Delimiter.OTHER);
+        properties.otherSeparator.setValue("|");
         properties.discardTrailingEmptyStr.setValue(false);
         properties.trim.setValue(false);
 
@@ -88,7 +92,9 @@ public class NormalizePropertiesTest {
 
         // the afterScheam trigger an update to the columnName
         assertEquals("testColumnToNormalize", properties.columnToNormalize.getValue());
-        assertEquals(";", properties.fieldSeparator.getValue());
+        assertEquals(false, properties.isList.getValue());
+        assertEquals(NormalizeConstant.Delimiter.OTHER, properties.fieldSeparator.getValue());
+        assertEquals("|", properties.otherSeparator.getValue());
         assertEquals(false, properties.discardTrailingEmptyStr.getValue());
         assertEquals(false, properties.trim.getValue());
     }
@@ -110,23 +116,31 @@ public class NormalizePropertiesTest {
 
         properties.refreshLayout(properties.getForm(Form.MAIN));
         assertTrue(properties.getForm(Form.MAIN).getWidget("columnToNormalize").isVisible());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("isList").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("fieldSeparator").isVisible());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("otherSeparator").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("discardTrailingEmptyStr").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("trim").isVisible());
         // The refreshLayout will change the columnName
         assertEquals("", properties.columnToNormalize.getValue());
-        assertEquals(",", properties.fieldSeparator.getValue());
+        assertEquals(false, properties.isList.getValue());
+        assertEquals(NormalizeConstant.Delimiter.SEMICOLON, properties.fieldSeparator.getValue());
+        assertEquals("", properties.otherSeparator.getValue());
         assertEquals(false, properties.discardTrailingEmptyStr.getValue());
         assertEquals(false, properties.trim.getValue());
 
         properties.refreshLayout(properties.getForm(Form.MAIN));
         assertTrue(properties.getForm(Form.MAIN).getWidget("columnToNormalize").isVisible());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("isList").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("fieldSeparator").isVisible());
+        assertTrue(properties.getForm(Form.MAIN).getWidget("otherSeparator").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("discardTrailingEmptyStr").isVisible());
         assertTrue(properties.getForm(Form.MAIN).getWidget("trim").isVisible());
         // The refreshLayout will change the columnName
         assertEquals("", properties.columnToNormalize.getValue());
-        assertEquals(",", properties.fieldSeparator.getValue());
+        assertEquals(false, properties.isList.getValue());
+        assertEquals(NormalizeConstant.Delimiter.SEMICOLON, properties.fieldSeparator.getValue());
+        assertEquals("", properties.otherSeparator.getValue());
         assertEquals(false, properties.discardTrailingEmptyStr.getValue());
         assertEquals(false, properties.trim.getValue());
     }
@@ -143,13 +157,23 @@ public class NormalizePropertiesTest {
         assertThat(main, notNullValue());
 
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(4));
+        assertThat(mainWidgets, hasSize(6));
+
         Widget columnToNormalizeWidget = main.getWidget("columnToNormalize");
         assertThat(columnToNormalizeWidget, notNullValue());
+
+        Widget isListWidget = main.getWidget("isList");
+        assertThat(isListWidget, notNullValue());
+
         Widget fieldSeparatorWidget = main.getWidget("fieldSeparator");
         assertThat(fieldSeparatorWidget, notNullValue());
+
+        Widget otherSeparatorWidget = main.getWidget("otherSeparator");
+        assertThat(fieldSeparatorWidget, notNullValue());
+
         Widget discardTrailingEmptyStrWidget = main.getWidget("discardTrailingEmptyStr");
         assertThat(discardTrailingEmptyStrWidget, notNullValue());
+
         Widget trimWidget = main.getWidget("trim");
         assertThat(trimWidget, notNullValue());
     }

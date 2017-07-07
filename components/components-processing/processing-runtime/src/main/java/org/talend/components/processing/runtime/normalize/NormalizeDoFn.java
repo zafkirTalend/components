@@ -19,6 +19,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
+import org.talend.components.processing.normalize.NormalizeConstant;
+import org.talend.components.processing.normalize.NormalizeDelimiter;
 import org.talend.components.processing.normalize.NormalizeProperties;
 
 public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
@@ -34,7 +36,18 @@ public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
         IndexedRecord inputRecord = context.element();
 
         String columnToNormalize = properties.columnToNormalize.getValue();
-        String delim = properties.fieldSeparator.getValue();
+        boolean isList = properties.isList.getValue();
+        String delim = null;
+        if (!isList) {
+            try {
+                NormalizeDelimiter normalizeDelimiter = NormalizeDelimiter.valueOf(properties.fieldSeparator.getValue());
+                delim = normalizeDelimiter.getDelimiter();
+            } catch (IllegalArgumentException ex) {
+                if (NormalizeConstant.Delimiter.OTHER.equals(properties.fieldSeparator.getValue())) {
+                    delim = properties.otherSeparator.getValue();
+                }
+            }
+        }
         boolean isDiscardTrailingEmptyStr = properties.discardTrailingEmptyStr.getValue();
         boolean isTrim = properties.trim.getValue();
 

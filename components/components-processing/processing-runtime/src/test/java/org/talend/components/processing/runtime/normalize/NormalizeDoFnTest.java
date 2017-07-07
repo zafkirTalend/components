@@ -24,6 +24,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFnTester;
 import org.junit.Assert;
 import org.junit.Test;
+import org.talend.components.processing.normalize.NormalizeConstant;
 import org.talend.components.processing.normalize.NormalizeProperties;
 import org.talend.daikon.exception.TalendRuntimeException;
 
@@ -174,7 +175,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);
 
@@ -204,7 +205,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);
 
@@ -240,7 +241,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);
 
@@ -301,7 +302,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);
 
@@ -373,12 +374,87 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        // Normalize `b.y.d.j` array field
+        // Normalize `b.y.d.k.t` simple field
         properties.columnToNormalize.setValue("b.y.d.k.t");
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
         List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord);
+    }
+
+    /**
+     * Input parent record: inputParentRecord_otherSeparator
+     *
+     * Normalize simple field `b.x` with separator `#`
+     *
+     * Expected normalized results of the field `b.x`:
+     *
+     * [{"a": "aaa", "b": {"x": "x1", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]},
+     *
+     * {"a": "aaa", "b": {"x": "x2", "y": {"d": {"j": [{"l": "l1"}, {"l": "l2"}], "k": "k1;k2"}, "e": "e"}}, "c": {"f":
+     * "f", "g": [{"h": "h1", "i": "i2"}, {"h": "h2", "i": "i1"}]}, "m": ["m1", "m2", "m3"]}]
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testNormalizeSimpleFields_otherSeparator() throws Exception {
+        NormalizeProperties properties = new NormalizeProperties("test");
+        properties.init();
+        properties.schemaListener.afterSchema();
+        properties.isList.setValue(false);
+        properties.fieldSeparator.setValue(NormalizeConstant.Delimiter.OTHER);
+        properties.otherSeparator.setValue("#");
+        properties.trim.setValue(true);
+        properties.discardTrailingEmptyStr.setValue(true);
+
+        // Normalize `b.x` simple field
+        properties.columnToNormalize.setValue("b.x");
+
+        GenericRecord inputRecordXY_otherSeparator = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x1#x2") //
+                .set("y", inputRecordDE) // listDE
+                .build();
+
+        GenericRecord inputParentRecord_otherSeparator = new GenericRecordBuilder(inputParentSchema) //
+                .set("a", "aaa") //
+                .set("b", inputRecordXY_otherSeparator) //
+                .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+
+        NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
+        DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
+        List<IndexedRecord> outputs = fnTester.processBundle(inputParentRecord_otherSeparator);
+        Assert.assertEquals(2, outputs.size());
+
+        GenericRecord expectedRecordX1Y = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x1") //
+                .set("y", inputRecordDE) //
+                .build();
+        GenericRecord expectedRecordX2Y = new GenericRecordBuilder(inputSchemaXY) //
+                .set("x", "x2") //
+                .set("y", inputRecordDE) //
+                .build();
+        GenericRecord expectedParentRecordX1 = new GenericRecordBuilder(inputParentSchema) //
+                .set("a", "aaa") //
+                .set("b", expectedRecordX1Y) //
+                .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+        GenericRecord expectedParentRecordX2 = new GenericRecordBuilder(inputParentSchema) //
+                .set("a", "aaa") //
+                .set("b", expectedRecordX2Y) //
+                .set("c", inputRecordFG) //
+                .set("m", listInputRecordM) //
+                .build();
+
+        GenericRecord outputRecord1 = (GenericRecord) outputs.get(0);
+        GenericRecord outputRecord2 = (GenericRecord) outputs.get(1);
+        Assert.assertEquals(expectedParentRecordX1.toString(), outputRecord1.toString());
+        Assert.assertEquals(expectedParentRecordX1.getSchema().toString(), outputRecord1.getSchema().toString());
+        Assert.assertEquals(expectedParentRecordX2.toString(), outputRecord2.toString());
+        Assert.assertEquals(expectedParentRecordX2.getSchema().toString(), outputRecord2.getSchema().toString());
     }
 
     /**
@@ -403,6 +479,7 @@ public class NormalizeDoFnTest {
         properties.schemaListener.afterSchema();
 
         // Normalize `c.g` array field
+        properties.isList.setValue(true);
         properties.columnToNormalize.setValue("c.g");
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
@@ -463,7 +540,7 @@ public class NormalizeDoFnTest {
     /**
      * Input parent record: {@link NormalizeDoFnTest#inputParentRecord}
      *
-     * Normalize simple field: `b.y.d.j`
+     * Normalize array field: `b.y.d.j`
      *
      * The schema of j must change from a list to a simple object Expected normalized results of the field `b.y.d.j`:
      *
@@ -481,6 +558,7 @@ public class NormalizeDoFnTest {
         properties.init();
         properties.schemaListener.afterSchema();
         // Normalize `b.y.d.j` array field
+        properties.isList.setValue(true);
         properties.columnToNormalize.setValue("b.y.d.j");
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
@@ -583,12 +661,13 @@ public class NormalizeDoFnTest {
      * @throws Exception
      */
     @Test
-    public void testNormalizeArrayFields_m() throws Exception {
+    public void testNormalizeSimpleFields_m() throws Exception {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
 
-        // Normalize `c.g` array field
+        // Normalize `m` simple field
+        properties.isList.setValue(false);
         properties.columnToNormalize.setValue("m");
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
@@ -770,7 +849,7 @@ public class NormalizeDoFnTest {
         NormalizeProperties properties = new NormalizeProperties("test");
         properties.init();
         properties.schemaListener.afterSchema();
-        properties.fieldSeparator.setValue(";");
+        properties.isList.setValue(false);
         properties.trim.setValue(true);
         properties.discardTrailingEmptyStr.setValue(true);
 
@@ -838,6 +917,7 @@ public class NormalizeDoFnTest {
         properties.init();
         properties.schemaListener.afterSchema();
         properties.columnToNormalize.setValue("b.y.f");
+        properties.isList.setValue(false);
 
         NormalizeDoFn function = new NormalizeDoFn().withProperties(properties);
         DoFnTester<IndexedRecord, IndexedRecord> fnTester = DoFnTester.of(function);
