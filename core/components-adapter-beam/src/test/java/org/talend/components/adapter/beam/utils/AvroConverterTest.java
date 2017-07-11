@@ -38,6 +38,10 @@ public class AvroConverterTest {
 
     private final String nullJson = "{\"a\": null}";
 
+    private final String intJson = "{\"a\": 100}";
+
+    private final String doubleJson = "{\"a\": 100.1}";
+
     /**
      * Get fields of the input record: {@link AvroConverterTest#simpleJson}
      *
@@ -165,6 +169,62 @@ public class AvroConverterTest {
         ArrayNode nodeAType = (ArrayNode) nodeA.get("type");
         assertEquals("null", nodeAType.get(0).textValue());
         assertEquals("string", nodeAType.get(1).textValue());
+    }
+
+    /**
+     * Get fields of the input record: {@link AvroConverterTest#intJson}
+     *
+     * Expected fields:
+     * [{"name":"a","type":["null","int"]}]
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testGetFields_intJson() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(intJson);
+
+        ArrayNode arrayNode = avroConverter.getFields(jsonNode);
+        assertEquals(1, arrayNode.size());
+
+        // Check `a` field
+        JsonNode nodeA = arrayNode.get(0);
+
+        // "name":"a"
+        assertEquals("a", nodeA.get("name").textValue());
+
+        // "type":["null","int"]
+        ArrayNode nodeAType = (ArrayNode) nodeA.get("type");
+        assertEquals("null", nodeAType.get(0).textValue());
+        assertEquals("int", nodeAType.get(1).textValue());
+    }
+
+    /**
+     * Get fields of the input record: {@link AvroConverterTest#doubleJson}
+     *
+     * Expected fields:
+     * [{"name":"a","type":["null","double"]}]
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testGetFields_doubleJson() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(doubleJson);
+
+        ArrayNode arrayNode = avroConverter.getFields(jsonNode);
+        assertEquals(1, arrayNode.size());
+
+        // Check `a` field
+        JsonNode nodeA = arrayNode.get(0);
+
+        // "name":"a"
+        assertEquals("a", nodeA.get("name").textValue());
+
+        // "type":["null","double"]
+        ArrayNode nodeAType = (ArrayNode) nodeA.get("type");
+        assertEquals("null", nodeAType.get(0).textValue());
+        assertEquals("double", nodeAType.get(1).textValue());
     }
 
     /**

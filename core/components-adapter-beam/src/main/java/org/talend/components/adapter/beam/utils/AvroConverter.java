@@ -100,7 +100,13 @@ public class AvroConverter implements Serializable {
                 case NUMBER:
                     fieldNode.put(NAME, map.getKey());
                     fieldTypeArray.add(NULL);
-                    fieldTypeArray.add((nextNode.isLong() ? "long" : "double"));
+                    if (nextNode.isInt()) {
+                        fieldTypeArray.add("int");
+                    } else if (nextNode.isLong()) {
+                        fieldTypeArray.add("long");
+                    } else {
+                        fieldTypeArray.add("double");
+                    }
                     fieldNode.put(TYPE, fieldTypeArray);
                     fields.add(fieldNode);
                     break;
