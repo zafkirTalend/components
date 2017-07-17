@@ -47,6 +47,8 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
 
     private GenericDatumReader<IndexedRecord> reader = null;
 
+    private JsonGenericRecordConverter jsonGenericRecordConverter = null;
+
     @Override
     public ValidationResult initialize(RuntimeContainer container, PythonRowProperties componentProperties) {
         this.properties = (PythonRowProperties) componentProperties;
@@ -69,7 +71,7 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
             IndexedRecord input = (IndexedRecord) converter.convertToAvro(context.element());
 
             if (schema == null) {
-                schema = retrieveOutputSchema(input);
+                schema = input.getSchema();
             }
             if (reader == null) {
                 reader = new GenericDatumReader<>(schema);
@@ -82,14 +84,6 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
             }
         }
         python.cleanup();
-    }
-
-    private Schema retrieveOutputSchema(IndexedRecord input) {
-        if (properties.changeOutputSchema.getValue()) {
-            return properties.schemaFlow.schema.getValue();
-        } else {
-            return input.getSchema();
-        }
     }
 
     private void map(IndexedRecord input, ProcessContext context) throws IOException {
@@ -105,9 +99,12 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
         python.exec("outputJSON = json.dumps(output)");
         PyObject output = python.get("outputJSON");
 
-        JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
-        Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
-        JsonGenericRecordConverter jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+        if (jsonGenericRecordConverter == null) {
+            JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
+            Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
+            jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+        }
+
         GenericRecord outputRecord = jsonGenericRecordConverter.convertToAvro(output.toString());
         context.output(outputRecord);
     }
@@ -128,9 +125,11 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
         if (outputList instanceof PyList) {
             PyList list = (PyList) outputList;
             for (Object output : list) {
-                JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
-                Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
-                JsonGenericRecordConverter jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+                if (jsonGenericRecordConverter == null) {
+                    JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
+                    Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
+                    jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+                }
                 GenericRecord outputRecord = jsonGenericRecordConverter.convertToAvro(output.toString());
                 context.output(outputRecord);
             }

@@ -112,15 +112,7 @@ public class PythonRowPropertiesTest {
         Form form = properties.getForm(Form.MAIN);
 
         properties.refreshLayout(form);
-        assertFalse(form.getWidget(properties.schemaFlow).isVisible());
-
-        properties.changeOutputSchema.setValue(true);
-        properties.refreshLayout(form);
         assertTrue(form.getWidget(properties.schemaFlow).isVisible());
-
-        properties.changeOutputSchema.setValue(false);
-        properties.refreshLayout(form);
-        assertFalse(form.getWidget(properties.schemaFlow).isVisible());
     }
 
     @Test
@@ -167,15 +159,13 @@ public class PythonRowPropertiesTest {
         assertThat(main, notNullValue());
 
         Collection<Widget> mainWidgets = main.getWidgets();
-        assertThat(mainWidgets, hasSize(5));
+        assertThat(mainWidgets, hasSize(4));
         Widget mainWidget = main.getWidget("main");
         assertThat(mainWidget, notNullValue());
         Widget columnNameWidget = main.getWidget("mapType");
         assertThat(columnNameWidget, notNullValue());
         Widget function = main.getWidget("pythonCode");
         assertThat(function, notNullValue());
-        Widget changeOutputSchema = main.getWidget("changeOutputSchema");
-        assertThat(changeOutputSchema, notNullValue());
         Widget schemaFlow = main.getWidget("schemaFlow");
         assertThat(schemaFlow, notNullValue());
     }
