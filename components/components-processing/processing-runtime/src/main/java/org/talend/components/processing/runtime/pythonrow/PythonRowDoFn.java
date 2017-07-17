@@ -12,15 +12,12 @@
 // ============================================================================
 package org.talend.components.processing.runtime.pythonrow;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.JsonDecoder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.python.core.PyList;
 import org.python.core.PyObject;
@@ -32,7 +29,11 @@ import org.talend.components.processing.pythonrow.MapType;
 import org.talend.components.processing.pythonrow.PythonRowProperties;
 import org.talend.daikon.avro.AvroRegistry;
 import org.talend.daikon.avro.converter.IndexedRecordConverter;
+import org.talend.daikon.avro.converter.JsonGenericRecordConverter;
+import org.talend.daikon.avro.inferrer.JsonSchemaInferrer;
 import org.talend.daikon.properties.ValidationResult;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRuntime<PythonRowProperties> {
 
@@ -45,7 +46,6 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
     private Schema schema = null;
 
     private GenericDatumReader<IndexedRecord> reader = null;
-
 
     @Override
     public ValidationResult initialize(RuntimeContainer container, PythonRowProperties componentProperties) {
@@ -105,10 +105,11 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
         python.exec("outputJSON = json.dumps(output)");
         PyObject output = python.get("outputJSON");
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(output.toString().getBytes());
-        DataInputStream din = new DataInputStream(bais);
-        JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, din);
-        context.output(reader.read(null, decoder));
+        JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
+        Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
+        JsonGenericRecordConverter jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+        GenericRecord outputRecord = jsonGenericRecordConverter.convertToAvro(output.toString());
+        context.output(outputRecord);
     }
 
     private void flatMap(IndexedRecord input, ProcessContext context) throws IOException {
@@ -127,10 +128,11 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
         if (outputList instanceof PyList) {
             PyList list = (PyList) outputList;
             for (Object output : list) {
-                ByteArrayInputStream bais = new ByteArrayInputStream(output.toString().getBytes());
-                DataInputStream din = new DataInputStream(bais);
-                JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, din);
-                context.output(reader.read(null, decoder));
+                JsonSchemaInferrer jsonSchemaInferrer = new JsonSchemaInferrer(new ObjectMapper());
+                Schema jsonSchema = jsonSchemaInferrer.inferSchema(output.toString());
+                JsonGenericRecordConverter jsonGenericRecordConverter = new JsonGenericRecordConverter(jsonSchema);
+                GenericRecord outputRecord = jsonGenericRecordConverter.convertToAvro(output.toString());
+                context.output(outputRecord);
             }
         }
     }
