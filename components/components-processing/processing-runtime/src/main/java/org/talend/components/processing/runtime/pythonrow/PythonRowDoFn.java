@@ -15,7 +15,6 @@ package org.talend.components.processing.runtime.pythonrow;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -43,10 +42,6 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
 
     private IndexedRecordConverter converter = null;
 
-    private Schema schema = null;
-
-    private GenericDatumReader<IndexedRecord> reader = null;
-
     private JsonGenericRecordConverter jsonGenericRecordConverter = null;
 
     @Override
@@ -69,13 +64,6 @@ public class PythonRowDoFn extends DoFn<Object, Object> implements RuntimableRun
                 converter = registry.createIndexedRecordConverter(context.element().getClass());
             }
             IndexedRecord input = (IndexedRecord) converter.convertToAvro(context.element());
-
-            if (schema == null) {
-                schema = input.getSchema();
-            }
-            if (reader == null) {
-                reader = new GenericDatumReader<>(schema);
-            }
 
             if (MapType.MAP.equals(properties.mapType.getValue())) {
                 map(input, context);

@@ -40,10 +40,6 @@ public class PythonRowProperties extends FixedConnectorsComponentProperties {
 
     public Property<MapType> mapType = PropertyFactory.newEnum("mapType", MapType.class);
 
-    // TODO: Currently the user have to set the schema property if he want to specify the output schema.
-    // This has high risk to be changed in short time.
-    public SchemaProperties schemaFlow = new SchemaProperties("schemaFlow");
-
     public Property<String> pythonCode = PropertyFactory.newString("pythonCode");
 
     @Override
@@ -52,7 +48,6 @@ public class PythonRowProperties extends FixedConnectorsComponentProperties {
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(main.getForm(Form.REFERENCE));
         mainForm.addRow(mapType);
-        mainForm.addRow(schemaFlow);
         mainForm.addRow(widget(pythonCode).setWidgetType(Widget.TEXT_AREA_WIDGET_TYPE));
     }
 
@@ -71,7 +66,7 @@ public class PythonRowProperties extends FixedConnectorsComponentProperties {
     public void afterChangeSchema() {
         refreshLayout(getForm(Form.MAIN));
     }
-    
+
     public void afterMapType() {
         if (MapType.MAP.equals(mapType.getValue())) {
             StringBuilder sb = new StringBuilder();
