@@ -98,9 +98,9 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
         if (form.getName().equals(Form.MAIN)) {
             form.getWidget(fieldSeparator.getName()).setHidden(isList);
             form.getWidget(otherSeparator.getName()).setHidden(isList);
-            if (!form.getWidget(otherSeparator.getName()).isHidden()) {
+            if (form.getWidget(otherSeparator.getName()).isVisible()) {
                 form.getWidget(otherSeparator.getName())
-                        .setHidden(!fieldSeparator.getValue().equals(NormalizeConstant.Delimiter.OTHER));
+                        .setVisible(fieldSeparator.getValue().equals(NormalizeConstant.Delimiter.OTHER));
             }
         }
     }
