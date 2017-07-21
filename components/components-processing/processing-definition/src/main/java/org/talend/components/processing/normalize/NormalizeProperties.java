@@ -76,6 +76,12 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     @Override
     public void setupProperties() {
         super.setupProperties();
+        columnToNormalize.setValue("");
+        isList.setValue(false);
+        fieldSeparator.setValue(NormalizeConstant.Delimiter.SEMICOLON);
+        otherSeparator.setValue("");
+        discardTrailingEmptyStr.setValue(false);
+        trim.setValue(false);
         schemaListener = new ISchemaListener() {
 
             @Override
@@ -89,6 +95,14 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     @Override
     public void refreshLayout(Form form) {
         super.refreshLayout(form);
+        if (form.getName().equals(Form.MAIN)) {
+            form.getWidget(fieldSeparator.getName()).setHidden(isList);
+            form.getWidget(otherSeparator.getName()).setHidden(isList);
+            if (!form.getWidget(otherSeparator.getName()).isHidden()) {
+                form.getWidget(otherSeparator.getName())
+                        .setHidden(!fieldSeparator.getValue().equals(NormalizeConstant.Delimiter.OTHER));
+            }
+        }
     }
 
     @Override
@@ -105,5 +119,13 @@ public class NormalizeProperties extends FixedConnectorsComponentProperties {
     protected void updateOutputSchemas() {
         Schema inputSchema = main.schema.getValue();
         schemaFlow.schema.setValue(inputSchema);
+    }
+
+    public void afterIsList() {
+        refreshLayout(getForm(Form.MAIN));
+    }
+
+    public void afterFieldSeparator() {
+        refreshLayout(getForm(Form.MAIN));
     }
 }
