@@ -22,8 +22,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.io.Read;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.Write;
-import org.apache.beam.sdk.io.hdfs.WritableCoder;
+import org.apache.beam.sdk.io.hadoop.WritableCoder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Values;
@@ -45,10 +44,11 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.talend.components.adapter.beam.transform.ConvertToIndexedRecord;
+import org.talend.components.simplefileio.runtime.beamcopy.Write;
 import org.talend.components.simplefileio.runtime.sinks.UgiFileSinkBase;
 import org.talend.components.simplefileio.runtime.sources.CsvHdfsFileSource;
 import org.talend.components.simplefileio.runtime.ugi.UgiDoAs;
+import org.talend.daikon.avro.converter.IndexedRecordConverter;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 
@@ -64,8 +64,7 @@ public class SimpleRecordFormatCsvIO extends SimpleRecordFormatBase {
     private final String fieldDelimiter;
 
     public SimpleRecordFormatCsvIO(UgiDoAs doAs, String path, boolean overwrite, int limit, String recordDelimiter,
-            String fieldDelimiter,
-            boolean mergeOutput) {
+            String fieldDelimiter, boolean mergeOutput) {
         super(doAs, path, overwrite, limit, mergeOutput);
         this.recordDelimiter = recordDelimiter;
 
@@ -84,7 +83,7 @@ public class SimpleRecordFormatCsvIO extends SimpleRecordFormatBase {
 
         PCollection<?> pc2;
         if (path.startsWith("gs://")) {
-            pc2 = in.apply(TextIO.Read.from(path));
+            pc2 = in.apply(TextIO.read().from(path));
         } else {
             CsvHdfsFileSource source = CsvHdfsFileSource.of(doAs, path, recordDelimiter);
             source.getExtraHadoopConfiguration().addFrom(getExtraHadoopConfiguration());
@@ -96,16 +95,15 @@ public class SimpleRecordFormatCsvIO extends SimpleRecordFormatBase {
             pc2 = pc1.apply(Values.<Text> create());
         }
 
-        PCollection<CSVRecord> pc3 = pc2.apply(ParDo.of(new ExtractCsvRecord<>(fieldDelimiter.charAt(0))));
-        PCollection pc4 = pc3.apply(ConvertToIndexedRecord.<CSVRecord, IndexedRecord> of());
-        return pc4;
+        PCollection<IndexedRecord> pc3 = pc2.apply(ParDo.of(new ExtractCsvRecord<>(fieldDelimiter.charAt(0))));
+        return pc3;
     }
 
     @Override
     public PDone write(PCollection<IndexedRecord> in) {
 
         if (path.startsWith("gs://")) {
-            TextIO.Write.Bound b = TextIO.Write.to(path);
+            TextIO.Write b = TextIO.write().to(path);
 
             PCollection<String> pc1 = in.apply(ParDo.of(new FormatCsvRecord2(fieldDelimiter.charAt(0))));
             return pc1.apply(b);
@@ -146,7 +144,7 @@ public class SimpleRecordFormatCsvIO extends SimpleRecordFormatBase {
         }
     }
 
-    public static class ExtractCsvRecord<T> extends DoFn<T, CSVRecord> {
+    public static class ExtractCsvRecord<T> extends DoFn<T, IndexedRecord> {
 
         static {
             // Ensure that the singleton for the SimpleFileIOAvroRegistry is created.
@@ -155,15 +153,21 @@ public class SimpleRecordFormatCsvIO extends SimpleRecordFormatBase {
 
         public final char fieldDelimiter;
 
+        /** The converter is cached for performance. */
+        private transient IndexedRecordConverter<CSVRecord, ? extends IndexedRecord> converter;
+
         public ExtractCsvRecord(char fieldDelimiter) {
             this.fieldDelimiter = fieldDelimiter;
         }
 
         @ProcessElement
         public void processElement(ProcessContext c) throws IOException {
+            if (converter == null) {
+                converter = new SimpleFileIOAvroRegistry.CsvRecordToIndexedRecordConverter();
+            }
             String in = c.element().toString();
             for (CSVRecord r : CSVFormat.RFC4180.withDelimiter(fieldDelimiter).parse(new StringReader(in)))
-                c.output(r);
+                c.output(converter.convertToAvro(r));
         }
     }
 

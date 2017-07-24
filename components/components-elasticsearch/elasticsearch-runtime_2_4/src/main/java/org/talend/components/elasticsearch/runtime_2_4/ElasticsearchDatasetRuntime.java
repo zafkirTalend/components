@@ -15,11 +15,10 @@ package org.talend.components.elasticsearch.runtime_2_4;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Sample;
-import org.talend.components.adapter.beam.coders.LazyAvroCoder;
+import org.talend.components.adapter.beam.BeamLocalRunnerOption;
 import org.talend.components.adapter.beam.transform.DirectConsumerCollector;
 import org.talend.components.api.container.RuntimeContainer;
 import org.talend.components.common.dataset.runtime.DatasetRuntime;
@@ -68,17 +67,14 @@ public class ElasticsearchDatasetRuntime implements DatasetRuntime<Elasticsearch
         inputProperties.setDatasetProperties(properties);
         inputRuntime.initialize(null, inputProperties);
 
-        // Create a pipeline using the input component to get records.
-        PipelineOptions options = PipelineOptionsFactory.create();
-        // options.setRunner(DirectRunner.class);
+        DirectOptions options = BeamLocalRunnerOption.getOptions();
         final Pipeline p = Pipeline.create(options);
-        LazyAvroCoder.registerAsFallback(p);
 
         try (DirectConsumerCollector<IndexedRecord> collector = DirectConsumerCollector.of(consumer)) {
             // Collect a sample of the input records.
             p.apply(inputRuntime) //
                     .apply(Sample.<IndexedRecord> any(limit)).apply(collector);
-            p.run();
+            p.run().waitUntilFinish();
         }
     }
 }

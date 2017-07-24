@@ -10,7 +10,7 @@ This repository contains the Talend Component Framework and implementations of T
 
 WARNING : when cloning this repo on Windows, please setup git to accept long paths using the following command:
 ```
-git config core.longpaths true
+git config --system core.longpaths true
 ```
 
 ## Folders/Modules/Maven
@@ -90,7 +90,7 @@ Alternatively you can launch the mvn command followed with those system properti
 -Dsalesforce.user=the_user_name -Dsalesforce.password=the_pazzword -Dsalesforce.key=the_salesforcekey
 ```
 
-##Contributing
+## Contributing
 please look at the [wiki](https://github.com/Talend/components/wiki).
 For pull request contribution please make sure to follow the review process explaine [here](/CONTRIBUTING.md)
 

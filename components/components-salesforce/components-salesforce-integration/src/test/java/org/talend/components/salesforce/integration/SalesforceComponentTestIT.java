@@ -30,7 +30,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.IndexedRecord;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.api.component.ComponentDefinition;
@@ -54,6 +56,7 @@ import org.talend.components.salesforce.SalesforceConnectionWizard;
 import org.talend.components.salesforce.SalesforceConnectionWizardDefinition;
 import org.talend.components.salesforce.SalesforceModuleListProperties;
 import org.talend.components.salesforce.SalesforceModuleProperties;
+import org.talend.components.salesforce.SalesforceModuleWizard;
 import org.talend.components.salesforce.SalesforceOutputProperties.OutputAction;
 import org.talend.components.salesforce.SalesforceUserPasswordProperties;
 import org.talend.components.salesforce.runtime.SalesforceSourceOrSink;
@@ -75,6 +78,9 @@ import org.talend.daikon.properties.test.PropertiesTestUtils;
 public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SalesforceComponentTestIT.class);
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     public SalesforceComponentTestIT() {
         super();
@@ -121,7 +127,7 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
                 .createProperties();
         assertTrue(props.userPassword.userId.isRequired());
         assertTrue(props.userPassword.password.isRequired());
-        assertFalse(props.userPassword.securityKey.isRequired());
+        assertFalse(props.userPassword.securityToken.isRequired());
 
         assertFalse(props.proxy.userPassword.userId.isRequired());
         assertFalse(props.proxy.userPassword.password.isRequired());
@@ -376,22 +382,27 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
         SalesforceConnectionProperties connProps = (SalesforceConnectionProperties) connFormWizard.getProperties();
 
         ComponentWizard[] subWizards = getComponentService().getComponentWizardsForProperties(connProps, "location")
-                .toArray(new ComponentWizard[3]);
+                .toArray(new ComponentWizard[2]);
         Arrays.sort(subWizards, new WizardNameComparator());
-        assertEquals(3, subWizards.length);
+        assertEquals(2, subWizards.length);
         // Edit connection wizard - we copy the connection properties, as we present the UI, so we use the
         // connection properties object created by the new wizard
         assertFalse(connProps == subWizards[1].getForms().get(0).getProperties());
-        // Add module wizard - we refer to the existing connection properties as we don't present the UI
-        // for them.
-        assertTrue(connProps == ((SalesforceModuleListProperties) subWizards[2].getForms().get(0).getProperties())
-                .getConnectionProperties());
         assertFalse(subWizards[1].getDefinition().isTopLevel());
         assertEquals("Edit Salesforce Connection", subWizards[1].getDefinition().getMenuItemName());
         assertTrue(subWizards[0].getDefinition().isTopLevel());
         assertEquals("Create Salesforce Connection", subWizards[0].getDefinition().getMenuItemName());
-        assertFalse(subWizards[2].getDefinition().isTopLevel());
-        assertEquals("Add Salesforce Modules", subWizards[2].getDefinition().getMenuItemName());
+
+        // Checking wizard for SalesforceModuleListProperties
+        SalesforceModuleListProperties moduleListProperties = new SalesforceModuleListProperties("moduleList");
+        moduleListProperties.setConnection(connProps);
+        List<ComponentWizard> moduleListWizardList = getComponentService().getComponentWizardsForProperties(moduleListProperties, "location");
+        ComponentWizard moduleListWizard = moduleListWizardList.get(0);
+
+        assertTrue(moduleListWizard instanceof SalesforceModuleWizard);
+        assertEquals(1, moduleListWizardList.size());
+        assertFalse(moduleListWizard.getDefinition().isTopLevel());
+        assertEquals("Add Salesforce Modules", moduleListWizard.getDefinition().getMenuItemName());
     }
 
     @Test
@@ -463,7 +474,8 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
         props.oauth.clientSecret.setValue("3545101463828280342");
         props.oauth.callbackHost.setValue("localhost");
         props.oauth.callbackPort.setValue(8115);
-        // props.oauth.tokenFile.setValue();
+        String tokenFile = tempFolder.newFile("token" + createNewRandom()).getPath();
+        props.oauth.tokenFile.setValue(tokenFile);
         return props;
     }
 
@@ -471,7 +483,7 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
     @Test
     public void testOAuthLogin() throws Throwable {
         SalesforceConnectionProperties props = setupOAuthProps(null);
-        Form f = props.getForm(Form.MAIN);
+        Form f = props.getForm(SalesforceConnectionProperties.FORM_WIZARD);
         props = (SalesforceConnectionProperties) PropertiesTestUtils.checkAndValidate(getComponentService(), f, "testConnection",
                 props);
         assertEquals(ValidationResult.Result.OK, props.getValidationResult().getStatus());
@@ -483,7 +495,7 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
     public void testOAuthBulkLogin() throws Throwable {
         SalesforceConnectionProperties props = setupOAuthProps(null);
         props.bulkConnection.setValue(true);
-        Form f = props.getForm(Form.MAIN);
+        Form f = props.getForm(SalesforceConnectionProperties.FORM_WIZARD);
         props = (SalesforceConnectionProperties) PropertiesTestUtils.checkAndValidate(getComponentService(), f, "testConnection",
                 props);
         assertEquals(ValidationResult.Result.OK, props.getValidationResult().getStatus());
@@ -526,7 +538,8 @@ public abstract class SalesforceComponentTestIT extends SalesforceTestBase {
         testSchemaWithAPIVersion("21.0");
         testSchemaWithAPIVersion("19.0");
         testSchemaWithAPIVersion("18.0");
-        // ignore it now as it fail and it seems the reason is the jar classpath issue, need to research on it, why before it success? i think
+        // ignore it now as it fail and it seems the reason is the jar classpath issue, need to research on it, why before it
+        // success? i think
         // the refactor make it up, but not from the code
         // testSchemaWithAPIVersion("15.0");
         // testSchemaWithAPIVersion("10.0");

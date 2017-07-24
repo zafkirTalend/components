@@ -18,7 +18,7 @@ import java.util.HashSet;
 
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.testing.RunnableOnService;
+import org.apache.beam.sdk.testing.ValidatesRunner;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.fs.FileSystem;
@@ -49,12 +49,12 @@ public class SparkSimpleFileIOOutputRuntimeTestIT {
     /**
      * Basic unit test using all default values (except for the path) on an in-memory DFS cluster.
      */
-    @Category(RunnableOnService.class)
+    @Category(ValidatesRunner.class)
     @Ignore("BEAM-1206")
     @Test
     public void testBasicDefaults() throws IOException {
         FileSystem fs = FileSystem.get(spark.createHadoopConfiguration());
-        String fileSpec = fs.getUri().resolve(tmp.getRoot() + "/basic").toString();
+        String fileSpec = fs.getUri().resolve(new Path(tmp.getRoot().toString(), "basic").toUri()).toString();
 
         // Configure the component.
         SimpleFileIOOutputProperties props = SimpleFileIOOutputRuntimeTest.createOutputComponentProperties();
@@ -82,7 +82,7 @@ public class SparkSimpleFileIOOutputRuntimeTestIT {
     @Test
     public void testCsv_merge() throws IOException {
         FileSystem fs = FileSystem.get(spark.createHadoopConfiguration());
-        String fileSpec = fs.getUri().resolve(tmp.getRoot() + "/output.csv").toString();
+        String fileSpec = fs.getUri().resolve(new Path(tmp.getRoot().toString(), "output.csv").toUri()).toString();
 
         // Configure the component.
         SimpleFileIOOutputProperties props = SimpleFileIOOutputRuntimeTest.createOutputComponentProperties();
@@ -112,7 +112,7 @@ public class SparkSimpleFileIOOutputRuntimeTestIT {
     @Test
     public void testAvro_merge() throws IOException {
         FileSystem fs = FileSystem.get(spark.createHadoopConfiguration());
-        String fileSpec = fs.getUri().resolve(tmp.getRoot() + "/output.avro").toString();
+        String fileSpec = fs.getUri().resolve(new Path(tmp.getRoot().toString(), "output.avro").toUri()).toString();
 
         // Configure the component.
         SimpleFileIOOutputProperties props = SimpleFileIOOutputRuntimeTest.createOutputComponentProperties();
@@ -146,7 +146,7 @@ public class SparkSimpleFileIOOutputRuntimeTestIT {
     @Test
     public void testParquet_merge() throws IOException {
         FileSystem fs = FileSystem.get(spark.createHadoopConfiguration());
-        String fileSpec = fs.getUri().resolve(tmp.getRoot() + "/output.parquet").toString();
+        String fileSpec = fs.getUri().resolve(new Path(tmp.getRoot().toString(), "output.parquet").toUri()).toString();
 
         // Configure the component.
         SimpleFileIOOutputProperties props = SimpleFileIOOutputRuntimeTest.createOutputComponentProperties();
