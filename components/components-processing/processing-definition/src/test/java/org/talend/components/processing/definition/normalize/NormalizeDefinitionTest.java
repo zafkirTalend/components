@@ -59,7 +59,7 @@ public class NormalizeDefinitionTest {
     public void testGetPropertyClass() {
         Class<?> propertyClass = definition.getPropertyClass();
         String canonicalName = propertyClass.getCanonicalName();
-        assertThat(canonicalName, equalTo("org.talend.components.processing.normalize.NormalizeProperties"));
+        assertThat(canonicalName, equalTo("org.talend.components.processing.definition.normalize.NormalizeProperties"));
     }
 
     @Test
