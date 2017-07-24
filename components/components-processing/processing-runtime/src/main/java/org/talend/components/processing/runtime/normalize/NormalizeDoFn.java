@@ -19,9 +19,9 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.commons.lang3.StringUtils;
-import org.talend.components.processing.normalize.NormalizeConstant;
-import org.talend.components.processing.normalize.NormalizeDelimiter;
-import org.talend.components.processing.normalize.NormalizeProperties;
+import org.talend.components.processing.definition.normalize.NormalizeConstant;
+import org.talend.components.processing.definition.normalize.NormalizeDelimiter;
+import org.talend.components.processing.definition.normalize.NormalizeProperties;
 
 public class NormalizeDoFn extends DoFn<IndexedRecord, IndexedRecord> {
 

@@ -18,7 +18,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.talend.components.api.component.runtime.RuntimableRuntime;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.processing.normalize.NormalizeProperties;
+import org.talend.components.processing.definition.normalize.NormalizeProperties;
 import org.talend.daikon.properties.ValidationResult;
 
 public class NormalizeRuntime extends PTransform<PCollection<IndexedRecord>, PCollection>

@@ -24,8 +24,8 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.beam.sdk.transforms.DoFnTester;
 import org.junit.Assert;
 import org.junit.Test;
-import org.talend.components.processing.normalize.NormalizeConstant;
-import org.talend.components.processing.normalize.NormalizeProperties;
+import org.talend.components.processing.definition.normalize.NormalizeConstant;
+import org.talend.components.processing.definition.normalize.NormalizeProperties;
 import org.talend.daikon.exception.TalendRuntimeException;
 
 public class NormalizeDoFnTest {
