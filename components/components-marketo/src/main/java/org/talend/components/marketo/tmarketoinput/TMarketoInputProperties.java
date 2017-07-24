@@ -45,7 +45,8 @@ import org.talend.components.marketo.MarketoConstants;
 import org.talend.components.marketo.helpers.CompoundKeyTable;
 import org.talend.components.marketo.helpers.IncludeExcludeTypesTable;
 import org.talend.components.marketo.helpers.MarketoColumnMappingsTable;
-import org.talend.components.marketo.runtime.MarketoSourceOrSink;
+import org.talend.components.marketo.runtime.MarketoSourceOrSinkRuntime;
+import org.talend.components.marketo.runtime.MarketoSourceOrSinkSchemaProvider;
 import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties;
 import org.talend.daikon.i18n.GlobalI18N;
 import org.talend.daikon.i18n.I18nMessages;
@@ -56,6 +57,7 @@ import org.talend.daikon.properties.ValidationResultMutable;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
+import org.talend.daikon.sandbox.SandboxedInstance;
 import org.talend.daikon.serialize.PostDeserializeSetup;
 import org.talend.daikon.serialize.migration.SerializeSetVersion;
 
@@ -383,6 +385,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
         super.setupLayout();
 
         Form mainForm = getForm(Form.MAIN);
+        mainForm.addColumn(Widget.widget(fetchLeadSchema).setWidgetType(Widget.BUTTON_WIDGET_TYPE).setLongRunning(true));
         mainForm.addRow(inputOperation);
         // Custom Objects & Opportunities
         mainForm.addColumn(customObjectAction);
@@ -425,6 +428,11 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
         //
         mainForm.addRow(batchSize);
         mainForm.addRow(dieOnError);
+
+        //
+        Form selectLeadSchemaForm = new Form(this, "fetchLeadSchema");
+        selectLeadSchemaForm.addRow(widget(selectedLeadColumns).setWidgetType(Widget.NAME_SELECTION_AREA_WIDGET_TYPE));
+        fetchLeadSchema.setFormtoShow(selectLeadSchemaForm);
     }
 
     @Override
@@ -455,6 +463,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
             form.getWidget(oldestCreateDate.getName()).setVisible(false);
             form.getWidget(latestCreateDate.getName()).setVisible(false);
             form.getWidget(batchSize.getName()).setVisible(false);
+            form.getWidget(fetchLeadSchema.getName()).setVisible(false);
             // custom objects
             form.getWidget(customObjectAction.getName()).setVisible(false);
             form.getWidget(customObjectName.getName()).setVisible(false);
@@ -478,6 +487,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
                 if (useSOAP) {
                     form.getWidget(leadKeyTypeSOAP.getName()).setVisible(true);
                 } else {
+                    form.getWidget(fetchLeadSchema.getName()).setVisible(true);
                     form.getWidget(leadKeyTypeREST.getName()).setVisible(true);
                 }
             }
@@ -506,6 +516,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
                         break;
                     }
                 } else {
+                    form.getWidget(fetchLeadSchema.getName()).setVisible(true);
                     form.getWidget(leadSelectorREST.getName()).setVisible(true);
                     switch (leadSelectorREST.getValue()) {
                     case LeadKeySelector:
@@ -526,16 +537,25 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
             }
             // getLeadActivity
             if (inputOperation.getValue().equals(getLeadActivity)) {
+                // first set all in/exclude types visibles
+                form.getWidget(setIncludeTypes.getName()).setVisible(true);
+                form.getWidget(includeTypes.getName()).setVisible(setIncludeTypes.getValue());
+                form.getWidget(setExcludeTypes.getName()).setVisible(true);
+                form.getWidget(excludeTypes.getName()).setVisible(setExcludeTypes.getValue());
                 if (useSOAP) {
                     form.getWidget(leadKeyTypeSOAP.getName()).setVisible(true);
                     form.getWidget(leadKeyValue.getName()).setVisible(true);
                 } else {
                     form.getWidget(sinceDateTime.getName()).setVisible(true);
+                    if (setIncludeTypes.getValue()) {
+                        setExcludeTypes.setValue(false);
+                        form.getWidget(setExcludeTypes.getName()).setVisible(false);
+                        form.getWidget(excludeTypes.getName()).setVisible(false);
+                    } else if (setExcludeTypes.getValue()) {
+                        form.getWidget(setIncludeTypes.getName()).setVisible(false);
+                        form.getWidget(includeTypes.getName()).setVisible(false);
+                    }
                 }
-                form.getWidget(setIncludeTypes.getName()).setVisible(true);
-                form.getWidget(includeTypes.getName()).setVisible(setIncludeTypes.getValue());
-                form.getWidget(setExcludeTypes.getName()).setVisible(true);
-                form.getWidget(excludeTypes.getName()).setVisible(setExcludeTypes.getValue());
                 form.getWidget(batchSize.getName()).setVisible(true);
             }
             // getLeadChanges
@@ -599,26 +619,19 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
 
     public ValidationResult validateFetchCustomObjectSchema() {
         ValidationResultMutable vr = new ValidationResultMutable();
-        // try (SandboxedInstance sandboxedInstance = RuntimeUtil.createRuntimeClass(new
-        // JarRuntimeInfo(MAVEN_RUNTIME_PATH,
-        // DependenciesReader.computeDependenciesFilePath(MAVEN_GROUP_ID, MAVEN_RUNTIME_ARTIFACT_ID),
-        // RUNTIME_SOURCEORSINK_CLASS), connection.getClass().getClassLoader())) {
-        // MarketoSourceOrSinkSchemaProvider sos = (MarketoSourceOrSinkSchemaProvider) sandboxedInstance.getInstance();
-
-        ValidationResultMutable vrm = new ValidationResultMutable(vr);
-        try {
-            MarketoSourceOrSink sos = new MarketoSourceOrSink();
+        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
+            MarketoSourceOrSinkRuntime sos = (MarketoSourceOrSinkRuntime) sandboxedInstance.getInstance();
             sos.initialize(null, this);
-            Schema schema = sos.getSchemaForCustomObject(customObjectName.getValue());
+            Schema schema = ((MarketoSourceOrSinkSchemaProvider) sos).getSchemaForCustomObject(customObjectName.getValue());
             if (schema == null) {
-                vrm.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
+                vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
                         "error.validation.customobjects.fetchcustomobjectschema", customObjectName.getValue(), "NULL"));
-                return vrm;
+                return vr;
             }
             schemaInput.schema.setValue(schema);
-            vrm.setStatus(ValidationResult.Result.OK);
+            vr.setStatus(ValidationResult.Result.OK);
         } catch (RuntimeException | IOException e) {
-            vrm.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
+            vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages.getMessage(
                     "error.validation.customobjects.fetchcustomobjectschema", customObjectName.getValue(), e.getMessage()));
         }
         return vr;
@@ -626,10 +639,10 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
 
     public ValidationResult validateFetchCompoundKey() {
         ValidationResultMutable vr = new ValidationResultMutable();
-        try {
-            MarketoSourceOrSink sos = new MarketoSourceOrSink();
+        try (SandboxedInstance sandboxedInstance = getRuntimeSandboxedInstance()) {
+            MarketoSourceOrSinkRuntime sos = (MarketoSourceOrSinkRuntime) sandboxedInstance.getInstance();
             sos.initialize(null, this);
-            List<String> keys = sos.getCompoundKeyFields(customObjectName.getValue());
+            List<String> keys = ((MarketoSourceOrSinkSchemaProvider) sos).getCompoundKeyFields(customObjectName.getValue());
             if (keys == null) {
                 vr.setStatus(ValidationResult.Result.ERROR).setMessage(messages
                         .getMessage("error.validation.customobjects.fetchcompoundkey", customObjectName.getValue(), "NULL"));
@@ -709,6 +722,12 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
 
     public void afterListParam() {
         refreshLayout(getForm(Form.MAIN));
+    }
+
+    @Override
+    public void afterFetchLeadSchema() {
+        super.afterFetchLeadSchema();
+        beforeMappingInput();
     }
 
     public void updateSchemaRelated() {

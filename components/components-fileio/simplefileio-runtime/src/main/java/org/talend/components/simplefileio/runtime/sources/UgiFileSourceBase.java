@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.BoundedSource;
-import org.apache.beam.sdk.io.hdfs.RelaxedHDFSFileSource;
+import org.talend.components.simplefileio.runtime.beamcopy.RelaxedHDFSFileSource;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.values.KV;
 import org.apache.hadoop.mapreduce.Job;
@@ -83,7 +83,7 @@ public abstract class UgiFileSourceBase<K, V, SourceT extends UgiFileSourceBase<
 
     /* Override with UGI if available. */
     @Override
-    public final List<? extends BoundedSource<KV<K, V>>> splitIntoBundles(final long desiredBundleSizeBytes,
+    public final List<? extends BoundedSource<KV<K, V>>> split(final long desiredBundleSizeBytes,
             final PipelineOptions options) throws Exception {
         return doAs.doAs(new PrivilegedExceptionAction<List<? extends BoundedSource<KV<K, V>>>>() {
 
@@ -100,7 +100,7 @@ public abstract class UgiFileSourceBase<K, V, SourceT extends UgiFileSourceBase<
 
     protected List<? extends BoundedSource<KV<K, V>>> doAsSplitIntoBundles(long desiredBundleSizeBytes, PipelineOptions options)
             throws Exception {
-        return super.splitIntoBundles(desiredBundleSizeBytes, options);
+        return super.split(desiredBundleSizeBytes, options);
     }
 
     protected static class UgiFileReader<K, V> extends RelaxedHDFSFileReader<K, V> {

@@ -33,8 +33,6 @@ import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.api.component.runtime.Writer;
 import org.talend.components.salesforce.SalesforceBulkProperties.Concurrency;
 import org.talend.components.salesforce.SalesforceConnectionProperties;
-import org.talend.components.salesforce.runtime.SalesforceBulkFileSink;
-import org.talend.components.salesforce.runtime.SalesforceSource;
 import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecDefinition;
 import org.talend.components.salesforce.tsalesforcebulkexec.TSalesforceBulkExecProperties;
 import org.talend.components.salesforce.tsalesforceoutputbulk.TSalesforceOutputBulkDefinition;
@@ -96,7 +94,7 @@ public class SalesforceRuntimeTestUtil {
 
     private final String password = System.getProperty("salesforce.password");
 
-    private final String securityKey = System.getProperty("salesforce.key");
+    private final String securityToken = System.getProperty("salesforce.key");
 
     public Schema getTestSchema1() {
         return schema1;
@@ -127,7 +125,7 @@ public class SalesforceRuntimeTestUtil {
 
         config.setAuthEndpoint(endpoint);
         config.setUsername(username);
-        config.setPassword(password + securityKey);
+        config.setPassword(password + securityToken);
         config.setConnectionTimeout(60000);
         config.setUseChunkedPost(true);
 
@@ -211,7 +209,7 @@ public class SalesforceRuntimeTestUtil {
             Schema schema) {
         // simulate some ui action
         // user create component
-        TSalesforceOutputBulkProperties modelProperties = (TSalesforceOutputBulkProperties) definition.createProperties();// setup
+        TSalesforceOutputBulkProperties modelProperties = (TSalesforceOutputBulkProperties) definition.createRuntimeProperties();// setup
                                                                                                                           // the
                                                                                                                           // properties,
                                                                                                                           // trigger
@@ -233,7 +231,7 @@ public class SalesforceRuntimeTestUtil {
 
     public void simulateRuntimeCaller(TSalesforceOutputBulkDefinition definition, TSalesforceOutputBulkProperties modelProperties,
             Schema schema, List<Map<String, String>> rows) throws IOException {
-        Writer writer = initWriter(definition, modelProperties);
+        Writer<?> writer = initWriter(definition, modelProperties);
 
         try {
             for (Map<String, String> row : rows) {
@@ -248,7 +246,7 @@ public class SalesforceRuntimeTestUtil {
         }
     }
 
-    private Writer initWriter(TSalesforceOutputBulkDefinition definition, TSalesforceOutputBulkProperties modelProperties)
+    private Writer<?> initWriter(TSalesforceOutputBulkDefinition definition, TSalesforceOutputBulkProperties modelProperties)
             throws IOException {
         // simulate to generate the runtime code
         TSalesforceOutputBulkProperties runtimeProperties = (TSalesforceOutputBulkProperties) definition
@@ -260,7 +258,7 @@ public class SalesforceRuntimeTestUtil {
         runtimeProperties.ignoreNull.setValue(modelProperties.ignoreNull.getValue());
 
         Object obj = modelProperties.upsertRelationTable.columnName.getValue();
-        if (obj != null && obj instanceof List && !((List) obj).isEmpty()) {
+        if (obj != null && obj instanceof List && !((List<?>) obj).isEmpty()) {
             runtimeProperties.upsertRelationTable.columnName.setValue(modelProperties.upsertRelationTable.columnName.getValue());
             runtimeProperties.upsertRelationTable.lookupFieldExternalIdName
                     .setValue(modelProperties.upsertRelationTable.lookupFieldExternalIdName.getValue());
@@ -278,18 +276,18 @@ public class SalesforceRuntimeTestUtil {
         Assert.assertTrue(result.getStatus() == ValidationResult.Result.OK);
 
         Sink sink = (Sink) source_sink;
-        WriteOperation writeOperation = sink.createWriteOperation();
+        WriteOperation<?> writeOperation = sink.createWriteOperation();
         writeOperation.initialize(null);
-        Writer writer = writeOperation.createWriter(null);
+        Writer<?> writer = writeOperation.createWriter(null);
         writer.open("component_instance_id");
         return writer;
     }
 
-    public Reader initReader(TSalesforceBulkExecDefinition definition, String data_file,
+    public Reader<?> initReader(TSalesforceBulkExecDefinition definition, String data_file,
             TSalesforceBulkExecProperties modelProperties, Schema schema, Schema output) {
         modelProperties.connection.userPassword.userId.setValue(username);
         modelProperties.connection.userPassword.password.setValue(password);
-        modelProperties.connection.userPassword.securityKey.setValue(securityKey);
+        modelProperties.connection.userPassword.securityToken.setValue(securityToken);
 
         modelProperties.connection.timeout.setValue(60000);
         modelProperties.connection.bulkConnection.setValue(true);
@@ -310,7 +308,7 @@ public class SalesforceRuntimeTestUtil {
             Assert.fail(vr.getMessage());
         }
 
-        Reader reader = source.createReader(null);
+        Reader<?> reader = source.createReader(null);
         return reader;
     }
 
