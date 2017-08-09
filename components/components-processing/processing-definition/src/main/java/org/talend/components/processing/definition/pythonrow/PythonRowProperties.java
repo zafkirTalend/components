@@ -48,7 +48,8 @@ public class PythonRowProperties extends FixedConnectorsComponentProperties {
         Form mainForm = new Form(this, Form.MAIN);
         mainForm.addRow(main.getForm(Form.REFERENCE));
         mainForm.addRow(mapType);
-        mainForm.addRow(widget(pythonCode).setWidgetType(Widget.CODE_WIDGET_TYPE));
+        mainForm.addRow(widget(pythonCode).setWidgetType(Widget.CODE_WIDGET_TYPE)
+                .setConfigurationValue(Widget.CODE_SYNTAX_WIDGET_CONF, "python"));
     }
 
     @Override
